@@ -126,13 +126,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // API endpoint to handle image uploads and variations
+  // API endpoint to handle image edits and variations
   app.post("/api/upload-image", async (req, res) => {
     try {
-      const { image, prompt, model, size, count, quality } = req.body;
+      const { images, prompt, model, size, count, quality } = req.body;
       
-      if (!image) {
-        return res.status(400).json({ message: "No image data provided" });
+      if (!images || !images.length) {
+        return res.status(400).json({ message: "No images provided" });
       }
       
       // Prepare parameters for the API call
@@ -142,10 +142,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         size: size || "1024x1024",
       };
       
-      // Add prompt if provided, otherwise OpenAI will create variations without guidance
-      if (prompt) {
-        requestParams.prompt = prompt;
-      }
+      // The prompt is required for image edits
+      requestParams.prompt = prompt || "Edit this image";
       
       // Add model-specific parameters
       if (model === "gpt-image-1") {
@@ -154,25 +152,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
           requestParams.quality = quality === "auto" ? "auto" : quality;
         }
         // GPT-Image-1 doesn't support response_format
-      } else if (model === "dall-e-3") {
-        // DALL-E 3 specific parameters - Only supports 1 image
-        requestParams.n = 1;
-        if (quality && quality === "hd") {
-          requestParams.quality = "hd";
-        } else {
-          requestParams.quality = "standard";
-        }
+      } else if (model === "dall-e-2") {
+        // DALL-E 2 specific parameters
         requestParams.response_format = "b64_json";
       } else {
-        // DALL-E 2 specific parameters - No quality parameter, it's not supported
+        // DALL-E 3 doesn't support image edits API, default to DALL-E 2
+        requestParams.model = "dall-e-2";
         requestParams.response_format = "b64_json";
+        console.log("Defaulting to dall-e-2 as dall-e-3 doesn't support image edits");
       }
       
-      console.log("Sending image variation request with params:", JSON.stringify(requestParams));
+      console.log("Sending image edit request with params:", JSON.stringify(requestParams));
       
-      // Use the create image variation API
-      const response = await openai.images.createVariation({
-        image: Buffer.from(image, 'base64'),
+      // Convert base64 strings to Buffers
+      const imageBuffers = images.map((img: string) => Buffer.from(img, 'base64'));
+      
+      // Use createEdit API instead of createVariation for GPT-Image-1 (supports multiple images)
+      const response = await openai.images.edit({
+        image: imageBuffers[0], // First image is the primary one
+        // Convert other images to array format required by the API
+        // Only include additional images if there are more than one and we're using gpt-image-1
+        ...(imageBuffers.length > 1 && model === "gpt-image-1" 
+            ? { image: imageBuffers.slice(1) as any } 
+            : {}),
         ...requestParams
       });
       
@@ -209,7 +211,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const newImage = {
           id: `img_${Date.now()}_${index}`,
           url: imageUrl,
-          prompt: prompt || "Image Variation",
+          prompt: prompt || "Image Edit",
           size: size || "1024x1024",
           model: model || "gpt-image-1",
           createdAt: new Date().toISOString(),
@@ -223,9 +225,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({ images: generatedImages });
     } catch (error: any) {
-      console.error("Error generating image variations:", error);
+      console.error("Error generating image edits:", error);
       res.status(500).json({ 
-        message: error.message || "Failed to generate image variations" 
+        message: error.message || "Failed to edit images" 
       });
     }
   });

@@ -10,10 +10,11 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { uploadImageSchema } from '@/../../shared/schema';
 import { apiRequest } from '@/lib/queryClient';
-import { FaUpload, FaImage } from 'react-icons/fa';
+import { FaUpload, FaImage, FaTimes } from 'react-icons/fa';
 import { useToast } from '@/hooks/use-toast';
 import { GeneratedImage } from '@/types/image';
 import LoadingState from './LoadingState';
+import { Badge } from '@/components/ui/badge';
 
 // File upload validation schema
 const fileUploadSchema = z.object({
@@ -37,8 +38,9 @@ export default function ImageUploader({
   onUploadComplete,
   onError
 }: ImageUploaderProps) {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [filePreview, setFilePreview] = useState<string | null>(null);
+  // Store array of files and their previews
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [filePreviews, setFilePreviews] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
   
@@ -56,37 +58,74 @@ export default function ImageUploader({
   const selectedModel = form.watch('model');
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    if (acceptedFiles && acceptedFiles.length > 0) {
-      const file = acceptedFiles[0];
-      
-      if (!file.type.startsWith('image/')) {
-        toast({
-          title: "Invalid file type",
-          description: "Please upload an image file (JPEG, PNG, etc.)",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      // No size limit anymore, but still notify user about very large files
-      if (file.size > 20 * 1024 * 1024) {
-        toast({
-          title: "Large file detected",
-          description: "Very large images (>20MB) may take longer to process",
-          variant: "default"
-        });
-      }
-      
-      setSelectedFile(file);
-      
-      // Create a preview URL
-      const reader = new FileReader();
-      reader.onload = () => {
-        setFilePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    // Check if trying to add more than 16 images for GPT-Image-1 or more than 1 for DALL-E-2/3
+    const model = form.getValues('model');
+    const maxFiles = model === 'gpt-image-1' ? 16 : 1;
+    
+    if (selectedFiles.length >= maxFiles) {
+      toast({
+        title: "Too many images",
+        description: model === 'gpt-image-1' ? 
+          "Maximum 16 images allowed for GPT-Image-1" : 
+          "Only 1 image allowed for DALL-E models",
+        variant: "destructive"
+      });
+      return;
     }
-  }, [toast]);
+    
+    if (acceptedFiles && acceptedFiles.length > 0) {
+      // Filter files that can be added without exceeding the limit
+      const filesToAdd = acceptedFiles.slice(0, maxFiles - selectedFiles.length);
+      
+      // Process each file
+      filesToAdd.forEach(file => {
+        if (!file.type.startsWith('image/')) {
+          toast({
+            title: "Invalid file type",
+            description: "Please upload an image file (JPEG, PNG, WebP)",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        // No size limit anymore, but still notify user about very large files
+        if (file.size > 20 * 1024 * 1024) {
+          toast({
+            title: "Large file detected",
+            description: "Very large images (>20MB) may take longer to process",
+            variant: "default"
+          });
+        }
+        
+        // Create a preview URL
+        const reader = new FileReader();
+        reader.onload = () => {
+          setFilePreviews(prev => [...prev, reader.result as string]);
+        };
+        reader.readAsDataURL(file);
+      });
+      
+      // Add files to state
+      setSelectedFiles(prev => [...prev, ...filesToAdd]);
+    }
+  }, [form, selectedFiles.length, toast]);
+  
+  // Update maxFiles based on model selection
+  React.useEffect(() => {
+    const maxFiles = selectedModel === 'gpt-image-1' ? 16 : 1;
+    
+    // If model changed and we have too many files, keep only the allowed number
+    if (selectedFiles.length > maxFiles) {
+      setSelectedFiles(selectedFiles.slice(0, maxFiles));
+      setFilePreviews(filePreviews.slice(0, maxFiles));
+      
+      toast({
+        title: "Files removed",
+        description: `Only ${maxFiles} ${maxFiles === 1 ? 'image' : 'images'} allowed for ${selectedModel}`,
+        variant: "default"
+      });
+    }
+  }, [selectedModel, selectedFiles, filePreviews, toast]);
   
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
     onDrop,
@@ -95,14 +134,16 @@ export default function ImageUploader({
       'image/png': [],
       'image/webp': []
     },
-    maxFiles: 1
+    // Allow multiple files for gpt-image-1, just one for others
+    multiple: selectedModel === 'gpt-image-1',
+    maxFiles: selectedModel === 'gpt-image-1' ? 16 : 1
   });
   
   const handleSubmit = async (values: FileUploadValues) => {
-    if (!selectedFile || !filePreview) {
+    if (selectedFiles.length === 0 || filePreviews.length === 0) {
       toast({
-        title: "No image selected",
-        description: "Please upload an image first",
+        title: "No images selected",
+        description: "Please upload at least one image",
         variant: "destructive"
       });
       return;
@@ -112,18 +153,20 @@ export default function ImageUploader({
       setIsUploading(true);
       onUploadStart();
       
-      // Extract the base64 data from the data URL
-      const base64Data = filePreview.split(',')[1];
+      // Extract the base64 data from the data URLs
+      const base64Images = filePreviews.map(preview => preview.split(',')[1]);
       
       // Create the upload payload
       const uploadData = {
-        image: base64Data,
+        images: base64Images,
         prompt: values.prompt || undefined,
         model: values.model,
         size: values.size,
         count: values.count,
         quality: values.quality
       };
+      
+      console.log(`Uploading ${base64Images.length} images with model ${values.model}`);
       
       // Send the request
       const response = await apiRequest<{ images: GeneratedImage[] }>('/api/upload-image', {
@@ -134,20 +177,27 @@ export default function ImageUploader({
       
       if (response && response.images) {
         onUploadComplete(response.images);
+        // Clear the selected files after successful upload
+        clearSelectedFiles();
       } else {
-        throw new Error('No images received');
+        throw new Error('No images received from API');
       }
     } catch (error: any) {
       console.error('Upload error:', error);
-      onError(error.message || 'Failed to process the image');
+      onError(error.message || 'Failed to process the images');
     } finally {
       setIsUploading(false);
     }
   };
   
-  const clearSelectedFile = () => {
-    setSelectedFile(null);
-    setFilePreview(null);
+  const clearSelectedFiles = () => {
+    setSelectedFiles([]);
+    setFilePreviews([]);
+  };
+  
+  const removeImage = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    setFilePreviews(prev => prev.filter((_, i) => i !== index));
   };
   
   return (
@@ -160,30 +210,67 @@ export default function ImageUploader({
           className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors mb-6 ${
             isDragActive 
               ? 'border-primary bg-primary/5' 
-              : filePreview 
+              : filePreviews.length > 0 
                 ? 'border-green-500 bg-green-50' 
                 : 'border-gray-300 hover:border-primary'
           }`}
         >
           <input {...getInputProps()} />
           
-          {filePreview ? (
+          {filePreviews.length > 0 ? (
             <div className="space-y-4">
-              <img 
-                src={filePreview} 
-                alt="Image preview" 
-                className="max-h-64 mx-auto rounded-lg shadow-sm"
-              />
+              <div className="flex items-center justify-center mb-2">
+                <Badge variant="outline" className="text-sm">
+                  {selectedFiles.length} {selectedFiles.length === 1 ? 'image' : 'images'} selected
+                </Badge>
+                {selectedModel === 'gpt-image-1' && (
+                  <Badge variant="secondary" className="ml-2 text-xs">
+                    {16 - selectedFiles.length} more allowed
+                  </Badge>
+                )}
+              </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-64 overflow-y-auto p-2">
+                {filePreviews.map((preview, index) => (
+                  <div key={index} className="relative group">
+                    <img 
+                      src={preview} 
+                      alt={`Preview ${index + 1}`} 
+                      className="h-24 w-full object-cover rounded border border-gray-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeImage(index);
+                      }}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 
+                                shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <FaTimes size={12} />
+                    </button>
+                  </div>
+                ))}
+                {selectedModel === 'gpt-image-1' && selectedFiles.length < 16 && (
+                  <div 
+                    className="h-24 border-2 border-dashed border-gray-300 rounded flex items-center justify-center text-gray-400 cursor-pointer hover:border-primary hover:text-primary transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <FaImage className="w-8 h-8" />
+                  </div>
+                )}
+              </div>
+              
               <div className="flex justify-center gap-2">
                 <Button 
                   variant="outline" 
                   size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
-                    clearSelectedFile();
+                    clearSelectedFiles();
                   }}
                 >
-                  Change Image
+                  Clear All
                 </Button>
               </div>
             </div>
@@ -194,11 +281,20 @@ export default function ImageUploader({
                 <p className="font-medium">
                   {isDragActive 
                     ? "Drop your image here..." 
-                    : "Drag & drop your image here or click to browse"}
+                    : `Drag & drop your ${selectedModel === 'gpt-image-1' ? 'images' : 'image'} here or click to browse`}
                 </p>
                 <p className="text-sm text-gray-500 mt-1">
                   Supported formats: JPEG, PNG, WebP
                 </p>
+                {selectedModel === 'gpt-image-1' ? (
+                  <p className="text-xs text-primary mt-1">
+                    Upload up to 16 images for GPT-Image-1
+                  </p>
+                ) : (
+                  <p className="text-xs text-amber-600 mt-1">
+                    Only 1 image allowed for {selectedModel}
+                  </p>
+                )}
               </div>
             </div>
           )}
@@ -366,14 +462,14 @@ export default function ImageUploader({
             <div className="pt-4 flex justify-center">
               <Button 
                 type="submit" 
-                disabled={isUploading || !selectedFile}
+                disabled={isUploading || selectedFiles.length === 0}
                 className="px-6 py-3"
               >
                 {isUploading ? (
                   <LoadingState />
                 ) : (
                   <>
-                    <span>Process Image</span>
+                    <span>Process {selectedFiles.length === 1 ? 'Image' : 'Images'}</span>
                     <FaUpload className="ml-2" />
                   </>
                 )}
