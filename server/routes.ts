@@ -30,15 +30,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         prompt: prompt,
         n: numImages,
         size: size,
-        response_format: "b64_json", // Always request base64 encoded images to avoid CORS issues
       };
+      
+      // DALL-E models support response_format but GPT-Image-1 doesn't
+      if (model !== "gpt-image-1") {
+        requestParams.response_format = "b64_json";
+      }
       
       // Add model-specific parameters
       if (model === 'dall-e-3') {
         // DALL-E 3 specific parameters
         requestParams.quality = quality === 'hd' || quality === 'standard' ? quality : 'standard';
         if (style) requestParams.style = style;
-        // Don't override response_format since we're setting it to b64_json by default
+        if (output_format) requestParams.response_format = output_format;
       } else if (model === 'gpt-image-1') {
         // GPT-Image-1 specific parameters
         if (quality === 'high' || quality === 'medium' || quality === 'low') {
@@ -47,10 +51,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           requestParams.quality = 'auto';
         }
         if (background) requestParams.background = background;
+        // GPT-Image-1 doesn't support response_format
       } else {
         // DALL-E 2 specific parameters
         requestParams.quality = 'standard';
-        // Don't override response_format since we're setting it to b64_json by default
+        if (output_format) requestParams.response_format = output_format;
       }
       
       console.log("Sending image generation request with params:", JSON.stringify(requestParams));
