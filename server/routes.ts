@@ -166,7 +166,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Convert base64 strings to Buffers
-      const imageBuffers = images.map((img: string) => Buffer.from(img, 'base64'));
+      const imageBuffers = images.map((img: string) => {
+        try {
+          // Verify that we're getting actual base64 data and log its length
+          console.log(`Processing base64 image data (length: ${img.length} characters)`);
+          
+          // Create a buffer from the base64 string
+          const buffer = Buffer.from(img, 'base64');
+          console.log(`Successfully converted to Buffer (size: ${buffer.length} bytes)`);
+          
+          // Verify the buffer is valid by checking its length
+          if (buffer.length === 0) {
+            console.error('Warning: Empty buffer created from base64 string');
+          }
+          
+          return buffer;
+        } catch (error) {
+          console.error('Error converting base64 to buffer:', error);
+          throw new Error('Failed to process image data');
+        }
+      });
 
       console.log(`Processing ${imageBuffers.length} images with model ${model || "gpt-image-1"}`);
 
@@ -213,15 +232,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
               quality: quality || "auto",
             });
 
-            // Use the SDK to make the request with the first image buffer directly
-            response = await openai.images.edit({
+            // Check if we have a second image for mask
+            const requestParams: any = {
               model: 'gpt-image-1',
               prompt: prompt || "Edit this image",
-              image: imageBuffers[0], // Send buffer directly
+              image: imageBuffers[0], // First image is the main one
               n: 1,
               size: size as any || "1024x1024",
               quality: quality as any || "auto"
+            };
+            
+            // Add mask if we have a second image
+            if (imageBuffers.length > 1) {
+              console.log("Using second image as mask");
+              requestParams.mask = imageBuffers[1];
+            }
+            
+            // Log the full set of parameters
+            console.log("Full request parameters:", {
+              ...requestParams,
+              image: `<Buffer with ${imageBuffers[0].length} bytes>`,
+              mask: imageBuffers.length > 1 ? `<Buffer with ${imageBuffers[1].length} bytes>` : undefined
             });
+            
+            // Use the SDK to make the request with image buffer(s)
+            response = await openai.images.edit(requestParams);
 
             console.log("Successful API response received from OpenAI SDK");
           } catch (error) {
