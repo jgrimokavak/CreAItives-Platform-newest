@@ -1,10 +1,3 @@
-import fetch from "node-fetch";
-import FormData from "form-data";
-
-// Polyfill global fetch and FormData so OpenAI SDK sets proper image/png headers
-;(globalThis as any).fetch = fetch;
-;(globalThis as any).FormData = FormData;
-
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
