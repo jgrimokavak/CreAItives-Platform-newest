@@ -214,7 +214,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             .toBuffer();
           fs.writeFileSync(maskPath, maskBuffer);
           
-          console.log(`Created transparent mask of size ${width}x${height}`);
+          console.log(`Created transparent mask of size ${imgWidth}x${imgHeight}`);
           
           // Determine if we should do a style transfer or edit
           let response;
