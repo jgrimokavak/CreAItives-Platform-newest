@@ -18,19 +18,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      const { prompt, model, size, quality, count } = validationResult.data;
+      const { prompt, model, size, quality, count, style, background, output_format } = validationResult.data;
       
-      // Call OpenAI to generate images
+      // Call OpenAI to generate images based on the model
       // For DALL-E 3, only one image can be generated at a time
       const numImages = model === 'dall-e-3' ? 1 : parseInt(count);
       
-      const response = await openai.images.generate({
+      // Create the base request object
+      const requestParams: any = {
         model: model,
         prompt: prompt,
         n: numImages,
         size: size,
-        quality: quality,
-      });
+      };
+      
+      // Add model-specific parameters
+      if (model === 'dall-e-3') {
+        // DALL-E 3 specific parameters
+        requestParams.quality = quality === 'hd' || quality === 'standard' ? quality : 'standard';
+        if (style) requestParams.style = style;
+        if (output_format) requestParams.response_format = output_format;
+      } else if (model === 'gpt-image-1') {
+        // GPT-Image-1 specific parameters
+        if (quality === 'high' || quality === 'medium' || quality === 'low') {
+          requestParams.quality = quality;
+        } else {
+          requestParams.quality = 'auto';
+        }
+        if (background) requestParams.background = background;
+      } else {
+        // DALL-E 2 specific parameters
+        requestParams.quality = 'standard';
+        if (output_format) requestParams.response_format = output_format;
+      }
+      
+      const response = await openai.images.generate(requestParams);
       
       // Check if response has data
       if (!response.data || response.data.length === 0) {

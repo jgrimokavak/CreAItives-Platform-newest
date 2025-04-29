@@ -14,11 +14,13 @@ import { queryClient } from "@/lib/queryClient";
 import { GeneratedImage } from "@/types/image";
 
 const promptSchema = z.object({
-  prompt: z.string().min(1, "Prompt is required").max(1000),
-  model: z.enum(["dall-e-3", "dall-e-2"]),
-  size: z.enum(["1024x1024", "1024x1792", "1792x1024"]),
-  quality: z.enum(["standard", "hd"]),
-  count: z.enum(["1", "2", "3", "4"]),
+  prompt: z.string().min(1, "Prompt is required").max(32000),
+  model: z.enum(["gpt-image-1", "dall-e-3", "dall-e-2"]),
+  size: z.enum(["auto", "1024x1024", "1536x1024", "1024x1536", "1792x1024", "1024x1792"]),
+  quality: z.enum(["auto", "standard", "hd", "high", "medium", "low"]),
+  style: z.enum(["vivid", "natural"]).optional(),
+  count: z.enum(["1", "2", "3", "4", "5"]),
+  background: z.enum(["auto", "transparent", "opaque"]).optional(),
 });
 
 type PromptFormValues = z.infer<typeof promptSchema>;
@@ -41,14 +43,16 @@ export default function PromptForm({
     resolver: zodResolver(promptSchema),
     defaultValues: {
       prompt: "",
-      model: "dall-e-3",
+      model: "gpt-image-1",
       size: "1024x1024",
-      quality: "standard",
+      quality: "auto",
+      style: "vivid",
       count: "1",
+      background: "auto",
     },
   });
   
-  // DALL-E 3 only supports generating 1 image at a time
+  // Watch for model changes to show appropriate options
   const selectedModel = form.watch("model");
 
   const generateMutation = useMutation({
@@ -124,6 +128,7 @@ export default function PromptForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
+                      <SelectItem value="gpt-image-1">GPT Image Model (Newest)</SelectItem>
                       <SelectItem value="dall-e-3">DALL-E 3</SelectItem>
                       <SelectItem value="dall-e-2">DALL-E 2</SelectItem>
                     </SelectContent>
@@ -148,9 +153,28 @@ export default function PromptForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="1024x1024">1024 × 1024</SelectItem>
-                      <SelectItem value="1024x1792">1024 × 1792</SelectItem>
-                      <SelectItem value="1792x1024">1792 × 1024</SelectItem>
+                      {selectedModel === "gpt-image-1" && (
+                        <>
+                          <SelectItem value="auto">Auto</SelectItem>
+                          <SelectItem value="1024x1024">1024 × 1024</SelectItem>
+                          <SelectItem value="1536x1024">1536 × 1024 (Landscape)</SelectItem>
+                          <SelectItem value="1024x1536">1024 × 1536 (Portrait)</SelectItem>
+                        </>
+                      )}
+                      {selectedModel === "dall-e-3" && (
+                        <>
+                          <SelectItem value="1024x1024">1024 × 1024</SelectItem>
+                          <SelectItem value="1792x1024">1792 × 1024 (Landscape)</SelectItem>
+                          <SelectItem value="1024x1792">1024 × 1792 (Portrait)</SelectItem>
+                        </>
+                      )}
+                      {selectedModel === "dall-e-2" && (
+                        <>
+                          <SelectItem value="1024x1024">1024 × 1024</SelectItem>
+                          <SelectItem value="512x512">512 × 512</SelectItem>
+                          <SelectItem value="256x256">256 × 256</SelectItem>
+                        </>
+                      )}
                     </SelectContent>
                   </Select>
                 </FormItem>
@@ -175,8 +199,23 @@ export default function PromptForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="standard">Standard</SelectItem>
-                      <SelectItem value="hd">HD</SelectItem>
+                      {selectedModel === "gpt-image-1" && (
+                        <>
+                          <SelectItem value="auto">Auto</SelectItem>
+                          <SelectItem value="high">High</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="low">Low</SelectItem>
+                        </>
+                      )}
+                      {selectedModel === "dall-e-3" && (
+                        <>
+                          <SelectItem value="standard">Standard</SelectItem>
+                          <SelectItem value="hd">HD</SelectItem>
+                        </>
+                      )}
+                      {selectedModel === "dall-e-2" && (
+                        <SelectItem value="standard">Standard</SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
                 </FormItem>

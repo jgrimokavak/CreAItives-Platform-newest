@@ -19,11 +19,14 @@ export type User = typeof users.$inferSelect;
 
 // Image generation schema
 export const generateImageSchema = z.object({
-  prompt: z.string().min(1).max(1000),
-  model: z.enum(["dall-e-3", "dall-e-2"]),
-  size: z.enum(["1024x1024", "1024x1792", "1792x1024"]),
-  quality: z.enum(["standard", "hd"]),
-  count: z.enum(["1", "2", "3", "4"]),
+  prompt: z.string().min(1).max(32000),
+  model: z.enum(["gpt-image-1", "dall-e-3", "dall-e-2"]),
+  size: z.enum(["auto", "1024x1024", "1536x1024", "1024x1536", "1792x1024", "1024x1792"]),
+  quality: z.enum(["auto", "standard", "hd", "high", "medium", "low"]),
+  style: z.enum(["vivid", "natural"]).optional(),
+  count: z.enum(["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]),
+  output_format: z.enum(["url", "b64_json"]).optional(),
+  background: z.enum(["auto", "transparent", "opaque"]).optional(),
 });
 
 export type GenerateImageInput = z.infer<typeof generateImageSchema>;
