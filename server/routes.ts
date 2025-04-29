@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { openai } from "./openai";
+import type { Uploadable } from "openai/uploads";
 import { z } from "zod";
 import { generateImageSchema } from "@shared/schema";
 import FormData from 'form-data';
@@ -166,7 +167,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Validate we have proper base64 strings
-      if (images.some(img => typeof img !== 'string')) {
+      if (images.some((img: any) => typeof img !== 'string')) {
         console.error('Error: Image data is not in string format');
         return res.status(400).json({ message: "Invalid image format" });
       }
@@ -245,7 +246,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`Using OpenAI SDK with model ${useModel} for image edit`);
 
           response = await openai.images.edit({
-            image: imageBuffers[0],
+            image: imageBuffers[0] as unknown as Uploadable,
             prompt: prompt || "Edit this image",
             model: useModel,
             n: parseInt(count || "1", 10),
@@ -261,22 +262,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
             // We'll use the OpenAI SDK's proper image edit method for better compatibility
             console.log('==== REQUEST ====');
-            console.log('Using OpenAI SDK images.edit');
-            console.log('Request parameters:');
-            console.log({
-              model: 'gpt-image-1',
-              prompt: prompt || "Edit this image",
-              image: "Buffer (first image)",
-              n: 1,
-              size: size || "1024x1024",
-              quality: quality || "auto",
-            });
 
             // Check if we have a second image for mask
             const requestParams: any = {
               model: 'gpt-image-1',
               prompt: prompt || "Edit this image",
-              image: imageBuffers[0], // First image is the main one
+              image: imageBuffers[0] as unknown as Uploadable, // First image is the main one, cast to Uploadable
               n: 1,
               size: size as any || "1024x1024",
               quality: quality as any || "auto"
@@ -285,7 +276,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Add mask if we have a second image
             if (imageBuffers.length > 1) {
               console.log("Using second image as mask");
-              requestParams.mask = imageBuffers[1];
+              requestParams.mask = imageBuffers[1] as unknown as Uploadable;
             }
             
             // Log the full set of parameters
