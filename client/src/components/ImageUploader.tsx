@@ -127,14 +127,14 @@ export default function ImageUploader({
       };
       
       // Send the request
-      const response = await apiRequest('/api/upload-image', {
+      const response = await apiRequest<{ images: GeneratedImage[] }>('/api/upload-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(uploadData)
       });
       
       if (response && response.images) {
-        onUploadComplete(response.images as GeneratedImage[]);
+        onUploadComplete(response.images);
       } else {
         throw new Error('No images received');
       }
