@@ -8,6 +8,8 @@ import { generateImageSchema } from "@shared/schema";
 import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
+import fetch from 'node-fetch';
+import FormData from 'form-data';
 // Use Node's path module to get the directory name
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
@@ -213,17 +215,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
           let response;
           
           if (model === "gpt-image-1") {
-            // Call the edit endpoint with both streams (no response_format override)
-            console.log("Calling GPT-Image-1 edit endpoint with mask");
-            response = await openai.images.edit({
-              image: fs.createReadStream(mainImagePath),
-              mask: fs.createReadStream(maskPath),
-              model: 'gpt-image-1',
-              prompt: prompt || "Transform this image",
-              n: 1,
-              size: size || "1024x1024",
-              quality: quality || "auto"
+            // Use direct FormData + fetch approach for GPT-Image-1 to ensure proper MIME types
+            console.log("Using FormData + node-fetch for GPT-Image-1 to ensure proper MIME types");
+            
+            const form = new FormData();
+            form.append('image', fs.createReadStream(mainImagePath), { filename: 'main.png', contentType: 'image/png' });
+            form.append('mask', fs.createReadStream(maskPath), { filename: 'mask.png', contentType: 'image/png' });
+            form.append('model', 'gpt-image-1');
+            form.append('prompt', prompt || "Transform this image");
+            form.append('n', '1');
+            form.append('size', size || "1024x1024");
+            form.append('quality', quality || "auto");
+            
+            console.log("Sending direct fetch request to OpenAI API");
+            const resp = await fetch('https://api.openai.com/v1/images/edits', {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+              body: form
             });
+            
+            if (!resp.ok) {
+              const errorJson = await resp.json();
+              console.error("OpenAI API error:", JSON.stringify(errorJson, null, 2));
+              throw new Error(`OpenAI API error: ${errorJson.error?.message || resp.statusText}`);
+            }
+            
+            const json = await resp.json();
+            console.log("Direct API response:", JSON.stringify(json, null, 2));
+            response = json;
           } else if (model === "dall-e-3") {
             // For DALL-E 3, use generate instead since it doesn't support edits
             console.log("Using DALL-E 3 generate endpoint for style transfer");
