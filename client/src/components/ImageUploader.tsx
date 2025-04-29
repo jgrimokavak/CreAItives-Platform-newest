@@ -397,7 +397,7 @@ export default function ImageUploader({
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
-                      disabled={selectedModel === "dall-e-3"}
+                      disabled={selectedModel === "dall-e-3" || selectedModel === "gpt-image-1"}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -414,6 +414,11 @@ export default function ImageUploader({
                     {selectedModel === "dall-e-3" && (
                       <p className="text-xs text-amber-600 mt-1">
                         DALL-E 3 only supports 1 image at a time
+                      </p>
+                    )}
+                    {selectedModel === "gpt-image-1" && (
+                      <p className="text-xs text-amber-600 mt-1">
+                        GPT-Image-1 image edits only support 1 output image
                       </p>
                     )}
                   </FormItem>

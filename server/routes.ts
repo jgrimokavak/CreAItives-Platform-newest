@@ -165,44 +165,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         } else if (model === "gpt-image-1") {
           // Multiple images case - Only for GPT-Image-1 
-          // Based on examining OpenAI JS SDK, we need to use Fetch API directly
-          console.log("Using custom fetch implementation for multiple images");
+          // Following documentation at https://platform.openai.com/docs/api-reference/images
+          console.log("Using Node.js fetch API for GPT-Image-1 image edits");
           
-          // Create form data
-          const formData = new FormData();
-          formData.append('model', 'gpt-image-1');
-          formData.append('prompt', prompt || "Edit these images");
-          formData.append('n', count || "1");
-          formData.append('size', size || "1024x1024");
-          formData.append('quality', quality || "auto");
+          const form = new FormData();
+          form.append('model', 'gpt-image-1');
+          form.append('prompt', prompt || "Edit these images");
           
-          // OpenAI API expects the first image separately and the rest in an array
-          const mainImage = imageBuffers[0];
-          const additionalImages = imageBuffers.slice(1);
+          // Important: OpenAI requires n=1 for image edits with GPT-Image-1
+          form.append('n', '1');
           
-          // Add main image
-          formData.append('image', new Blob([mainImage]), 'image.png');
+          form.append('size', size || "1024x1024");
+          form.append('quality', quality || "auto");
           
-          // Add additional images
-          additionalImages.forEach((img, i) => {
-            formData.append('additional_images', new Blob([img]), `image_${i+1}.png`);
-          });
-          
-          // Direct fetch to OpenAI API
-          const fetchResponse = await fetch('https://api.openai.com/v1/images/edits', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
-            },
-            body: formData
-          });
-          
-          if (!fetchResponse.ok) {
-            const errorText = await fetchResponse.text();
-            throw new Error(`OpenAI API error: ${fetchResponse.status} - ${errorText}`);
+          // Add all images to the form data using the image[] format
+          // This is documented in the curl example in the OpenAI API docs
+          for (let i = 0; i < imageBuffers.length; i++) {
+            // Create a blob for each image
+            const blob = new Blob([imageBuffers[i]], { type: 'image/png' });
+            
+            // Use the image[] format as shown in the documentation
+            form.append('image[]', blob, `image_${i}.png`);
+            
+            console.log(`Added image ${i} to form data`);
           }
           
-          response = await fetchResponse.json();
+          // Log detailed information
+          console.log(`Making request to OpenAI with ${imageBuffers.length} images`);
+          console.log(`Model: ${model}, Size: ${size}, Quality: ${quality}`);
+          
+          try {
+            // Make the direct API call using fetch
+            const apiResponse = await fetch('https://api.openai.com/v1/images/edits', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+              },
+              body: form
+            });
+            
+            // Check for errors in the response
+            if (!apiResponse.ok) {
+              const errorText = await apiResponse.text();
+              console.error(`OpenAI API error: ${apiResponse.status}`, errorText);
+              throw new Error(`OpenAI API error: ${apiResponse.status} - ${errorText}`);
+            }
+            
+            // Parse the response
+            response = await apiResponse.json();
+            console.log("Successful API response received");
+          } catch (fetchError) {
+            console.error("Fetch API error:", fetchError);
+            throw fetchError;
+          }
         }
         
         console.log("API response received");
