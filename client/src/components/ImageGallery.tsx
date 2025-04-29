@@ -17,21 +17,37 @@ export default function ImageGallery({ images, onClearResults }: ImageGalleryPro
 
   const handleDownload = async (image: GeneratedImage) => {
     try {
-      const response = await fetch(image.url);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      let url;
+      
+      // If the URL is a data URL (base64), use it directly
+      if (image.url.startsWith('data:')) {
+        url = image.url;
+      } else {
+        // Otherwise, fetch the image from the URL
+        const response = await fetch(image.url);
+        const blob = await response.blob();
+        url = window.URL.createObjectURL(blob);
+      }
+      
+      // Create a download link
       const a = document.createElement("a");
       a.style.display = "none";
       a.href = url;
       a.download = `image-${Date.now()}.png`;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
+      
+      // Clean up the URL only if it was created from a blob
+      if (!image.url.startsWith('data:')) {
+        window.URL.revokeObjectURL(url);
+      }
+      
       toast({
         title: "Image downloaded",
         description: "Image has been downloaded successfully",
       });
     } catch (error) {
+      console.error("Download error:", error);
       toast({
         title: "Download failed",
         description: "Failed to download the image",

@@ -30,6 +30,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         prompt: prompt,
         n: numImages,
         size: size,
+        response_format: "b64_json", // Always request base64 encoded images to avoid CORS issues
       };
       
       // Add model-specific parameters
@@ -37,7 +38,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // DALL-E 3 specific parameters
         requestParams.quality = quality === 'hd' || quality === 'standard' ? quality : 'standard';
         if (style) requestParams.style = style;
-        if (output_format) requestParams.response_format = output_format;
+        // Don't override response_format since we're setting it to b64_json by default
       } else if (model === 'gpt-image-1') {
         // GPT-Image-1 specific parameters
         if (quality === 'high' || quality === 'medium' || quality === 'low') {
@@ -49,10 +50,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         // DALL-E 2 specific parameters
         requestParams.quality = 'standard';
-        if (output_format) requestParams.response_format = output_format;
+        // Don't override response_format since we're setting it to b64_json by default
       }
       
+      console.log("Sending image generation request with params:", JSON.stringify(requestParams));
       const response = await openai.images.generate(requestParams);
+      console.log("OpenAI API response:", JSON.stringify(response, null, 2));
       
       // Check if response has data
       if (!response.data || response.data.length === 0) {
@@ -70,9 +73,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           })
         );
         
+        // Check if we have a valid URL or base64 image data
+        let imageUrl = "";
+        if (image.url) {
+          imageUrl = image.url;
+          console.log("Using direct URL from OpenAI:", imageUrl.substring(0, 50) + "...");
+        } else if (image.b64_json) {
+          imageUrl = `data:image/png;base64,${image.b64_json}`;
+          console.log("Using base64 image data from OpenAI");
+        } else {
+          console.warn("No image URL or base64 data found in OpenAI response");
+        }
+
         const newImage = {
           id: `img_${Date.now()}_${index}`,
-          url: image.url || "",
+          url: imageUrl,
           prompt: prompt,
           size: size,
           model: model,
