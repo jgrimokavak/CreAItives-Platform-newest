@@ -135,111 +135,109 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No images provided" });
       }
       
-      // Prepare parameters for the API call
-      const requestParams: any = {
-        model: model || "gpt-image-1",
-        n: parseInt(count || "1", 10),
-        size: size || "1024x1024",
-      };
-      
-      // The prompt is required for image edits
-      requestParams.prompt = prompt || "Edit this image";
-      
-      // Add model-specific parameters
-      if (model === "gpt-image-1") {
-        // GPT-Image-1 specific parameters
-        if (quality) {
-          requestParams.quality = quality === "auto" ? "auto" : quality;
-        }
-        // GPT-Image-1 doesn't support response_format
-      } else if (model === "dall-e-2") {
-        // DALL-E 2 specific parameters
-        requestParams.response_format = "b64_json";
-      } else {
-        // DALL-E 3 doesn't support image edits API, default to DALL-E 2
-        requestParams.model = "dall-e-2";
-        requestParams.response_format = "b64_json";
-        console.log("Defaulting to dall-e-2 as dall-e-3 doesn't support image edits");
-      }
-      
-      console.log("Sending image edit request with params:", JSON.stringify(requestParams));
-      
       // Convert base64 strings to Buffers
       const imageBuffers = images.map((img: string) => Buffer.from(img, 'base64'));
       
-      console.log(`Processing ${imageBuffers.length} images with model ${model}`);
+      console.log(`Processing ${imageBuffers.length} images with model ${model || "gpt-image-1"}`);
       
+      // Handle multiple images only for GPT-Image-1
       let response;
       
       try {
+        // Looking at the OpenAI Node.js SDK version 4.x
+        // For multiple images in gpt-image-1 we need a completely different approach
+        
         if (imageBuffers.length === 1 || model !== "gpt-image-1") {
-          // Single image case
+          // Single image case - supported by all models
+          console.log("Using single image edit API");
+          
+          // For DALL-E 3, switch to DALL-E 2 as DALL-E 3 doesn't support image edits
+          const useModel = model === "dall-e-3" ? "dall-e-2" : (model || "gpt-image-1");
+          
           response = await openai.images.edit({
             image: imageBuffers[0],
-            prompt: requestParams.prompt,
-            model: requestParams.model,
-            n: requestParams.n,
-            size: requestParams.size,
-            quality: requestParams.quality,
-            ...(model !== "gpt-image-1" ? { response_format: "b64_json" } : {})
+            prompt: prompt || "Edit this image",
+            model: useModel,
+            n: parseInt(count || "1", 10),
+            size: size || "1024x1024",
+            quality: quality || "auto",
+            ...(useModel !== "gpt-image-1" ? { response_format: "b64_json" } : {})
           });
-          console.log("Using single image edit API");
-        } else {
-          // Multiple images case - only for GPT-Image-1
-          // Use direct SDK method with appropriate type casting
-          // Prepare first image and additional images according to examples
-          console.log("Using multiple images with the OpenAI SDK");
+        } else if (model === "gpt-image-1") {
+          // Multiple images case - Only for GPT-Image-1 
+          // Based on examining OpenAI JS SDK, we need to use Fetch API directly
+          console.log("Using custom fetch implementation for multiple images");
           
-          // Create an array of additional images (after the first one)
+          // Create form data
+          const formData = new FormData();
+          formData.append('model', 'gpt-image-1');
+          formData.append('prompt', prompt || "Edit these images");
+          formData.append('n', count || "1");
+          formData.append('size', size || "1024x1024");
+          formData.append('quality', quality || "auto");
+          
+          // OpenAI API expects the first image separately and the rest in an array
+          const mainImage = imageBuffers[0];
           const additionalImages = imageBuffers.slice(1);
           
-          // Make the API call with the OpenAI SDK
-          response = await openai.images.edit({
-            image: imageBuffers[0], // First image
-            // @ts-ignore - The TypeScript definition might not support this, but we're following the examples
-            additionalImages: additionalImages, // Additional images
-            prompt: requestParams.prompt,
-            model: requestParams.model,
-            n: requestParams.n,
-            size: requestParams.size,
-            quality: requestParams.quality
-          } as any);
+          // Add main image
+          formData.append('image', new Blob([mainImage]), 'image.png');
+          
+          // Add additional images
+          additionalImages.forEach((img, i) => {
+            formData.append('additional_images', new Blob([img]), `image_${i+1}.png`);
+          });
+          
+          // Direct fetch to OpenAI API
+          const fetchResponse = await fetch('https://api.openai.com/v1/images/edits', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+            },
+            body: formData
+          });
+          
+          if (!fetchResponse.ok) {
+            const errorText = await fetchResponse.text();
+            throw new Error(`OpenAI API error: ${fetchResponse.status} - ${errorText}`);
+          }
+          
+          response = await fetchResponse.json();
         }
         
         console.log("API response received");
-      } catch (apiError) {
+      } catch (apiError: any) {
         console.error("OpenAI API error details:", apiError);
-        throw apiError;
+        throw new Error(`OpenAI API error: ${apiError.message || "Unknown error"}`);
       }
       
       console.log("OpenAI API response:", JSON.stringify(response, null, 2));
       
       // Check if response has data
-      if (!response.data || response.data.length === 0) {
+      if (!response || !response.data || response.data.length === 0) {
         throw new Error("No images were generated");
       }
       
       // Process and store the response
-      const generatedImages = response.data.map((image, index) => {
-        // Log image data for debugging
-        console.log(`Image ${index} response data:`, 
-          JSON.stringify({
-            url: image.url ? "url exists" : "no url",
-            revised_prompt: image.revised_prompt ? "revised_prompt exists" : "no revised_prompt",
-            b64_json: image.b64_json ? "b64_json exists" : "no b64_json"
-          })
-        );
+      const generatedImages = response.data.map((image: any, index: number) => {
+        const imageData = {
+          url: image.url || null,
+          b64_json: image.b64_json || null,
+          revised_prompt: image.revised_prompt || null
+        };
+        
+        console.log(`Image ${index} data types:`, Object.keys(imageData).map(k => `${k}: ${imageData[k] ? 'present' : 'missing'}`).join(', '));
         
         // Check if we have a valid URL or base64 image data
         let imageUrl = "";
-        if (image.url) {
-          imageUrl = image.url;
-          console.log("Using direct URL from OpenAI:", imageUrl.substring(0, 50) + "...");
-        } else if (image.b64_json) {
-          imageUrl = `data:image/png;base64,${image.b64_json}`;
-          console.log("Using base64 image data from OpenAI");
+        if (imageData.url) {
+          imageUrl = imageData.url;
+          console.log("Using URL from OpenAI");
+        } else if (imageData.b64_json) {
+          imageUrl = `data:image/png;base64,${imageData.b64_json}`;
+          console.log("Using base64 data from OpenAI");
         } else {
-          console.warn("No image URL or base64 data found in OpenAI response");
+          console.warn("No image URL or base64 data found in response");
         }
 
         const newImage = {

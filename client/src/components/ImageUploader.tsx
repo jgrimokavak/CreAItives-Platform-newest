@@ -159,14 +159,15 @@ export default function ImageUploader({
       // Create the upload payload
       const uploadData = {
         images: base64Images,
-        prompt: values.prompt || undefined,
+        prompt: values.prompt || "Edit this image",
         model: values.model,
         size: values.size,
         count: values.count,
         quality: values.quality
       };
       
-      console.log(`Uploading ${base64Images.length} images with model ${values.model}`);
+      // Log upload details
+      console.log(`Sending ${base64Images.length} image(s) to server with model ${values.model}`);
       
       // Send the request
       const response = await apiRequest<{ images: GeneratedImage[] }>('/api/upload-image', {
