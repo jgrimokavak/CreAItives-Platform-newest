@@ -60,7 +60,8 @@ export default function ImageUploader({
   const onDrop = useCallback((acceptedFiles: File[]) => {
     // Check if trying to add more than 16 images for GPT-Image-1 or more than 1 for DALL-E-2/3
     const model = form.getValues('model');
-    const maxFiles = model === 'gpt-image-1' ? 16 : 1;
+    // Limit to 1 image for all models for better compatibility with OpenAI's API
+    const maxFiles = 1;
     
     if (selectedFiles.length >= maxFiles) {
       toast({
@@ -112,7 +113,8 @@ export default function ImageUploader({
   
   // Update maxFiles based on model selection
   React.useEffect(() => {
-    const maxFiles = selectedModel === 'gpt-image-1' ? 16 : 1;
+    // Limit to 1 image for all models for better compatibility with OpenAI's API
+    const maxFiles = 1;
     
     // If model changed and we have too many files, keep only the allowed number
     if (selectedFiles.length > maxFiles) {
@@ -134,9 +136,9 @@ export default function ImageUploader({
       'image/png': [],
       'image/webp': []
     },
-    // Allow multiple files for gpt-image-1, just one for others
-    multiple: selectedModel === 'gpt-image-1',
-    maxFiles: selectedModel === 'gpt-image-1' ? 16 : 1
+    // Only allow one file for all models for better compatibility
+    multiple: false,
+    maxFiles: 1
   });
   
   const handleSubmit = async (values: FileUploadValues) => {
@@ -224,11 +226,6 @@ export default function ImageUploader({
                 <Badge variant="outline" className="text-sm">
                   {selectedFiles.length} {selectedFiles.length === 1 ? 'image' : 'images'} selected
                 </Badge>
-                {selectedModel === 'gpt-image-1' && (
-                  <Badge variant="secondary" className="ml-2 text-xs">
-                    {16 - selectedFiles.length} more allowed
-                  </Badge>
-                )}
               </div>
               
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-64 overflow-y-auto p-2">
@@ -252,14 +249,7 @@ export default function ImageUploader({
                     </button>
                   </div>
                 ))}
-                {selectedModel === 'gpt-image-1' && selectedFiles.length < 16 && (
-                  <div 
-                    className="h-24 border-2 border-dashed border-gray-300 rounded flex items-center justify-center text-gray-400 cursor-pointer hover:border-primary hover:text-primary transition-colors"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <FaImage className="w-8 h-8" />
-                  </div>
-                )}
+
               </div>
               
               <div className="flex justify-center gap-2">
@@ -282,20 +272,14 @@ export default function ImageUploader({
                 <p className="font-medium">
                   {isDragActive 
                     ? "Drop your image here..." 
-                    : `Drag & drop your ${selectedModel === 'gpt-image-1' ? 'images' : 'image'} here or click to browse`}
+                    : "Drag & drop your image here or click to browse"}
                 </p>
                 <p className="text-sm text-gray-500 mt-1">
                   Supported formats: JPEG, PNG, WebP
                 </p>
-                {selectedModel === 'gpt-image-1' ? (
-                  <p className="text-xs text-primary mt-1">
-                    Upload up to 16 images for GPT-Image-1
-                  </p>
-                ) : (
-                  <p className="text-xs text-amber-600 mt-1">
-                    Only 1 image allowed for {selectedModel}
-                  </p>
-                )}
+                <p className="text-xs text-amber-600 mt-1">
+                  Only 1 image allowed for all models
+                </p>
               </div>
             </div>
           )}

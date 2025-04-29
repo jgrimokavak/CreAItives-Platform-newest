@@ -214,7 +214,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           revised_prompt: image.revised_prompt || null
         };
         
-        console.log(`Image ${index} data types:`, Object.keys(imageData).map(k => `${k}: ${imageData[k] ? 'present' : 'missing'}`).join(', '));
+        console.log(`Image ${index} data:`, 
+          `url: ${imageData.url ? 'present' : 'missing'}, ` +
+          `b64_json: ${imageData.b64_json ? 'present' : 'missing'}, ` +
+          `revised_prompt: ${imageData.revised_prompt ? 'present' : 'missing'}`
+        );
         
         // Check if we have a valid URL or base64 image data
         let imageUrl = "";
