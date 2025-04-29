@@ -185,15 +185,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ...(useModel !== "gpt-image-1" ? { response_format: "b64_json" } : {})
           });
         } else if (model === "gpt-image-1") {
-          console.log("Using direct JSON API for GPT-Image-1 image edits");
+          console.log("Using OpenAI SDK for GPT-Image-1 image edits");
           
-          // For GPT-Image-1, we send base64-encoded images directly in the JSON request
-          // Convert image buffers to base64 strings
-          const base64Images = imageBuffers.map((buffer: Buffer) => buffer.toString('base64'));
-          console.log(`Converted ${base64Images.length} images to base64 for GPT-Image-1 request`);
-          
-          // We need to use the official OpenAI SDK for image edits instead of direct fetch
-          // The /image/edits endpoint requires multipart/form-data which is hard to get right with fetch
           try {
             console.log(`Using OpenAI SDK to edit ${imageBuffers.length} images`);
             
@@ -210,7 +203,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               quality: quality || "auto",
             });
             
-            // Use the SDK to make the request
+            // Use the SDK to make the request with the first image buffer
             response = await openai.images.edit({
               model: 'gpt-image-1',
               prompt: prompt || "Edit this image",
@@ -221,9 +214,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             });
             
             console.log("Successful API response received from OpenAI SDK");
-          } catch (fetchError) {
-            console.error("Fetch API error:", fetchError);
-            throw fetchError;
+          } catch (error) {
+            console.error("OpenAI SDK error:", error);
+            throw error;
           }
         }
         
