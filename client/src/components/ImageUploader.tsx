@@ -68,14 +68,13 @@ export default function ImageUploader({
         return;
       }
       
-      // Limit file size to 4MB
-      if (file.size > 4 * 1024 * 1024) {
+      // No size limit anymore, but still notify user about very large files
+      if (file.size > 20 * 1024 * 1024) {
         toast({
-          title: "File too large",
-          description: "Please upload an image smaller than 4MB",
-          variant: "destructive"
+          title: "Large file detected",
+          description: "Very large images (>20MB) may take longer to process",
+          variant: "default"
         });
-        return;
       }
       
       setSelectedFile(file);
@@ -198,7 +197,7 @@ export default function ImageUploader({
                     : "Drag & drop your image here or click to browse"}
                 </p>
                 <p className="text-sm text-gray-500 mt-1">
-                  Supported formats: JPEG, PNG, WebP (max 4MB)
+                  Supported formats: JPEG, PNG, WebP
                 </p>
               </div>
             </div>
