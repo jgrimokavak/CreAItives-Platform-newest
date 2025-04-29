@@ -1,3 +1,10 @@
+import fetch from "node-fetch";
+import FormData from "form-data";
+
+// Polyfill global fetch and FormData so OpenAI SDK sets proper image/png headers
+;(globalThis as any).fetch = fetch;
+;(globalThis as any).FormData = FormData;
+
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
@@ -5,17 +12,11 @@ import { openai } from "./openai";
 import type { Uploadable } from "openai/uploads";
 import { z } from "zod";
 import { generateImageSchema } from "@shared/schema";
-import FormData from 'form-data';
 import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
-import { Readable } from 'stream';
-import fetch from 'node-fetch';
-import { fileURLToPath } from 'url';
-
-// Get current file directory (ES Modules compatible)
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Use Node's path module to get the directory name
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
 // Define the OpenAI API response structure
 interface OpenAIImageResponse {
@@ -194,13 +195,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`Saved main image to temporary PNG file: ${mainImagePath}`);
           
           // Read dimensions and build a fully-transparent mask of the same size
-          const { width, height } = await sharp(imgBuffer).metadata();
-          const maskBuffer = await sharp({
-            create: {
-              width,
-              height,
-              channels: 4,
-              background: { r: 0, g: 0, b: 0, alpha: 0 }
+          const metadata = await sharp(imgBuffer).metadata();
+          const imgWidth = metadata.width || 1024;
+          const imgHeight = metadata.height || 1024;
+          
+          console.log(`Image dimensions: ${imgWidth}x${imgHeight}`);
+          
+          // Create a transparent PNG buffer
+          const transparentPixels = Buffer.alloc(imgWidth * imgHeight * 4, 0);
+          const maskBuffer = await sharp(transparentPixels, {
+            raw: {
+              width: imgWidth,
+              height: imgHeight,
+              channels: 4
             }
           })
             .png()
@@ -252,6 +259,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log("API response received:", JSON.stringify(response, null, 2));
           
           // Process and store the response
+          if (!response || !response.data || !Array.isArray(response.data) || response.data.length === 0) {
+            console.warn("Invalid or empty response from OpenAI");
+            return res.status(500).json({ message: "No valid images were generated" });
+          }
+          
           const generatedImages = response.data.map((image: any, index: number) => {
             const imageUrl = image.url || (image.b64_json ? `data:image/png;base64,${image.b64_json}` : null);
             
