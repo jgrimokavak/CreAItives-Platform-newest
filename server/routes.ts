@@ -165,27 +165,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No images provided" });
       }
 
-      // Convert base64 strings to Buffers
-      const imageBuffers = images.map((img: string) => {
-        try {
-          // Verify that we're getting actual base64 data and log its length
-          console.log(`Processing base64 image data (length: ${img.length} characters)`);
+      // Validate we have proper base64 strings
+      if (images.some(img => typeof img !== 'string')) {
+        console.error('Error: Image data is not in string format');
+        return res.status(400).json({ message: "Invalid image format" });
+      }
+      
+      // Convert base64 strings to Buffers with validation
+      let imageBuffers: Buffer[];
+      try {
+        imageBuffers = images.map((img: string, index: number) => {
+          // Check for base64 validity
+          console.log(`Image ${index}: Processing base64 data (length: ${img.length} characters)`);
           
-          // Create a buffer from the base64 string
-          const buffer = Buffer.from(img, 'base64');
-          console.log(`Successfully converted to Buffer (size: ${buffer.length} bytes)`);
-          
-          // Verify the buffer is valid by checking its length
-          if (buffer.length === 0) {
-            console.error('Warning: Empty buffer created from base64 string');
+          if (!img || img.length === 0) {
+            console.error(`Image ${index}: Empty base64 string`);
+            throw new Error('Empty image data received');
           }
           
-          return buffer;
-        } catch (error) {
-          console.error('Error converting base64 to buffer:', error);
-          throw new Error('Failed to process image data');
-        }
-      });
+          // Log beginning of the base64 string to verify format
+          console.log(`Image ${index}: Base64 preview: ${img.substring(0, 20)}...`);
+          
+          // Create buffer from base64
+          try {
+            const buffer = Buffer.from(img, 'base64');
+            
+            // Verify buffer has content
+            if (buffer.length === 0) {
+              console.error(`Image ${index}: Empty buffer created from base64 string`);
+              throw new Error('Empty buffer created');
+            }
+            
+            // Check for very small buffers which might indicate data problems
+            if (buffer.length < 1000) {
+              console.warn(`Image ${index}: Very small buffer (${buffer.length} bytes) - may not be a valid image`);
+            }
+            
+            console.log(`Image ${index}: Successfully converted to buffer (size: ${buffer.length} bytes)`);
+            
+            // Verify it starts with image file signature bytes for basic validation
+            // This is a simple check and not foolproof
+            const isJPEG = buffer.length > 2 && buffer[0] === 0xFF && buffer[1] === 0xD8;
+            const isPNG = buffer.length > 8 && buffer.slice(0, 8).toString('hex') === '89504e470d0a1a0a';
+            
+            if (isJPEG) {
+              console.log(`Image ${index}: Detected as JPEG format`);
+            } else if (isPNG) {
+              console.log(`Image ${index}: Detected as PNG format`);
+            } else {
+              console.warn(`Image ${index}: Unknown image format - proceeding anyway`);
+            }
+            
+            return buffer;
+          } catch (error) {
+            console.error(`Image ${index}: Error converting base64 to buffer:`, error);
+            throw new Error('Failed to convert image data to buffer');
+          }
+        });
+      } catch (error: any) {
+        console.error('Image processing error:', error.message);
+        return res.status(400).json({ message: error.message || "Failed to process image data" });
+      }
 
       console.log(`Processing ${imageBuffers.length} images with model ${model || "gpt-image-1"}`);
 

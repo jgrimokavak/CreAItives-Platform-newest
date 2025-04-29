@@ -156,9 +156,43 @@ export default function ImageUploader({
       setIsUploading(true);
       onUploadStart();
       
-      // Extract the base64 data from the data URLs
-      const base64Images = filePreviews.map(preview => preview.split(',')[1]);
-      console.log(`Prepared ${base64Images.length} images for upload`);
+      // Extract the base64 data from the data URLs with validation
+      const base64Images = filePreviews.map(preview => {
+        // Verify data URL format and extract base64 portion
+        const parts = preview.split(',');
+        if (parts.length !== 2 || !parts[0].includes('base64')) {
+          console.error('Invalid data URL format:', preview.substring(0, 50) + '...');
+          toast({
+            title: "Image processing error",
+            description: "Invalid image format detected",
+            variant: "destructive"
+          });
+          return null;
+        }
+        
+        const base64Data = parts[1];
+        // Validate base64 data is non-empty
+        if (!base64Data || base64Data.trim().length === 0) {
+          console.error('Empty base64 data detected');
+          return null;
+        }
+        
+        console.log(`Valid base64 data extracted (length: ${base64Data.length} chars, starts with: ${base64Data.substring(0, 20)}...)`);
+        return base64Data;
+      }).filter(Boolean); // Remove any null values
+      
+      // Verify we have valid images
+      if (base64Images.length === 0) {
+        toast({
+          title: "Image processing error",
+          description: "Failed to process image data",
+          variant: "destructive"
+        });
+        setIsUploading(false);
+        return;
+      }
+      
+      console.log(`Prepared ${base64Images.length} valid images for upload`);
       
       // Create the upload payload
       const uploadData = {
