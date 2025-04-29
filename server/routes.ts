@@ -4,6 +4,11 @@ import { storage } from "./storage";
 import { openai } from "./openai";
 import { z } from "zod";
 import { generateImageSchema } from "@shared/schema";
+import FormData from 'form-data';
+import fs from 'fs';
+import path from 'path';
+import { Readable } from 'stream';
+import fetch from 'node-fetch';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API endpoint to generate images
@@ -164,60 +169,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ...(useModel !== "gpt-image-1" ? { response_format: "b64_json" } : {})
           });
         } else if (model === "gpt-image-1") {
-          // Multiple images case - Only for GPT-Image-1 
-          // Following documentation at https://platform.openai.com/docs/api-reference/images
-          console.log("Using Node.js fetch API for GPT-Image-1 image edits");
+          // For GPT-Image-1, let's focus on single-image approach which is more reliable
+          console.log("Using OpenAI SDK for GPT-Image-1 image edits");
           
-          const form = new FormData();
-          form.append('model', 'gpt-image-1');
-          form.append('prompt', prompt || "Edit these images");
+          // Important note: the OpenAI SDK doesn't directly support multiple images for GPT-Image-1
+          // Let's stick with a consistent approach that works for single images
           
-          // Important: OpenAI requires n=1 for image edits with GPT-Image-1
-          form.append('n', '1');
-          
-          form.append('size', size || "1024x1024");
-          form.append('quality', quality || "auto");
-          
-          // Add all images to the form data using the image[] format
-          // This is documented in the curl example in the OpenAI API docs
-          for (let i = 0; i < imageBuffers.length; i++) {
-            // Create a blob for each image
-            const blob = new Blob([imageBuffers[i]], { type: 'image/png' });
-            
-            // Use the image[] format as shown in the documentation
-            form.append('image[]', blob, `image_${i}.png`);
-            
-            console.log(`Added image ${i} to form data`);
+          // If the user selected multiple images, we'll only use the first one
+          // and show a warning
+          if (imageBuffers.length > 1) {
+            console.log("Warning: Multiple images selected with GPT-Image-1. Using only the first image for compatibility.");
           }
           
-          // Log detailed information
-          console.log(`Making request to OpenAI with ${imageBuffers.length} images`);
-          console.log(`Model: ${model}, Size: ${size}, Quality: ${quality}`);
-          
-          try {
-            // Make the direct API call using fetch
-            const apiResponse = await fetch('https://api.openai.com/v1/images/edits', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
-              },
-              body: form
-            });
-            
-            // Check for errors in the response
-            if (!apiResponse.ok) {
-              const errorText = await apiResponse.text();
-              console.error(`OpenAI API error: ${apiResponse.status}`, errorText);
-              throw new Error(`OpenAI API error: ${apiResponse.status} - ${errorText}`);
-            }
-            
-            // Parse the response
-            response = await apiResponse.json();
-            console.log("Successful API response received");
-          } catch (fetchError) {
-            console.error("Fetch API error:", fetchError);
-            throw fetchError;
-          }
+          // Use the OpenAI SDK which will handle properly formatting the request
+          response = await openai.images.edit({
+            image: imageBuffers[0],
+            prompt: prompt || "Edit this image",
+            model: 'gpt-image-1',
+            n: 1, // Only 1 variation
+            size: size || "1024x1024",
+            quality: quality || "auto"
+          });
+          console.log("Successful API response received");
         }
         
         console.log("API response received");
