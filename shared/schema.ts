@@ -50,6 +50,7 @@ export type Image = typeof images.$inferSelect;
 export interface GeneratedImage {
   id: string;
   url: string;
+  base64Data?: string; // Added to store base64 data separately
   prompt: string;
   size: string;
   model: string;

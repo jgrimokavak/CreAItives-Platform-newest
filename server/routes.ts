@@ -75,12 +75,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Check if we have a valid URL or base64 image data
         let imageUrl = "";
+        let base64Data = "";
+        
         if (image.url) {
           imageUrl = image.url;
           console.log("Using direct URL from OpenAI:", imageUrl.substring(0, 50) + "...");
         } else if (image.b64_json) {
-          imageUrl = `data:image/png;base64,${image.b64_json}`;
+          // Store the base64 data separately and also use it as a data URL
+          base64Data = image.b64_json;
+          imageUrl = `data:image/png;base64,${base64Data}`;
           console.log("Using base64 image data from OpenAI");
+          
+          // Log a small sample of the base64 data for debugging
+          const sample = base64Data.substring(0, 100);
+          console.log("Base64 data sample:", sample);
         } else {
           console.warn("No image URL or base64 data found in OpenAI response");
         }
@@ -88,6 +96,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const newImage = {
           id: `img_${Date.now()}_${index}`,
           url: imageUrl,
+          base64Data: base64Data || undefined,
           prompt: prompt,
           size: size,
           model: model,

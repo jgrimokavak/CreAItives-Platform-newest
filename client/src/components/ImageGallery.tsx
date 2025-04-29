@@ -88,22 +88,32 @@ export default function ImageGallery({ images, onClearResults }: ImageGalleryPro
             className="bg-white rounded-lg overflow-hidden shadow-md border border-gray-100"
           >
             <div className="relative pb-[100%]">
-              <img
-                src={image.url}
-                alt={image.prompt}
-                className="absolute inset-0 w-full h-full object-cover"
-                onError={(e) => {
-                  console.error("Image failed to load:", image.url);
-                  const target = e.target as HTMLImageElement;
-                  target.onerror = null; // Prevent infinite loops
-                  target.alt = "Failed to load image";
-                  target.style.background = "#f0f0f0";
-                  target.style.display = "flex";
-                  target.style.alignItems = "center";
-                  target.style.justifyContent = "center";
-                  target.style.padding = "20px";
-                }}
-              />
+              {image.base64Data ? (
+                // If we have base64 data, directly use it with an img tag
+                <img
+                  src={`data:image/png;base64,${image.base64Data}`}
+                  alt={image.prompt}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              ) : (
+                // Otherwise use the URL with error handling
+                <img
+                  src={image.url}
+                  alt={image.prompt}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  onError={(e) => {
+                    console.error("Image failed to load:", image.url);
+                    const target = e.target as HTMLImageElement;
+                    target.onerror = null; // Prevent infinite loops
+                    target.alt = "Failed to load image";
+                    target.style.background = "#f0f0f0";
+                    target.style.display = "flex";
+                    target.style.alignItems = "center";
+                    target.style.justifyContent = "center";
+                    target.style.padding = "20px";
+                  }}
+                />
+              )}
             </div>
             <div className="p-4">
               <p className="text-sm text-accent mb-2 line-clamp-2">
