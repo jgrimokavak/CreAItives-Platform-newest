@@ -1,0 +1,139 @@
+2. Images
+Given a prompt and/or input image, the model generates a new image.
+Related guide: Image generation.
+
+2.1 Create Image
+Endpoint:
+POST https://api.openai.com/v1/images/generations
+Creates an image given a prompt.
+
+Request body:
+prompt (string, Required): A description of the desired image(s).
+Max 32,000 characters for gpt-image-1
+1,000 for dall-e-2
+4,000 for dall-e-3
+background (string or null, Optional, Default: auto): For gpt-image-1 only. One of transparent, opaque, auto. If transparent, output format must be png or webp.
+model (string, Optional, Default: dall-e-2): Must be one of dall-e-2, dall-e-3, gpt-image-1.
+moderation (string or null, Optional, Default: auto): For gpt-image-1 only. One of low or auto.
+n (integer or null, Optional, Default: 1): Number of images (1–10). Only n=1 for dall-e-3.
+output_compression (integer or null, Optional, Default: 100): (0-100%) Only for gpt-image-1 with webp or jpeg.
+output_format (string or null, Optional, Default: png): gpt-image-1 only. One of png, jpeg, webp.
+quality (string or null, Optional, Default: auto):
+auto: chooses the best quality
+high, medium, low: gpt-image-1
+hd, standard: dall-e-3
+standard: only for dall-e-2
+response_format (string or null, Optional, Default: url): For dall-e-2, dall-e-3: url or b64_json. (gpt-image-1 always returns b64_json)
+size (string or null, Optional, Default: auto):
+For gpt-image-1: 1024x1024, 1536x1024, 1024x1536, auto
+For dall-e-2: 256x256, 512x512, 1024x1024
+For dall-e-3: 1024x1024, 1792x1024, 1024x1792
+style (string or null, Optional, Default: vivid): Only for dall-e-3. vivid or natural
+user (string, Optional): Unique end-user identifier for abuse detection
+Example request (cURL):
+curl https://api.openai.com/v1/images/generations \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer $OPENAI_API_KEY" \
+-d '{
+  "model": "gpt-image-1",
+  "prompt": "A cute baby sea otter",
+  "n": 1,
+  "size": "1024x1024"
+}'
+Response:
+{
+  "created": 1713833628,
+  "data": [
+    { "b64_json": "..." }
+  ],
+  "usage": {
+    "total_tokens": 100,
+    "input_tokens": 50,
+    "output_tokens": 50,
+    "input_tokens_details": {
+      "text_tokens": 10,
+      "image_tokens": 40
+    }
+  }
+}
+2.2 Create Image Edit
+Endpoint:
+POST https://api.openai.com/v1/images/edits
+Creates an edited or extended image given one or more source images and a prompt.
+Only supports gpt-image-1 and dall-e-2.
+
+Request body:
+image (string/array, Required): For gpt-image-1: up to 16 images (png, webp, jpg, < 25 MB). For dall-e-2: One square png < 4 MB.
+prompt (string, Required): Description of the desired image.
+Max 1,000 for dall-e-2
+32,000 for gpt-image-1
+mask (file, Optional): PNG with transparency indicating regions to edit. < 4 MB, matches image dimensions.
+model (string, Optional, Default: dall-e-2)
+n (integer or null, Optional, Default: 1): 1–10.
+quality (string or null, Optional, Default: auto): high, medium, low (gpt-image-1); standard (dall-e-2)
+response_format (string or null, Optional, Default: url): url or b64_json. (gpt-image-1 always returns b64_json)
+size (string or null, Optional, Default: 1024x1024 for dall-e-2, auto for gpt-image-1)
+user (string, Optional)
+Example request (cURL):
+curl -s -D >(grep -i x-request-id >&2) \
+-o >(jq -r '.data[0].b64_json' | base64 --decode > gif) \
+-X POST "https://api.openai.com/v1/images/edits" \
+-H "Authorization: Bearer $OPENAI_API_KEY" \
+-F "model=gpt-image-1" \
+-F "image[]=@body-lotion.png" \
+-F "image[]=@bath-bomb.png" \
+-F "image[]=@incense-kit.png" \
+-F "image[]=@soap.png" \
+-F 'prompt=Create a lovely gift basket with these four'
+Response:
+Same as create image endpoint above.
+
+2.3 Create Image Variation
+Endpoint:
+POST https://api.openai.com/v1/images/variations
+Creates a variation of a given image. Only supports dall-e-2.
+
+Request body:
+image (file, Required): PNG, < 4 MB, square.
+model (string, Optional, "dall-e-2"): Only dall-e-2 supported.
+n (integer or null, Optional, Default: 1): 1–10.
+response_format (string or null, Optional, Default: url): url or b64_json.
+size (string or null, Optional, Default: 1024x1024): 256x256, 512x512, 1024x1024.
+user (string, Optional)
+Example request (cURL):
+curl https://api.openai.com/v1/images/variations \
+-H "Authorization: Bearer $OPENAI_API_KEY" \
+-F image="@otter.png" \
+-F n=2 \
+-F size="1024x1024"
+Response:
+{
+  "created": 1589478378,
+  "data": [
+    { "url": "https://..." },
+    { "url": "https://..." }
+  ]
+}
+3. The Image Generation Response
+created (integer): The Unix timestamp (in seconds) when the image was created.
+data (array): List of generated images. Each object includes either:
+b64_json: base64-encoded image (for gpt-image-1)
+url: temporary (60-min) URL (for dall-e-2, dall-e-3)
+usage (object): (for gpt-image-1 only) Token usage for image generation.
+Example:
+
+{
+  "created": 1713833628,
+  "data": [
+    { "b64_json": "..." }
+  ],
+  "usage": {
+    "total_tokens": 100,
+    "input_tokens": 50,
+    "output_tokens": 50,
+    "input_tokens_details": {
+      "text_tokens": 10,
+      "image_tokens": 40
+    }
+  }
+}

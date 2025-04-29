@@ -169,33 +169,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ...(useModel !== "gpt-image-1" ? { response_format: "b64_json" } : {})
           });
         } else if (model === "gpt-image-1") {
-          // For GPT-Image-1, let's focus on single-image approach which is more reliable
-          console.log("Using OpenAI SDK for GPT-Image-1 image edits");
+          console.log("Using direct fetch API for GPT-Image-1 image edits");
           
-          // Important note: the OpenAI SDK doesn't directly support multiple images for GPT-Image-1
-          // Let's stick with a consistent approach that works for single images
-          
-          // If the user selected multiple images, we'll only use the first one
-          // and show a warning
-          if (imageBuffers.length > 1) {
-            console.log("Warning: Multiple images selected with GPT-Image-1. Using only the first image for compatibility.");
+          // For GPT-Image-1, we need to follow the exact API format with image[] parameters
+          // Create temporary files for the images
+          const tempDir = path.join(__dirname, 'temp_images');
+          if (!fs.existsSync(tempDir)) {
+            fs.mkdirSync(tempDir, { recursive: true });
           }
           
-          // Use the OpenAI SDK which will handle properly formatting the request
-          response = await openai.images.edit({
-            image: imageBuffers[0],
-            prompt: prompt || "Edit this image",
-            model: 'gpt-image-1',
-            n: 1, // Only 1 variation
-            size: size || "1024x1024",
-            quality: quality || "auto"
-          });
-          console.log("Successful API response received");
+          // Create a form data object for the multipart/form-data request
+          const form = new FormData();
+          
+          // Add the form fields exactly as shown in the API documentation
+          form.append('model', 'gpt-image-1');
+          form.append('prompt', prompt || "Edit this image");
+          form.append('n', '1');
+          form.append('size', size || "1024x1024");
+          form.append('quality', quality || "auto");
+          
+          // Process each image and add it to form data with image[] format
+          for (let i = 0; i < imageBuffers.length; i++) {
+            const tempFilePath = path.join(tempDir, `temp_image_${i}.png`);
+            fs.writeFileSync(tempFilePath, imageBuffers[i]);
+            
+            // IMPORTANT: Use image[] format exactly as shown in the API docs
+            form.append('image[]', fs.createReadStream(tempFilePath));
+            console.log(`Added image ${i} to form data with key 'image[]'`);
+          }
+          
+          // Make the request directly using fetch
+          try {
+            console.log(`Making direct API request to OpenAI with ${imageBuffers.length} images`);
+            const openaiResponse = await fetch('https://api.openai.com/v1/images/edits', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+                // Get headers from FormData
+                ...form.getHeaders()
+              },
+              body: form
+            });
+            
+            if (!openaiResponse.ok) {
+              const errorText = await openaiResponse.text();
+              console.error(`OpenAI API Error: ${openaiResponse.status}`, errorText);
+              throw new Error(`OpenAI API Error: ${openaiResponse.status} - ${errorText}`);
+            }
+            
+            // Parse the successful response
+            response = await openaiResponse.json();
+            console.log("Successful API response received from direct fetch");
+            
+            // Clean up temp files
+            for (let i = 0; i < imageBuffers.length; i++) {
+              const tempFilePath = path.join(tempDir, `temp_image_${i}.png`);
+              if (fs.existsSync(tempFilePath)) {
+                fs.unlinkSync(tempFilePath);
+              }
+            }
+          } catch (fetchError) {
+            console.error("Fetch API error:", fetchError);
+            throw fetchError;
+          }
         }
         
         console.log("API response received");
       } catch (apiError: any) {
         console.error("OpenAI API error details:", apiError);
+        console.error("Full error object:", JSON.stringify(apiError, null, 2));
+        if (apiError.response) {
+          console.error("Response status:", apiError.response.status);
+          console.error("Response headers:", apiError.response.headers);
+          console.error("Response data:", apiError.response.data);
+        }
         throw new Error(`OpenAI API error: ${apiError.message || "Unknown error"}`);
       }
       
@@ -207,7 +254,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Process and store the response
-      const generatedImages = response.data.map((image: any, index: number) => {
+      const responseData = response.data || [];
+      const generatedImages = responseData.map((image: any, index: number) => {
         const imageData = {
           url: image.url || null,
           b64_json: image.b64_json || null,
