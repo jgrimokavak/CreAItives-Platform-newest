@@ -9,6 +9,11 @@ import fs from 'fs';
 import path from 'path';
 import { Readable } from 'stream';
 import fetch from 'node-fetch';
+import { fileURLToPath } from 'url';
+
+// Get current file directory (ES Modules compatible)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Define the OpenAI API response structure
 interface OpenAIImageResponse {
@@ -184,7 +189,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // For GPT-Image-1, we send base64-encoded images directly in the JSON request
           // Convert image buffers to base64 strings
-          const base64Images = imageBuffers.map((buffer) => buffer.toString('base64'));
+          const base64Images = imageBuffers.map((buffer: Buffer) => buffer.toString('base64'));
           console.log(`Converted ${base64Images.length} images to base64 for GPT-Image-1 request`);
           
           // Create the request payload
