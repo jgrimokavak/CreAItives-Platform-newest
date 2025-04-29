@@ -152,11 +152,13 @@ export default function ImageUploader({
     }
     
     try {
+      console.log('Starting image upload process...');
       setIsUploading(true);
       onUploadStart();
       
       // Extract the base64 data from the data URLs
       const base64Images = filePreviews.map(preview => preview.split(',')[1]);
+      console.log(`Prepared ${base64Images.length} images for upload`);
       
       // Create the upload payload
       const uploadData = {
@@ -177,6 +179,7 @@ export default function ImageUploader({
       
       // Send the request
       try {
+        console.log('Sending request to /api/upload-image...');
         const response = await apiRequest<{ images: GeneratedImage[] }>('/api/upload-image', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -184,6 +187,9 @@ export default function ImageUploader({
         });
         
         console.log("Upload response received:", response);
+        if (!response || !response.images) {
+          throw new Error('Invalid response format from server');
+        }
         
         if (response && response.images) {
           onUploadComplete(response.images);

@@ -149,9 +149,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API endpoint to handle image edits and variations
   app.post("/api/upload-image", async (req, res) => {
     try {
+      console.log('==== UPLOAD IMAGE REQUEST START ====');
       const { images, prompt, model, size, count, quality } = req.body;
+      console.log('Request received with params:', {
+        imagesCount: images?.length || 0,
+        prompt,
+        model,
+        size,
+        count,
+        quality
+      });
 
       if (!images || !images.length) {
+        console.log('Error: No images provided');
         return res.status(400).json({ message: "No images provided" });
       }
 
@@ -222,12 +232,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         console.log("API response received");
       } catch (apiError: any) {
-        console.error("OpenAI API error details:", apiError);
+        console.error("==== OPENAI API ERROR ====");
+        console.error("Error type:", apiError.constructor.name);
+        console.error("Error message:", apiError.message);
         console.error("Full error object:", JSON.stringify(apiError, null, 2));
         if (apiError.response) {
           console.error("Response status:", apiError.response.status);
           console.error("Response headers:", apiError.response.headers);
           console.error("Response data:", apiError.response.data);
+        }
+        if (apiError.code) {
+          console.error("Error code:", apiError.code);
         }
         throw new Error(`OpenAI API error: ${apiError.message || "Unknown error"}`);
       }
