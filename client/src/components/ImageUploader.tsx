@@ -170,20 +170,31 @@ export default function ImageUploader({
       
       // Log upload details
       console.log(`Sending ${base64Images.length} image(s) to server with model ${values.model}`);
-      
-      // Send the request
-      const response = await apiRequest<{ images: GeneratedImage[] }>('/api/upload-image', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(uploadData)
+      console.log("Upload payload (without image data):", {
+        ...uploadData,
+        images: `[${uploadData.images.length} base64 encoded images]`
       });
       
-      if (response && response.images) {
-        onUploadComplete(response.images);
-        // Clear the selected files after successful upload
-        clearSelectedFiles();
-      } else {
-        throw new Error('No images received from API');
+      // Send the request
+      try {
+        const response = await apiRequest<{ images: GeneratedImage[] }>('/api/upload-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(uploadData)
+        });
+        
+        console.log("Upload response received:", response);
+        
+        if (response && response.images) {
+          onUploadComplete(response.images);
+          // Clear the selected files after successful upload
+          clearSelectedFiles();
+        } else {
+          throw new Error('No images received from API');
+        }
+      } catch (apiError: any) {
+        console.error('API error details:', apiError);
+        throw apiError;
       }
     } catch (error: any) {
       console.error('Upload error:', error);

@@ -162,12 +162,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Looking at the OpenAI Node.js SDK version 4.x
         // For multiple images in gpt-image-1 we need a completely different approach
         
-        if (imageBuffers.length === 1 || model !== "gpt-image-1") {
+        if (model !== "gpt-image-1") {
           // Single image case - supported by all models
           console.log("Using single image edit API");
           
           // For DALL-E 3, switch to DALL-E 2 as DALL-E 3 doesn't support image edits
           const useModel = model === "dall-e-3" ? "dall-e-2" : (model || "gpt-image-1");
+          console.log(`Using OpenAI SDK with model ${useModel} for image edit`);
           
           response = await openai.images.edit({
             image: imageBuffers[0],
@@ -211,7 +212,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Make the request directly using fetch
           try {
             console.log(`Making direct API request to OpenAI with ${imageBuffers.length} images`);
-            const openaiResponse = await fetch('https://api.openai.com/v1/images/edits', {
+            console.log('Form data headers:', form.getHeaders());
+            
+            // Use axios-like debug logs
+            console.log('==== REQUEST ====');
+            console.log('URL:', 'https://api.openai.com/v1/images/edits');
+            console.log('Method:', 'POST');
+            console.log('Headers:', {
+              'Authorization': 'Bearer <API_KEY>',
+              ...form.getHeaders()
+            });
+            console.log('Form fields:');
+            // Log the form keys (but not the actual images)
+            for (const [key, value] of Object.entries(form.getHeaders())) {
+              console.log(' -', key, ':', value);
+            }
+            
+            // Manual inspection of form fields 
+            console.log(' - Form fields added:');
+            console.log(`   model: gpt-image-1`);
+            console.log(`   prompt: ${prompt || "Edit this image"}`);
+            console.log(`   n: 1`);
+            console.log(`   size: ${size || "1024x1024"}`); 
+            console.log(`   quality: ${quality || "auto"}`);
+            console.log(' - Image files added');
+            
+            // GPT-Image-1 uses the generations endpoint even for image edits
+            const openaiResponse = await fetch('https://api.openai.com/v1/images/generations', {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
@@ -221,9 +248,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
               body: form
             });
             
+            console.log(`Response status: ${openaiResponse.status}`);
+            
             if (!openaiResponse.ok) {
               const errorText = await openaiResponse.text();
               console.error(`OpenAI API Error: ${openaiResponse.status}`, errorText);
+              
+              // Try to parse the error as JSON for more details
+              try {
+                const errorJSON = JSON.parse(errorText);
+                console.error("Parsed error details:", errorJSON);
+              } catch (e) {
+                console.error("Could not parse error as JSON");
+              }
+              
               throw new Error(`OpenAI API Error: ${openaiResponse.status} - ${errorText}`);
             }
             
