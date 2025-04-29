@@ -244,9 +244,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // For DALL-E 3, switch to DALL-E 2 as DALL-E 3 doesn't support image edits
           const useModel = model === "dall-e-3" ? "dall-e-2" : (model || "gpt-image-1");
           console.log(`Using OpenAI SDK with model ${useModel} for image edit`);
-
+          
+          // Create temporary files for the images - this is crucial for OpenAI SDK to work properly
+          const tempDir = path.join(__dirname, '../temp');
+          // Create the temp directory if it doesn't exist
+          if (!fs.existsSync(tempDir)) {
+              fs.mkdirSync(tempDir, { recursive: true });
+          }
+          
+          // Save the main image to a temporary file
+          const mainImagePath = path.join(tempDir, `main_${Date.now()}.png`);
+          fs.writeFileSync(mainImagePath, imageBuffers[0]);
+          console.log(`Saved main image to temporary file: ${mainImagePath}`);
+          
+          // Create readable stream for the main image
+          const mainImageStream = fs.createReadStream(mainImagePath);
+          
+          // Make the API request with a proper file stream
           response = await openai.images.edit({
-            image: imageBuffers[0] as unknown as Uploadable,
+            image: mainImageStream, // Pass the file stream instead of the raw buffer
             prompt: prompt || "Edit this image",
             model: useModel,
             n: parseInt(count || "1", 10),
@@ -254,6 +270,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
             quality: quality || "auto",
             ...(useModel !== "gpt-image-1" ? { response_format: "b64_json" } : {})
           });
+          
+          // Clean up temporary files
+          try {
+            if (fs.existsSync(mainImagePath)) {
+              fs.unlinkSync(mainImagePath);
+              console.log(`Deleted temporary file: ${mainImagePath}`);
+            }
+          } catch (cleanupError) {
+            console.warn("Error cleaning up temporary files:", cleanupError);
+          }
         } else if (model === "gpt-image-1") {
           console.log("Using OpenAI SDK for GPT-Image-1 image edits");
 
@@ -262,32 +288,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
             // We'll use the OpenAI SDK's proper image edit method for better compatibility
             console.log('==== REQUEST ====');
-
-            // Check if we have a second image for mask
+            
+            // Create temporary files for the images - this is crucial for OpenAI SDK to work properly
+            const tempDir = path.join(__dirname, '../temp');
+            // Create the temp directory if it doesn't exist
+            if (!fs.existsSync(tempDir)) {
+                fs.mkdirSync(tempDir, { recursive: true });
+            }
+            
+            // Save the main image to a temporary file
+            const mainImagePath = path.join(tempDir, `main_${Date.now()}.png`);
+            fs.writeFileSync(mainImagePath, imageBuffers[0]);
+            console.log(`Saved main image to temporary file: ${mainImagePath}`);
+            
+            // Create readable stream for the main image
+            const mainImageStream = fs.createReadStream(mainImagePath);
+            
+            // Prepare mask if available
+            let maskImageStream = undefined;
+            let maskImagePath = '';
+            if (imageBuffers.length > 1) {
+              maskImagePath = path.join(tempDir, `mask_${Date.now()}.png`);
+              fs.writeFileSync(maskImagePath, imageBuffers[1]);
+              console.log(`Saved mask image to temporary file: ${maskImagePath}`);
+              maskImageStream = fs.createReadStream(maskImagePath);
+            }
+            
+            // Prepare the request parameters with proper file streams
             const requestParams: any = {
               model: 'gpt-image-1',
               prompt: prompt || "Edit this image",
-              image: imageBuffers[0] as unknown as Uploadable, // First image is the main one, cast to Uploadable
+              image: mainImageStream, // Pass the file stream instead of the raw buffer
               n: 1,
               size: size as any || "1024x1024",
               quality: quality as any || "auto"
             };
             
-            // Add mask if we have a second image
-            if (imageBuffers.length > 1) {
-              console.log("Using second image as mask");
-              requestParams.mask = imageBuffers[1] as unknown as Uploadable;
+            // Add mask if available
+            if (maskImageStream) {
+              console.log("Using mask image");
+              requestParams.mask = maskImageStream;
             }
             
-            // Log the full set of parameters
-            console.log("Full request parameters:", {
-              ...requestParams,
-              image: `<Buffer with ${imageBuffers[0].length} bytes>`,
-              mask: imageBuffers.length > 1 ? `<Buffer with ${imageBuffers[1].length} bytes>` : undefined
+            // Log the request parameters
+            console.log("Request parameters:", {
+              model: requestParams.model,
+              prompt: requestParams.prompt,
+              image: "ReadableStream from temporary file",
+              mask: maskImageStream ? "ReadableStream from temporary file" : undefined,
+              n: requestParams.n,
+              size: requestParams.size,
+              quality: requestParams.quality
             });
             
-            // Use the SDK to make the request with image buffer(s)
+            // Make the request with proper file streams
             response = await openai.images.edit(requestParams);
+            
+            // Clean up temporary files
+            try {
+              if (fs.existsSync(mainImagePath)) {
+                fs.unlinkSync(mainImagePath);
+                console.log(`Deleted temporary file: ${mainImagePath}`);
+              }
+              if (maskImagePath && fs.existsSync(maskImagePath)) {
+                fs.unlinkSync(maskImagePath);
+                console.log(`Deleted temporary file: ${maskImagePath}`);
+              }
+            } catch (cleanupError) {
+              console.warn("Error cleaning up temporary files:", cleanupError);
+            }
 
             console.log("Successful API response received from OpenAI SDK");
           } catch (error) {
