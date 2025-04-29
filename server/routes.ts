@@ -37,13 +37,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           errors: validationResult.error.errors 
         });
       }
-      
+
       const { prompt, model, size, quality, count, style, background, output_format } = validationResult.data;
-      
+
       // Call OpenAI to generate images based on the model
       // For DALL-E 3, only one image can be generated at a time
       const numImages = model === 'dall-e-3' ? 1 : parseInt(count);
-      
+
       // Create the base request object
       const requestParams: any = {
         model: model,
@@ -51,12 +51,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         n: numImages,
         size: size,
       };
-      
+
       // DALL-E models support response_format but GPT-Image-1 doesn't
       if (model !== "gpt-image-1") {
         requestParams.response_format = "b64_json";
       }
-      
+
       // Add model-specific parameters
       if (model === 'dall-e-3') {
         // DALL-E 3 specific parameters
@@ -76,16 +76,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // DALL-E 2 specific parameters - No quality parameter, it's not supported
         if (output_format) requestParams.response_format = output_format;
       }
-      
+
       console.log("Sending image generation request with params:", JSON.stringify(requestParams));
       const response = await openai.images.generate(requestParams);
       console.log("OpenAI API response:", JSON.stringify(response, null, 2));
-      
+
       // Check if response has data
       if (!response.data || response.data.length === 0) {
         throw new Error("No images were generated");
       }
-      
+
       // Process and store the response
       const generatedImages = response.data.map((image, index) => {
         // Log image data for debugging
@@ -96,7 +96,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             b64_json: image.b64_json ? "b64_json exists" : "no b64_json"
           })
         );
-        
+
         // Check if we have a valid URL or base64 image data
         let imageUrl = "";
         if (image.url) {
@@ -117,13 +117,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           model: model,
           createdAt: new Date().toISOString(),
         };
-        
+
         // Store the image in our storage
         storage.saveImage(newImage);
-        
+
         return newImage;
       });
-      
+
       res.json({ images: generatedImages });
     } catch (error: any) {
       console.error("Error generating images:", error);
@@ -132,7 +132,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
-  
+
   // API endpoint to get all images
   app.get("/api/images", async (req, res) => {
     try {
@@ -145,36 +145,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
-  
+
   // API endpoint to handle image edits and variations
   app.post("/api/upload-image", async (req, res) => {
     try {
       const { images, prompt, model, size, count, quality } = req.body;
-      
+
       if (!images || !images.length) {
         return res.status(400).json({ message: "No images provided" });
       }
-      
+
       // Convert base64 strings to Buffers
       const imageBuffers = images.map((img: string) => Buffer.from(img, 'base64'));
-      
+
       console.log(`Processing ${imageBuffers.length} images with model ${model || "gpt-image-1"}`);
-      
+
       // Handle multiple images only for GPT-Image-1
       let response;
-      
+
       try {
         // Looking at the OpenAI Node.js SDK version 4.x
         // For multiple images in gpt-image-1 we need a completely different approach
-        
+
         if (model !== "gpt-image-1") {
           // Single image case - supported by all models
           console.log("Using single image edit API");
-          
+
           // For DALL-E 3, switch to DALL-E 2 as DALL-E 3 doesn't support image edits
           const useModel = model === "dall-e-3" ? "dall-e-2" : (model || "gpt-image-1");
           console.log(`Using OpenAI SDK with model ${useModel} for image edit`);
-          
+
           response = await openai.images.edit({
             image: imageBuffers[0],
             prompt: prompt || "Edit this image",
@@ -186,10 +186,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         } else if (model === "gpt-image-1") {
           console.log("Using OpenAI SDK for GPT-Image-1 image edits");
-          
+
           try {
             console.log(`Using OpenAI SDK to edit ${imageBuffers.length} images`);
-            
+
             // We'll use the OpenAI SDK's proper image edit method for better compatibility
             console.log('==== REQUEST ====');
             console.log('Using OpenAI SDK images.edit');
@@ -202,27 +202,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
               size: size || "1024x1024",
               quality: quality || "auto",
             });
-            
-            // Use the SDK to make the request with the first image buffer
-            // Convert buffer to readable stream
-            const imageStream = Readable.from(imageBuffers[0]);
-            
+
+            // Use the SDK to make the request with the first image buffer directly
             response = await openai.images.edit({
               model: 'gpt-image-1',
               prompt: prompt || "Edit this image",
-              image: imageStream, // Send as stream
+              image: imageBuffers[0], // Send buffer directly
               n: 1,
               size: size as any || "1024x1024",
               quality: quality as any || "auto"
             });
-            
+
             console.log("Successful API response received from OpenAI SDK");
           } catch (error) {
             console.error("OpenAI SDK error:", error);
             throw error;
           }
         }
-        
+
         console.log("API response received");
       } catch (apiError: any) {
         console.error("OpenAI API error details:", apiError);
@@ -234,15 +231,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         throw new Error(`OpenAI API error: ${apiError.message || "Unknown error"}`);
       }
-      
+
       console.log("OpenAI API response:", JSON.stringify(response, null, 2));
-      
+
       // Check if response has data
       const typedResponse = response as OpenAIImageResponse;
       if (!typedResponse || !typedResponse.data || typedResponse.data.length === 0) {
         throw new Error("No images were generated");
       }
-      
+
       // Process and store the response
       const responseData = typedResponse.data;
       const generatedImages = responseData.map((image: any, index: number) => {
@@ -251,13 +248,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           b64_json: image.b64_json || null,
           revised_prompt: image.revised_prompt || null
         };
-        
+
         console.log(`Image ${index} data:`, 
           `url: ${imageData.url ? 'present' : 'missing'}, ` +
           `b64_json: ${imageData.b64_json ? 'present' : 'missing'}, ` +
           `revised_prompt: ${imageData.revised_prompt ? 'present' : 'missing'}`
         );
-        
+
         // Check if we have a valid URL or base64 image data
         let imageUrl = "";
         if (imageData.url) {
@@ -278,13 +275,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           model: model || "gpt-image-1",
           createdAt: new Date().toISOString(),
         };
-        
+
         // Store the image in our storage
         storage.saveImage(newImage);
-        
+
         return newImage;
       });
-      
+
       res.json({ images: generatedImages });
     } catch (error: any) {
       console.error("Error generating image edits:", error);
