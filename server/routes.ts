@@ -8,6 +8,7 @@ import { generateImageSchema } from "@shared/schema";
 import FormData from 'form-data';
 import fs from 'fs';
 import path from 'path';
+import sharp from 'sharp';
 import { Readable } from 'stream';
 import fetch from 'node-fetch';
 import { fileURLToPath } from 'url';
@@ -255,9 +256,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Save the main image to a temporary file with explicit PNG extension
           const mainImagePath = path.join(tempDir, `main_${Date.now()}.png`);
             
-          // Create a PNG file with proper MIME type
-          const sharp = require('sharp');
-            
           // Use sharp to ensure the image is properly saved as PNG with correct MIME type
           try {
             // Convert buffer to proper PNG format
@@ -319,9 +317,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             // Save the main image to a temporary file with explicit PNG extension
             const mainImagePath = path.join(tempDir, `main_${Date.now()}.png`);
-            
-            // Create a PNG file with proper MIME type
-            const sharp = require('sharp');
             
             // Use sharp to ensure the image is properly saved as PNG with correct MIME type
             try {
