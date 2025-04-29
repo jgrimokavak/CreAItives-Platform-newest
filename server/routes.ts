@@ -167,16 +167,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Convert base64 strings to Buffers
       const imageBuffers = images.map((img: string) => Buffer.from(img, 'base64'));
       
-      // Use createEdit API instead of createVariation for GPT-Image-1 (supports multiple images)
-      const response = await openai.images.edit({
-        image: imageBuffers[0], // First image is the primary one
-        // Convert other images to array format required by the API
-        // Only include additional images if there are more than one and we're using gpt-image-1
-        ...(imageBuffers.length > 1 && model === "gpt-image-1" 
-            ? { image: imageBuffers.slice(1) as any } 
-            : {}),
-        ...requestParams
-      });
+      console.log(`Processing ${imageBuffers.length} images with model ${model}`);
+      
+      let response;
+      
+      try {
+        if (imageBuffers.length === 1 || model !== "gpt-image-1") {
+          // Single image case
+          response = await openai.images.edit({
+            image: imageBuffers[0],
+            prompt: requestParams.prompt,
+            model: requestParams.model,
+            n: requestParams.n,
+            size: requestParams.size,
+            quality: requestParams.quality,
+            ...(model !== "gpt-image-1" ? { response_format: "b64_json" } : {})
+          });
+          console.log("Using single image edit API");
+        } else {
+          // Multiple images case - only for GPT-Image-1
+          // Use direct SDK method with appropriate type casting
+          // Prepare first image and additional images according to examples
+          console.log("Using multiple images with the OpenAI SDK");
+          
+          // Create an array of additional images (after the first one)
+          const additionalImages = imageBuffers.slice(1);
+          
+          // Make the API call with the OpenAI SDK
+          response = await openai.images.edit({
+            image: imageBuffers[0], // First image
+            // @ts-ignore - The TypeScript definition might not support this, but we're following the examples
+            additionalImages: additionalImages, // Additional images
+            prompt: requestParams.prompt,
+            model: requestParams.model,
+            n: requestParams.n,
+            size: requestParams.size,
+            quality: requestParams.quality
+          } as any);
+        }
+        
+        console.log("API response received");
+      } catch (apiError) {
+        console.error("OpenAI API error details:", apiError);
+        throw apiError;
+      }
       
       console.log("OpenAI API response:", JSON.stringify(response, null, 2));
       
