@@ -210,7 +210,7 @@ export default function ImageUploader({
           className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors mb-6 ${
             isDragActive 
               ? 'border-primary bg-primary/5' 
-              : filePreviews.length > 0 
+              : selectedFiles.length > 0 
                 ? 'border-green-500 bg-green-50' 
                 : 'border-gray-300 hover:border-primary'
           }`}
