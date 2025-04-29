@@ -119,7 +119,22 @@ export default function PromptForm({
                 <FormItem>
                   <FormLabel>Model</FormLabel>
                   <Select
-                    onValueChange={field.onChange}
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      // Reset quality to appropriate default for model
+                      if (value === "gpt-image-1") {
+                        form.setValue("quality", "auto");
+                      } else if (value === "dall-e-3") {
+                        form.setValue("quality", "standard");  
+                      } else {
+                        form.setValue("quality", "standard");
+                      }
+                      
+                      // Reset count to 1 for DALL-E 3
+                      if (value === "dall-e-3") {
+                        form.setValue("count", "1");
+                      }
+                    }}
                     defaultValue={field.value}
                   >
                     <FormControl>
@@ -128,10 +143,27 @@ export default function PromptForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="gpt-image-1">GPT Image Model (Newest)</SelectItem>
-                      <SelectItem value="dall-e-3">DALL-E 3</SelectItem>
-                      <SelectItem value="dall-e-2">DALL-E 2</SelectItem>
+                      <SelectItem value="gpt-image-1">GPT-Image-1 (Latest & Recommended)</SelectItem>
+                      <SelectItem value="dall-e-3">DALL-E 3 (High Quality)</SelectItem>
+                      <SelectItem value="dall-e-2">DALL-E 2 (Faster)</SelectItem>
                     </SelectContent>
+                    <div className="mt-2">
+                      {selectedModel === "gpt-image-1" && (
+                        <p className="text-xs text-slate-600">
+                          OpenAI's latest image model. Excellent for realistic images with fine details.
+                        </p>
+                      )}
+                      {selectedModel === "dall-e-3" && (
+                        <p className="text-xs text-slate-600">
+                          High-quality image generation with strong creative interpretation.
+                        </p>
+                      )}
+                      {selectedModel === "dall-e-2" && (
+                        <p className="text-xs text-slate-600">
+                          Faster image generation, but less detailed than newer models.
+                        </p>
+                      )}
+                    </div>
                   </Select>
                 </FormItem>
               )}

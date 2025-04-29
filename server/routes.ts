@@ -53,8 +53,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (background) requestParams.background = background;
         // GPT-Image-1 doesn't support response_format
       } else {
-        // DALL-E 2 specific parameters
-        requestParams.quality = 'standard';
+        // DALL-E 2 specific parameters - No quality parameter, it's not supported
         if (output_format) requestParams.response_format = output_format;
       }
       
