@@ -192,44 +192,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const base64Images = imageBuffers.map((buffer: Buffer) => buffer.toString('base64'));
           console.log(`Converted ${base64Images.length} images to base64 for GPT-Image-1 request`);
           
-          // Create the request payload
-          const requestPayload = {
-            model: 'gpt-image-1',
-            prompt: prompt || "Edit this image",
-            n: 1,
-            size: size || "1024x1024",
-            quality: quality || "auto",
-            // Add the base64 encoded images
-            images: base64Images
-          };
+          // Create FormData for the edits endpoint (this is how the API documentation shows it)
+          const form = new FormData();
+          form.append('model', 'gpt-image-1');
+          form.append('prompt', prompt || "Edit this image");
+          form.append('n', '1');
+          form.append('size', size || "1024x1024");
+          form.append('quality', quality || "auto");
           
-          // Make the request directly using fetch with JSON
+          // Add images in the format expected by the API
+          for (let i = 0; i < base64Images.length; i++) {
+            // Create a blob from the base64 data
+            const imageBuffer = Buffer.from(base64Images[i], 'base64');
+            const blob = new Blob([imageBuffer], { type: 'image/png' });
+            
+            // IMPORTANT: Use "image[]" format as shown in the API docs for multiple images
+            form.append('image[]', blob, `image_${i}.png`);
+            console.log(`Added image ${i} to form data with key 'image[]'`);
+          }
+          
+          // Make the request directly using fetch with FormData
           try {
-            console.log(`Making direct JSON API request to OpenAI with ${base64Images.length} base64 images`);
+            console.log(`Making direct FormData API request to OpenAI with ${base64Images.length} images`);
             
             // Use axios-like debug logs
             console.log('==== REQUEST ====');
-            console.log('URL:', 'https://api.openai.com/v1/images/generations');
+            console.log('URL:', 'https://api.openai.com/v1/images/edits');
             console.log('Method:', 'POST');
             console.log('Headers:', {
-              'Authorization': 'Bearer <API_KEY>',
-              'Content-Type': 'application/json'
+              'Authorization': 'Bearer <API_KEY>'
+              // Content-Type is set automatically for FormData
             });
             
-            // Log request details (excluding the actual base64 data)
-            console.log('Request payload:', {
-              ...requestPayload,
-              images: `[${requestPayload.images.length} base64 encoded images]`
-            });
+            // Log the form keys
+            console.log('Form fields:');
+            console.log(' - model: gpt-image-1');
+            console.log(` - prompt: ${prompt || "Edit this image"}`);
+            console.log(' - n: 1');
+            console.log(` - size: ${size || "1024x1024"}`); 
+            console.log(` - quality: ${quality || "auto"}`);
+            console.log(` - ${base64Images.length} images added with key 'image[]'`);
             
-            // Make the API request to OpenAI generations endpoint
-            const openaiResponse = await fetch('https://api.openai.com/v1/images/generations', {
+            // Make the API request to OpenAI edits endpoint
+            const openaiResponse = await fetch('https://api.openai.com/v1/images/edits', {
               method: 'POST',
               headers: {
-                'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-                'Content-Type': 'application/json'
+                'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+                // Content-Type header is not needed for FormData
               },
-              body: JSON.stringify(requestPayload)
+              body: form
             });
             
             console.log(`Response status: ${openaiResponse.status}`);
