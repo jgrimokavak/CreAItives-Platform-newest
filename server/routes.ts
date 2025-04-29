@@ -192,8 +192,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const base64Images = imageBuffers.map((buffer: Buffer) => buffer.toString('base64'));
           console.log(`Converted ${base64Images.length} images to base64 for GPT-Image-1 request`);
           
-          // Create FormData for the edits endpoint (this is how the API documentation shows it)
+          // Create a FormData instance from the form-data library
+          const FormData = require('form-data');
           const form = new FormData();
+          
+          // Add basic form fields
           form.append('model', 'gpt-image-1');
           form.append('prompt', prompt || "Edit this image");
           form.append('n', '1');
@@ -201,13 +204,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           form.append('quality', quality || "auto");
           
           // Add images in the format expected by the API
-          for (let i = 0; i < base64Images.length; i++) {
-            // Create a blob from the base64 data
-            const imageBuffer = Buffer.from(base64Images[i], 'base64');
-            const blob = new Blob([imageBuffer], { type: 'image/png' });
-            
-            // IMPORTANT: Use "image[]" format as shown in the API docs for multiple images
-            form.append('image[]', blob, `image_${i}.png`);
+          for (let i = 0; i < imageBuffers.length; i++) {
+            // Use the raw buffer directly - no need to convert back and forth
+            form.append('image[]', imageBuffers[i], {
+              filename: `image_${i}.png`,
+              contentType: 'image/png'
+            });
             console.log(`Added image ${i} to form data with key 'image[]'`);
           }
           
@@ -233,12 +235,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.log(` - quality: ${quality || "auto"}`);
             console.log(` - ${base64Images.length} images added with key 'image[]'`);
             
+            // Get headers from form-data
+            const formHeaders = form.getHeaders();
+            
             // Make the API request to OpenAI edits endpoint
             const openaiResponse = await fetch('https://api.openai.com/v1/images/edits', {
               method: 'POST',
               headers: {
-                'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
-                // Content-Type header is not needed for FormData
+                'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+                ...formHeaders  // Include content-type and other headers from FormData
               },
               body: form
             });
