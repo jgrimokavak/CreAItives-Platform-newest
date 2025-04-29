@@ -125,6 +125,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+  
+  // API endpoint to handle image uploads and variations
+  app.post("/api/upload-image", async (req, res) => {
+    try {
+      const { image, prompt, model, size, count, quality } = req.body;
+      
+      if (!image) {
+        return res.status(400).json({ message: "No image data provided" });
+      }
+      
+      // Prepare parameters for the API call
+      const requestParams: any = {
+        model: model || "gpt-image-1",
+        n: parseInt(count || "1", 10),
+        size: size || "1024x1024",
+      };
+      
+      // Add prompt if provided, otherwise OpenAI will create variations without guidance
+      if (prompt) {
+        requestParams.prompt = prompt;
+      }
+      
+      // Add model-specific parameters
+      if (model === "gpt-image-1") {
+        // GPT-Image-1 specific parameters
+        if (quality) {
+          requestParams.quality = quality === "auto" ? "auto" : quality;
+        }
+        // GPT-Image-1 doesn't support response_format
+      } else if (model === "dall-e-3") {
+        // DALL-E 3 specific parameters - Only supports 1 image
+        requestParams.n = 1;
+        if (quality && quality === "hd") {
+          requestParams.quality = "hd";
+        } else {
+          requestParams.quality = "standard";
+        }
+        requestParams.response_format = "b64_json";
+      } else {
+        // DALL-E 2 specific parameters - No quality parameter, it's not supported
+        requestParams.response_format = "b64_json";
+      }
+      
+      console.log("Sending image variation request with params:", JSON.stringify(requestParams));
+      
+      // Use the create image variation API
+      const response = await openai.images.createVariation({
+        image: Buffer.from(image, 'base64'),
+        ...requestParams
+      });
+      
+      console.log("OpenAI API response:", JSON.stringify(response, null, 2));
+      
+      // Check if response has data
+      if (!response.data || response.data.length === 0) {
+        throw new Error("No images were generated");
+      }
+      
+      // Process and store the response
+      const generatedImages = response.data.map((image, index) => {
+        // Log image data for debugging
+        console.log(`Image ${index} response data:`, 
+          JSON.stringify({
+            url: image.url ? "url exists" : "no url",
+            revised_prompt: image.revised_prompt ? "revised_prompt exists" : "no revised_prompt",
+            b64_json: image.b64_json ? "b64_json exists" : "no b64_json"
+          })
+        );
+        
+        // Check if we have a valid URL or base64 image data
+        let imageUrl = "";
+        if (image.url) {
+          imageUrl = image.url;
+          console.log("Using direct URL from OpenAI:", imageUrl.substring(0, 50) + "...");
+        } else if (image.b64_json) {
+          imageUrl = `data:image/png;base64,${image.b64_json}`;
+          console.log("Using base64 image data from OpenAI");
+        } else {
+          console.warn("No image URL or base64 data found in OpenAI response");
+        }
+
+        const newImage = {
+          id: `img_${Date.now()}_${index}`,
+          url: imageUrl,
+          prompt: prompt || "Image Variation",
+          size: size || "1024x1024",
+          model: model || "gpt-image-1",
+          createdAt: new Date().toISOString(),
+        };
+        
+        // Store the image in our storage
+        storage.saveImage(newImage);
+        
+        return newImage;
+      });
+      
+      res.json({ images: generatedImages });
+    } catch (error: any) {
+      console.error("Error generating image variations:", error);
+      res.status(500).json({ 
+        message: error.message || "Failed to generate image variations" 
+      });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;
