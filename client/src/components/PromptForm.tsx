@@ -230,7 +230,7 @@ export default function PromptForm({
                   <FormLabel>Number of Images</FormLabel>
                   <Select
                     onValueChange={(value) => {
-                      // Reset to 1 if switching to DALL-E 3 and count was > 1
+                      // Reset to 1 if switching to DALL-E 3 as it only supports 1 image
                       if (selectedModel === "dall-e-3" && value !== "1") {
                         field.onChange("1");
                       } else {
@@ -250,6 +250,7 @@ export default function PromptForm({
                       <SelectItem value="2">2 Images</SelectItem>
                       <SelectItem value="3">3 Images</SelectItem>
                       <SelectItem value="4">4 Images</SelectItem>
+                      <SelectItem value="5">5 Images</SelectItem>
                     </SelectContent>
                   </Select>
                   {selectedModel === "dall-e-3" && (
@@ -259,6 +260,67 @@ export default function PromptForm({
               )}
             />
           </div>
+
+          {/* Add style option for DALL-E 3 */}
+          {selectedModel === "dall-e-3" && (
+            <div className="mb-4">
+              <FormField
+                control={form.control}
+                name="style"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Style</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value || "vivid"}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select style" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="vivid">Vivid</SelectItem>
+                        <SelectItem value="natural">Natural</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-slate-500 mt-1">Vivid creates hyper-real and dramatic images. Natural produces more realistic images.</p>
+                  </FormItem>
+                )}
+              />
+            </div>
+          )}
+          
+          {/* Add background option for GPT-Image-1 */}
+          {selectedModel === "gpt-image-1" && (
+            <div className="mb-4">
+              <FormField
+                control={form.control}
+                name="background"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Background</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value || "auto"}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select background" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="auto">Auto</SelectItem>
+                        <SelectItem value="transparent">Transparent</SelectItem>
+                        <SelectItem value="opaque">Opaque</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-slate-500 mt-1">Set transparency for the background. Auto lets the model decide.</p>
+                  </FormItem>
+                )}
+              />
+            </div>
+          )}
 
           <div className="flex justify-center">
             <Button 
