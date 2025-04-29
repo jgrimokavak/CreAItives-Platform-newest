@@ -10,6 +10,16 @@ import path from 'path';
 import { Readable } from 'stream';
 import fetch from 'node-fetch';
 
+// Define the OpenAI API response structure
+interface OpenAIImageResponse {
+  created: number;
+  data: Array<{
+    url?: string;
+    b64_json?: string;
+    revised_prompt?: string;
+  }>;
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // API endpoint to generate images
   app.post("/api/generate", async (req, res) => {
@@ -249,12 +259,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("OpenAI API response:", JSON.stringify(response, null, 2));
       
       // Check if response has data
-      if (!response || !response.data || response.data.length === 0) {
+      const typedResponse = response as OpenAIImageResponse;
+      if (!typedResponse || !typedResponse.data || typedResponse.data.length === 0) {
         throw new Error("No images were generated");
       }
       
       // Process and store the response
-      const responseData = response.data || [];
+      const responseData = typedResponse.data;
       const generatedImages = responseData.map((image: any, index: number) => {
         const imageData = {
           url: image.url || null,
