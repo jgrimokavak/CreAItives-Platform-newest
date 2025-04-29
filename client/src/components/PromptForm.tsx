@@ -47,6 +47,9 @@ export default function PromptForm({
       count: "1",
     },
   });
+  
+  // DALL-E 3 only supports generating 1 image at a time
+  const selectedModel = form.watch("model");
 
   const generateMutation = useMutation({
     mutationFn: async (values: PromptFormValues) => {
@@ -187,8 +190,16 @@ export default function PromptForm({
                 <FormItem>
                   <FormLabel>Number of Images</FormLabel>
                   <Select
-                    onValueChange={field.onChange}
+                    onValueChange={(value) => {
+                      // Reset to 1 if switching to DALL-E 3 and count was > 1
+                      if (selectedModel === "dall-e-3" && value !== "1") {
+                        field.onChange("1");
+                      } else {
+                        field.onChange(value);
+                      }
+                    }}
                     defaultValue={field.value}
+                    disabled={selectedModel === "dall-e-3"}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -202,6 +213,9 @@ export default function PromptForm({
                       <SelectItem value="4">4 Images</SelectItem>
                     </SelectContent>
                   </Select>
+                  {selectedModel === "dall-e-3" && (
+                    <p className="text-xs text-amber-600 mt-1">DALL-E 3 only supports generating 1 image at a time</p>
+                  )}
                 </FormItem>
               )}
             />

@@ -21,13 +21,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { prompt, model, size, quality, count } = validationResult.data;
       
       // Call OpenAI to generate images
+      // For DALL-E 3, only one image can be generated at a time
+      const numImages = model === 'dall-e-3' ? 1 : parseInt(count);
+      
       const response = await openai.images.generate({
         model: model,
         prompt: prompt,
-        n: parseInt(count),
+        n: numImages,
         size: size,
         quality: quality,
       });
+      
+      // Check if response has data
+      if (!response.data || response.data.length === 0) {
+        throw new Error("No images were generated");
+      }
       
       // Process and store the response
       const generatedImages = response.data.map((image, index) => {
