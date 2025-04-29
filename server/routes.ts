@@ -173,313 +173,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid image format" });
       }
       
-      // Convert base64 strings to Buffers with validation
-      let imageBuffers: Buffer[];
       try {
-        imageBuffers = images.map((img: string, index: number) => {
-          // Check for base64 validity
-          console.log(`Image ${index}: Processing base64 data (length: ${img.length} characters)`);
+        // Parse and buffer the first base64 image
+        const imgBase64 = images[0];
+        const imgBuffer = Buffer.from(imgBase64, 'base64');
+        
+        // Set up temp paths
+        const tempDir = path.join(__dirname, '../temp');
+        if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
+        const mainImagePath = path.join(tempDir, `main_${Date.now()}.png`);
+        const maskPath = path.join(tempDir, `mask_${Date.now()}.png`);
+        
+        try {
+          // Convert to PNG with an alpha channel so the API sees real transparency
+          await sharp(imgBuffer)
+            .ensureAlpha(0)
+            .png()
+            .toFile(mainImagePath);
           
-          if (!img || img.length === 0) {
-            console.error(`Image ${index}: Empty base64 string`);
-            throw new Error('Empty image data received');
-          }
+          console.log(`Saved main image to temporary PNG file: ${mainImagePath}`);
           
-          // Log beginning of the base64 string to verify format
-          console.log(`Image ${index}: Base64 preview: ${img.substring(0, 20)}...`);
-          
-          // Create buffer from base64
-          try {
-            const buffer = Buffer.from(img, 'base64');
-            
-            // Verify buffer has content
-            if (buffer.length === 0) {
-              console.error(`Image ${index}: Empty buffer created from base64 string`);
-              throw new Error('Empty buffer created');
+          // Read dimensions and build a fully-transparent mask of the same size
+          const { width, height } = await sharp(imgBuffer).metadata();
+          const maskBuffer = await sharp({
+            create: {
+              width,
+              height,
+              channels: 4,
+              background: { r: 0, g: 0, b: 0, alpha: 0 }
             }
-            
-            // Check for very small buffers which might indicate data problems
-            if (buffer.length < 1000) {
-              console.warn(`Image ${index}: Very small buffer (${buffer.length} bytes) - may not be a valid image`);
-            }
-            
-            console.log(`Image ${index}: Successfully converted to buffer (size: ${buffer.length} bytes)`);
-            
-            // Verify it starts with image file signature bytes for basic validation
-            // This is a simple check and not foolproof
-            const isJPEG = buffer.length > 2 && buffer[0] === 0xFF && buffer[1] === 0xD8;
-            const isPNG = buffer.length > 8 && buffer.slice(0, 8).toString('hex') === '89504e470d0a1a0a';
-            
-            if (isJPEG) {
-              console.log(`Image ${index}: Detected as JPEG format`);
-            } else if (isPNG) {
-              console.log(`Image ${index}: Detected as PNG format`);
-            } else {
-              console.warn(`Image ${index}: Unknown image format - proceeding anyway`);
-            }
-            
-            return buffer;
-          } catch (error) {
-            console.error(`Image ${index}: Error converting base64 to buffer:`, error);
-            throw new Error('Failed to convert image data to buffer');
-          }
-        });
-      } catch (error: any) {
-        console.error('Image processing error:', error.message);
-        return res.status(400).json({ message: error.message || "Failed to process image data" });
-      }
-
-      console.log(`Processing ${imageBuffers.length} images with model ${model || "gpt-image-1"}`);
-
-      // Handle multiple images only for GPT-Image-1
-      let response;
-
-      try {
-        // Looking at the OpenAI Node.js SDK version 4.x
-        // For multiple images in gpt-image-1 we need a completely different approach
-
-        if (model !== "gpt-image-1") {
-          // Single image case - supported by all models
-          console.log("Using single image edit API");
-
-          // For DALL-E 3, switch to DALL-E 2 as DALL-E 3 doesn't support image edits
-          const useModel = model === "dall-e-3" ? "dall-e-2" : (model || "gpt-image-1");
-          console.log(`Using OpenAI SDK with model ${useModel} for image edit`);
+          })
+            .png()
+            .toBuffer();
+          fs.writeFileSync(maskPath, maskBuffer);
           
-          // Create temporary files for the images - this is crucial for OpenAI SDK to work properly
-          const tempDir = path.join(__dirname, '../temp');
-          // Create the temp directory if it doesn't exist
-          if (!fs.existsSync(tempDir)) {
-              fs.mkdirSync(tempDir, { recursive: true });
-          }
+          console.log(`Created transparent mask of size ${width}x${height}`);
           
-          // Save the main image to a temporary file with explicit PNG extension
-          const mainImagePath = path.join(tempDir, `main_${Date.now()}.png`);
-            
-          // Use sharp to ensure the image is properly saved as PNG with correct MIME type
-          try {
-            // Convert buffer to proper PNG format
-            await sharp(imageBuffers[0])
-              .png()
-              .toFile(mainImagePath);
-            console.log(`Saved main image to temporary PNG file: ${mainImagePath}`);
-          } catch (sharpError) {
-            console.error('Error converting image with sharp:', sharpError);
-            // Fallback to direct write if sharp fails
-            fs.writeFileSync(mainImagePath, imageBuffers[0]);
-            console.log(`Fallback: Saved raw image data to: ${mainImagePath}`);
-          }
+          // Determine if we should do a style transfer or edit
+          let response;
           
-          // Create readable stream for the main image
-          const mainImageStream = fs.createReadStream(mainImagePath);
-          
-          // Use exactly the format from OpenAI docs
-          console.log(`Using exact OpenAI documentation format for request with model ${useModel}`);
-          
-          // Log the path to verify it exists
-          console.log(`Image file path: ${mainImagePath}`);
-          
-          // Create the request based on exact OpenAI documentation example
-          response = await openai.images.edit({
-            image: fs.createReadStream(mainImagePath),
-            prompt: prompt || "Edit this image",
-            model: useModel,
-            n: parseInt(count || "1", 10),
-            size: size || "1024x1024",
-            quality: quality || "auto",
-            ...(useModel !== "gpt-image-1" ? { response_format: "b64_json" } : {})
-          });
-          
-          // Clean up temporary files
-          try {
-            if (fs.existsSync(mainImagePath)) {
-              fs.unlinkSync(mainImagePath);
-              console.log(`Deleted temporary file: ${mainImagePath}`);
-            }
-          } catch (cleanupError) {
-            console.warn("Error cleaning up temporary files:", cleanupError);
-          }
-        } else if (model === "gpt-image-1") {
-          console.log("Using OpenAI SDK for GPT-Image-1 image edits");
-
-          try {
-            console.log(`Using OpenAI SDK to edit ${imageBuffers.length} images`);
-
-            // We'll use the OpenAI SDK's proper image edit method for better compatibility
-            console.log('==== REQUEST ====');
-            
-            // Create temporary files for the images - this is crucial for OpenAI SDK to work properly
-            const tempDir = path.join(__dirname, '../temp');
-            // Create the temp directory if it doesn't exist
-            if (!fs.existsSync(tempDir)) {
-                fs.mkdirSync(tempDir, { recursive: true });
-            }
-            
-            // Save the main image to a temporary file with explicit PNG extension
-            const mainImagePath = path.join(tempDir, `main_${Date.now()}.png`);
-            
-            // Use sharp to ensure the image is properly saved as PNG with correct MIME type
-            try {
-              // Convert buffer to proper PNG format
-              await sharp(imageBuffers[0])
-                .png()
-                .toFile(mainImagePath);
-              console.log(`Saved main image to temporary PNG file: ${mainImagePath}`);
-            } catch (sharpError) {
-              console.error('Error converting image with sharp:', sharpError);
-              // Fallback to direct write if sharp fails
-              fs.writeFileSync(mainImagePath, imageBuffers[0]);
-              console.log(`Fallback: Saved raw image data to: ${mainImagePath}`);
-            }
-            
-            // Create readable stream for the main image
-            const mainImageStream = fs.createReadStream(mainImagePath);
-            
-            // Prepare mask if available
-            let maskImageStream = undefined;
-            let maskImagePath = '';
-            if (imageBuffers.length > 1) {
-              maskImagePath = path.join(tempDir, `mask_${Date.now()}.png`);
-              
-              // Create a PNG file with proper MIME type for mask
-              try {
-                // Convert buffer to proper PNG format
-                await sharp(imageBuffers[1])
-                  .png()
-                  .toFile(maskImagePath);
-                console.log(`Saved mask image to temporary PNG file: ${maskImagePath}`);
-              } catch (sharpError) {
-                console.error('Error converting mask image with sharp:', sharpError);
-                // Fallback to direct write if sharp fails
-                fs.writeFileSync(maskImagePath, imageBuffers[1]);
-                console.log(`Fallback: Saved raw mask image data to: ${maskImagePath}`);
-              }
-              
-              maskImageStream = fs.createReadStream(maskImagePath);
-            }
-            
-            // Use exactly the format from OpenAI docs
-            console.log(`Using exact OpenAI documentation format for request`);
-
-            // Log the path to verify it exists
-            console.log(`Image file path: ${mainImagePath}`);
-
-            // Create the base request parameters
-            const editParams: any = {
+          if (model === "gpt-image-1") {
+            // Call the edit endpoint with both streams (no response_format override)
+            console.log("Calling GPT-Image-1 edit endpoint with mask");
+            response = await openai.images.edit({
               image: fs.createReadStream(mainImagePath),
-              prompt: prompt || "Edit this image",
-              model: "gpt-image-1",
+              mask: fs.createReadStream(maskPath),
+              model: 'gpt-image-1',
+              prompt: prompt || "Transform this image",
               n: 1,
-              size: size as any || "1024x1024",
-              quality: quality as any || "auto"
+              size: size || "1024x1024",
+              quality: quality || "auto"
+            });
+          } else if (model === "dall-e-3") {
+            // For DALL-E 3, use generate instead since it doesn't support edits
+            console.log("Using DALL-E 3 generate endpoint for style transfer");
+            response = await openai.images.generate({
+              model: 'dall-e-3',
+              prompt: prompt || "Transform this image",
+              n: 1,
+              size: size || "1024x1024",
+              quality: quality || "standard",
+              style: "natural"
+            });
+          } else {
+            // For DALL-E 2, use edit with b64_json response format
+            console.log("Using DALL-E 2 edit endpoint");
+            response = await openai.images.edit({
+              image: fs.createReadStream(mainImagePath),
+              mask: fs.createReadStream(maskPath),
+              model: 'dall-e-2',
+              prompt: prompt || "Transform this image",
+              n: parseInt(count || "1", 10),
+              size: size || "1024x1024",
+              response_format: "b64_json"
+            });
+          }
+          
+          console.log("API response received:", JSON.stringify(response, null, 2));
+          
+          // Process and store the response
+          const generatedImages = response.data.map((image: any, index: number) => {
+            const imageUrl = image.url || (image.b64_json ? `data:image/png;base64,${image.b64_json}` : null);
+            
+            if (!imageUrl) {
+              console.warn("No image URL or base64 data found in response");
+            }
+            
+            const newImage = {
+              id: `img_${Date.now()}_${index}`,
+              url: imageUrl,
+              prompt: prompt || "Image Edit",
+              size: size || "1024x1024",
+              model: model || "gpt-image-1",
+              createdAt: new Date().toISOString(),
             };
             
-            // Add mask if available
-            if (maskImageStream) {
-              console.log(`Adding mask to request: ${maskImagePath}`);
-              editParams.mask = fs.createReadStream(maskImagePath);
-            }
+            // Store the image in our storage
+            storage.saveImage(newImage);
             
-            console.log("Final request params:", {
-              ...editParams,
-              image: `<ReadableStream from ${mainImagePath}>`,
-              mask: maskImageStream ? `<ReadableStream from ${maskImagePath}>` : undefined
-            });
-            
-            // Make the request with the complete parameters
-            response = await openai.images.edit(editParams);
-            
-            console.log("Request sent using documented format");
-            
-            // Clean up temporary files
-            try {
-              if (fs.existsSync(mainImagePath)) {
-                fs.unlinkSync(mainImagePath);
-                console.log(`Deleted temporary file: ${mainImagePath}`);
-              }
-              if (maskImagePath && fs.existsSync(maskImagePath)) {
-                fs.unlinkSync(maskImagePath);
-                console.log(`Deleted temporary file: ${maskImagePath}`);
-              }
-            } catch (cleanupError) {
-              console.warn("Error cleaning up temporary files:", cleanupError);
-            }
-
-            console.log("Successful API response received from OpenAI SDK");
-          } catch (error) {
-            console.error("OpenAI SDK error:", error);
-            throw error;
-          }
+            return newImage;
+          });
+          
+          res.json({ images: generatedImages });
+        } finally {
+          // Cleanup temp files
+          if (fs.existsSync(mainImagePath)) fs.unlinkSync(mainImagePath);
+          if (fs.existsSync(maskPath)) fs.unlinkSync(maskPath);
+          console.log("Temporary files cleaned up");
         }
-
-        console.log("API response received");
-      } catch (apiError: any) {
-        console.error("==== OPENAI API ERROR ====");
-        console.error("Error type:", apiError.constructor.name);
-        console.error("Error message:", apiError.message);
-        console.error("Full error object:", JSON.stringify(apiError, null, 2));
-        if (apiError.response) {
-          console.error("Response status:", apiError.response.status);
-          console.error("Response headers:", apiError.response.headers);
-          console.error("Response data:", apiError.response.data);
-        }
-        if (apiError.code) {
-          console.error("Error code:", apiError.code);
-        }
-        throw new Error(`OpenAI API error: ${apiError.message || "Unknown error"}`);
+      } catch (error: any) {
+        console.error("Error processing image:", error);
+        throw new Error(`Image processing error: ${error.message}`);
       }
-
-      console.log("OpenAI API response:", JSON.stringify(response, null, 2));
-
-      // Check if response has data
-      const typedResponse = response as OpenAIImageResponse;
-      if (!typedResponse || !typedResponse.data || typedResponse.data.length === 0) {
-        throw new Error("No images were generated");
-      }
-
-      // Process and store the response
-      const responseData = typedResponse.data;
-      const generatedImages = responseData.map((image: any, index: number) => {
-        const imageData = {
-          url: image.url || null,
-          b64_json: image.b64_json || null,
-          revised_prompt: image.revised_prompt || null
-        };
-
-        console.log(`Image ${index} data:`, 
-          `url: ${imageData.url ? 'present' : 'missing'}, ` +
-          `b64_json: ${imageData.b64_json ? 'present' : 'missing'}, ` +
-          `revised_prompt: ${imageData.revised_prompt ? 'present' : 'missing'}`
-        );
-
-        // Check if we have a valid URL or base64 image data
-        let imageUrl = "";
-        if (imageData.url) {
-          imageUrl = imageData.url;
-          console.log("Using URL from OpenAI");
-        } else if (imageData.b64_json) {
-          imageUrl = `data:image/png;base64,${imageData.b64_json}`;
-          console.log("Using base64 data from OpenAI");
-        } else {
-          console.warn("No image URL or base64 data found in response");
-        }
-
-        const newImage = {
-          id: `img_${Date.now()}_${index}`,
-          url: imageUrl,
-          prompt: prompt || "Image Edit",
-          size: size || "1024x1024",
-          model: model || "gpt-image-1",
-          createdAt: new Date().toISOString(),
-        };
-
-        // Store the image in our storage
-        storage.saveImage(newImage);
-
-        return newImage;
-      });
-
-      res.json({ images: generatedImages });
     } catch (error: any) {
       console.error("Error generating image edits:", error);
       res.status(500).json({ 
