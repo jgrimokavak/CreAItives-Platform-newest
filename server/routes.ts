@@ -192,84 +192,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const base64Images = imageBuffers.map((buffer: Buffer) => buffer.toString('base64'));
           console.log(`Converted ${base64Images.length} images to base64 for GPT-Image-1 request`);
           
-          // Create a FormData instance from the form-data library
-          const FormData = require('form-data');
-          const form = new FormData();
-          
-          // Add basic form fields
-          form.append('model', 'gpt-image-1');
-          form.append('prompt', prompt || "Edit this image");
-          form.append('n', '1');
-          form.append('size', size || "1024x1024");
-          form.append('quality', quality || "auto");
-          
-          // Add images in the format expected by the API
-          for (let i = 0; i < imageBuffers.length; i++) {
-            // Use the raw buffer directly - no need to convert back and forth
-            form.append('image[]', imageBuffers[i], {
-              filename: `image_${i}.png`,
-              contentType: 'image/png'
-            });
-            console.log(`Added image ${i} to form data with key 'image[]'`);
-          }
-          
-          // Make the request directly using fetch with FormData
+          // We need to use the official OpenAI SDK for image edits instead of direct fetch
+          // The /image/edits endpoint requires multipart/form-data which is hard to get right with fetch
           try {
-            console.log(`Making direct FormData API request to OpenAI with ${base64Images.length} images`);
+            console.log(`Using OpenAI SDK to edit ${imageBuffers.length} images`);
             
-            // Use axios-like debug logs
+            // We'll use the OpenAI SDK's proper image edit method for better compatibility
             console.log('==== REQUEST ====');
-            console.log('URL:', 'https://api.openai.com/v1/images/edits');
-            console.log('Method:', 'POST');
-            console.log('Headers:', {
-              'Authorization': 'Bearer <API_KEY>'
-              // Content-Type is set automatically for FormData
+            console.log('Using OpenAI SDK images.edit');
+            console.log('Request parameters:');
+            console.log({
+              model: 'gpt-image-1',
+              prompt: prompt || "Edit this image",
+              image: "Buffer (first image)",
+              n: 1,
+              size: size || "1024x1024",
+              quality: quality || "auto",
             });
             
-            // Log the form keys
-            console.log('Form fields:');
-            console.log(' - model: gpt-image-1');
-            console.log(` - prompt: ${prompt || "Edit this image"}`);
-            console.log(' - n: 1');
-            console.log(` - size: ${size || "1024x1024"}`); 
-            console.log(` - quality: ${quality || "auto"}`);
-            console.log(` - ${base64Images.length} images added with key 'image[]'`);
-            
-            // Get headers from form-data
-            const formHeaders = form.getHeaders();
-            
-            // Make the API request to OpenAI edits endpoint
-            const openaiResponse = await fetch('https://api.openai.com/v1/images/edits', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-                ...formHeaders  // Include content-type and other headers from FormData
-              },
-              body: form
+            // Use the SDK to make the request
+            response = await openai.images.edit({
+              model: 'gpt-image-1',
+              prompt: prompt || "Edit this image",
+              image: imageBuffers[0], // First image is the main one
+              n: 1,
+              size: size as any || "1024x1024",
+              quality: quality as any || "auto"
             });
             
-            console.log(`Response status: ${openaiResponse.status}`);
-            
-            if (!openaiResponse.ok) {
-              const errorText = await openaiResponse.text();
-              console.error(`OpenAI API Error: ${openaiResponse.status}`, errorText);
-              
-              // Try to parse the error as JSON for more details
-              try {
-                const errorJSON = JSON.parse(errorText);
-                console.error("Parsed error details:", errorJSON);
-              } catch (e) {
-                console.error("Could not parse error as JSON");
-              }
-              
-              throw new Error(`OpenAI API Error: ${openaiResponse.status} - ${errorText}`);
-            }
-            
-            // Parse the successful response
-            response = await openaiResponse.json();
-            console.log("Successful API response received from direct fetch");
-            
-            // No temp files to clean up with JSON approach
+            console.log("Successful API response received from OpenAI SDK");
           } catch (fetchError) {
             console.error("Fetch API error:", fetchError);
             throw fetchError;
