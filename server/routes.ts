@@ -180,72 +180,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ...(useModel !== "gpt-image-1" ? { response_format: "b64_json" } : {})
           });
         } else if (model === "gpt-image-1") {
-          console.log("Using direct fetch API for GPT-Image-1 image edits");
+          console.log("Using direct JSON API for GPT-Image-1 image edits");
           
-          // For GPT-Image-1, we need to follow the exact API format with image[] parameters
-          // Create temporary files for the images
-          const tempDir = path.join(__dirname, 'temp_images');
-          if (!fs.existsSync(tempDir)) {
-            fs.mkdirSync(tempDir, { recursive: true });
-          }
+          // For GPT-Image-1, we send base64-encoded images directly in the JSON request
+          // Convert image buffers to base64 strings
+          const base64Images = imageBuffers.map((buffer) => buffer.toString('base64'));
+          console.log(`Converted ${base64Images.length} images to base64 for GPT-Image-1 request`);
           
-          // Create a form data object for the multipart/form-data request
-          const form = new FormData();
+          // Create the request payload
+          const requestPayload = {
+            model: 'gpt-image-1',
+            prompt: prompt || "Edit this image",
+            n: 1,
+            size: size || "1024x1024",
+            quality: quality || "auto",
+            // Add the base64 encoded images
+            images: base64Images
+          };
           
-          // Add the form fields exactly as shown in the API documentation
-          form.append('model', 'gpt-image-1');
-          form.append('prompt', prompt || "Edit this image");
-          form.append('n', '1');
-          form.append('size', size || "1024x1024");
-          form.append('quality', quality || "auto");
-          
-          // Process each image and add it to form data with image[] format
-          for (let i = 0; i < imageBuffers.length; i++) {
-            const tempFilePath = path.join(tempDir, `temp_image_${i}.png`);
-            fs.writeFileSync(tempFilePath, imageBuffers[i]);
-            
-            // IMPORTANT: Use image[] format exactly as shown in the API docs
-            form.append('image[]', fs.createReadStream(tempFilePath));
-            console.log(`Added image ${i} to form data with key 'image[]'`);
-          }
-          
-          // Make the request directly using fetch
+          // Make the request directly using fetch with JSON
           try {
-            console.log(`Making direct API request to OpenAI with ${imageBuffers.length} images`);
-            console.log('Form data headers:', form.getHeaders());
+            console.log(`Making direct JSON API request to OpenAI with ${base64Images.length} base64 images`);
             
             // Use axios-like debug logs
             console.log('==== REQUEST ====');
-            console.log('URL:', 'https://api.openai.com/v1/images/edits');
+            console.log('URL:', 'https://api.openai.com/v1/images/generations');
             console.log('Method:', 'POST');
             console.log('Headers:', {
               'Authorization': 'Bearer <API_KEY>',
-              ...form.getHeaders()
+              'Content-Type': 'application/json'
             });
-            console.log('Form fields:');
-            // Log the form keys (but not the actual images)
-            for (const [key, value] of Object.entries(form.getHeaders())) {
-              console.log(' -', key, ':', value);
-            }
             
-            // Manual inspection of form fields 
-            console.log(' - Form fields added:');
-            console.log(`   model: gpt-image-1`);
-            console.log(`   prompt: ${prompt || "Edit this image"}`);
-            console.log(`   n: 1`);
-            console.log(`   size: ${size || "1024x1024"}`); 
-            console.log(`   quality: ${quality || "auto"}`);
-            console.log(' - Image files added');
+            // Log request details (excluding the actual base64 data)
+            console.log('Request payload:', {
+              ...requestPayload,
+              images: `[${requestPayload.images.length} base64 encoded images]`
+            });
             
-            // GPT-Image-1 uses the generations endpoint even for image edits
+            // Make the API request to OpenAI generations endpoint
             const openaiResponse = await fetch('https://api.openai.com/v1/images/generations', {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-                // Get headers from FormData
-                ...form.getHeaders()
+                'Content-Type': 'application/json'
               },
-              body: form
+              body: JSON.stringify(requestPayload)
             });
             
             console.log(`Response status: ${openaiResponse.status}`);
@@ -269,13 +248,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             response = await openaiResponse.json();
             console.log("Successful API response received from direct fetch");
             
-            // Clean up temp files
-            for (let i = 0; i < imageBuffers.length; i++) {
-              const tempFilePath = path.join(tempDir, `temp_image_${i}.png`);
-              if (fs.existsSync(tempFilePath)) {
-                fs.unlinkSync(tempFilePath);
-              }
-            }
+            // No temp files to clean up with JSON approach
           } catch (fetchError) {
             console.error("Fetch API error:", fetchError);
             throw fetchError;
