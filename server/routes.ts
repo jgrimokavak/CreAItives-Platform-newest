@@ -61,6 +61,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Process and store the response
       const generatedImages = response.data.map((image, index) => {
+        // Log image data for debugging
+        console.log(`Image ${index} response data:`, 
+          JSON.stringify({
+            url: image.url ? "url exists" : "no url",
+            revised_prompt: image.revised_prompt ? "revised_prompt exists" : "no revised_prompt",
+            b64_json: image.b64_json ? "b64_json exists" : "no b64_json"
+          })
+        );
+        
         const newImage = {
           id: `img_${Date.now()}_${index}`,
           url: image.url || "",
