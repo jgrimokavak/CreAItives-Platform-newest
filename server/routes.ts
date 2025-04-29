@@ -252,17 +252,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
               fs.mkdirSync(tempDir, { recursive: true });
           }
           
-          // Save the main image to a temporary file
+          // Save the main image to a temporary file with explicit PNG extension
           const mainImagePath = path.join(tempDir, `main_${Date.now()}.png`);
-          fs.writeFileSync(mainImagePath, imageBuffers[0]);
-          console.log(`Saved main image to temporary file: ${mainImagePath}`);
+            
+          // Create a PNG file with proper MIME type
+          const sharp = require('sharp');
+            
+          // Use sharp to ensure the image is properly saved as PNG with correct MIME type
+          try {
+            // Convert buffer to proper PNG format
+            await sharp(imageBuffers[0])
+              .png()
+              .toFile(mainImagePath);
+            console.log(`Saved main image to temporary PNG file: ${mainImagePath}`);
+          } catch (sharpError) {
+            console.error('Error converting image with sharp:', sharpError);
+            // Fallback to direct write if sharp fails
+            fs.writeFileSync(mainImagePath, imageBuffers[0]);
+            console.log(`Fallback: Saved raw image data to: ${mainImagePath}`);
+          }
           
           // Create readable stream for the main image
           const mainImageStream = fs.createReadStream(mainImagePath);
           
-          // Make the API request with a proper file stream
+          // Use exactly the format from OpenAI docs
+          console.log(`Using exact OpenAI documentation format for request with model ${useModel}`);
+          
+          // Log the path to verify it exists
+          console.log(`Image file path: ${mainImagePath}`);
+          
+          // Create the request based on exact OpenAI documentation example
           response = await openai.images.edit({
-            image: mainImageStream, // Pass the file stream instead of the raw buffer
+            image: fs.createReadStream(mainImagePath),
             prompt: prompt || "Edit this image",
             model: useModel,
             n: parseInt(count || "1", 10),
@@ -296,10 +317,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 fs.mkdirSync(tempDir, { recursive: true });
             }
             
-            // Save the main image to a temporary file
+            // Save the main image to a temporary file with explicit PNG extension
             const mainImagePath = path.join(tempDir, `main_${Date.now()}.png`);
-            fs.writeFileSync(mainImagePath, imageBuffers[0]);
-            console.log(`Saved main image to temporary file: ${mainImagePath}`);
+            
+            // Create a PNG file with proper MIME type
+            const sharp = require('sharp');
+            
+            // Use sharp to ensure the image is properly saved as PNG with correct MIME type
+            try {
+              // Convert buffer to proper PNG format
+              await sharp(imageBuffers[0])
+                .png()
+                .toFile(mainImagePath);
+              console.log(`Saved main image to temporary PNG file: ${mainImagePath}`);
+            } catch (sharpError) {
+              console.error('Error converting image with sharp:', sharpError);
+              // Fallback to direct write if sharp fails
+              fs.writeFileSync(mainImagePath, imageBuffers[0]);
+              console.log(`Fallback: Saved raw image data to: ${mainImagePath}`);
+            }
             
             // Create readable stream for the main image
             const mainImageStream = fs.createReadStream(mainImagePath);
@@ -309,16 +345,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
             let maskImagePath = '';
             if (imageBuffers.length > 1) {
               maskImagePath = path.join(tempDir, `mask_${Date.now()}.png`);
-              fs.writeFileSync(maskImagePath, imageBuffers[1]);
-              console.log(`Saved mask image to temporary file: ${maskImagePath}`);
+              
+              // Create a PNG file with proper MIME type for mask
+              try {
+                // Convert buffer to proper PNG format
+                await sharp(imageBuffers[1])
+                  .png()
+                  .toFile(maskImagePath);
+                console.log(`Saved mask image to temporary PNG file: ${maskImagePath}`);
+              } catch (sharpError) {
+                console.error('Error converting mask image with sharp:', sharpError);
+                // Fallback to direct write if sharp fails
+                fs.writeFileSync(maskImagePath, imageBuffers[1]);
+                console.log(`Fallback: Saved raw mask image data to: ${maskImagePath}`);
+              }
+              
               maskImageStream = fs.createReadStream(maskImagePath);
             }
             
-            // Prepare the request parameters with proper file streams
-            const requestParams: any = {
-              model: 'gpt-image-1',
+            // Use exactly the format from OpenAI docs
+            console.log(`Using exact OpenAI documentation format for request`);
+
+            // Log the path to verify it exists
+            console.log(`Image file path: ${mainImagePath}`);
+
+            // Create the base request parameters
+            const editParams: any = {
+              image: fs.createReadStream(mainImagePath),
               prompt: prompt || "Edit this image",
-              image: mainImageStream, // Pass the file stream instead of the raw buffer
+              model: "gpt-image-1",
               n: 1,
               size: size as any || "1024x1024",
               quality: quality as any || "auto"
@@ -326,23 +381,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             // Add mask if available
             if (maskImageStream) {
-              console.log("Using mask image");
-              requestParams.mask = maskImageStream;
+              console.log(`Adding mask to request: ${maskImagePath}`);
+              editParams.mask = fs.createReadStream(maskImagePath);
             }
             
-            // Log the request parameters
-            console.log("Request parameters:", {
-              model: requestParams.model,
-              prompt: requestParams.prompt,
-              image: "ReadableStream from temporary file",
-              mask: maskImageStream ? "ReadableStream from temporary file" : undefined,
-              n: requestParams.n,
-              size: requestParams.size,
-              quality: requestParams.quality
+            console.log("Final request params:", {
+              ...editParams,
+              image: `<ReadableStream from ${mainImagePath}>`,
+              mask: maskImageStream ? `<ReadableStream from ${maskImagePath}>` : undefined
             });
             
-            // Make the request with proper file streams
-            response = await openai.images.edit(requestParams);
+            // Make the request with the complete parameters
+            response = await openai.images.edit(editParams);
+            
+            console.log("Request sent using documented format");
             
             // Clean up temporary files
             try {
