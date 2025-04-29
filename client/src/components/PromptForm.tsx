@@ -1,0 +1,224 @@
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FaMagic } from "react-icons/fa";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
+import { GeneratedImage } from "@/types/image";
+
+const promptSchema = z.object({
+  prompt: z.string().min(1, "Prompt is required").max(1000),
+  model: z.enum(["dall-e-3", "dall-e-2"]),
+  size: z.enum(["1024x1024", "1024x1792", "1792x1024"]),
+  quality: z.enum(["standard", "hd"]),
+  count: z.enum(["1", "2", "3", "4"]),
+});
+
+type PromptFormValues = z.infer<typeof promptSchema>;
+
+interface PromptFormProps {
+  onGenerateStart: () => void;
+  onGenerateComplete: (images: GeneratedImage[]) => void;
+  onError: (message: string) => void;
+}
+
+export default function PromptForm({
+  onGenerateStart,
+  onGenerateComplete,
+  onError,
+}: PromptFormProps) {
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const form = useForm<PromptFormValues>({
+    resolver: zodResolver(promptSchema),
+    defaultValues: {
+      prompt: "",
+      model: "dall-e-3",
+      size: "1024x1024",
+      quality: "standard",
+      count: "1",
+    },
+  });
+
+  const generateMutation = useMutation({
+    mutationFn: async (values: PromptFormValues) => {
+      const response = await apiRequest(
+        "POST",
+        "/api/generate",
+        values
+      );
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setIsSubmitting(false);
+      onGenerateComplete(data.images);
+      queryClient.invalidateQueries({ queryKey: ["/api/images"] });
+      toast({
+        title: "Images generated successfully",
+        description: `Generated ${data.images.length} images`,
+      });
+    },
+    onError: (error) => {
+      setIsSubmitting(false);
+      onError(error.message || "Failed to generate images");
+      toast({
+        title: "Failed to generate images",
+        description: error.message || "Please try again",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onSubmit = async (values: PromptFormValues) => {
+    setIsSubmitting(true);
+    onGenerateStart();
+    generateMutation.mutate(values);
+  };
+
+  return (
+    <div className="bg-white rounded-lg shadow-md p-6 max-w-3xl mx-auto">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <FormField
+            control={form.control}
+            name="prompt"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Prompt</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="An astronaut riding a horse on Mars, digital art"
+                    className="resize-none min-h-[80px]"
+                    {...field}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="model"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Model</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select model" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="dall-e-3">DALL-E 3</SelectItem>
+                      <SelectItem value="dall-e-2">DALL-E 2</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="size"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Size</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select size" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="1024x1024">1024 × 1024</SelectItem>
+                      <SelectItem value="1024x1792">1024 × 1792</SelectItem>
+                      <SelectItem value="1792x1024">1792 × 1024</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="quality"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Quality</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select quality" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="standard">Standard</SelectItem>
+                      <SelectItem value="hd">HD</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="count"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Number of Images</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select count" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="1">1 Image</SelectItem>
+                      <SelectItem value="2">2 Images</SelectItem>
+                      <SelectItem value="3">3 Images</SelectItem>
+                      <SelectItem value="4">4 Images</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="flex justify-center">
+            <Button 
+              type="submit" 
+              disabled={isSubmitting}
+              className="px-6 py-3"
+            >
+              <span>Generate Images</span>
+              <FaMagic className="ml-2" />
+            </Button>
+          </div>
+        </form>
+      </Form>
+    </div>
+  );
+}
