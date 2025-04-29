@@ -204,10 +204,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             });
             
             // Use the SDK to make the request with the first image buffer
+            // Convert buffer to readable stream
+            const imageStream = Readable.from(imageBuffers[0]);
+            
             response = await openai.images.edit({
               model: 'gpt-image-1',
               prompt: prompt || "Edit this image",
-              image: imageBuffers[0], // First image is the main one
+              image: imageStream, // Send as stream
               n: 1,
               size: size as any || "1024x1024",
               quality: quality as any || "auto"
