@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
+import ApiLogConsole from "@/components/ApiLogConsole";
 
 function Router() {
   return (
@@ -19,6 +20,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Router />
+        <ApiLogConsole />
       </TooltipProvider>
     </QueryClientProvider>
   );

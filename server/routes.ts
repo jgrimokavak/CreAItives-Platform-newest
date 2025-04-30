@@ -9,6 +9,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import * as fs from "fs";
 import sharp from "sharp";
+import { log, getLogs } from "./logger";
 
 // Fix for __dirname in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -187,6 +188,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const uploadables = await Promise.all(imgPaths.map(p => toFile(fs.createReadStream(p))));
         const maskUpload = await toFile(fs.createReadStream(maskPath));
         
+        // Log the request to our API logger
+        log({
+          ts: new Date().toISOString(),
+          direction: "request",
+          payload: {
+            model: "gpt-image-1",
+            images: imgPaths.map(p => p.substring(p.lastIndexOf('/') + 1)),
+            mask: mask ? "provided" : "blank",
+            prompt,
+            n,
+            size, 
+            quality,
+            uploadableInfo: uploadables.map(u => ({
+              type: u.type,
+              name: u.name,
+              size: u.size
+            }))
+          }
+        });
+        
         console.log("Sending image edit request with params:", {
           model: "gpt-image-1",
           images: `${images.length} images`,
@@ -208,6 +229,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Convert size to a compatible format for the API
           size: size === "auto" ? "1024x1024" : size,
           quality: quality as "auto" | "high" | "medium" | "low"
+        }).catch(err => {
+          // Log error to our API logger
+          log({
+            ts: new Date().toISOString(),
+            direction: "error",
+            payload: {
+              message: err.message,
+              code: err.code,
+              param: err.param,
+              type: err.type,
+              status: err.status
+            }
+          });
+          throw err;
+        });
+        
+        // Log the response to our API logger
+        log({
+          ts: new Date().toISOString(),
+          direction: "response",
+          payload: {
+            status: response ? "ok" : "unknown",
+            created: response.created,
+            dataCount: response.data?.length || 0,
+            dataInfo: response.data?.map(d => ({
+              b64_json: d.b64_json ? `${d.b64_json.substring(0, 20)}... (${d.b64_json.length} bytes)` : null,
+              url: d.url ? `${d.url.substring(0, 30)}...` : null
+            })) || []
+          }
         });
         
         console.log("OpenAI image edit API response:", JSON.stringify({
@@ -263,6 +313,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: error.message || "Failed to edit images" 
       });
     }
+  });
+
+  // API endpoint to get logs
+  app.get("/api/logs", (_req, res) => {
+    res.json({ logs: getLogs() });
   });
 
   const httpServer = createServer(app);
