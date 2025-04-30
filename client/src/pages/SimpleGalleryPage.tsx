@@ -62,7 +62,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       const params = new URLSearchParams();
       if (showStarredOnly) params.append('starred', 'true');
       if (mode === 'trash') params.append('trash', 'true');
-      if (debouncedSearchTerm) params.append('searchQuery', debouncedSearchTerm);
+      if (debouncedSearchTerm) params.append('q', debouncedSearchTerm); // Backend expects 'q' parameter
       
       const url = `/api/gallery?${params.toString()}`;
       console.log('Fetching images with URL:', url);
@@ -362,7 +362,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
     }
   };
   
-  // Fetch images when component mounts, mode changes, starred filter, or search term changes
+  // Fetch images when component mounts, mode changes, or starred filter changes
   useEffect(() => {
     fetchImages();
     
@@ -377,7 +377,16 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
     return () => {
       window.removeEventListener('gallery-updated', handleWebSocketMessage);
     };
-  }, [mode, showStarredOnly, debouncedSearchTerm]);
+  }, [mode, showStarredOnly]);
+  
+  // Separate effect for search term changes
+  useEffect(() => {
+    // Only search if term is not empty
+    if (debouncedSearchTerm !== undefined) {
+      console.log(`Search term changed to: ${debouncedSearchTerm}`);
+      fetchImages();
+    }
+  }, [debouncedSearchTerm]);
   
   // Empty state
   if (loading) {
@@ -463,6 +472,12 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               className="pl-8 h-9 md:w-[200px] lg:w-[300px]"
+              onKeyDown={(e) => {
+                // Prevent form submission on Enter key
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                }
+              }}
             />
             {searchInput && (
               <X

@@ -11,7 +11,7 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   saveImage(image: GeneratedImage): Promise<GeneratedImage>;
-  getAllImages(options?: { starred?: boolean; trash?: boolean; limit?: number; cursor?: string }): Promise<{ 
+  getAllImages(options?: { starred?: boolean; trash?: boolean; limit?: number; cursor?: string; searchQuery?: string }): Promise<{ 
     items: GeneratedImage[]; 
     nextCursor: string | null 
   }>;
