@@ -41,18 +41,24 @@ export function useWebSocket() {
         console.log('Image created:', data.image);
         // Invalidate gallery queries when new images are created
         queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
+        // Dispatch custom event for components listening for gallery updates
+        window.dispatchEvent(new CustomEvent('gallery-updated', { detail: { type: 'created', data } }));
         break;
         
       case 'imageUpdated':
         console.log('Image updated:', data);
         // Invalidate gallery queries when images are updated (starred, trashed)
         queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
+        // Dispatch custom event for components listening for gallery updates
+        window.dispatchEvent(new CustomEvent('gallery-updated', { detail: { type: 'updated', data } }));
         break;
         
       case 'imageDeleted':
         console.log('Image deleted:', data);
         // Invalidate gallery queries when images are deleted
         queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
+        // Dispatch custom event for components listening for gallery updates
+        window.dispatchEvent(new CustomEvent('gallery-updated', { detail: { type: 'deleted', data } }));
         break;
         
       default:

@@ -1,6 +1,9 @@
 import { Router } from 'express';
-import prisma from './prisma';
+import { db } from './db';
+import { images } from '@shared/schema';
+import { eq, isNull, isNotNull, desc } from 'drizzle-orm';
 import { push } from './ws';
+import { storage } from './storage';
 
 const router = Router();
 
@@ -8,42 +11,18 @@ const router = Router();
 router.get('/gallery', async (req, res) => {
   try {
     const { cursor, limit = 50, starred, trash } = req.query;
-    const where: any = { userId: 'demo' }; // Replace with actual user ID when auth is implemented
     
-    if (starred === 'true') {
-      where.starred = true;
-    }
-    
-    if (trash === 'true') {
-      where.deletedAt = { not: null };
-    } else {
-      where.deletedAt = null;
-    }
-    
-    const items = await prisma.image.findMany({
-      where,
-      take: Number(limit),
-      orderBy: { createdAt: 'desc' },
-      ...(cursor ? { cursor: { id: cursor as string }, skip: 1 } : {}),
-      include: {
-        sources: true
-      }
+    // Get images from database with filtering for starred/trash
+    const { items, nextCursor } = await storage.getAllImages({
+      starred: starred === 'true',
+      trash: trash === 'true',
+      limit: Number(limit),
+      cursor: cursor as string
     });
     
-    const mapped = items.map((img: any) => ({
-      ...img,
-      fullUrl: `/uploads/${img.path}`,
-      thumbUrl: `/uploads/${img.thumbPath}`,
-      sources: img.sources.map((src: any) => ({
-        ...src,
-        fullUrl: src.path ? `/uploads/${src.path}` : null,
-        thumbUrl: src.thumbPath ? `/uploads/${src.thumbPath}` : null
-      }))
-    }));
-    
     res.json({
-      items: mapped,
-      nextCursor: items.length > 0 ? items[items.length - 1].id : null
+      items,
+      nextCursor
     });
   } catch (error) {
     console.error('Error fetching gallery:', error);
@@ -57,29 +36,27 @@ router.patch('/image/:id', async (req, res) => {
     const { starred, deleteToTrash, restoreFromTrash } = req.body;
     const id = req.params.id;
     
-    const updateData: any = {};
+    const updates: any = {};
     
     if (starred !== undefined) {
-      updateData.starred = starred;
+      updates.starred = starred;
     }
     
     if (deleteToTrash) {
-      updateData.deletedAt = new Date();
+      updates.deletedAt = new Date().toISOString();
     }
     
     if (restoreFromTrash) {
-      updateData.deletedAt = null;
+      updates.deletedAt = null;
     }
     
-    const updated = await prisma.image.update({
-      where: { id },
-      data: updateData
-    });
+    const updatedImage = await storage.updateImage(id, updates);
     
-    // Notify clients of the update
-    push('imageUpdated', { id, ...updateData });
+    if (!updatedImage) {
+      return res.status(404).json({ error: 'Image not found' });
+    }
     
-    res.json({ ok: true, image: updated });
+    res.json({ ok: true, image: updatedImage });
   } catch (error) {
     console.error('Error updating image:', error);
     res.status(500).json({ error: 'Failed to update image' });
@@ -95,34 +72,21 @@ router.patch('/images/bulk', async (req, res) => {
       return res.status(400).json({ error: 'No image IDs provided' });
     }
     
-    const updateData: any = {};
+    const updates: any = {};
     
     if (starred !== undefined) {
-      updateData.starred = starred;
+      updates.starred = starred;
     }
     
     if (deleteToTrash) {
-      updateData.deletedAt = new Date();
+      updates.deletedAt = new Date().toISOString();
     }
     
     if (restoreFromTrash) {
-      updateData.deletedAt = null;
+      updates.deletedAt = null;
     }
     
-    // Batch update all images
-    const updates = ids.map(id => 
-      prisma.image.update({
-        where: { id },
-        data: updateData
-      })
-    );
-    
-    await Promise.all(updates);
-    
-    // Notify clients of the updates
-    ids.forEach(id => {
-      push('imageUpdated', { id, ...updateData });
-    });
+    await storage.bulkUpdateImages(ids, updates);
     
     res.json({ ok: true, count: ids.length });
   } catch (error) {
@@ -135,24 +99,9 @@ router.patch('/images/bulk', async (req, res) => {
 router.delete('/image/:id', async (req, res) => {
   try {
     const id = req.params.id;
+    const permanent = req.query.permanent === 'true';
     
-    // Get image details before deleting
-    const image = await prisma.image.findUnique({
-      where: { id },
-      include: { sources: true }
-    });
-    
-    if (!image) {
-      return res.status(404).json({ error: 'Image not found' });
-    }
-    
-    // Delete the database record (sources will cascade delete)
-    await prisma.image.delete({
-      where: { id }
-    });
-    
-    // Notify clients of the deletion
-    push('imageDeleted', { id });
+    await storage.deleteImage(id, permanent);
     
     res.json({ ok: true });
   } catch (error) {

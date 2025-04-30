@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useEditor } from '@/context/EditorContext';
 import { Button } from '@/components/ui/button';
@@ -17,8 +17,8 @@ interface GalleryPageProps {
 interface GalleryImage {
   id: string;
   prompt: string;
-  width: number;
-  height: number;
+  width: number | string;
+  height: number | string;
   fullUrl: string;
   thumbUrl: string;
   starred: boolean;
@@ -26,58 +26,54 @@ interface GalleryImage {
   createdAt: string;
 }
 
-// Mock images for development
-const MOCK_IMAGES: GalleryImage[] = [
-  {
-    id: '1',
-    prompt: 'A beautiful landscape with mountains and a sunset',
-    width: 1024,
-    height: 1024,
-    fullUrl: 'https://placehold.co/1024x1024?text=Image+1',
-    thumbUrl: 'https://placehold.co/400x400?text=Image+1',
-    starred: true,
-    deletedAt: null,
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '2',
-    prompt: 'A futuristic city with flying cars and tall skyscrapers',
-    width: 1024,
-    height: 1024,
-    fullUrl: 'https://placehold.co/1024x1024?text=Image+2',
-    thumbUrl: 'https://placehold.co/400x400?text=Image+2',
-    starred: false,
-    deletedAt: null,
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '3',
-    prompt: 'A cute cat sitting on a windowsill watching birds',
-    width: 1024,
-    height: 1024,
-    fullUrl: 'https://placehold.co/1024x1024?text=Image+3',
-    thumbUrl: 'https://placehold.co/400x400?text=Image+3',
-    starred: false,
-    deletedAt: null,
-    createdAt: new Date().toISOString()
-  }
-];
-
 const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [showStarredOnly, setShowStarredOnly] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const [_, navigate] = useLocation();
   const { setMode, setSourceImages } = useEditor();
   
-  // Simulated data for development
-  const [images, setImages] = useState<GalleryImage[]>(
-    mode === 'trash' 
-      ? [] // Empty trash for now
-      : showStarredOnly 
-        ? MOCK_IMAGES.filter(img => img.starred) 
-        : MOCK_IMAGES
-  );
+  // Real data from database
+  const [images, setImages] = useState<GalleryImage[]>([]);
+  
+  // Fetch gallery images
+  const fetchImages = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const params = new URLSearchParams();
+      if (showStarredOnly) params.append('starred', 'true');
+      if (mode === 'trash') params.append('trash', 'true');
+      
+      const url = `/api/gallery?${params.toString()}`;
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`Error fetching gallery: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('Gallery data:', data);
+      
+      // Ensure images have proper URLs
+      const formattedImages = data.items || [];
+      
+      setImages(formattedImages);
+    } catch (err) {
+      console.error('Error fetching gallery:', err);
+      setError('Failed to load gallery images');
+      toast({
+        variant: 'destructive',
+        title: 'Gallery Error',
+        description: 'Failed to load images. Please try again.'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
   
   // Toggle selection
   const toggleSelection = (id: string) => {
@@ -98,105 +94,238 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
   
   // Handle edit
   const handleEdit = (image: GalleryImage) => {
+    // Set up editor context for edit mode
     setMode('edit');
     setSourceImages([image.fullUrl]);
     navigate('/');
   };
   
-  // Handle star/unstar
-  const handleStar = (id: string, starred: boolean) => {
-    setImages(prev => 
-      prev.map(img => img.id === id ? { ...img, starred } : img)
-    );
-    toast({
-      title: starred ? 'Image starred' : 'Image unstarred',
-      description: 'Your gallery has been updated',
-    });
-  };
-  
-  // Handle trash/restore
-  const handleTrash = (id: string, toTrash: boolean) => {
-    if (toTrash) {
-      setImages(prev => prev.filter(img => img.id !== id));
-      toast({
-        title: 'Image moved to trash',
-        description: 'You can restore it from the trash for the next 30 days',
-      });
-    } else {
-      // In a real app, would restore from trash
-      toast({
-        title: 'Image restored',
-        description: 'The image has been moved back to your gallery',
-      });
-    }
-  };
-  
-  // Handle bulk star
-  const handleBulkStar = (starred: boolean) => {
-    setImages(prev => 
-      prev.map(img => selectedIds.includes(img.id) ? { ...img, starred } : img)
-    );
-    toast({
-      title: starred ? 'Images starred' : 'Images unstarred',
-      description: `${selectedIds.length} images updated`,
-    });
-    clearSelection();
-  };
-  
-  // Handle bulk trash
-  const handleBulkTrash = (toTrash: boolean) => {
-    if (toTrash) {
-      setImages(prev => prev.filter(img => !selectedIds.includes(img.id)));
-      toast({
-        title: 'Images moved to trash',
-        description: `${selectedIds.length} images moved to trash`,
-      });
-    } else {
-      // In a real app, would restore from trash
-      toast({
-        title: 'Images restored',
-        description: `${selectedIds.length} images restored to gallery`,
-      });
-    }
-    clearSelection();
-  };
-  
   // Handle download
   const handleDownload = async (image: GalleryImage) => {
     try {
-      toast({
-        title: 'Downloading image',
-        description: 'Your image is being prepared for download',
-      });
+      const response = await fetch(image.fullUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image: ${response.status}`);
+      }
       
-      // In a real implementation, this would fetch the actual image
-      // For now we just show a success toast
-      setTimeout(() => {
-        toast({
-          title: 'Download complete',
-          description: 'Your image has been downloaded',
-        });
-      }, 1500);
-    } catch (error) {
+      const blob = await response.blob();
+      
+      // Create a temporary link to download the image
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `image-${image.id}.png`;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Clean up
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
       toast({
-        title: 'Download failed',
-        description: 'Could not download the image',
+        title: 'Image downloaded',
+        description: 'The image has been saved to your device.'
+      });
+    } catch (error) {
+      console.error('Download error:', error);
+      toast({
         variant: 'destructive',
+        title: 'Download failed',
+        description: 'There was a problem downloading the image.'
       });
     }
   };
   
-  // Filter images based on mode and starred filter
-  React.useEffect(() => {
-    if (mode === 'trash') {
-      setImages([]); // Empty trash for this example
-    } else {
-      setImages(showStarredOnly 
-        ? MOCK_IMAGES.filter(img => img.starred) 
-        : MOCK_IMAGES
+  // Handle star/unstar
+  const handleStar = async (id: string, starred: boolean) => {
+    try {
+      // Update the UI optimistically
+      setImages(prev =>
+        prev.map(img => img.id === id ? { ...img, starred: !starred } : img)
       );
+      
+      // Make the actual API call
+      const response = await fetch(`/api/image/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ starred: !starred })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update image');
+      }
+      
+      toast({
+        title: starred ? 'Image unmarked' : 'Image starred',
+        description: starred 
+          ? 'The image has been removed from your starred items' 
+          : 'The image has been added to your starred items'
+      });
+    } catch (error) {
+      // Revert on error
+      setImages(prev =>
+        prev.map(img => img.id === id ? { ...img, starred } : img)
+      );
+      
+      toast({
+        variant: 'destructive',
+        title: 'Action failed',
+        description: 'There was a problem updating the image.'
+      });
     }
+  };
+  
+  // Handle delete/restore
+  const handleTrash = async (id: string, isInTrash: boolean) => {
+    try {
+      // Update UI optimistically
+      if (isInTrash) {
+        // Restore from trash
+        setImages(prev =>
+          prev.map(img => img.id === id ? { ...img, deletedAt: null } : img)
+        );
+      } else {
+        // Move to trash
+        setImages(prev => prev.filter(img => img.id !== id));
+      }
+      
+      // Make the actual API call
+      const response = await fetch(`/api/image/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(
+          isInTrash ? { restoreFromTrash: true } : { deleteToTrash: true }
+        )
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update image');
+      }
+      
+      toast({
+        title: isInTrash ? 'Image restored' : 'Image moved to trash',
+        description: isInTrash
+          ? 'The image has been restored from trash'
+          : 'The image has been moved to trash'
+      });
+    } catch (error) {
+      // Revert on error by refreshing the data
+      fetchImages();
+      
+      toast({
+        variant: 'destructive',
+        title: 'Action failed',
+        description: 'There was a problem updating the image.'
+      });
+    }
+  };
+  
+  // Handle bulk actions
+  const handleBulkAction = async (action: 'star' | 'unstar' | 'trash' | 'restore') => {
+    if (selectedIds.length === 0) return;
+    
+    try {
+      // Optimistic UI updates
+      if (action === 'star' || action === 'unstar') {
+        setImages(prev =>
+          prev.map(img => selectedIds.includes(img.id) 
+            ? { ...img, starred: action === 'star' } 
+            : img
+          )
+        );
+      } else if (action === 'trash') {
+        setImages(prev => prev.filter(img => !selectedIds.includes(img.id)));
+      } else if (action === 'restore') {
+        setImages(prev =>
+          prev.map(img => selectedIds.includes(img.id) 
+            ? { ...img, deletedAt: null } 
+            : img
+          )
+        );
+      }
+      
+      // Make the actual API call
+      const response = await fetch('/api/images/bulk', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ids: selectedIds,
+          starred: action === 'star' ? true : action === 'unstar' ? false : undefined,
+          deleteToTrash: action === 'trash' ? true : undefined,
+          restoreFromTrash: action === 'restore' ? true : undefined
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update images');
+      }
+      
+      // Clear selection after successful action
+      setSelectedIds([]);
+      
+      toast({
+        title: `${selectedIds.length} images updated`,
+        description: action === 'star' 
+          ? 'Images have been starred'
+          : action === 'unstar'
+            ? 'Images have been unmarked'
+            : action === 'trash'
+              ? 'Images have been moved to trash'
+              : 'Images have been restored'
+      });
+    } catch (error) {
+      // Refresh data on error
+      fetchImages();
+      
+      toast({
+        variant: 'destructive',
+        title: 'Action failed',
+        description: 'There was a problem updating the images.'
+      });
+    }
+  };
+  
+  // Fetch images when component mounts, mode changes, or starred filter changes
+  useEffect(() => {
+    fetchImages();
+    
+    // Also refresh gallery when new images are created
+    const handleWebSocketMessage = (ev: Event) => {
+      fetchImages();
+    };
+    
+    // Listen for custom events that we'll dispatch when websocket messages arrive
+    window.addEventListener('gallery-updated', handleWebSocketMessage);
+    
+    return () => {
+      window.removeEventListener('gallery-updated', handleWebSocketMessage);
+    };
   }, [mode, showStarredOnly]);
+  
+  // Empty state
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-[70vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+  
+  // Error state
+  if (error) {
+    return (
+      <div className="flex flex-col justify-center items-center h-[70vh] text-center">
+        <p className="text-red-500 mb-4">{error}</p>
+        <Button onClick={fetchImages}>Try Again</Button>
+      </div>
+    );
+  }
   
   // Empty state
   if (images.length === 0) {
@@ -234,75 +363,101 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
   }
   
   return (
-    <div>
-      <div className="mb-6 flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:justify-between sm:items-center">
-        <h1 className="text-2xl font-bold">
-          {mode === 'gallery' ? 'Gallery' : 'Trash'}
-        </h1>
-        
-        <div className="flex space-x-2 flex-wrap">
-          {/* Only show filter in gallery mode */}
+    <div className="pb-20">
+      {/* Gallery toolbar */}
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border p-4 flex flex-wrap gap-3 items-center justify-between">
+        <div className="flex flex-wrap gap-3 items-center">
+          {/* Filters for gallery mode */}
           {mode === 'gallery' && (
             <Button
-              variant={showStarredOnly ? 'default' : 'outline'}
+              variant={showStarredOnly ? "default" : "outline"}
+              size="sm"
               onClick={() => setShowStarredOnly(!showStarredOnly)}
-              className="flex items-center space-x-1"
+              className="gap-2"
             >
-              <Star className={cn("w-4 h-4", showStarredOnly ? "fill-white" : "")} />
-              <span>Starred</span>
+              <Star className={cn(
+                "h-4 w-4", 
+                showStarredOnly ? "fill-current" : ""
+              )} />
+              {showStarredOnly ? "Starred Only" : "All Images"}
             </Button>
           )}
           
-          {/* Bulk actions when images are selected */}
-          {selectedIds.length > 0 && (
+          {/* Item count */}
+          <div className="text-sm text-muted-foreground">
+            {selectedIds.length > 0
+              ? `${selectedIds.length} selected`
+              : `${images.length} ${mode === 'trash' ? 'items' : 'images'}`
+            }
+          </div>
+        </div>
+        
+        <div className="flex flex-wrap gap-3 items-center">
+          {/* Selection actions */}
+          {selectedIds.length > 0 ? (
             <>
-              <span className="text-sm flex items-center px-2">
-                {selectedIds.length} selected
-              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearSelection}
+              >
+                Cancel
+              </Button>
               
               {mode === 'gallery' && (
                 <>
                   <Button
                     variant="outline"
-                    onClick={() => handleBulkStar(true)}
+                    size="sm"
+                    onClick={() => handleBulkAction('star')}
+                    className="gap-2"
                   >
-                    <Star className="w-4 h-4 mr-2" />
-                    <span>Star</span>
+                    <Star className="h-4 w-4" />
+                    Star
                   </Button>
                   
                   <Button
                     variant="outline"
-                    onClick={() => handleBulkTrash(true)}
+                    size="sm"
+                    onClick={() => handleBulkAction('unstar')}
+                    className="gap-2"
                   >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    <span>Move to Trash</span>
+                    <Star className="h-4 w-4 fill-current" />
+                    Unstar
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleBulkAction('trash')}
+                    className="gap-2 text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete
                   </Button>
                 </>
               )}
               
               {mode === 'trash' && (
-                <Button
-                  variant="outline"
-                  onClick={() => handleBulkTrash(false)}
-                >
-                  <RotateCcw className="w-4 h-4 mr-2" />
-                  <span>Restore</span>
-                </Button>
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleBulkAction('restore')}
+                    className="gap-2"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    Restore
+                  </Button>
+                </>
               )}
-              
-              <Button
-                variant="ghost"
-                onClick={clearSelection}
-              >
-                Clear
-              </Button>
             </>
-          )}
-          
-          {selectedIds.length === 0 && images.length > 0 && (
+          ) : (
             <Button
-              variant="ghost"
+              variant="outline"
+              size="sm"
               onClick={selectAll}
+              disabled={images.length === 0}
             >
               Select All
             </Button>
@@ -310,120 +465,135 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
         </div>
       </div>
       
-      {/* Image grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {images.map(image => {
-          const isSelected = selectedIds.includes(image.id);
-          
-          return (
-            <Card key={image.id} className={cn(
-              "rounded-lg overflow-hidden transition-all",
-              isSelected ? "ring-2 ring-primary" : ""
-            )}>
-              <div className="relative group">
-                <div 
-                  className="absolute top-2 left-2 z-10"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleSelection(image.id);
-                  }}
-                >
-                  <Checkbox 
-                    checked={isSelected} 
-                    className="bg-white/80 border-slate-400"
-                  />
-                </div>
-                
-                <img
-                  src={image.thumbUrl}
-                  alt={image.prompt}
-                  className="w-full h-48 object-cover cursor-pointer"
-                  onClick={() => toggleSelection(image.id)}
+      {/* Gallery grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+        {images.map((image) => (
+          <Card key={image.id} className="overflow-hidden group">
+            <div className="relative">
+              {/* Image thumbnail */}
+              <img 
+                src={image.thumbUrl} 
+                alt={image.prompt}
+                className="object-cover w-full aspect-square rounded-t-md"
+                loading="lazy"
+              />
+              
+              {/* Selection overlay */}
+              <div className="absolute top-2 left-2">
+                <Checkbox
+                  checked={selectedIds.includes(image.id)}
+                  onCheckedChange={() => toggleSelection(image.id)}
                 />
-                
-                <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {mode === 'gallery' ? (
-                    <>
-                      <Button
-                        variant="secondary"
-                        size="icon"
-                        className="w-8 h-8 rounded-full bg-white/80 hover:bg-white"
-                        onClick={() => handleStar(image.id, !image.starred)}
-                      >
-                        <Star 
-                          className={cn("w-4 h-4", image.starred ? "fill-yellow-400 text-yellow-400" : "")} 
-                        />
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        size="icon"
-                        className="w-8 h-8 rounded-full bg-white/80 hover:bg-white"
-                        onClick={() => handleTrash(image.id, true)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </>
-                  ) : (
-                    <Button
-                      variant="secondary"
-                      size="icon"
-                      className="w-8 h-8 rounded-full bg-white/80 hover:bg-white"
-                      onClick={() => handleTrash(image.id, false)}
-                    >
-                      <RotateCcw className="w-4 h-4" />
-                    </Button>
-                  )}
-                </div>
               </div>
               
-              <CardContent className="p-3">
-                <p className="text-xs text-slate-600 line-clamp-2 mb-2">{image.prompt}</p>
+              {/* Actions overlay */}
+              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 p-2">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-9 w-9 rounded-full bg-white/20 backdrop-blur-sm text-white hover:text-white hover:bg-white/30"
+                        onClick={() => handleEdit(image)}
+                      >
+                        <PenTool className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Edit</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 
-                <div className="flex justify-between items-center">
-                  <div className="text-xs text-slate-500">
-                    {new Date(image.createdAt).toLocaleDateString()}
-                  </div>
-                  
-                  <div className="flex space-x-1">
-                    {mode === 'gallery' && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="w-7 h-7 p-0"
-                              onClick={() => handleEdit(image)}
-                            >
-                              <PenTool className="w-4 h-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Edit this image</TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-9 w-9 rounded-full bg-white/20 backdrop-blur-sm text-white hover:text-white hover:bg-white/30"
+                        onClick={() => handleDownload(image)}
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Download</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                
+                {mode === 'gallery' && (
+                  <>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className={cn(
+                              "h-9 w-9 rounded-full bg-white/20 backdrop-blur-sm text-white hover:text-white hover:bg-white/30",
+                              image.starred && "text-yellow-300 hover:text-yellow-300"
+                            )}
+                            onClick={() => handleStar(image.id, image.starred)}
+                          >
+                            <Star className={cn(
+                              "h-4 w-4",
+                              image.starred && "fill-current"
+                            )} />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>{image.starred ? "Unstar" : "Star"}</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                     
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-7 h-7 p-0"
-                            onClick={() => handleDownload(image)}
+                            variant="outline"
+                            size="icon"
+                            className="h-9 w-9 rounded-full bg-white/20 backdrop-blur-sm text-white hover:text-white hover:bg-white/30 hover:text-red-400"
+                            onClick={() => handleTrash(image.id, false)}
                           >
-                            <Download className="w-4 h-4" />
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </TooltipTrigger>
-                        <TooltipContent>Download</TooltipContent>
+                        <TooltipContent>Delete</TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
-                  </div>
+                  </>
+                )}
+                
+                {mode === 'trash' && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-9 w-9 rounded-full bg-white/20 backdrop-blur-sm text-white hover:text-white hover:bg-white/30"
+                          onClick={() => handleTrash(image.id, true)}
+                        >
+                          <RotateCcw className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Restore</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+              </div>
+              
+              {/* Starred indicator */}
+              {image.starred && mode === 'gallery' && (
+                <div className="absolute top-2 right-2 text-yellow-300">
+                  <Star className="h-5 w-5 fill-current" />
                 </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+              )}
+            </div>
+            
+            <CardContent className="p-3">
+              <p className="text-sm text-muted-foreground line-clamp-2 h-10">{image.prompt}</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   );
