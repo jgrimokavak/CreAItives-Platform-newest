@@ -7,7 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
-import { Loader2, FolderOpen } from 'lucide-react';
+import { Loader2, FolderOpen, Star, Trash2, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ImageCard from '@/components/ImageCard';
 
@@ -19,9 +19,19 @@ interface GalleryPageProps {
 import { GeneratedImage } from "@/types/image";
 
 // Extend the GeneratedImage with any gallery-specific properties
-interface GalleryImage extends GeneratedImage {
+interface GalleryImage {
+  id: string;
+  prompt: string;
+  width?: string | number;
+  height?: string | number;
+  model: string;
+  size: string;
+  quality?: string;
+  createdAt: string;
+  url?: string;
   fullUrl: string;
   thumbUrl: string;
+  starred?: boolean;
   deletedAt: string | null;
 }
 
@@ -469,11 +479,15 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
         {images.map((image) => (
           <ImageCard
             key={image.id}
-            image={image}
+            image={{
+              ...image,
+              url: image.fullUrl || image.url || '', // Ensures url is always a string
+              thumbUrl: image.thumbUrl || image.url || '', // Ensures thumbUrl is always available
+            }}
             mode={mode}
-            onEdit={handleEdit}
-            onDownload={handleDownload}
-            onDelete={handleTrash}
+            onEdit={(img) => handleEdit(image)}
+            onDownload={(img) => handleDownload(image)}
+            onDelete={(id) => handleTrash(id, false)}
             onStar={handleStar}
             onRestore={(id) => handleTrash(id, true)}
             onSelect={toggleSelection}
