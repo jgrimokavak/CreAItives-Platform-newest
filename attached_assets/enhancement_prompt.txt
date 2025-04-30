@@ -1,0 +1,55 @@
+
+Enhancements
+============
+
+1. Default quality = "high"
+---------------------------
+* **Frontend**  
+  • In the quality dropdown component, set default value to `"high"`.  
+  • Remove “Auto” if you prefer not to expose it.  
+* **Backend**  
+  • In `/api/edit-image` and `/api/generate-image`, if `quality` not provided, default to `"high"`.
+
+2. Full‑screen viewer for generated images
+-----------------------------------------
+* Add `<ImageModal />` component that shows the image in a centred overlay at native resolution.  
+* In `GeneratedImageCard`, on image click open modal with that image’s `url`.  
+* ESC or outside‑click closes.
+
+3. “Send to Editor” button
+--------------------------
+* On each `GeneratedImageCard`, add a small “✎ Edit” icon/button.  
+* When clicked:  
+  ```ts
+  navigate("/edit", { state: { sourceImage: image.url } });
+  ```  
+* In `EditPage`, if `location.state?.sourceImage` exists, pre‑populate the source‑image drop‑zone with that data‑URL.
+
+4. Persist reference thumbnail
+------------------------------
+* Extend `GeneratedImage` type:
+  ```ts
+  interface GeneratedImage {
+    id: string;
+    url: string;          // final image
+    sourceThumb?: string; // 128‑px thumb of first reference image
+    prompt: string;
+    size: string;
+    model: "gpt-image-1";
+    createdAt: string;
+  }
+  ```
+* **Backend**  
+  • When the request includes `images[]`, create a 128‑px thumbnail of the first reference via Sharp:  
+    ```ts
+    const thumbBuf = await sharp(imgPaths[0]).resize(128).png().toBuffer();
+    const thumb64 = `data:image/png;base64,${thumbBuf.toString("base64")}`;
+    ```  
+  • Attach `sourceThumb: thumb64` to the response object.  
+* **Frontend**  
+  • Show thumbnail on generated card (e.g. overlay corner) and store it in gallery state so users can drag/drop it back into editor as needed.
+
+5. Clean‑up
+-----------
+* Make the full‑screen viewer and edit button feature‑flagged so they can be removed easily once QA is done.  
+* Remove temporary API log console when all features are confirmed stable.

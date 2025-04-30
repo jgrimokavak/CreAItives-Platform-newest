@@ -54,7 +54,7 @@ export default function EditForm({
     defaultValues: {
       prompt: "",
       size: "1024x1024",
-      quality: "auto",
+      quality: "high",
       n: 1,
     },
   });

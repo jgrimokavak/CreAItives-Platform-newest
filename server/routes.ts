@@ -55,10 +55,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (output_format) requestParams.response_format = output_format;
       } else if (model === 'gpt-image-1') {
         // GPT-Image-1 specific parameters
-        if (quality === 'high' || quality === 'medium' || quality === 'low') {
+        if (quality === 'high' || quality === 'medium' || quality === 'low' || quality === 'auto') {
           requestParams.quality = quality;
         } else {
-          requestParams.quality = 'auto';
+          requestParams.quality = 'high'; // Default to high quality
         }
         if (background) requestParams.background = background;
         // GPT-Image-1 doesn't support response_format
@@ -225,7 +225,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           n,
           // Convert size to a compatible format for the API
           size: size === "auto" ? "1024x1024" : size,
-          quality: quality as "auto" | "high" | "medium" | "low"
+          quality: (quality || "high") as "auto" | "high" | "medium" | "low"
         };
         
         // Only include mask if user provided one

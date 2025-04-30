@@ -45,7 +45,7 @@ export default function PromptForm({
       prompt: "",
       model: "gpt-image-1",
       size: "1024x1024",
-      quality: "auto",
+      quality: "high",
       style: "vivid",
       count: "1",
       background: "auto",
