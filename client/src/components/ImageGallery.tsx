@@ -108,7 +108,7 @@ export default function ImageGallery({ images, onClearResults }: ImageGalleryPro
         {images.map((image) => (
           <div
             key={image.id}
-            className="bg-white rounded-lg overflow-hidden shadow-md border border-gray-100"
+            className="bg-card rounded-lg overflow-hidden shadow-sm border border-border hover:shadow-md transition-shadow"
           >
             <div className="relative pb-[100%]">
               <img
@@ -133,51 +133,65 @@ export default function ImageGallery({ images, onClearResults }: ImageGalleryPro
                   variant="outline"
                   size="icon"
                   onClick={() => handleSendToEditor(image)}
-                  className="w-8 h-8 rounded-full bg-white shadow-md hover:bg-gray-100"
+                  className="w-8 h-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border"
                   title="Edit this image"
                 >
                   <FaEdit className="w-3 h-3" />
                 </Button>
               </div>
             </div>
-            <div className="p-4">
-              <p className="text-sm text-accent mb-2 line-clamp-2">
-                {image.prompt}
-              </p>
-              <div className="flex justify-between items-center mb-2">
-                <div className="flex flex-col">
-                  <span className="text-xs text-accent">{image.size}</span>
-                  <span className="text-xs text-accent mt-1">Model: {image.model}</span>
-                  {image.sourceThumb && (
-                    <div className="mt-2 flex items-center">
-                      <span className="text-xs text-accent mr-2">Source:</span>
-                      <img 
-                        src={image.sourceThumb} 
-                        alt="Source" 
-                        className="w-8 h-8 rounded object-cover border border-gray-200" 
-                        title="Reference image used for editing"
-                      />
-                    </div>
-                  )}
+            <div className="p-3 space-y-2">
+              <p className="text-sm font-medium line-clamp-2">{image.prompt}</p>
+              <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                <span className="bg-muted/50 rounded-full px-2 py-0.5">
+                  {image.model}
+                </span>
+                <span className="bg-muted/50 rounded-full px-2 py-0.5">
+                  {image.size}
+                </span>
+                <span className="bg-muted/50 rounded-full px-2 py-0.5">
+                  {image.quality || 'standard'}
+                </span>
+                {image.sourceThumb && (
+                  <div className="flex items-center gap-1 mt-2">
+                    <span className="text-xs text-muted-foreground">Source:</span>
+                    <img 
+                      src={image.sourceThumb} 
+                      alt="Source" 
+                      className="w-6 h-6 rounded-sm object-cover border border-border" 
+                      title="Reference image used for editing"
+                    />
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex justify-between items-center pt-2">
+                <div className="text-xs text-muted-foreground">
+                  {new Date(image.createdAt).toLocaleString(undefined, {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
                 </div>
                 <div className="flex space-x-2">
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => handleDownload(image)}
-                    className="text-accent hover:text-primary transition-colors p-2 rounded-md hover:bg-gray-100"
+                    className="h-8 w-8 rounded-full hover:bg-muted transition-colors"
                     title="Download image"
                   >
-                    <FaDownload />
+                    <FaDownload className="h-3 w-3" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => handleCopyPrompt(image.prompt)}
-                    className="text-accent hover:text-primary transition-colors p-2 rounded-md hover:bg-gray-100"
+                    className="h-8 w-8 rounded-full hover:bg-muted transition-colors"
                     title="Copy prompt"
                   >
-                    <FaCopy />
+                    <FaCopy className="h-3 w-3" />
                   </Button>
                 </div>
               </div>

@@ -24,6 +24,10 @@ interface GalleryImage {
   starred: boolean;
   deletedAt: string | null;
   createdAt: string;
+  model: string;
+  size: string;
+  quality?: string;
+  url?: string;
 }
 
 const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => {
@@ -589,8 +593,19 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
               )}
             </div>
             
-            <CardContent className="p-3">
-              <p className="text-sm text-muted-foreground line-clamp-2 h-10">{image.prompt}</p>
+            <CardContent className="p-3 space-y-2">
+              <p className="text-sm font-medium line-clamp-2">{image.prompt}</p>
+              <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                <span className="bg-muted/50 rounded-full px-2 py-0.5">
+                  {image.model}
+                </span>
+                <span className="bg-muted/50 rounded-full px-2 py-0.5">
+                  {image.size}
+                </span>
+                <span className="bg-muted/50 rounded-full px-2 py-0.5">
+                  {image.quality || 'standard'}
+                </span>
+              </div>
             </CardContent>
           </Card>
         ))}
