@@ -2,10 +2,11 @@ import fs from 'fs';
 import path from 'path';
 import { v4 as uuid } from 'uuid';
 import sharp from 'sharp';
-import prisma from './prisma';
 import { push } from './ws';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { db } from './db';
+import { images } from '@shared/schema';
 
 // Get the directory name in ES module context
 const __filename = fileURLToPath(import.meta.url);
@@ -51,26 +52,38 @@ export async function persistImage(b64: string, meta: ImageMetadata): Promise<{
   fs.writeFileSync(path.join(root, fullPath), imgBuf);
   fs.writeFileSync(path.join(root, thumbPath), thumbBuf);
 
-  // Create database record
-  const image = await prisma.image.create({
-    data: {
-      id,
-      userId: meta.userId,
+  // Format params for storage - convert to JSON string
+  const paramsStr = JSON.stringify(meta.params);
+  const sizeStr = `${width || 1024}x${height || 1024}`;
+  const widthStr = width?.toString() || '1024';
+  const heightStr = height?.toString() || '1024';
+  const starredStr = 'false';
+
+  // Use Drizzle ORM instead of Prisma to store image metadata
+  try {
+    // Create a single object matching the schema
+    const record = {
+      id: id,
+      url: `/uploads/${fullPath}`,
       prompt: meta.prompt,
+      size: sizeStr,
       model: meta.params.model || 'gpt-image-1',
-      params: meta.params,
-      width: width || 1024, // Default if undefined
-      height: height || 1024, // Default if undefined
-      path: fullPath,
-      thumbPath: thumbPath,
-      sources: {
-        create: meta.sources.map(src => ({
-          path: src,
-          thumbPath: '' // Fill if you store source thumbs
-        }))
-      }
-    }
-  });
+      width: widthStr,
+      height: heightStr,
+      thumbUrl: `/uploads/${thumbPath}`,
+      fullUrl: `/uploads/${fullPath}`,
+      starred: starredStr
+    };
+    
+    // Insert the record properly
+    const imageRecords = await db.insert(images).values(record).returning();
+    const imageRecord = imageRecords[0];
+    console.log(`Successfully inserted image record: ${id}`);
+  } catch (error) {
+    console.error('Error inserting image record:', error);
+    // We'll continue even if database insertion fails
+    // The image files are still saved to disk
+  }
 
   // Create URLs for the image
   const fullUrl = `/uploads/${fullPath}`;
@@ -79,14 +92,22 @@ export async function persistImage(b64: string, meta: ImageMetadata): Promise<{
   // Notify connected clients
   push('imageCreated', {
     image: {
-      ...image,
+      id,
+      url: fullUrl,
+      prompt: meta.prompt,
+      size: `${width || 1024}x${height || 1024}`,
+      model: meta.params.model || 'gpt-image-1',
+      createdAt: new Date().toISOString(),
+      width: width?.toString() || '1024',
+      height: height?.toString() || '1024',
       fullUrl,
-      thumbUrl
+      thumbUrl,
+      starred: false
     }
   });
 
   return {
-    id: image.id,
+    id,
     fullUrl,
     thumbUrl
   };

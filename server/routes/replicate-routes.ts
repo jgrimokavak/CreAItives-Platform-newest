@@ -8,6 +8,8 @@ import fetch from 'node-fetch';
 import path from 'path';
 import fs from 'fs';
 import { persistImage } from '../fs-storage';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
 const router = Router();
 
