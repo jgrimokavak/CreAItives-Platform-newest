@@ -57,11 +57,12 @@ export default function PromptForm({
 
   const generateMutation = useMutation({
     mutationFn: async (values: PromptFormValues) => {
-      return await apiRequest<{images: GeneratedImage[]}>("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values)
-      });
+      const response = await apiRequest(
+        "POST",
+        "/api/generate",
+        values
+      );
+      return response.json();
     },
     onSuccess: (data) => {
       setIsSubmitting(false);

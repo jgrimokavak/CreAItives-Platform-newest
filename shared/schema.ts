@@ -55,15 +55,3 @@ export interface GeneratedImage {
   model: string;
   createdAt: string;
 }
-
-// Image upload schema
-export const uploadImageSchema = z.object({
-  images: z.array(z.string()).min(1, "At least one image is required"), // Array of base64 encoded image data
-  prompt: z.string().optional(), // Optional prompt to guide image edit/variation
-  model: z.enum(["gpt-image-1", "dall-e-3", "dall-e-2"]).default("gpt-image-1"),
-  size: z.enum(["auto", "1024x1024", "1536x1024", "1024x1536", "1792x1024", "1024x1792", "512x512"]).default("1024x1024"),
-  count: z.enum(["1", "2", "3", "4"]).default("1"),
-  quality: z.enum(["auto", "standard", "hd", "high", "medium", "low"]).default("auto"),
-});
-
-export type UploadImageInput = z.infer<typeof uploadImageSchema>;
