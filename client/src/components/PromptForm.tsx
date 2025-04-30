@@ -108,8 +108,15 @@ export default function PromptForm({
         "POST",
         "/api/generate",
         { 
-          modelKey, 
-          inputs: values 
+          modelKey,
+          prompt: values.prompt,
+          size: values.size,
+          quality: values.quality,
+          n: parseInt(values.count),
+          style: values.style,
+          background: values.background,
+          aspect_ratio: values.aspect_ratio,
+          seed: values.seed
         }
       );
       
@@ -193,6 +200,7 @@ export default function PromptForm({
     setIsSubmitting(true);
     setProgress(0);
     onGenerateStart();
+    // Send values with the modelKey
     generateMutation.mutate(values);
   };
 
