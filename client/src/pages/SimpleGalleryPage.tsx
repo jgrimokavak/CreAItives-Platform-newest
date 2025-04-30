@@ -501,7 +501,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-9 w-9 rounded-full bg-white/20 backdrop-blur-sm text-white hover:text-white hover:bg-white/30"
+                        className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border"
                         onClick={() => handleEdit(image)}
                       >
                         <PenTool className="h-4 w-4" />
@@ -517,7 +517,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-9 w-9 rounded-full bg-white/20 backdrop-blur-sm text-white hover:text-white hover:bg-white/30"
+                        className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border"
                         onClick={() => handleDownload(image)}
                       >
                         <Download className="h-4 w-4" />
@@ -536,7 +536,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
                             variant="outline"
                             size="icon"
                             className={cn(
-                              "h-9 w-9 rounded-full bg-white/20 backdrop-blur-sm text-white hover:text-white hover:bg-white/30",
+                              "h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border",
                               image.starred && "text-yellow-300 hover:text-yellow-300"
                             )}
                             onClick={() => handleStar(image.id, image.starred)}
@@ -557,7 +557,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
                           <Button
                             variant="outline"
                             size="icon"
-                            className="h-9 w-9 rounded-full bg-white/20 backdrop-blur-sm text-white hover:text-white hover:bg-white/30 hover:text-red-400"
+                            className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border hover:text-red-500"
                             onClick={() => handleTrash(image.id, false)}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -576,7 +576,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
                         <Button
                           variant="outline"
                           size="icon"
-                          className="h-9 w-9 rounded-full bg-white/20 backdrop-blur-sm text-white hover:text-white hover:bg-white/30"
+                          className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border"
                           onClick={() => handleTrash(image.id, true)}
                         >
                           <RotateCcw className="h-4 w-4" />
