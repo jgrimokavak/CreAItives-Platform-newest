@@ -30,11 +30,11 @@ router.get('/gallery', async (req, res) => {
       }
     });
     
-    const mapped = items.map(img => ({
+    const mapped = items.map((img: any) => ({
       ...img,
       fullUrl: `/uploads/${img.path}`,
       thumbUrl: `/uploads/${img.thumbPath}`,
-      sources: img.sources.map(src => ({
+      sources: img.sources.map((src: any) => ({
         ...src,
         fullUrl: src.path ? `/uploads/${src.path}` : null,
         thumbUrl: src.thumbPath ? `/uploads/${src.thumbPath}` : null

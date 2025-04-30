@@ -1,4 +1,4 @@
-import type { Express, Request } from "express";
+import express, { type Express, type Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { openai } from "./openai";
@@ -13,6 +13,10 @@ import { log, getLogs } from "./logger";
 import multer from "multer";
 import crypto from "crypto";
 import { GeneratedImage } from "@shared/schema";
+import galleryRoutes from "./gallery-routes";
+import { attachWS } from "./ws";
+import { setupCleanupJob } from "./cleanup";
+import { persistImage } from "./fs-storage";
 
 // Fix for __dirname in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -509,6 +513,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ logs: getLogs() });
   });
 
+  // Serve static uploads folder
+  const uploadsPath = path.join(path.dirname(new URL(import.meta.url).pathname), '../uploads');
+  
+  if (!fs.existsSync(uploadsPath)) {
+    fs.mkdirSync(uploadsPath, { recursive: true });
+  }
+  
+  // Use express.static directly
+  app.use('/uploads', express.static(uploadsPath));
+
+  // Add gallery routes
+  app.use('/api', galleryRoutes);
+
+  // Create HTTP server
   const httpServer = createServer(app);
+  
+  // Set long timeouts to allow for heavy jobs
+  httpServer.headersTimeout = 300_000;   // 5 minutes
+  httpServer.keepAliveTimeout = 300_000; // 5 minutes
+  
+  // Attach WebSocket server
+  attachWS(httpServer);
+  
+  // Initialize cleanup job for trashed images
+  setupCleanupJob();
+  
   return httpServer;
 }

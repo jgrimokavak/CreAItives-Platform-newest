@@ -1,0 +1,108 @@
+import React, { ReactNode } from 'react';
+import { Link, useLocation } from 'wouter';
+import { cn } from '@/lib/utils';
+import { 
+  Sparkles, 
+  Images, 
+  Trash2, 
+  Menu,
+  X
+} from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
+
+interface SidebarLinkProps {
+  to: string;
+  icon: ReactNode;
+  children: ReactNode;
+}
+
+const SidebarLink = ({ to, icon, children }: SidebarLinkProps) => {
+  const [location] = useLocation();
+  const isActive = location === to;
+  
+  return (
+    <Link to={to}>
+      <div
+        className={cn(
+          'flex items-center space-x-3 px-4 py-3 rounded-md text-sm font-medium cursor-pointer transition-colors',
+          isActive
+            ? 'bg-primary/10 text-primary hover:bg-primary/15'
+            : 'text-slate-600 hover:bg-slate-100'
+        )}
+      >
+        <div className={isActive ? 'text-primary' : 'text-slate-500'}>
+          {icon}
+        </div>
+        <span>{children}</span>
+      </div>
+    </Link>
+  );
+};
+
+interface SidebarProps {
+  children: ReactNode;
+}
+
+const Sidebar = ({ children }: SidebarProps) => {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const isMobile = useIsMobile();
+
+  return (
+    <div className="flex min-h-screen">
+      {/* Mobile menu button */}
+      {isMobile && (
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="fixed top-4 left-4 z-50 p-2 bg-white rounded-full shadow-md"
+        >
+          {isOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
+      )}
+
+      {/* Sidebar */}
+      <div
+        className={cn(
+          'fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 transition-all duration-300 ease-in-out transform',
+          isMobile ? (isOpen ? 'translate-x-0' : '-translate-x-full') : 'translate-x-0',
+          'flex flex-col'
+        )}
+      >
+        <div className="p-4 text-xl font-bold border-b border-slate-200">
+          AI Image Studio
+        </div>
+        
+        <nav className="flex-1 p-4 space-y-1">
+          <SidebarLink to="/" icon={<Sparkles size={18} />}>
+            Create
+          </SidebarLink>
+          <SidebarLink to="/gallery" icon={<Images size={18} />}>
+            Gallery
+          </SidebarLink>
+          <SidebarLink to="/trash" icon={<Trash2 size={18} />}>
+            Trash
+          </SidebarLink>
+        </nav>
+      </div>
+
+      {/* Main content */}
+      <div
+        className={cn(
+          'flex-1 transition-all duration-300 ease-in-out',
+          isMobile ? 'ml-0' : 'ml-64',
+          'min-h-screen'
+        )}
+      >
+        {/* Overlay for mobile */}
+        {isMobile && isOpen && (
+          <div
+            className="fixed inset-0 z-30 bg-black/20"
+            onClick={() => setIsOpen(false)}
+          />
+        )}
+        <main className="p-6">{children}</main>
+      </div>
+    </div>
+  );
+};
+
+export default Sidebar;
