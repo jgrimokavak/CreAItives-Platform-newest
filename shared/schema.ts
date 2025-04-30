@@ -55,3 +55,15 @@ export interface GeneratedImage {
   model: string;
   createdAt: string;
 }
+
+// Image edit schema
+export const editImageSchema = z.object({
+  images: z.array(z.string()).min(1).max(16),  // base64 (may include data-URL prefix)
+  prompt: z.string().min(1).max(32000),
+  size: z.enum(["auto", "1024x1024", "1536x1024", "1024x1536"]),
+  quality: z.enum(["auto", "high", "medium", "low"]).default("auto"),
+  n: z.coerce.number().int().min(1).max(10).default(1),
+  mask: z.string().nullable().optional()
+});
+
+export type EditImageInput = z.infer<typeof editImageSchema>;

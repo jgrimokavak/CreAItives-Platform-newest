@@ -2,8 +2,12 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { openai } from "./openai";
+import { toFile } from "openai";
 import { z } from "zod";
-import { generateImageSchema } from "@shared/schema";
+import { generateImageSchema, editImageSchema } from "@shared/schema";
+import * as path from "path";
+import * as fs from "fs";
+import sharp from "sharp";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API endpoint to generate images
@@ -122,6 +126,129 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error fetching images:", error);
       res.status(500).json({ 
         message: error.message || "Failed to fetch images" 
+      });
+    }
+  });
+
+  // API endpoint to edit images
+  app.post("/api/edit-image", async (req, res) => {
+    try {
+      // Validate request body
+      const validationResult = editImageSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid request data", 
+          errors: validationResult.error.errors 
+        });
+      }
+      
+      const { images, prompt, size, quality, n, mask } = validationResult.data;
+      
+      // Create temp directory for image processing
+      const tmpDir = path.join(__dirname, "../temp");
+      fs.mkdirSync(tmpDir, { recursive: true });
+      
+      try {
+        // Write each image to PNG
+        const imgPaths = images.map((b64, i) => {
+          const buf = Buffer.from(b64.replace(/^data:.*;base64,/, ""), "base64");
+          const p = path.join(tmpDir, `img_${Date.now()}_${i}.png`);
+          fs.writeFileSync(p, buf);
+          return p;
+        });
+        
+        // Resolve mask
+        let maskPath: string;
+        if (mask) {
+          maskPath = path.join(tmpDir, "mask.png");
+          fs.writeFileSync(maskPath, Buffer.from(mask.replace(/^data:.*;base64,/, ""), "base64"));
+        } else {
+          // Create a blank transparent mask if none is provided
+          const { width, height } = await sharp(imgPaths[0]).metadata();
+          const blank = await sharp({
+            create: { 
+              width: width ?? 1024, 
+              height: height ?? 1024, 
+              channels: 4, 
+              background: { r: 0, g: 0, b: 0, alpha: 0 } 
+            }
+          }).png().toBuffer();
+          
+          maskPath = path.join(tmpDir, "mask.png");
+          fs.writeFileSync(maskPath, blank);
+        }
+        
+        // Build uploadables
+        const uploadables = await Promise.all(imgPaths.map(p => toFile(fs.createReadStream(p))));
+        const maskUpload = await toFile(fs.createReadStream(maskPath));
+        
+        console.log("Sending image edit request with params:", {
+          model: "gpt-image-1",
+          images: `${images.length} images`,
+          mask: mask ? "provided" : "blank",
+          prompt,
+          n,
+          size,
+          quality
+        });
+        
+        // OpenAI call
+        const response = await openai.images.edit({
+          model: "gpt-image-1",
+          image: uploadables,
+          mask: maskUpload,
+          prompt,
+          n,
+          size,
+          quality
+        });
+        
+        console.log("OpenAI image edit API response:", JSON.stringify({
+          created: response.created,
+          data: response.data.map(d => ({
+            b64_json: d.b64_json ? "data exists" : "no data",
+            url: d.url ? "url exists" : "no url"
+          }))
+        }, null, 2));
+        
+        // Process and store the response
+        const generatedImages = response.data.map((image, index) => {
+          // Use base64 data from response
+          const imageUrl = `data:image/png;base64,${image.b64_json}`;
+          
+          const newImage = {
+            id: `img_${Date.now()}_${index}`,
+            url: imageUrl,
+            prompt: prompt,
+            size: size,
+            model: "gpt-image-1",
+            createdAt: new Date().toISOString(),
+          };
+          
+          // Store the image in our storage
+          storage.saveImage(newImage);
+          
+          return newImage;
+        });
+        
+        res.json({ images: generatedImages });
+        
+        // Cleanup temp files
+        imgPaths.forEach(p => fs.unlinkSync(p));
+        fs.unlinkSync(maskPath);
+      } catch (error) {
+        // Make sure to clean up temp directory even if there's an error
+        if (fs.existsSync(tmpDir)) {
+          fs.readdirSync(tmpDir).forEach(file => {
+            fs.unlinkSync(path.join(tmpDir, file));
+          });
+        }
+        throw error;
+      }
+    } catch (error: any) {
+      console.error("Error editing images:", error);
+      res.status(500).json({ 
+        message: error.message || "Failed to edit images" 
       });
     }
   });
