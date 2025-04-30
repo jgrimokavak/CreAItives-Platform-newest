@@ -7,7 +7,8 @@ import {
   StarIcon, 
   Trash2Icon,
   RotateCcwIcon,
-  CopyIcon
+  CopyIcon,
+  ImageIcon
 } from "lucide-react";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -206,6 +207,41 @@ export default function ImageCard({
         {image.starred && mode === 'gallery' && (
           <div className="absolute top-2 right-2 text-yellow-300">
             <StarIcon className="h-5 w-5 fill-current" />
+          </div>
+        )}
+        
+        {/* Source image thumbnail indicator (for edited images) */}
+        {image.sourceThumb && (
+          <div 
+            className="absolute bottom-2 right-2 z-10 h-12 w-12 rounded-md overflow-hidden border-2 border-white shadow-md cursor-pointer hover:scale-105 transition-transform"
+            onClick={(e) => {
+              e.stopPropagation();
+              // Show source image in fullscreen when clicked
+              const modal = document.createElement('div');
+              modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/90';
+              modal.onclick = () => document.body.removeChild(modal);
+              
+              const imgEl = document.createElement('img');
+              imgEl.src = image.sourceThumb;
+              imgEl.className = 'max-h-[90vh] max-w-[90vw] object-contain';
+              
+              const caption = document.createElement('div');
+              caption.className = 'absolute bottom-4 left-0 right-0 text-center text-white text-sm bg-black/50 py-2';
+              caption.textContent = 'Source image';
+              
+              modal.appendChild(imgEl);
+              modal.appendChild(caption);
+              document.body.appendChild(modal);
+            }}
+          >
+            <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+              <ImageIcon className="h-6 w-6 text-white" />
+            </div>
+            <img 
+              src={image.sourceThumb} 
+              alt="Source" 
+              className="w-full h-full object-cover"
+            />
           </div>
         )}
       </div>
