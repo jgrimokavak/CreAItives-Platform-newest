@@ -14,9 +14,10 @@ import { dirname } from 'path';
 const router = Router();
 
 // Download image from URL and save it to uploads directory
-async function downloadAndSaveImage(url: string, userId: string = "system", prompt: string): Promise<{
+async function downloadAndSaveImage(url: string, userId: string = "system", prompt: string, modelKey: string, imageId: string): Promise<{
   fullUrl: string;
   thumbUrl: string;
+  id: string;
 }> {
   try {
     console.log(`Downloading image from Replicate: ${url}`);
@@ -31,18 +32,22 @@ async function downloadAndSaveImage(url: string, userId: string = "system", prom
     const buffer = Buffer.from(arrayBuffer);
     const base64 = buffer.toString('base64');
     
-    // Create metadata
+    // Create metadata with the correct model parameter
     const meta = {
       prompt: prompt,
-      params: { url },
+      params: { 
+        url, 
+        model: modelKey  // Include the model key
+      },
       userId,
       sources: []
     };
     
-    // Save image using the existing function
-    const savedImagePaths = await persistImage(base64, meta);
+    // Save image using the existing function, passing our image ID
+    const savedImagePaths = await persistImage(base64, meta, imageId);
     
     return {
+      id: savedImagePaths.id,
       fullUrl: savedImagePaths.fullUrl,
       thumbUrl: savedImagePaths.thumbUrl
     };
@@ -131,12 +136,8 @@ export async function generateWithReplicate(modelKey: string, inputs: any): Prom
   for (let i = 0; i < imageUrls.length; i++) {
     const remoteUrl = imageUrls[i];
     
-    // Download and save the image locally
-    const { fullUrl, thumbUrl } = await downloadAndSaveImage(
-      remoteUrl, 
-      "system", 
-      inputs.prompt || "Generated image"
-    );
+    // Generate a consistent ID for both file storage and database
+    const imageId = `img_${Date.now()}_${i}`;
     
     // Extract size from aspect_ratio if provided
     let width = 1024;
@@ -154,11 +155,22 @@ export async function generateWithReplicate(modelKey: string, inputs: any): Prom
     
     const sizeStr = `${width}x${height}`;
     
+    // Download and save the image locally with the correct model information
+    // Now passing the model key and image ID to ensure consistency
+    const { id, fullUrl, thumbUrl } = await downloadAndSaveImage(
+      remoteUrl, 
+      "system", 
+      inputs.prompt || "Generated image",
+      modelKey,
+      imageId
+    );
+    
+    // Create the GeneratedImage object using the SAME ID
     const image: GeneratedImage = {
-      id: `img_${Date.now()}_${i}`,
-      url: fullUrl, // Use our local URL
-      fullUrl: fullUrl, // Use our local URL
-      thumbUrl: thumbUrl, // Use our local thumbnail URL
+      id: id, // Use the same ID that was used in the file system
+      url: fullUrl,
+      fullUrl: fullUrl,
+      thumbUrl: thumbUrl,
       prompt: inputs.prompt,
       size: sizeStr,
       model: modelKey,
@@ -167,8 +179,10 @@ export async function generateWithReplicate(modelKey: string, inputs: any): Prom
       height: height.toString(),
     };
     
-    // Store the image
-    await storage.saveImage(image);
+    // We no longer need to call storage.saveImage here
+    // because the image is already saved to database in persistImage
+    
+    console.log(`Successfully processed Replicate image: ${id} with model: ${modelKey}`);
     images.push(image);
   }
   

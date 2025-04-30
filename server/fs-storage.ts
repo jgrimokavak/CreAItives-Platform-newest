@@ -28,12 +28,13 @@ export interface ImageMetadata {
   sources: string[];
 }
 
-export async function persistImage(b64: string, meta: ImageMetadata): Promise<{
+export async function persistImage(b64: string, meta: ImageMetadata, customId?: string): Promise<{
   id: string;
   fullUrl: string;
   thumbUrl: string;
 }> {
-  const id = uuid();
+  // Use provided ID or generate a new one
+  const id = customId || uuid();
   const imgBuf = Buffer.from(b64, 'base64');
   // Use the same root path as in initializeDirs for consistency
   const root = path.join(__dirname, '../uploads');
