@@ -260,18 +260,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
           imgPaths.push(filePath);
         }
         
-        // Create a 128px thumbnail of the first reference image
+        // Create a 128px thumbnail and save the full source image
         let sourceThumb: string | undefined;
+        let sourceImage: string | undefined;
         try {
           if (imgPaths.length > 0) {
+            // Create thumbnail for display in card
             const thumbBuf = await sharp(imgPaths[0])
               .resize(128)
               .png()
               .toBuffer();
             sourceThumb = `data:image/png;base64,${thumbBuf.toString("base64")}`;
+            
+            // Also save the full image as base64 for full-screen view
+            const fullImageBuf = await fs.promises.readFile(imgPaths[0]);
+            sourceImage = `data:image/png;base64,${fullImageBuf.toString("base64")}`;
           }
         } catch (err) {
-          console.warn("Failed to create source thumbnail:", err);
+          console.warn("Failed to create source thumbnail or image:", err);
         }
         
         // Save mask file if provided
@@ -400,7 +406,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             size: size,
             model: "gpt-image-1",
             createdAt: new Date().toISOString(),
-            sourceThumb: sourceThumb
+            sourceThumb: sourceThumb,
+            sourceImage: sourceImage
           };
           
           // Store the image in our storage

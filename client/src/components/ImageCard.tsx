@@ -222,7 +222,8 @@ export default function ImageCard({
               modal.onclick = () => document.body.removeChild(modal);
               
               const imgEl = document.createElement('img');
-              imgEl.src = image.sourceThumb;
+              // Use the full-resolution sourceImage if available, otherwise fall back to the thumbnail
+              imgEl.src = image.sourceImage || image.sourceThumb || "";
               imgEl.className = 'max-h-[90vh] max-w-[90vw] object-contain';
               
               const caption = document.createElement('div');

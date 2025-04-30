@@ -45,6 +45,7 @@ export const images = pgTable("images", {
   thumbUrl: text("thumb_url"),
   fullUrl: text("full_url"),
   sourceThumb: text("source_thumb"),
+  sourceImage: text("source_image"),  // Full original source image data
   starred: text("starred").default("false"),
   deletedAt: timestamp("deleted_at"),
 });
@@ -63,6 +64,7 @@ export interface GeneratedImage {
   model: string;
   createdAt: string;
   sourceThumb?: string | null; // 128px thumbnail of the first reference image
+  sourceImage?: string | null; // Full-resolution source image
   width?: string | null;
   height?: string | null;
   thumbUrl?: string | null;
