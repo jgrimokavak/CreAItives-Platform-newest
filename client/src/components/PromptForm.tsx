@@ -19,7 +19,7 @@ const promptSchema = z.object({
   size: z.enum(["auto", "1024x1024", "1536x1024", "1024x1536", "1792x1024", "1024x1792"]),
   quality: z.enum(["auto", "standard", "hd", "high", "medium", "low"]),
   style: z.enum(["vivid", "natural"]).optional(),
-  count: z.enum(["1", "2", "3", "4", "5"]),
+  count: z.enum(["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]),
   background: z.enum(["auto", "transparent", "opaque"]).optional(),
 });
 
@@ -283,6 +283,11 @@ export default function PromptForm({
                       <SelectItem value="3">3 Images</SelectItem>
                       <SelectItem value="4">4 Images</SelectItem>
                       <SelectItem value="5">5 Images</SelectItem>
+                      <SelectItem value="6">6 Images</SelectItem>
+                      <SelectItem value="7">7 Images</SelectItem>
+                      <SelectItem value="8">8 Images</SelectItem>
+                      <SelectItem value="9">9 Images</SelectItem>
+                      <SelectItem value="10">10 Images</SelectItem>
                     </SelectContent>
                   </Select>
                   {selectedModel === "dall-e-3" && (
