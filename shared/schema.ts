@@ -62,11 +62,11 @@ export interface GeneratedImage {
   size: string;
   model: string;
   createdAt: string;
-  sourceThumb?: string; // 128px thumbnail of the first reference image
-  width?: string;
-  height?: string;
-  thumbUrl?: string;
-  fullUrl?: string;
+  sourceThumb?: string | null; // 128px thumbnail of the first reference image
+  width?: string | null;
+  height?: string | null;
+  thumbUrl?: string | null;
+  fullUrl?: string | null;
   starred?: boolean;
   deletedAt?: string | null;
 }
