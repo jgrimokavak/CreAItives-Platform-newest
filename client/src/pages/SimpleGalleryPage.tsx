@@ -4,10 +4,12 @@ import { useEditor } from '@/context/EditorContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
 import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
+import { useDebounce } from '@/hooks/useDebounce';
 import { apiRequest, queryClient } from '@/lib/queryClient';
-import { Loader2, FolderOpen, Star, Trash2, RotateCcw, Trash } from 'lucide-react';
+import { Loader2, FolderOpen, Star, Trash2, RotateCcw, Trash, Search, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ImageCard from '@/components/ImageCard';
 
@@ -40,6 +42,8 @@ interface GalleryImage {
 const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [showStarredOnly, setShowStarredOnly] = useState(false);
+  const [searchInput, setSearchInput] = useState('');
+  const debouncedSearchTerm = useDebounce(searchInput, 500); // 500ms delay
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
@@ -58,6 +62,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       const params = new URLSearchParams();
       if (showStarredOnly) params.append('starred', 'true');
       if (mode === 'trash') params.append('trash', 'true');
+      if (debouncedSearchTerm) params.append('searchQuery', debouncedSearchTerm);
       
       const url = `/api/gallery?${params.toString()}`;
       console.log('Fetching images with URL:', url);
