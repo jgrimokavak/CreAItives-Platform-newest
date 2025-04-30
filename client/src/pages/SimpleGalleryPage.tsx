@@ -472,13 +472,16 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       {/* Gallery grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
         {images.map((image) => (
-          <Card key={image.id} className="overflow-hidden group">
-            <div className="relative">
+          <div 
+            key={image.id}
+            className="bg-card rounded-lg overflow-hidden shadow-sm border border-border hover:shadow-md transition-shadow group"
+          >
+            <div className="relative pb-[100%]">
               {/* Image thumbnail */}
               <img 
                 src={image.thumbUrl} 
                 alt={image.prompt}
-                className="object-cover w-full aspect-square rounded-t-md"
+                className="absolute inset-0 w-full h-full object-cover"
                 loading="lazy"
               />
               
@@ -607,7 +610,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
                 </span>
               </div>
             </CardContent>
-          </Card>
+          </div>
         ))}
       </div>
     </div>
