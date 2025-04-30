@@ -17,6 +17,8 @@ import galleryRoutes from "./gallery-routes";
 import { attachWS, setPush } from "./ws";
 import { setupCleanupJob } from "./cleanup";
 import { persistImage } from "./fs-storage";
+import { models } from "./config/models";
+import modelRoutes, { initializeModels } from "./routes/model-routes";
 
 // Fix for __dirname in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -62,91 +64,130 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       job.status = "processing";
       
-      const { prompt, model, size, quality, count, style, background, output_format } = data;
+      const { prompt, modelKey, size, quality, n, style, background, output_format, aspect_ratio, seed } = data;
       
-      // Call OpenAI to generate images based on the model
-      // For DALL-E 3, only one image can be generated at a time
-      const numImages = model === 'dall-e-3' ? 1 : parseInt(count);
+      console.log(`Job ${jobId}: Processing image generation with model: ${modelKey}`);
       
-      // Create the base request object
-      const requestParams: any = {
-        model: model,
-        prompt: prompt,
-        n: numImages,
-        size: size,
-      };
+      // Import the generateWithReplicate function dynamically to avoid circular imports
+      const { generateWithReplicate } = await import('./routes/replicate-routes');
       
-      // DALL-E models support response_format but GPT-Image-1 doesn't
-      if (model !== "gpt-image-1") {
-        requestParams.response_format = "b64_json";
+      // Determine provider based on model key
+      const modelInfo = models.find(m => m.key === modelKey);
+      if (!modelInfo) {
+        throw new Error(`Unknown model: ${modelKey}`);
       }
       
-      // Add model-specific parameters
-      if (model === 'dall-e-3') {
-        // DALL-E 3 specific parameters
-        requestParams.quality = quality === 'hd' || quality === 'standard' ? quality : 'standard';
-        if (style) requestParams.style = style;
-        if (output_format) requestParams.response_format = output_format;
-      } else if (model === 'gpt-image-1') {
-        // GPT-Image-1 specific parameters
-        if (quality === 'high' || quality === 'medium' || quality === 'low' || quality === 'auto') {
-          requestParams.quality = quality;
-        } else {
-          requestParams.quality = 'high'; // Default to high quality
-        }
-        if (background) requestParams.background = background;
-        // GPT-Image-1 doesn't support response_format
-      } else {
-        // DALL-E 2 specific parameters - No quality parameter, it's not supported
-        if (output_format) requestParams.response_format = output_format;
-      }
+      let generatedImages: GeneratedImage[] = [];
       
-      console.log(`Job ${jobId}: Sending image generation request with params:`, JSON.stringify(requestParams));
-      const response = await openai.images.generate(requestParams);
-      console.log(`Job ${jobId}: OpenAI API response:`, JSON.stringify(response, null, 2));
-      
-      // Check if response has data
-      if (!response.data || response.data.length === 0) {
-        throw new Error("No images were generated");
-      }
-      
-      // Process and store the response
-      const generatedImages = response.data.map((image, index) => {
-        // Log image data for debugging
-        console.log(`Job ${jobId}: Image ${index} response data:`, 
-          JSON.stringify({
-            url: image.url ? "url exists" : "no url",
-            revised_prompt: image.revised_prompt ? "revised_prompt exists" : "no revised_prompt",
-            b64_json: image.b64_json ? "b64_json exists" : "no b64_json"
-          })
-        );
+      // Handle OpenAI models
+      if (modelInfo.provider === 'openai') {
+        // Call OpenAI to generate images based on the model
+        // For DALL-E 3, only one image can be generated at a time
+        const numImages = modelKey === 'dall-e-3' ? 1 : (n || 1);
         
-        // Check if we have a valid URL or base64 image data
-        let imageUrl = "";
-        if (image.url) {
-          imageUrl = image.url;
-          console.log(`Job ${jobId}: Using direct URL from OpenAI:`, imageUrl.substring(0, 50) + "...");
-        } else if (image.b64_json) {
-          imageUrl = `data:image/png;base64,${image.b64_json}`;
-          console.log(`Job ${jobId}: Using base64 image data from OpenAI`);
-        } else {
-          console.warn(`Job ${jobId}: No image URL or base64 data found in OpenAI response`);
-        }
-
-        const newImage = {
-          id: `img_${Date.now()}_${index}`,
-          url: imageUrl,
+        // Create the base request object
+        const requestParams: any = {
+          model: modelKey,
           prompt: prompt,
-          size: size,
-          model: model,
-          createdAt: new Date().toISOString(),
+          n: numImages,
+          size: size || '1024x1024',
         };
         
-        // Store the image in our storage
-        storage.saveImage(newImage);
+        // DALL-E models support response_format but GPT-Image-1 doesn't
+        if (modelKey !== "gpt-image-1") {
+          requestParams.response_format = "b64_json";
+        }
         
-        return newImage;
-      });
+        // Add model-specific parameters
+        if (modelKey === 'dall-e-3') {
+          // DALL-E 3 specific parameters
+          requestParams.quality = quality === 'hd' || quality === 'standard' ? quality : 'standard';
+          if (style) requestParams.style = style;
+          if (output_format) requestParams.response_format = output_format;
+        } else if (modelKey === 'gpt-image-1') {
+          // GPT-Image-1 specific parameters
+          if (quality === 'high' || quality === 'medium' || quality === 'low' || quality === 'auto') {
+            requestParams.quality = quality || 'high';
+          } else {
+            requestParams.quality = 'high'; // Default to high quality
+          }
+          if (background) requestParams.background = background;
+          // GPT-Image-1 doesn't support response_format
+        } else {
+          // DALL-E 2 specific parameters - No quality parameter, it's not supported
+          if (output_format) requestParams.response_format = output_format;
+        }
+        
+        console.log(`Job ${jobId}: Sending OpenAI image generation request with params:`, JSON.stringify(requestParams));
+        const response = await openai.images.generate(requestParams);
+        console.log(`Job ${jobId}: OpenAI API response:`, JSON.stringify(response, null, 2));
+        
+        // Check if response has data
+        if (!response.data || response.data.length === 0) {
+          throw new Error("No images were generated");
+        }
+        
+        // Process and store the response
+        generatedImages = response.data.map((image, index) => {
+          // Log image data for debugging
+          console.log(`Job ${jobId}: Image ${index} response data:`, 
+            JSON.stringify({
+              url: image.url ? "url exists" : "no url",
+              revised_prompt: image.revised_prompt ? "revised_prompt exists" : "no revised_prompt",
+              b64_json: image.b64_json ? "b64_json exists" : "no b64_json"
+            })
+          );
+          
+          // Check if we have a valid URL or base64 image data
+          let imageUrl = "";
+          let fullUrl = "";
+          let thumbUrl = "";
+          
+          if (image.url) {
+            imageUrl = image.url;
+            fullUrl = image.url;
+            thumbUrl = image.url;
+            console.log(`Job ${jobId}: Using direct URL from OpenAI:`, imageUrl.substring(0, 50) + "...");
+          } else if (image.b64_json) {
+            imageUrl = `data:image/png;base64,${image.b64_json}`;
+            fullUrl = imageUrl;
+            thumbUrl = imageUrl; 
+            console.log(`Job ${jobId}: Using base64 image data from OpenAI`);
+          } else {
+            console.warn(`Job ${jobId}: No image URL or base64 data found in OpenAI response`);
+          }
+
+          const newImage: GeneratedImage = {
+            id: `img_${Date.now()}_${index}`,
+            url: imageUrl,
+            fullUrl: fullUrl,
+            thumbUrl: thumbUrl,
+            prompt: prompt,
+            size: size || '1024x1024',
+            model: modelKey,
+            createdAt: new Date().toISOString(),
+          };
+          
+          // Store the image in our storage
+          storage.saveImage(newImage);
+          
+          return newImage;
+        });
+      }
+      // Handle Replicate models
+      else if (modelInfo.provider === 'replicate') {
+        const inputs = {
+          prompt,
+          aspect_ratio,
+          seed
+        };
+        
+        console.log(`Job ${jobId}: Sending Replicate generation request with model ${modelKey} and inputs:`, JSON.stringify(inputs));
+        
+        // Call the Replicate generation function
+        generatedImages = await generateWithReplicate(modelKey, inputs);
+        console.log(`Job ${jobId}: Generated ${generatedImages.length} images with Replicate`);
+      }
       
       // Update job with results
       job.status = "done";

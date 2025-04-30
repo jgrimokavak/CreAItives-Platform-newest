@@ -1,18 +1,21 @@
-// Model configuration for all supported models
+// Model definitions for OpenAI and Replicate
+
 export const models = [
   {
     key: "gpt-image-1",
     provider: "openai",
     visible: ["prompt", "size", "quality", "n"],
-    description: "GPT-Image-1 – most accurate, but slow."
+    description: "GPT‑Image‑1 – most accurate, but slow."
   },
   {
     key: "imagen-3",
     provider: "replicate",
     slug: "google/imagen-3",
-    defaults: { safety_filter_level: "block_only_high" },
+    defaults: { 
+      safety_filter_level: "block_only_high" 
+    },
     visible: ["prompt", "aspect_ratio"],
-    description: "Imagen-3 – accurate, fast, consistent, but not very creative."
+    description: "Imagen‑3 – accurate, fast, consistent, but not very creative."
   },
   {
     key: "flux-pro",
@@ -24,33 +27,38 @@ export const models = [
       safety_tolerance: 2
     },
     visible: ["prompt", "aspect_ratio", "seed"],
-    description: "Flux-Pro 1.1 – fast, creative, high-quality; less prompt-accurate."
+    description: "Flux‑Pro 1.1 – fast, creative, high‑quality; less prompt‑accurate."
   }
 ];
 
-// OpenAI schema for GPT-Image-1
+// OpenAI schema for GPT-Image-1 and DALL-E models
 export const openaiSchema = {
   type: "object",
   properties: {
     prompt: {
       type: "string",
-      description: "A text description of the desired image(s)."
+      description: "Text description of the desired image(s)"
     },
     size: {
       type: "string",
       enum: ["1024x1024", "1536x1024", "1024x1536", "1792x1024", "1024x1792"],
-      description: "The size of the generated images."
+      description: "Size of the generated image"
     },
     quality: {
       type: "string",
-      enum: ["standard", "high", "medium", "low"],
-      description: "The quality of the generated images."
+      enum: ["high", "medium", "low", "auto"],
+      description: "Quality of the generated image"
     },
     n: {
       type: "integer",
       minimum: 1,
       maximum: 10,
-      description: "The number of images to generate."
+      description: "Number of images to generate"
+    },
+    background: {
+      type: "string",
+      enum: ["auto", "transparent", "opaque"],
+      description: "Background transparency (GPT-Image-1 only)"
     }
   },
   required: ["prompt"]

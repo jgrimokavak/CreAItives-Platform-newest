@@ -19,15 +19,40 @@ export type User = typeof users.$inferSelect;
 
 // Image generation schema
 export const generateImageSchema = z.object({
+  // Common fields for all models
   prompt: z.string().min(1).max(32000),
-  model: z.enum(["gpt-image-1", "dall-e-3", "dall-e-2"]),
-  size: z.enum(["auto", "1024x1024", "1536x1024", "1024x1536", "1792x1024", "1024x1792"]),
-  quality: z.enum(["auto", "standard", "hd", "high", "medium", "low"]),
+  // Add Replicate models
+  modelKey: z.enum(["gpt-image-1", "dall-e-3", "dall-e-2", "imagen-3", "flux-pro"]),
+  // OpenAI-specific parameters (only validated when OpenAI model is selected)
+  size: z.enum(["auto", "1024x1024", "1536x1024", "1024x1536", "1792x1024", "1024x1792"]).optional(),
+  quality: z.enum(["auto", "standard", "hd", "high", "medium", "low"]).optional(),
   style: z.enum(["vivid", "natural"]).optional(),
-  count: z.enum(["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]),
+  n: z.number().int().min(1).max(10).optional(),
   output_format: z.enum(["url", "b64_json"]).optional(),
   background: z.enum(["auto", "transparent", "opaque"]).optional(),
+  // Replicate-specific parameters
+  aspect_ratio: z.string().optional(), // For Imagen-3 and Flux-Pro
+  seed: z.number().int().optional(),   // For Flux-Pro
 });
+
+// Map to hold form data for different model types
+export const modelFormSchemas = {
+  "gpt-image-1": z.object({
+    prompt: z.string().min(1).max(32000),
+    size: z.enum(["1024x1024", "1536x1024", "1024x1536", "1792x1024", "1024x1792"]),
+    quality: z.enum(["high", "medium", "low", "auto"]),
+    n: z.number().int().min(1).max(10),
+  }),
+  "imagen-3": z.object({
+    prompt: z.string().min(1).max(32000),
+    aspect_ratio: z.enum(["1:1", "16:9", "9:16", "4:3", "3:4"]),
+  }),
+  "flux-pro": z.object({
+    prompt: z.string().min(1).max(32000),
+    aspect_ratio: z.enum(["1:1", "3:2", "2:3", "16:9", "9:16"]),
+    seed: z.number().int().optional(),
+  })
+};
 
 export type GenerateImageInput = z.infer<typeof generateImageSchema>;
 
