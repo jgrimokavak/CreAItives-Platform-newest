@@ -21,6 +21,7 @@ interface ImageCardProps {
   onStar?: (id: string, status: boolean) => void;
   onRestore?: (id: string) => void;
   onSelect?: (id: string, selected: boolean) => void;
+  onClick?: () => void;  // Add onClick handler for full-size preview
   selected?: boolean;
 }
 
@@ -33,6 +34,7 @@ export default function ImageCard({
   onStar, 
   onRestore, 
   onSelect,
+  onClick,
   selected
 }: ImageCardProps) {
   const [isHovered, setIsHovered] = useState(false);
@@ -40,9 +42,10 @@ export default function ImageCard({
   return (
     <div 
       key={image.id}
-      className="bg-card rounded-lg overflow-hidden shadow-sm border border-border hover:shadow-md transition-shadow group"
+      className="bg-card rounded-lg overflow-hidden shadow-sm border border-border hover:shadow-md transition-shadow group cursor-pointer"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={onClick}
     >
       <div className="relative pb-[100%]">
         {/* Image thumbnail */}
@@ -74,7 +77,10 @@ export default function ImageCard({
                   variant="outline"
                   size="icon"
                   className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border"
-                  onClick={() => onEdit?.(image)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit?.(image);
+                  }}
                 >
                   <PenToolIcon className="h-4 w-4" />
                 </Button>
@@ -90,7 +96,10 @@ export default function ImageCard({
                   variant="outline"
                   size="icon"
                   className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border"
-                  onClick={() => onDownload?.(image)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDownload?.(image);
+                  }}
                 >
                   <DownloadIcon className="h-4 w-4" />
                 </Button>
@@ -110,7 +119,10 @@ export default function ImageCard({
                       "h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border",
                       image.starred && "text-yellow-300 hover:text-yellow-300"
                     )}
-                    onClick={() => onStar(image.id, !image.starred)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onStar(image.id, !image.starred);
+                    }}
                   >
                     <StarIcon className={cn(
                       "h-4 w-4",
@@ -131,7 +143,10 @@ export default function ImageCard({
                     variant="outline"
                     size="icon"
                     className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border hover:text-red-500"
-                    onClick={() => onDelete(image.id, false)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(image.id, false);
+                    }}
                   >
                     <Trash2Icon className="h-4 w-4" />
                   </Button>
