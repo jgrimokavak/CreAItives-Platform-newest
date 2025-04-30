@@ -56,11 +56,23 @@ export class DatabaseStorage implements IStorage {
       base64Data = image.url.split(',')[1];
     }
     
+    // Create directory structure if it doesn't exist
+    const fullDir = path.join(this.uploadsDir, 'full');
+    const thumbDir = path.join(this.uploadsDir, 'thumb');
+    
+    if (!fs.existsSync(fullDir)) {
+      fs.mkdirSync(fullDir, { recursive: true });
+    }
+    
+    if (!fs.existsSync(thumbDir)) {
+      fs.mkdirSync(thumbDir, { recursive: true });
+    }
+    
     // Generate file paths
     const fileName = `${image.id}.png`;
     const thumbName = `${image.id}_thumb.png`;
-    const filePath = path.join(this.uploadsDir, fileName);
-    const thumbPath = path.join(this.uploadsDir, thumbName);
+    const filePath = path.join(fullDir, fileName);
+    const thumbPath = path.join(thumbDir, thumbName);
     
     // Save image file if we have base64 data
     if (base64Data) {
@@ -70,6 +82,9 @@ export class DatabaseStorage implements IStorage {
       fs.writeFileSync(thumbPath, Buffer.from(base64Data, 'base64'));
     }
     
+    // Parse size to get width and height
+    const [width, height] = image.size.split('x');
+    
     // Prepare database object
     const dbImage = {
       id: image.id,
@@ -77,12 +92,12 @@ export class DatabaseStorage implements IStorage {
       prompt: image.prompt,
       size: image.size,
       model: image.model,
-      // Parse size to get width and height
-      width: image.size.split('x')[0] || "1024",
-      height: image.size.split('x')[1] || "1024",
-      // Set fullUrl and thumbUrl
-      fullUrl: `/uploads/${fileName}`,
-      thumbUrl: `/uploads/${thumbName}`,
+      // Set width and height
+      width: width || "1024",
+      height: height || "1024",
+      // Set paths for URLs
+      fullUrl: `/uploads/full/${fileName}`,
+      thumbUrl: `/uploads/thumb/${thumbName}`,
       sourceThumb: image.sourceThumb || null,
       starred: "false",
       // Don't set deletedAt - it's null by default
@@ -91,9 +106,13 @@ export class DatabaseStorage implements IStorage {
     // Save to database
     const [savedImage] = await db.insert(images).values(dbImage).returning();
     
-    // Notify clients about the new image
+    // Notify clients about the new image with full URLs
     push('imageCreated', {
-      id: savedImage.id,
+      image: {
+        id: savedImage.id,
+        fullUrl: dbImage.fullUrl,
+        thumbUrl: dbImage.thumbUrl
+      }
     });
     
     // Convert to GeneratedImage type
@@ -234,8 +253,8 @@ export class DatabaseStorage implements IStorage {
       
       if (image) {
         // Delete image files
-        const filePath = path.join(this.uploadsDir, `${id}.png`);
-        const thumbPath = path.join(this.uploadsDir, `${id}_thumb.png`);
+        const filePath = path.join(this.uploadsDir, 'full', `${id}.png`);
+        const thumbPath = path.join(this.uploadsDir, 'thumb', `${id}_thumb.png`);
         
         if (fs.existsSync(filePath)) {
           fs.unlinkSync(filePath);

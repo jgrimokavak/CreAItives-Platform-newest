@@ -518,10 +518,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   if (!fs.existsSync(uploadsPath)) {
     fs.mkdirSync(uploadsPath, { recursive: true });
+    
+    // Create subdirectories
+    const fullDir = path.join(uploadsPath, 'full');
+    const thumbDir = path.join(uploadsPath, 'thumb');
+    
+    if (!fs.existsSync(fullDir)) {
+      fs.mkdirSync(fullDir, { recursive: true });
+    }
+    
+    if (!fs.existsSync(thumbDir)) {
+      fs.mkdirSync(thumbDir, { recursive: true });
+    }
   }
   
-  // Use express.static directly
-  app.use('/uploads', express.static(uploadsPath));
+  // Use express.static with cache settings
+  app.use('/uploads', express.static(uploadsPath, { maxAge: '7d' }));
 
   // Add gallery routes
   app.use('/api', galleryRoutes);

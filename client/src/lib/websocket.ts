@@ -38,16 +38,19 @@ export function useWebSocket() {
   const handleMessage = (ev: string, data: any) => {
     switch (ev) {
       case 'imageCreated':
+        console.log('Image created:', data.image);
         // Invalidate gallery queries when new images are created
         queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
         break;
         
       case 'imageUpdated':
+        console.log('Image updated:', data);
         // Invalidate gallery queries when images are updated (starred, trashed)
         queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
         break;
         
       case 'imageDeleted':
+        console.log('Image deleted:', data);
         // Invalidate gallery queries when images are deleted
         queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
         break;
