@@ -203,23 +203,34 @@ export default function EditForm({
         throw new Error("Please select at least one image");
       }
       
-      // Extract base64 data from previews
-      const clean = (str: string) => str.replace(/^data:.*;base64,/, "");
+      // Create FormData object for multipart/form-data upload
+      const formData = new FormData();
+      formData.append("prompt", values.prompt);
+      formData.append("size", values.size);
+      formData.append("quality", values.quality);
+      formData.append("n", values.n.toString());
       
-      const body = {
-        images: Object.values(previews).map(preview => clean(preview)),
-        prompt: values.prompt,
-        size: values.size,
-        quality: values.quality,
-        n: values.n,
-        mask: maskPreview ? clean(maskPreview) : null
-      };
+      // Append all selected images
+      selectedFiles.forEach(file => {
+        formData.append("image", file);
+      });
       
-      const response = await apiRequest(
-        "POST",
-        "/api/edit-image",
-        body
-      );
+      // Append mask if selected
+      if (selectedMask) {
+        formData.append("mask", selectedMask);
+      }
+      
+      // Use fetch directly for FormData
+      const response = await fetch("/api/edit-image", {
+        method: "POST",
+        body: formData
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to edit images");
+      }
+      
       return response.json();
     },
     onSuccess: (data) => {
