@@ -4,6 +4,12 @@ import { v4 as uuid } from 'uuid';
 import sharp from 'sharp';
 import prisma from './prisma';
 import { push } from './ws';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+// Get the directory name in ES module context
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Create upload directories if they don't exist
 const initializeDirs = () => {
@@ -28,6 +34,7 @@ export async function persistImage(b64: string, meta: ImageMetadata): Promise<{
 }> {
   const id = uuid();
   const imgBuf = Buffer.from(b64, 'base64');
+  // Use the same root path as in initializeDirs for consistency
   const root = path.join(__dirname, '../uploads');
 
   // Get image metadata
