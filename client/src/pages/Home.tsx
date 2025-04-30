@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PromptForm from "@/components/PromptForm";
@@ -9,11 +9,13 @@ import ErrorState from "@/components/ErrorState";
 import EmptyState from "@/components/EmptyState";
 import { GeneratedImage } from "@/types/image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useEditor } from "@/context/EditorContext";
 
 export default function Home() {
   const [images, setImages] = useState<GeneratedImage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { mode, setMode } = useEditor();
 
   const handleGenerateStart = () => {
     setIsLoading(true);
@@ -53,7 +55,11 @@ export default function Home() {
             </p>
           </div>
 
-          <Tabs defaultValue="generate" className="w-full mb-8">
+          <Tabs 
+            value={mode} 
+            onValueChange={(value) => setMode(value as "generate" | "edit")}
+            className="w-full mb-8"
+          >
             <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
               <TabsTrigger value="generate">Generate</TabsTrigger>
               <TabsTrigger value="edit">Edit</TabsTrigger>

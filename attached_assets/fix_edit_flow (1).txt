@@ -1,0 +1,104 @@
+
+Fix “Edit This Image” flow & source thumbnails
+=============================================
+
+1. Route / State design
+-----------------------
+*Keep everything on the existing single page.*  
+Add a global React context `EditorContext`:
+
+```tsx
+interface EditorCtx {
+  mode: "generate" | "edit";
+  sourceImages: string[];          // data‑URLs
+  setMode: (m: "generate" | "edit") => void;
+  setSourceImages: (arr: string[]) => void;
+}
+```
+
+Create `EditorProvider` in `App.tsx`. The tab toggle now uses
+`ctx.mode` instead of local state.
+
+2. Gallery “✎ Edit” button
+--------------------------
+In `GeneratedImageCard`:
+
+```tsx
+import { useEditor } from "@/context/EditorContext";
+…
+const { setMode, setSourceImages } = useEditor();
+
+<button onClick={()=>{
+  setSourceImages([image.url]);    // pre‑select current image
+  setMode("edit");                 // switch tab
+  window.scrollTo({ top:0, behavior:"smooth" });
+}}>
+  <PencilIcon/>
+</button>
+```
+
+No navigation; no 404.
+
+3. Edit tab pre‑loads source image
+----------------------------------
+`EditForm.tsx` (or `ImageUploaderEdit.tsx`) should consume `sourceImages`
+from context on mount:
+
+```tsx
+const { sourceImages, setSourceImages } = useEditor();
+useEffect(()=>{
+  if (sourceImages.length) {
+    // push into Dropzone previews then clear
+    presetFiles(sourceImages);     // helper that injects File objects
+    setSourceImages([]);           // reset for next time
+  }
+}, []);
+```
+
+`presetFiles` converts a data‑URL to File via `fetch(...).then(r=>r.blob())`.
+
+4. Backend – thumbnail support
+------------------------------
+In `/api/generate-image` and `/api/edit-image` add:
+
+```ts
+const thumbBuf = await sharp(uploadables[0].file as any)
+  .resize(128)
+  .png()
+  .toBuffer();
+const thumb64 = `data:image/png;base64,${thumbBuf.toString("base64")}`;
+…
+out[i].sourceThumb = thumb64;
+```
+
+Return `sourceThumb` only when `images[]` was supplied.
+
+5. Frontend – show thumbnail & reuse
+------------------------------------
+`GeneratedImageCard` display a 32‑px corner badge:
+
+```tsx
+{image.sourceThumb && (
+  <img src={image.sourceThumb} className="w-8 h-8 absolute bottom-2 right-2 rounded shadow" />
+)}
+```
+
+Allow drag‑and‑drop of that thumb into the edit drop‑zone, or reuse via
+the same “✎ Edit” button.
+
+6. Remove 404 path
+------------------
+Delete `/edit` route from react‑router; all editing happens via tab switch.
+
+7. Confirm default quality
+--------------------------
+Ensure `defaultValues` in both generate & edit forms set `quality:"high"`.
+
+Testing
+-------
+* Click ✎ → page scrolls to top, Edit tab selected, image already loaded in
+  “Source Images”.  
+* Generate again; card shows small reference badge.  
+* Repeat with multiple generated images; each can be re‑edited instantly.
+
+Remove the context & UI bits once QA passes.
