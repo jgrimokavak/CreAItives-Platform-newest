@@ -184,9 +184,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           fs.writeFileSync(maskPath, blank);
         }
         
-        // Build uploadables
-        const uploadables = await Promise.all(imgPaths.map(p => toFile(fs.createReadStream(p))));
-        const maskUpload = await toFile(fs.createReadStream(maskPath));
+        // Helper function to create uploadable files with correct MIME type
+        const toUploadable = (p: string) => {
+          const ext = path.extname(p).toLowerCase();
+          const mime = ext === ".jpg" || ext === ".jpeg"
+            ? "image/jpeg"
+            : ext === ".webp"
+              ? "image/webp"
+              : "image/png";
+          return toFile(fs.createReadStream(p), path.basename(p), { type: mime });
+        };
+        
+        // Build uploadables with proper MIME types
+        const uploadables = await Promise.all(imgPaths.map(toUploadable));
+        const maskUpload = await toUploadable(maskPath);
         
         // Log the request to our API logger
         log({

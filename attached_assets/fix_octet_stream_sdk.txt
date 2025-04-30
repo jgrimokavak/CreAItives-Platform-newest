@@ -1,0 +1,71 @@
+
+Problem
+-------
+OpenAI rejects the upload with:
+```
+400 Invalid file 'image[0]': unsupported mimetype ('application/octet-stream')
+```
+Our `toFile()` calls default to `application/octet-stream` because we didn’t
+pass an explicit MIME type.
+
+Solution
+--------
+Pass the correct `type:"image/png"` (or jpg/webp) metadata when wrapping each
+stream with `toFile`.
+
+### routes.ts (inside /api/edit-image)
+
+```ts
+import path from "path";
+import { toFile } from "openai";
+
+// …
+
+const uploadables = await Promise.all(
+  imgPaths.map(p =>
+    toFile(
+      fs.createReadStream(p),
+      path.basename(p),              // filename
+      { type: "image/png" }          // <–– FIX
+    )
+  )
+);
+
+const maskUpload = await toFile(
+  fs.createReadStream(maskPath),
+  "mask.png",
+  { type: "image/png" }              // <–– FIX
+);
+```
+
+If you support jpg / webp, derive MIME from file extension:
+```ts
+const mime = ext === ".jpg" || ext === ".jpeg"
+  ? "image/jpeg"
+  : ext === ".webp"
+    ? "image/webp"
+    : "image/png";
+```
+
+Add a helper:
+
+```ts
+const toUploadable = (p:string) => {
+  const ext = path.extname(p).toLowerCase();
+  const mime = ext === ".jpg" || ext === ".jpeg"
+    ? "image/jpeg"
+    : ext === ".webp"
+      ? "image/webp"
+      : "image/png";
+  return toFile(fs.createReadStream(p), path.basename(p), { type:mime });
+};
+```
+
+Then:
+```ts
+const uploadables = await Promise.all(imgPaths.map(toUploadable));
+const maskUpload  = await toUploadable(maskPath);
+```
+
+Restart the server; OpenAI should accept the images (mime now image/png) and
+return `b64_json` instead of 400.
