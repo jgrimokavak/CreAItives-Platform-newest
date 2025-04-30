@@ -2,11 +2,13 @@ import { useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PromptForm from "@/components/PromptForm";
+import EditForm from "@/components/EditForm";
 import ImageGallery from "@/components/ImageGallery";
 import LoadingState from "@/components/LoadingState";
 import ErrorState from "@/components/ErrorState";
 import EmptyState from "@/components/EmptyState";
 import { GeneratedImage } from "@/types/image";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Home() {
   const [images, setImages] = useState<GeneratedImage[]>([]);
@@ -51,11 +53,28 @@ export default function Home() {
             </p>
           </div>
 
-          <PromptForm
-            onGenerateStart={handleGenerateStart}
-            onGenerateComplete={handleGenerateComplete}
-            onError={handleError}
-          />
+          <Tabs defaultValue="generate" className="w-full mb-8">
+            <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
+              <TabsTrigger value="generate">Generate</TabsTrigger>
+              <TabsTrigger value="edit">Edit</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="generate" className="mt-6">
+              <PromptForm
+                onGenerateStart={handleGenerateStart}
+                onGenerateComplete={handleGenerateComplete}
+                onError={handleError}
+              />
+            </TabsContent>
+            
+            <TabsContent value="edit" className="mt-6">
+              <EditForm
+                onEditStart={handleGenerateStart}
+                onEditComplete={handleGenerateComplete}
+                onError={handleError}
+              />
+            </TabsContent>
+          </Tabs>
         </section>
 
         {isLoading && <LoadingState />}

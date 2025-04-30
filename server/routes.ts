@@ -193,23 +193,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         
         // OpenAI call
+        // @ts-ignore - The OpenAI SDK types don't include all supported sizes
         const response = await openai.images.edit({
           model: "gpt-image-1",
           image: uploadables,
           mask: maskUpload,
           prompt,
           n,
-          size,
-          quality
+          // Convert size to a compatible format for the API
+          size: size === "auto" ? "1024x1024" : size,
+          quality: quality as "auto" | "high" | "medium" | "low"
         });
         
         console.log("OpenAI image edit API response:", JSON.stringify({
           created: response.created,
-          data: response.data.map(d => ({
+          data: response.data?.map(d => ({
             b64_json: d.b64_json ? "data exists" : "no data",
             url: d.url ? "url exists" : "no url"
-          }))
+          })) || []
         }, null, 2));
+
+        // Check if response has data
+        if (!response.data || response.data.length === 0) {
+          throw new Error("No edited images were generated");
+        }
         
         // Process and store the response
         const generatedImages = response.data.map((image, index) => {
