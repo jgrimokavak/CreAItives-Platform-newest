@@ -6,6 +6,7 @@ import {
   PenToolIcon, 
   StarIcon, 
   Trash2Icon,
+  TrashIcon,
   RotateCcwIcon,
   CopyIcon,
   ImageIcon
@@ -161,24 +162,47 @@ export default function ImageCard({
           )}
           
           {mode === 'trash' && onRestore && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onRestore(image.id);
-                    }}
-                  >
-                    <RotateCcwIcon className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Restore</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRestore(image.id);
+                      }}
+                    >
+                      <RotateCcwIcon className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Restore</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border hover:text-red-500"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (window.confirm('Are you sure you want to permanently delete this image? This action cannot be undone.') && onDelete) {
+                          onDelete(image.id, true);
+                        }
+                      }}
+                    >
+                      <TrashIcon className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Delete Permanently</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </>
           )}
           
           {onCopyPrompt && (

@@ -66,10 +66,23 @@ router.patch('/image/:id', async (req, res) => {
 // Bulk update images
 router.patch('/images/bulk', async (req, res) => {
   try {
-    const { ids, starred, deleteToTrash, restoreFromTrash } = req.body;
+    const { ids, starred, deleteToTrash, restoreFromTrash, permanentDelete } = req.body;
     
     if (!ids || !Array.isArray(ids) || ids.length === 0) {
       return res.status(400).json({ error: 'No image IDs provided' });
+    }
+    
+    if (permanentDelete) {
+      // Handle permanent deletion of multiple images
+      for (const id of ids) {
+        await storage.deleteImage(id, true);
+      }
+      
+      // Notify clients about bulk permanent deletion
+      push('gallery-updated', { deleted: ids, permanent: true });
+      
+      res.json({ ok: true, count: ids.length, deleted: true });
+      return;
     }
     
     const updates: any = {};
@@ -88,6 +101,9 @@ router.patch('/images/bulk', async (req, res) => {
     
     await storage.bulkUpdateImages(ids, updates);
     
+    // Notify clients about updates
+    push('gallery-updated', { count: ids.length });
+    
     res.json({ ok: true, count: ids.length });
   } catch (error) {
     console.error('Error bulk updating images:', error);
@@ -102,6 +118,9 @@ router.delete('/image/:id', async (req, res) => {
     const permanent = req.query.permanent === 'true';
     
     await storage.deleteImage(id, permanent);
+    
+    // Notify clients about the deletion
+    push('gallery-updated', { deleted: id, permanent });
     
     res.json({ ok: true });
   } catch (error) {
