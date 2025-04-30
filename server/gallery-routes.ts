@@ -16,13 +16,17 @@ router.get('/gallery', async (req, res) => {
       { cursor, limit, starred: starred === 'true', trash: trash === 'true', searchQuery: q });
     
     // Get images from database with filtering for starred/trash and search
-    const { items, nextCursor } = await storage.getAllImages({
+    const searchParams = {
       starred: starred === 'true',
       trash: trash === 'true',
       limit: Number(limit),
       cursor: cursor as string,
       searchQuery: q as string
-    });
+    };
+    
+    console.log('Calling storage.getAllImages with params:', JSON.stringify(searchParams));
+    
+    const { items, nextCursor } = await storage.getAllImages(searchParams);
     
     console.log(`Returning ${items.length} images, nextCursor: ${nextCursor}`);
     

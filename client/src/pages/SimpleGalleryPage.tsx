@@ -385,11 +385,11 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
   
   // Separate effect for search term changes
   useEffect(() => {
-    // Only search if term is not empty
-    if (debouncedSearchTerm !== undefined) {
-      console.log(`Search term changed to: ${debouncedSearchTerm}`);
-      fetchImages();
-    }
+    console.log(`Search term changed to: "${debouncedSearchTerm}"`);
+    
+    // Always fetch images when the search term changes
+    // This allows showing all images when search is cleared
+    fetchImages();
   }, [debouncedSearchTerm]);
   
   // Empty state
@@ -468,22 +468,31 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
           )}
           
           {/* Search input */}
-          <div className="relative w-full max-w-xs" 
-              onClick={(e) => e.stopPropagation()} // Stop click propagation
-              onSubmit={(e) => e.preventDefault()} // Prevent any form submission
+          <form 
+            className="relative w-full max-w-xs"
+            onClick={(e) => e.stopPropagation()} 
+            onSubmit={(e) => {
+              e.preventDefault(); // Prevent any form submission
+              console.log('Search form submit prevented');
+              return false;
+            }}
           >
             <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="search" 
               placeholder="Search by prompt..."
               value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
+              onChange={(e) => {
+                console.log(`Search input changed to: "${e.target.value}"`);
+                setSearchInput(e.target.value);
+              }}
               className="pl-8 h-9 md:w-[200px] lg:w-[300px]"
               onKeyDown={(e) => {
                 // Prevent form submission on Enter key
                 if (e.key === 'Enter') {
                   e.preventDefault();
                   e.stopPropagation();
+                  console.log('Enter key press in search prevented default action');
                   return false;
                 }
               }}
@@ -494,7 +503,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
                 onClick={() => setSearchInput('')}
               />
             )}
-          </div>
+          </form>
           
           {/* Item count */}
           <div className="text-sm text-muted-foreground">

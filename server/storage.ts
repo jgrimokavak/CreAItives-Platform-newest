@@ -168,10 +168,16 @@ export class DatabaseStorage implements IStorage {
       console.log(`Searching for prompt containing: "${searchTerm}"`);
       
       // Use the GIN trigram index for text search
-      if (searchTerm.length >= 2) { // Minimum 2 chars for performance reasons
-        conditions.push(
-          ilike(images.prompt, `%${searchTerm}%`)
-        );
+      if (searchTerm.length >= 1) { // Allow even single character searches
+        try {
+          conditions.push(
+            ilike(images.prompt, `%${searchTerm}%`)
+          );
+          
+          console.log(`Added search condition for prompt containing: "${searchTerm}"`);
+        } catch (err) {
+          console.error(`Error adding search condition:`, err);
+        }
       }
     }
     
