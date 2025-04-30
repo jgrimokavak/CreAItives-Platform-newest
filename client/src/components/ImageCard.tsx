@@ -164,7 +164,10 @@ export default function ImageCard({
                     variant="outline"
                     size="icon"
                     className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border"
-                    onClick={() => onRestore(image.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRestore(image.id);
+                    }}
                   >
                     <RotateCcwIcon className="h-4 w-4" />
                   </Button>
