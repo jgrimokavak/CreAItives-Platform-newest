@@ -63,13 +63,25 @@ export default function ImageCard({
         
         {/* Selection overlay */}
         {onSelect && (
-          <div className="absolute top-2 left-2 z-10">
-            <input
-              type="checkbox"
-              checked={selected}
-              onChange={(e) => onSelect(image.id, e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300"
-            />
+          <div 
+            className="absolute top-2 left-2 z-10 bg-white/80 backdrop-blur-sm rounded p-1 shadow-sm hover:bg-white/95 transition-colors cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect(image.id, !selected);
+            }}
+          >
+            <div className="relative w-5 h-5">
+              <input
+                type="checkbox"
+                checked={selected}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  onSelect(image.id, e.target.checked);
+                }}
+                className="h-5 w-5 rounded border-gray-300 cursor-pointer"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
           </div>
         )}
         
