@@ -1,0 +1,40 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Image {
+  id         String        @id @default(uuid())
+  userId     String
+  prompt     String
+  model      String
+  params     Json
+  width      Int
+  height     Int
+  path       String
+  thumbPath  String
+  costTokens Int?          // optional, fill when you calculate
+  starred    Boolean       @default(false)
+  deletedAt  DateTime?     // null = active, not null = in Trash
+  createdAt  DateTime      @default(now())
+
+  sources    SourceImage[]
+  @@index([createdAt])
+}
+
+model SourceImage {
+  id        String   @id @default(uuid())
+  imageId   String
+  path      String
+  thumbPath String
+
+  Image     Image    @relation(fields:[imageId], references:[id], onDelete: Cascade)
+  @@index([imageId])
+}
