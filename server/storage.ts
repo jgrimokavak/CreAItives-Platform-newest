@@ -1,6 +1,6 @@
 import { users, images, type User, type InsertUser, type GeneratedImage } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, isNull, isNotNull, and } from "drizzle-orm";
+import { eq, desc, isNull, isNotNull, and, ilike, sql } from "drizzle-orm";
 import * as fs from "fs";
 import * as path from "path";
 import { push } from "./ws";
@@ -136,11 +136,11 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  async getAllImages(options: { starred?: boolean; trash?: boolean; limit?: number; cursor?: string } = {}): Promise<{ 
+  async getAllImages(options: { starred?: boolean; trash?: boolean; limit?: number; cursor?: string; searchQuery?: string } = {}): Promise<{ 
     items: GeneratedImage[]; 
     nextCursor: string | null 
   }> {
-    const { starred, trash, limit = 20, cursor } = options;
+    const { starred, trash, limit = 20, cursor, searchQuery } = options;
     
     console.log(`getAllImages called with options:`, JSON.stringify(options));
     
@@ -160,6 +160,19 @@ export class DatabaseStorage implements IStorage {
       conditions.push(isNotNull(images.deletedAt));
     } else {
       conditions.push(isNull(images.deletedAt));
+    }
+    
+    // Add text search if searchQuery is provided
+    if (searchQuery && searchQuery.trim() !== '') {
+      const searchTerm = searchQuery.trim();
+      console.log(`Searching for prompt containing: "${searchTerm}"`);
+      
+      // Use the GIN trigram index for text search
+      if (searchTerm.length >= 2) { // Minimum 2 chars for performance reasons
+        conditions.push(
+          ilike(images.prompt, `%${searchTerm}%`)
+        );
+      }
     }
     
     // Apply all conditions to the query

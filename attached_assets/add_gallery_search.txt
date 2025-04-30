@@ -1,0 +1,123 @@
+
+Add prompt‑text search in Gallery
+=================================
+
+Goal
+----
+Allow users to filter gallery images by words in the original **prompt**.  
+Example: typing “rick” returns any image whose `prompt` contains “rick”, case‑insensitive.
+
+Backend (PostgreSQL + Prisma)
+-----------------------------
+1. **Enable trigram search** (best performance)
+   ```sql
+   CREATE EXTENSION IF NOT EXISTS pg_trgm;
+   ```
+
+2. **Add GIN index**
+   ```sql
+   CREATE INDEX IF NOT EXISTS image_prompt_trgm
+   ON "Image"
+   USING gin (prompt gin_trgm_ops);
+   ```
+
+   In Prisma migration:
+   ```prisma
+   /// migrate.sql
+   -- Enable pg_trgm and index
+   ```
+
+3. **Update gallery route**
+   `server/routes.ts`
+   ```ts
+   app.get("/api/gallery", async (req,res)=>{
+     const { cursor, limit = 50, q } = req.query;
+     const where:any = { userId:"demo", deletedAt:null };
+     if (q) where.prompt = { contains: q as string, mode:"insensitive" };
+
+     const items = await prisma.image.findMany({
+       where,
+       take:+limit,
+       orderBy:{ createdAt:"desc" },
+       ...(cursor ? { cursor:{ id:cursor as string } } : {}),
+     });
+     res.json({ items, nextCursor: items.at(-1)?.id });
+   });
+   ```
+
+   *`contains + insensitive` uses the trigram index automatically.*
+
+4. **API validation**
+   Accept `q?: string` (1‑64 chars). Ignore if empty.
+
+Front‑end (GalleryPage)
+-----------------------
+
+1. **SearchBar component**
+   ```tsx
+   const [text,setText] = useState("");
+   const debounced = useDebounce(text, 300);   // custom hook
+
+   // place at top of GalleryPage
+   <Input
+     value={text}
+     onChange={e=> setText(e.target.value)}
+     placeholder="Search prompts…"
+     className="w-64"
+   />
+   ```
+
+2. **React‑Query integration**
+   ```tsx
+   const {
+     data, fetchNextPage, hasNextPage
+   } = useInfiniteQuery(
+     ["gallery", { q: debounced, trash, starred }],
+     ({ pageParam }) =>
+       fetch(`/api/gallery?cursor=${pageParam ?? ""}&q=${debounced}`)
+         .then(r=>r.json()),
+     { getNextPageParam: last => last.nextCursor }
+   );
+   ```
+
+3. **Reset scroll on new query**
+   `useEffect(()=> { scrollRef.current?.scrollTo(0,0) }, [debounced]);`
+
+4. **Highlight matches (optional)**
+   In `ImageCard`, wrap prompt:
+   ```tsx
+   const parts = image.prompt.split(new RegExp(`(${debounced})`,"gi"));
+   <p className="line-clamp-1">
+     {parts.map((p,i)=>
+       p.toLowerCase()===debounced.toLowerCase()
+         ? <mark key={i} className="bg-yellow-300">{p}</mark>
+         : p )}
+   </p>
+   ```
+
+5. **UX details**
+   * “×” clear button if `text.length>0`.  
+   * Show “8 images” count updates after fetch.  
+   * If no results, display empty‑state illustration.
+
+Edge cases
+----------
+* Empty search = normal gallery.  
+* Query shorter than 2 chars ignored to avoid perf hit.  
+* Works alongside Starred/Trash filters (all params in key & API).
+
+Testing
+-------
+1. Generate image with prompt “Rick and Morty playing Catan”.  
+2. Open Gallery, search “rick” → tile appears.  
+3. Search “morty” → same tile appears.  
+4. Search “space” (absent) → “No images” placeholder.  
+5. Clear search → full gallery returns.
+
+Implementation files to touch
+-----------------------------
+* `server/routes.ts` – gallery endpoint
+* `schema.prisma` & migration
+* `client/src/pages/GalleryPage.tsx`
+* `client/src/components/SearchBar.tsx` (new)
+* `client/src/hooks/useDebounce.ts` (utility)

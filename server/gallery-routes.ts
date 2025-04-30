@@ -10,17 +10,18 @@ const router = Router();
 // Get gallery images with pagination
 router.get('/gallery', async (req, res) => {
   try {
-    const { cursor, limit = 50, starred, trash } = req.query;
+    const { cursor, limit = 50, starred, trash, q } = req.query;
     
     console.log(`Gallery request received with params:`, 
-      { cursor, limit, starred: starred === 'true', trash: trash === 'true' });
+      { cursor, limit, starred: starred === 'true', trash: trash === 'true', searchQuery: q });
     
-    // Get images from database with filtering for starred/trash
+    // Get images from database with filtering for starred/trash and search
     const { items, nextCursor } = await storage.getAllImages({
       starred: starred === 'true',
       trash: trash === 'true',
       limit: Number(limit),
-      cursor: cursor as string
+      cursor: cursor as string,
+      searchQuery: q as string
     });
     
     console.log(`Returning ${items.length} images, nextCursor: ${nextCursor}`);
