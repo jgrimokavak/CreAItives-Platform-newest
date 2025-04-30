@@ -42,20 +42,20 @@ export async function persistImage(b64: string, meta: ImageMetadata, customId?: 
   // Get image metadata
   const { width, height } = await sharp(imgBuf).metadata();
 
-  // Generate higher quality thumbnail with proper aspect ratio
+  // Generate optimized WebP thumbnail with proper aspect ratio
   const thumbBuf = await sharp(imgBuf)
     .resize({
-      width: 512, // Larger thumbnail size for better quality
-      height: 512,
+      width: 256, // Smaller size for faster loading
+      height: 256,
       fit: 'inside', // Maintain aspect ratio
       withoutEnlargement: true, // Don't enlarge small images
     })
-    .png({ quality: 90, compressionLevel: 8 }) // Higher quality PNG
+    .webp({ quality: 90 }) // WebP format for better compression while preserving quality
     .toBuffer();
 
-  // Define paths
+  // Define paths - full image as PNG, thumbnail as WebP
   const fullPath = `full/${id}.png`;
-  const thumbPath = `thumb/${id}.png`;
+  const thumbPath = `thumb/${id}.webp`;
 
   // Write files
   fs.writeFileSync(path.join(root, fullPath), imgBuf);

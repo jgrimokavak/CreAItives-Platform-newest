@@ -1,6 +1,6 @@
 import { users, images, type User, type InsertUser, type GeneratedImage } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, isNull, isNotNull, and, ilike, sql } from "drizzle-orm";
+import { eq, desc, isNull, isNotNull, and, ilike, lt } from "drizzle-orm";
 import * as fs from "fs";
 import * as path from "path";
 import { push } from "./ws";
@@ -140,109 +140,147 @@ export class DatabaseStorage implements IStorage {
     items: GeneratedImage[]; 
     nextCursor: string | null 
   }> {
-    const { starred, trash, limit = 20, cursor, searchQuery } = options;
+    const { starred, trash, limit = 50, cursor, searchQuery } = options;
     
     console.log(`getAllImages called with options:`, JSON.stringify(options));
     
-    // Build query
-    let query = db.select().from(images);
+    // Apply sensible limit constraints for performance
+    const take = Math.min(Number(limit) || 50, 100);
     
-    // Build conditions array
-    const conditions = [];
-    
-    // Filter by starred and trash status
-    if (starred) {
-      console.log("Filtering for starred=true images");
-      conditions.push(eq(images.starred, "true"));
-    }
-    
-    if (trash) {
-      conditions.push(isNotNull(images.deletedAt));
-    } else {
-      conditions.push(isNull(images.deletedAt));
-    }
-    
-    // Add text search if searchQuery is provided
-    if (searchQuery && searchQuery.trim() !== '') {
-      const searchTerm = searchQuery.trim();
-      console.log(`Searching for prompt containing: "${searchTerm}"`);
+    try {
+      // Build query
+      let query = db.select().from(images);
       
-      // Use the GIN trigram index for text search
-      if (searchTerm.length >= 1) { // Allow even single character searches
-        try {
-          conditions.push(
-            ilike(images.prompt, `%${searchTerm}%`)
-          );
-          
-          console.log(`Added search condition for prompt containing: "${searchTerm}"`);
-        } catch (err) {
-          console.error(`Error adding search condition:`, err);
+      // Build conditions array
+      const conditions = [];
+      
+      // Filter by starred and trash status
+      if (starred) {
+        console.log("Filtering for starred=true images");
+        conditions.push(eq(images.starred, "true"));
+      }
+      
+      if (trash) {
+        conditions.push(isNotNull(images.deletedAt));
+      } else {
+        conditions.push(isNull(images.deletedAt));
+      }
+      
+      // Add text search if searchQuery is provided
+      if (searchQuery && searchQuery.trim() !== '') {
+        const searchTerm = searchQuery.trim();
+        console.log(`Searching for prompt containing: "${searchTerm}"`);
+        
+        // Use case-insensitive ILIKE for flexible search
+        if (searchTerm.length >= 1) { // Allow even single character searches
+          try {
+            conditions.push(
+              ilike(images.prompt, `%${searchTerm}%`)
+            );
+            
+            console.log(`Added search condition for prompt containing: "${searchTerm}"`);
+          } catch (err) {
+            console.error(`Error adding search condition:`, err);
+          }
         }
       }
-    }
-    
-    // Apply all conditions to the query
-    if (conditions.length === 1) {
-      query = query.where(conditions[0]);
-    } else if (conditions.length > 1) {
-      // For multiple conditions, use the 'and' operator
-      query = query.where(and(...conditions));
-    }
-    
-    // Order by createdAt (latest first)
-    query = query.orderBy(desc(images.createdAt));
-    
-    // Apply pagination
-    query = query.limit(limit + 1); // Get one extra to determine if there's more
-    
-    // Apply cursor if provided
-    if (cursor) {
-      const [cursorDate, cursorId] = cursor.split(':');
-      // In a real app, we'd use a more sophisticated cursor approach
-      if (cursorDate && cursorId) {
-        // Skip items before the cursor
-        // This is a simplification - in production we'd use something more efficient
+      
+      // Apply all conditions to the query
+      if (conditions.length === 1) {
+        query = query.where(conditions[0]);
+      } else if (conditions.length > 1) {
+        // For multiple conditions, use the 'and' operator
+        query = query.where(and(...conditions));
       }
-    }
-    
-    // Log the SQL for debugging
-    const sql = query.toSQL();
-    console.log("Generated SQL:", sql.sql);
-    console.log("SQL parameters:", sql.params);
-    
-    // Execute query
-    const results = await query;
-    console.log(`Query returned ${results.length} results`);
-    
-    // Check if there are more results
-    const hasMore = results.length > limit;
-    const items = hasMore ? results.slice(0, limit) : results;
-    
-    // Create next cursor if there are more results
-    let nextCursor = null;
-    if (hasMore && items.length > 0) {
-      const lastItem = items[items.length - 1];
-      nextCursor = `${lastItem.createdAt}:${lastItem.id}`;
-    }
-    
-    // Convert to GeneratedImage type
-    const mappedItems = items.map(item => {
-      // This is important - make sure we properly convert the string "true"/"false" to boolean
-      const starredStatus = item.starred === "true";
-      console.log(`Image ${item.id} starred status: "${item.starred}" -> ${starredStatus}`);
+      
+      // Order by createdAt (latest first)
+      query = query.orderBy(desc(images.createdAt));
+      
+      // Apply cursor-based pagination if provided
+      if (cursor) {
+        try {
+          const cursorImage = await db.select()
+            .from(images)
+            .where(eq(images.id, cursor))
+            .limit(1);
+            
+          if (cursorImage.length > 0) {
+            // Get the creation date of the cursor image for efficient pagination
+            query = query.where(
+              lt(images.createdAt, cursorImage[0].createdAt)
+            );
+          }
+        } catch (err) {
+          console.error('Error applying cursor pagination:', err);
+        }
+      }
+      
+      // Apply pagination
+      query = query.limit(take + 1); // Get one extra to determine if there's more
+      
+      // Log the SQL for debugging
+      const sqlInfo = query.toSQL();
+      console.log("Generated SQL:", sqlInfo.sql);
+      console.log("SQL parameters:", sqlInfo.params);
+      
+      // Execute query
+      const results = await query;
+      console.log(`Query returned ${results.length} results`);
+      
+      // Check if there are more results
+      const hasMore = results.length > take;
+      const items = hasMore ? results.slice(0, take) : results;
+      
+      // Create next cursor if there are more results
+      let nextCursor = null;
+      if (hasMore && items.length > 0) {
+        const lastItem = items[items.length - 1];
+        nextCursor = lastItem.id; // Simplified cursor using just the ID
+      }
+      
+      // Convert to GeneratedImage type with thumbnail optimization
+      const mappedItems = items.map(item => {
+        // This is important - make sure we properly convert the string "true"/"false" to boolean
+        const starredStatus = item.starred === "true";
+        console.log(`Image ${item.id} starred status: "${item.starred}" -> ${starredStatus}`);
+        
+        return {
+          id: item.id,
+          url: item.thumbUrl || item.url, // Prefer thumbnail for gallery listing
+          prompt: item.prompt,
+          size: item.size,
+          model: item.model,
+          createdAt: item.createdAt ? new Date(item.createdAt).toISOString() : new Date().toISOString(),
+          width: item.width,
+          height: item.height,
+          thumbUrl: item.thumbUrl,
+          fullUrl: item.fullUrl,
+          sourceThumb: item.sourceThumb,
+          sourceImage: item.sourceImage,
+          starred: starredStatus,
+          deletedAt: item.deletedAt ? new Date(item.deletedAt).toISOString() : null
+        };
+      });
+      
+      console.log(`Returning ${mappedItems.length} images, nextCursor: ${nextCursor}`);
+      
+      // Log a sample image for debugging
+      if (mappedItems.length > 0) {
+        console.log(`Sample image data:`, {
+          id: mappedItems[0].id,
+          starred: mappedItems[0].starred,
+          deletedAt: mappedItems[0].deletedAt
+        });
+      }
       
       return {
-        ...item,
-        createdAt: item.createdAt ? new Date(item.createdAt).toISOString() : new Date().toISOString(),
-        starred: starredStatus,
-        deletedAt: item.deletedAt ? new Date(item.deletedAt).toISOString() : null
+        items: mappedItems,
+        nextCursor
       };
-    });
-    
-    return {
-      items: mappedItems,
-      nextCursor
-    };
+    } catch (error) {
+      console.error('Error getting images:', error);
+      return { items: [], nextCursor: null };
+    }
   }
 
   async getImageById(id: string): Promise<GeneratedImage | undefined> {
@@ -309,27 +347,61 @@ export class DatabaseStorage implements IStorage {
       const [image] = await db.select().from(images).where(eq(images.id, id));
       
       if (image) {
-        // Delete image files
-        const filePath = path.join(this.uploadsDir, 'full', `${id}.png`);
-        const thumbPath = path.join(this.uploadsDir, 'thumb', `${id}_thumb.png`);
-        
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-        }
-        
-        if (fs.existsSync(thumbPath)) {
-          fs.unlinkSync(thumbPath);
+        try {
+          // Extract actual paths from URLs
+          const getPathFromUrl = (url: string | null) => {
+            if (!url) return null;
+            // Extract path component from URL, e.g. /uploads/full/img_123.png -> full/img_123.png
+            const match = url.match(/\/uploads\/(.+)$/);
+            return match ? match[1] : null;
+          };
+          
+          // Support various potential file formats (png, webp)
+          const possibleFullPaths = [
+            path.join(this.uploadsDir, 'full', `${id}.png`),
+            path.join(this.uploadsDir, getPathFromUrl(image.fullUrl) || '')
+          ];
+          
+          const possibleThumbPaths = [
+            path.join(this.uploadsDir, 'thumb', `${id}.webp`),
+            path.join(this.uploadsDir, 'thumb', `${id}.png`),
+            path.join(this.uploadsDir, 'thumb', `${id}_thumb.png`),
+            path.join(this.uploadsDir, getPathFromUrl(image.thumbUrl) || '')
+          ];
+          
+          // Delete full image if any of the possible paths exist
+          for (const fullPath of possibleFullPaths) {
+            if (fs.existsSync(fullPath)) {
+              console.log(`Deleting full image at: ${fullPath}`);
+              fs.unlinkSync(fullPath);
+              break; // Only delete one matching file
+            }
+          }
+          
+          // Delete thumbnail if any of the possible paths exist
+          for (const thumbPath of possibleThumbPaths) {
+            if (fs.existsSync(thumbPath)) {
+              console.log(`Deleting thumbnail at: ${thumbPath}`);
+              fs.unlinkSync(thumbPath);
+              break; // Only delete one matching file
+            }
+          }
+        } catch (err) {
+          console.error(`Error deleting image files for ${id}:`, err);
+          // Continue with database deletion even if file deletion fails
         }
         
         // Delete from database
         await db.delete(images).where(eq(images.id, id));
         
-        // Notify clients
+        // Notify clients about permanent deletion
         push('imageDeleted', { id });
+        console.log(`Permanently deleted image ${id}`);
       }
     } else {
       // Soft delete - mark as deleted
       await this.updateImage(id, { deletedAt: new Date().toISOString() });
+      console.log(`Soft deleted image ${id} (moved to trash)`);
     }
   }
 
