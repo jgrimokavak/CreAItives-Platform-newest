@@ -60,6 +60,8 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       if (mode === 'trash') params.append('trash', 'true');
       
       const url = `/api/gallery?${params.toString()}`;
+      console.log('Fetching images with URL:', url);
+      
       const response = await fetch(url);
       
       if (!response.ok) {
@@ -72,6 +74,10 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       // Ensure images have proper URLs
       const formattedImages = data.items || [];
       
+      // Clear selection when filter changes
+      setSelectedIds([]);
+      
+      // Update the images
       setImages(formattedImages);
     } catch (err) {
       console.error('Error fetching gallery:', err);
@@ -161,9 +167,13 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
     try {
       console.log(`Star action: id=${id}, current starred status=${starred}`);
       
+      // The API requires "starred" to be the NEW state we want, not the current state
+      const newStarredState = !starred;
+      console.log(`Setting image ${id} star status to ${newStarredState}`);
+      
       // Update the UI optimistically
       setImages(prev =>
-        prev.map(img => img.id === id ? { ...img, starred: !starred } : img)
+        prev.map(img => img.id === id ? { ...img, starred: newStarredState } : img)
       );
       
       // Make the actual API call
@@ -172,23 +182,27 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ starred: !starred })
+        body: JSON.stringify({ starred: newStarredState })
       });
       
       if (!response.ok) {
         throw new Error('Failed to update image');
       }
       
+      const data = await response.json();
+      console.log('Star response:', data);
+      
       // If we're in starred mode and unstarring, refresh the gallery to remove it
-      if (showStarredOnly && starred) {
+      if (showStarredOnly && !newStarredState) {
+        console.log('Refreshing gallery after unstarring in starred mode');
         fetchImages();
       }
       
       toast({
-        title: starred ? 'Image unmarked' : 'Image starred',
-        description: starred 
-          ? 'The image has been removed from your starred items' 
-          : 'The image has been added to your starred items'
+        title: newStarredState ? 'Image starred' : 'Image unmarked',
+        description: newStarredState 
+          ? 'The image has been added to your starred items' 
+          : 'The image has been removed from your starred items'
       });
     } catch (error) {
       console.error('Error starring image:', error);

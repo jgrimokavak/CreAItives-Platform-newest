@@ -140,7 +140,14 @@ export default function ImageCard({
                       e.stopPropagation();
                       e.preventDefault();
                       if (onStar) {
-                        onStar(image.id, image.starred || false);
+                        try {
+                          // Use the current state for consistency
+                          const isCurrentlyStarred = image.starred || false;
+                          console.log(`Card star button clicked - id:${image.id}, currently starred:${isCurrentlyStarred}`);
+                          onStar(image.id, isCurrentlyStarred);
+                        } catch (error) {
+                          console.error('Error in star button handler:', error);
+                        }
                       }
                     }}
                   >
