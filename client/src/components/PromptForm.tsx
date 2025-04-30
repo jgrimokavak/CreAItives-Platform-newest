@@ -260,9 +260,9 @@ export default function PromptForm({
                   ) : (
                     availableModels.map(model => (
                       <SelectItem key={model.key} value={model.key}>
-                        {model.key === "gpt-image-1" ? "GPT-Image-1 (Latest)" : 
-                         model.key === "imagen-3" ? "Imagen-3 (Replicate)" :
-                         model.key === "flux-pro" ? "Flux-Pro (Replicate)" :
+                        {model.key === "gpt-image-1" ? "GPT-Image-1 (OpenAI)" : 
+                         model.key === "imagen-3" ? "Imagen-3 (Google)" :
+                         model.key === "flux-pro" ? "Flux-Pro (Black-forest-labs)" :
                          model.key}
                       </SelectItem>
                     ))
@@ -273,7 +273,10 @@ export default function PromptForm({
                 {selectedModelInfo && (
                   <p className="text-xs text-slate-600">
                     {selectedModelInfo.description || 
-                      (selectedModelInfo.provider === "openai" ? "OpenAI model" : "Replicate model")}
+                      (selectedModelInfo.key === "gpt-image-1" ? "OpenAI's latest image model" : 
+                       selectedModelInfo.key === "imagen-3" ? "Google's Imagen 3 model" : 
+                       selectedModelInfo.key === "flux-pro" ? "Black-forest-labs Flux model" : 
+                       "AI image generation model")}
                   </p>
                 )}
               </div>
