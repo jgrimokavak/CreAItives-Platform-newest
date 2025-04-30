@@ -18,11 +18,19 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
 // Image generation schema
+export const generateSchema = z.object({
+  modelKey: z.enum(["gpt-image-1", "imagen-3", "flux-pro"]),
+  inputs: z.record(z.any())
+});
+
+export type ModelKey = z.infer<typeof generateSchema>["modelKey"];
+
+// Keep the old schema for compatibility with existing code, but we'll transition to the new one
 export const generateImageSchema = z.object({
   // Common fields for all models
   prompt: z.string().min(1).max(32000),
-  // Add Replicate models
-  modelKey: z.enum(["gpt-image-1", "dall-e-3", "dall-e-2", "imagen-3", "flux-pro"]),
+  // Updated to match the new model keys
+  modelKey: z.enum(["gpt-image-1", "imagen-3", "flux-pro"]),
   // OpenAI-specific parameters (only validated when OpenAI model is selected)
   size: z.enum(["auto", "1024x1024", "1536x1024", "1024x1536", "1792x1024", "1024x1792"]).optional(),
   quality: z.enum(["auto", "standard", "hd", "high", "medium", "low"]).optional(),

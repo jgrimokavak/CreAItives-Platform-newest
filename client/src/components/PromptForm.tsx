@@ -13,6 +13,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { GeneratedImage } from "@/types/image";
 import { Progress } from "@/components/ui/progress";
+import { ModelKey } from "@shared/schema";
 
 // Model interface for the API response
 interface ModelInfo {
@@ -27,7 +28,6 @@ interface ModelInfo {
 // Base schema with common fields
 const basePromptSchema = z.object({
   prompt: z.string().min(1, "Prompt is required").max(32000),
-  model: z.enum(["gpt-image-1", "dall-e-3", "dall-e-2", "imagen-3", "flux-pro"]),
   count: z.enum(["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]),
   // Optional fields for all model types
   size: z.enum(["auto", "1024x1024", "1536x1024", "1024x1536", "1792x1024", "1024x1792"]).optional(),
@@ -80,11 +80,12 @@ export default function PromptForm({
     fetchModels();
   }, []);
 
+  const [modelKey, setModelKey] = useState<ModelKey>("gpt-image-1");
+
   const form = useForm<PromptFormValues>({
     resolver: zodResolver(promptSchema),
     defaultValues: {
       prompt: "",
-      model: "gpt-image-1",
       size: "1024x1024",
       quality: "high",
       style: "vivid",
@@ -95,8 +96,7 @@ export default function PromptForm({
   });
   
   // Watch for model changes to show appropriate options
-  const selectedModel = form.watch("model");
-  const selectedModelInfo = availableModels.find(model => model.key === selectedModel);
+  const selectedModelInfo = availableModels.find(model => model.key === modelKey);
 
   const generateMutation = useMutation<{images: GeneratedImage[]}, Error, PromptFormValues>({
     mutationFn: async (values: PromptFormValues) => {
@@ -107,7 +107,10 @@ export default function PromptForm({
       const response = await apiRequest(
         "POST",
         "/api/generate",
-        values
+        { 
+          modelKey, 
+          inputs: values 
+        }
       );
       
       const { jobId } = await response.json();
@@ -224,64 +227,49 @@ export default function PromptForm({
           />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="model"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Model</FormLabel>
-                  <Select
-                    onValueChange={(value) => {
-                      field.onChange(value);
-                      // Reset quality to appropriate default for model
-                      if (value === "gpt-image-1") {
-                        form.setValue("quality", "auto");
-                      } else if (value === "dall-e-3") {
-                        form.setValue("quality", "standard");  
-                      } else {
-                        form.setValue("quality", "standard");
-                      }
-                      
-                      // Reset count to 1 for DALL-E 3
-                      if (value === "dall-e-3") {
-                        form.setValue("count", "1");
-                      }
-                    }}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select model" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {loading ? (
-                        <SelectItem value="gpt-image-1">Loading models...</SelectItem>
-                      ) : (
-                        availableModels.map(model => (
-                          <SelectItem key={model.key} value={model.key}>
-                            {model.key === "gpt-image-1" ? "GPT-Image-1 (Latest)" : 
-                             model.key === "dall-e-3" ? "DALL-E 3 (High Quality)" :
-                             model.key === "dall-e-2" ? "DALL-E 2 (Faster)" :
-                             model.key === "imagen-3" ? "Imagen-3 (Replicate)" :
-                             model.key === "flux-pro" ? "Flux-Pro (Replicate)" :
-                             model.key}
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                    <div className="mt-2">
-                      {selectedModelInfo && (
-                        <p className="text-xs text-slate-600">
-                          {selectedModelInfo.description || 
-                            (selectedModelInfo.provider === "openai" ? "OpenAI model" : "Replicate model")}
-                        </p>
-                      )}
-                    </div>
-                  </Select>
-                </FormItem>
-              )}
-            />
+            <div className="mb-4">
+              <FormLabel>Model</FormLabel>
+              <Select
+                onValueChange={(val: ModelKey) => {
+                  setModelKey(val);
+                  // Reset quality to appropriate default for model
+                  if (val === "gpt-image-1") {
+                    form.setValue("quality", "auto");
+                  } else {
+                    form.setValue("quality", "standard");
+                  }
+                }}
+                defaultValue={modelKey}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select model" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {loading ? (
+                    <SelectItem value="gpt-image-1">Loading models...</SelectItem>
+                  ) : (
+                    availableModels.map(model => (
+                      <SelectItem key={model.key} value={model.key}>
+                        {model.key === "gpt-image-1" ? "GPT-Image-1 (Latest)" : 
+                         model.key === "imagen-3" ? "Imagen-3 (Replicate)" :
+                         model.key === "flux-pro" ? "Flux-Pro (Replicate)" :
+                         model.key}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+              <div className="mt-2">
+                {selectedModelInfo && (
+                  <p className="text-xs text-slate-600">
+                    {selectedModelInfo.description || 
+                      (selectedModelInfo.provider === "openai" ? "OpenAI model" : "Replicate model")}
+                  </p>
+                )}
+              </div>
+            </div>
 
             <FormField
               control={form.control}
@@ -299,7 +287,7 @@ export default function PromptForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {selectedModel === "gpt-image-1" && (
+                      {modelKey === "gpt-image-1" && (
                         <>
                           <SelectItem value="auto">Auto</SelectItem>
                           <SelectItem value="1024x1024">1024 × 1024</SelectItem>
@@ -307,22 +295,8 @@ export default function PromptForm({
                           <SelectItem value="1024x1536">1024 × 1536 (Portrait)</SelectItem>
                         </>
                       )}
-                      {selectedModel === "dall-e-3" && (
-                        <>
-                          <SelectItem value="1024x1024">1024 × 1024</SelectItem>
-                          <SelectItem value="1792x1024">1792 × 1024 (Landscape)</SelectItem>
-                          <SelectItem value="1024x1792">1024 × 1792 (Portrait)</SelectItem>
-                        </>
-                      )}
-                      {selectedModel === "dall-e-2" && (
-                        <>
-                          <SelectItem value="1024x1024">1024 × 1024</SelectItem>
-                          <SelectItem value="512x512">512 × 512</SelectItem>
-                          <SelectItem value="256x256">256 × 256</SelectItem>
-                        </>
-                      )}
                       {/* Replicate models don't use 'size' but 'aspect_ratio' */}
-                      {(selectedModel === "imagen-3" || selectedModel === "flux-pro") && (
+                      {(modelKey === "imagen-3" || modelKey === "flux-pro") && (
                         <SelectItem value="auto" disabled>
                           Not applicable - use aspect ratio instead
                         </SelectItem>
@@ -351,22 +325,13 @@ export default function PromptForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {selectedModel === "gpt-image-1" && (
+                      {modelKey === "gpt-image-1" && (
                         <>
                           <SelectItem value="auto">Auto</SelectItem>
                           <SelectItem value="high">High</SelectItem>
                           <SelectItem value="medium">Medium</SelectItem>
                           <SelectItem value="low">Low</SelectItem>
                         </>
-                      )}
-                      {selectedModel === "dall-e-3" && (
-                        <>
-                          <SelectItem value="standard">Standard</SelectItem>
-                          <SelectItem value="hd">HD</SelectItem>
-                        </>
-                      )}
-                      {selectedModel === "dall-e-2" && (
-                        <SelectItem value="standard">Standard</SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -382,15 +347,9 @@ export default function PromptForm({
                   <FormLabel>Number of Images</FormLabel>
                   <Select
                     onValueChange={(value) => {
-                      // Reset to 1 if switching to DALL-E 3 as it only supports 1 image
-                      if (selectedModel === "dall-e-3" && value !== "1") {
-                        field.onChange("1");
-                      } else {
-                        field.onChange(value);
-                      }
+                      field.onChange(value);
                     }}
                     defaultValue={field.value}
-                    disabled={selectedModel === "dall-e-3"}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -410,46 +369,13 @@ export default function PromptForm({
                       <SelectItem value="10">10 Images</SelectItem>
                     </SelectContent>
                   </Select>
-                  {selectedModel === "dall-e-3" && (
-                    <p className="text-xs text-amber-600 mt-1">DALL-E 3 only supports generating 1 image at a time</p>
-                  )}
                 </FormItem>
               )}
             />
           </div>
-
-          {/* Add style option for DALL-E 3 */}
-          {selectedModel === "dall-e-3" && (
-            <div className="mb-4">
-              <FormField
-                control={form.control}
-                name="style"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Style</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value || "vivid"}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select style" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="vivid">Vivid</SelectItem>
-                        <SelectItem value="natural">Natural</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <p className="text-xs text-slate-500 mt-1">Vivid creates hyper-real and dramatic images. Natural produces more realistic images.</p>
-                  </FormItem>
-                )}
-              />
-            </div>
-          )}
           
           {/* Add background option for GPT-Image-1 */}
-          {selectedModel === "gpt-image-1" && (
+          {modelKey === "gpt-image-1" && (
             <div className="mb-4">
               <FormField
                 control={form.control}
@@ -480,7 +406,7 @@ export default function PromptForm({
           )}
           
           {/* Add Replicate-specific parameters */}
-          {(selectedModel === "imagen-3" || selectedModel === "flux-pro") && (
+          {(modelKey === "imagen-3" || modelKey === "flux-pro") && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <FormField
                 control={form.control}
@@ -503,7 +429,7 @@ export default function PromptForm({
                         <SelectItem value="9:16">9:16 (Portrait)</SelectItem>
                         <SelectItem value="4:3">4:3 (Standard)</SelectItem>
                         <SelectItem value="3:4">3:4 (Portrait)</SelectItem>
-                        {selectedModel === "flux-pro" && (
+                        {modelKey === "flux-pro" && (
                           <>
                             <SelectItem value="3:2">3:2 (Landscape)</SelectItem>
                             <SelectItem value="2:3">2:3 (Portrait)</SelectItem>
@@ -517,7 +443,7 @@ export default function PromptForm({
               />
               
               {/* Add seed parameter for Flux-Pro only */}
-              {selectedModel === "flux-pro" && (
+              {modelKey === "flux-pro" && (
                 <FormField
                   control={form.control}
                   name="seed"
