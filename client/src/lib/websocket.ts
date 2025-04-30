@@ -3,29 +3,57 @@ import { queryClient } from './queryClient';
 
 // Function to create a WebSocket connection
 const createWebSocket = (onMessage: (ev: string, data: any) => void): WebSocket => {
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const wsUrl = `${protocol}//${window.location.host}/ws`;
-  
-  const socket = new WebSocket(wsUrl);
-  
-  socket.onopen = () => {
-    console.log('WebSocket connected');
-  };
-  
-  socket.onerror = (error) => {
-    console.error('WebSocket error:', error);
-  };
-  
-  socket.onmessage = (event) => {
-    try {
-      const { ev, data } = JSON.parse(event.data);
-      onMessage(ev, data);
-    } catch (error) {
-      console.error('Error parsing WebSocket message:', error);
-    }
-  };
-  
-  return socket;
+  try {
+    // Safely get the host, ensuring we have a valid value
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.host || document.location.host;
+    const wsUrl = `${protocol}//${host}/ws`;
+    
+    const socket = new WebSocket(wsUrl);
+    
+    socket.onopen = () => {
+      console.log('WebSocket connected');
+    };
+    
+    socket.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+    
+    socket.onmessage = (event) => {
+      try {
+        const { ev, data } = JSON.parse(event.data);
+        onMessage(ev, data);
+      } catch (error) {
+        console.error('Error parsing WebSocket message:', error);
+      }
+    };
+    
+    return socket;
+  } catch (error) {
+    console.error('Failed to create WebSocket connection:', error);
+    // Create a dummy WebSocket for graceful degradation
+    return {
+      readyState: WebSocket.CLOSED,
+      close: () => {},
+      onclose: null,
+      onerror: null,
+      onmessage: null,
+      onopen: null,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+      send: () => {},
+      binaryType: 'blob',
+      bufferedAmount: 0,
+      extensions: '',
+      protocol: '',
+      url: '',
+      CONNECTING: WebSocket.CONNECTING,
+      OPEN: WebSocket.OPEN,
+      CLOSING: WebSocket.CLOSING,
+      CLOSED: WebSocket.CLOSED
+    } as unknown as WebSocket;
+  }
 };
 
 export function useWebSocket() {
