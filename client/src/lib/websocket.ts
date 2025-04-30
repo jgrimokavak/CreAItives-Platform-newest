@@ -1,13 +1,19 @@
 import { useEffect, useRef } from 'react';
 import { queryClient } from './queryClient';
 
-// Function to create a WebSocket connection
-const createWebSocket = (onMessage: (ev: string, data: any) => void): WebSocket => {
+/**
+ * Create a WebSocket connection
+ * Uses proper URL format based on environment
+ */
+export function setupWebSocket(onMessage: (ev: string, data: any) => void): WebSocket {
   try {
-    // Safely get the host, ensuring we have a valid value
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.host || document.location.host;
-    const wsUrl = `${protocol}//${host}/ws`;
+    // Create proper WebSocket URL based on environment
+    const base = import.meta.env.DEV
+      ? `ws://${window.location.hostname}:${import.meta.env.VITE_WS_PORT || window.location.port || 3000}`
+      : window.location.origin.replace(/^http/, 'ws');
+    
+    const wsUrl = `${base}/ws`;
+    console.log(`Connecting to WebSocket at: ${wsUrl}`);
     
     const socket = new WebSocket(wsUrl);
     
@@ -54,13 +60,18 @@ const createWebSocket = (onMessage: (ev: string, data: any) => void): WebSocket 
       CLOSED: WebSocket.CLOSED
     } as unknown as WebSocket;
   }
-};
+}
 
+/**
+ * Hook to manage WebSocket connection
+ * Handles connect/disconnect and reconnection logic
+ */
 export function useWebSocket() {
-  // Use a ref to track if the component is mounted
+  // Use refs to track component lifecycle and socket state
   const isMountedRef = useRef(true);
   const socketRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectAttemptRef = useRef(0);
   
   // Handle WebSocket messages
   const handleMessage = (ev: string, data: any) => {
@@ -89,12 +100,18 @@ export function useWebSocket() {
         window.dispatchEvent(new CustomEvent('gallery-updated', { detail: { type: 'deleted', data } }));
         break;
         
+      case 'gallery-updated':
+        console.log('Gallery updated:', data);
+        // Invalidate gallery queries when the gallery is updated
+        queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
+        break;
+        
       default:
         console.log('Unknown WebSocket event:', ev, data);
     }
   };
   
-  // Function to connect or reconnect WebSocket
+  // Function to connect or reconnect WebSocket with backoff
   const connectWebSocket = () => {
     // Only connect if the component is still mounted
     if (!isMountedRef.current) return;
@@ -105,25 +122,40 @@ export function useWebSocket() {
     }
     
     // Create new socket
-    socketRef.current = createWebSocket(handleMessage);
+    socketRef.current = setupWebSocket(handleMessage);
     
-    // Set up reconnection logic
-    socketRef.current.onclose = (event) => {
-      console.log('WebSocket disconnected:', event.code, event.reason);
-      
-      // Clear any existing reconnect timeout
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
-      }
-      
-      // Reconnect after 5 seconds if not a normal closure and component is mounted
-      if (event.code !== 1000 && isMountedRef.current) {
-        reconnectTimeoutRef.current = setTimeout(() => {
-          console.log('Attempting to reconnect...');
-          connectWebSocket();
-        }, 5000);
-      }
-    };
+    const maxReconnectDelay =
+     30000; // 30 seconds max
+    
+    // Set up reconnection logic with exponential backoff
+    if (socketRef.current) {
+      socketRef.current.onclose = (event) => {
+        console.log('WebSocket disconnected:', event.code, event.reason);
+        
+        // Clear any existing reconnect timeout
+        if (reconnectTimeoutRef.current) {
+          clearTimeout(reconnectTimeoutRef.current);
+        }
+        
+        // Reconnect with exponential backoff if not a normal closure and component is mounted
+        if (event.code !== 1000 && isMountedRef.current) {
+          // Calculate backoff delay (exponential with jitter)
+          const delay = Math.min(
+            1000 * Math.pow(2, reconnectAttemptRef.current) + Math.random() * 1000, 
+            maxReconnectDelay
+          );
+          
+          reconnectAttemptRef.current++; // Increment for next reconnect attempt
+          
+          console.log(`Reconnecting in ${Math.round(delay/1000)}s (attempt ${reconnectAttemptRef.current})...`);
+          
+          reconnectTimeoutRef.current = setTimeout(() => {
+            console.log('Attempting to reconnect...');
+            connectWebSocket();
+          }, delay);
+        }
+      };
+    }
   };
   
   useEffect(() => {

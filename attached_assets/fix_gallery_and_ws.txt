@@ -1,0 +1,76 @@
+
+Fix sluggish gallery + WebSocket errors
+=======================================
+
+Part A – Speed up Gallery
+-------------------------
+
+1. Serve thumbnails only  
+   *server/routes.ts*
+   ```ts
+   const items = await prisma.image.findMany({ … });
+   res.json({
+     items: items.map(i => ({
+       id: i.id,
+       thumb: `/uploads/${i.thumbPath}`,   // 256‑px webp
+       full:  `/uploads/${i.path}`,
+       prompt: i.prompt,
+       model: i.model,
+       createdAt: i.createdAt
+     })),
+     nextCursor: items.at(-1)?.id
+   });
+   ```
+
+2. Pagination limit  
+   ```ts
+   const take = Math.min(Number(req.query.limit) || 50, 100);
+   ```
+   Client infinite query sends `?limit=50`.
+
+3. Remove synchronous `fs.statSync`  
+   Delete tooltip code that calls it; compute size lazily in modal if needed.
+
+4. Thumbnails as WebP  
+   *persistImage.ts*
+   ```ts
+   const thumbBuf = await sharp(imgBuf).resize(256).webp({ quality:90 }).toBuffer();
+   thumbPath = `thumb/${id}.webp`;
+   await putObject(thumbPath, thumbBuf, "image/webp");
+   ```
+
+5. React front‑end  
+   `ImageCard` `<img src={image.thumb} …>`; open `image.full` in modal.  
+   Invalidate `["gallery", filters]` query on `imageCreated` WS event.
+
+Part B – WebSocket URL fix
+--------------------------
+
+1. **client/src/lib/websocket.ts**
+   ```ts
+   export function setupWebSocket(token?: string) {
+     const base = import.meta.env.DEV
+       ? `ws://localhost:${import.meta.env.VITE_WS_PORT ?? 3000}`
+       : location.origin.replace(/^http/, "ws");
+     const url  = token ? `${base}/?token=${token}` : base;
+     return new WebSocket(url);
+   }
+   ```
+   *Remove localhost fallback with undefined port.*
+
+2. **server/ws.ts**
+   Temporarily disable JWT check until real auth:
+   ```ts
+   server.on("upgrade", (req,sock,head)=>{
+     wss.handleUpgrade(req,sock,head, ws=> wss.emit("connection",ws,req));
+   });
+   ```
+
+3. Delete the first failed attempt logic in `fallback()`; call `setupWebSocket`
+   once on mount; reconnect on `close` with back‑off.
+
+Testing
+-------
+* Page load → single WebSocket handshake succeeds, no console error.  
+* Gallery initial response ≤ 300 ms, grid shows thumbs quickly.  
+* Scrolling loads next pages smoothly.  
