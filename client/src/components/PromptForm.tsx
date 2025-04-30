@@ -62,32 +62,68 @@ export default function PromptForm({
       // Reset progress
       setProgress(0);
       
+      // Step 1: Submit the request to the server to create a new job
       const response = await apiRequest(
         "POST",
         "/api/generate",
         values
       );
       
-      // Start progress animation
-      setProgress(50);
+      const { jobId } = await response.json();
+      if (!jobId) throw new Error("No job ID returned from server");
       
-      // Simulate progress updates for better user experience
-      const progressInterval = setInterval(() => {
-        setProgress(current => {
-          if (current >= 95) {
+      // Step 2: Start progress animation
+      setProgress(10);
+      
+      // Step 3: Poll for job status until complete
+      return new Promise((resolve, reject) => {
+        // Update progress slightly more often for better user experience
+        const progressInterval = setInterval(() => {
+          setProgress(current => {
+            if (current >= 95) {
+              return 95; // Cap at 95% until we actually get the results
+            }
+            // Gradually increase progress to simulate ongoing work
+            return current + (95 - current) * 0.1;
+          });
+        }, 1000);
+        
+        // Poll for job status
+        const statusCheck = async () => {
+          try {
+            const statusResponse = await apiRequest(
+              "GET",
+              `/api/job/${jobId}`,
+              null
+            );
+            
+            const job = await statusResponse.json();
+            
+            if (job.status === "done" && job.result) {
+              // Job completed successfully
+              clearInterval(progressInterval);
+              clearTimeout(pollTimeout);
+              setProgress(100);
+              resolve({ images: job.result });
+            } else if (job.status === "error") {
+              // Job failed
+              clearInterval(progressInterval);
+              clearTimeout(pollTimeout);
+              reject(new Error(job.error || "Image generation failed"));
+            } else {
+              // Job still in progress, schedule another check
+              pollTimeout = setTimeout(statusCheck, 1000);
+            }
+          } catch (error) {
             clearInterval(progressInterval);
-            return current;
+            clearTimeout(pollTimeout);
+            reject(error);
           }
-          return current + 5;
-        });
-      }, 1000);
-      
-      // Actual response handling
-      const result = await response.json();
-      setProgress(100);
-      clearInterval(progressInterval);
-      
-      return result;
+        };
+        
+        // Keep track of the timeout so we can clear it if needed
+        let pollTimeout = setTimeout(statusCheck, 1000);
+      });
     },
     onSuccess: (data) => {
       setIsSubmitting(false);

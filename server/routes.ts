@@ -49,19 +49,16 @@ setInterval(() => {
 }, 5 * 60 * 1000); // Run every 5 minutes
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // API endpoint to generate images
-  app.post("/api/generate", async (req, res) => {
+  // Helper function to run image generation job
+  async function runGenerateJob(jobId: string, data: any) {
+    console.log(`Starting job ${jobId} for image generation`);
+    const job = jobs.get(jobId);
+    if (!job) return;
+    
     try {
-      // Validate request body
-      const validationResult = generateImageSchema.safeParse(req.body);
-      if (!validationResult.success) {
-        return res.status(400).json({ 
-          message: "Invalid request data", 
-          errors: validationResult.error.errors 
-        });
-      }
+      job.status = "processing";
       
-      const { prompt, model, size, quality, count, style, background, output_format } = validationResult.data;
+      const { prompt, model, size, quality, count, style, background, output_format } = data;
       
       // Call OpenAI to generate images based on the model
       // For DALL-E 3, only one image can be generated at a time
@@ -100,9 +97,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (output_format) requestParams.response_format = output_format;
       }
       
-      console.log("Sending image generation request with params:", JSON.stringify(requestParams));
+      console.log(`Job ${jobId}: Sending image generation request with params:`, JSON.stringify(requestParams));
       const response = await openai.images.generate(requestParams);
-      console.log("OpenAI API response:", JSON.stringify(response, null, 2));
+      console.log(`Job ${jobId}: OpenAI API response:`, JSON.stringify(response, null, 2));
       
       // Check if response has data
       if (!response.data || response.data.length === 0) {
@@ -112,7 +109,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Process and store the response
       const generatedImages = response.data.map((image, index) => {
         // Log image data for debugging
-        console.log(`Image ${index} response data:`, 
+        console.log(`Job ${jobId}: Image ${index} response data:`, 
           JSON.stringify({
             url: image.url ? "url exists" : "no url",
             revised_prompt: image.revised_prompt ? "revised_prompt exists" : "no revised_prompt",
@@ -124,12 +121,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         let imageUrl = "";
         if (image.url) {
           imageUrl = image.url;
-          console.log("Using direct URL from OpenAI:", imageUrl.substring(0, 50) + "...");
+          console.log(`Job ${jobId}: Using direct URL from OpenAI:`, imageUrl.substring(0, 50) + "...");
         } else if (image.b64_json) {
           imageUrl = `data:image/png;base64,${image.b64_json}`;
-          console.log("Using base64 image data from OpenAI");
+          console.log(`Job ${jobId}: Using base64 image data from OpenAI`);
         } else {
-          console.warn("No image URL or base64 data found in OpenAI response");
+          console.warn(`Job ${jobId}: No image URL or base64 data found in OpenAI response`);
         }
 
         const newImage = {
@@ -147,11 +144,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return newImage;
       });
       
-      res.json({ images: generatedImages });
+      // Update job with results
+      job.status = "done";
+      job.result = generatedImages;
+      
     } catch (error: any) {
-      console.error("Error generating images:", error);
+      console.error(`Job ${jobId} error:`, error);
+      job.status = "error";
+      job.error = error.message || "Failed to generate images";
+    }
+  }
+
+  // API endpoint to generate images (async with job queue)
+  app.post("/api/generate", async (req, res) => {
+    try {
+      // Validate request body
+      const validationResult = generateImageSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid request data", 
+          errors: validationResult.error.errors 
+        });
+      }
+      
+      // Create a new job
+      const jobId = crypto.randomUUID();
+      jobs.set(jobId, { 
+        id: jobId, 
+        status: "pending",
+        createdAt: new Date() 
+      });
+      
+      console.log(`Created job ${jobId} for image generation`);
+      
+      // Start the job processing in the background
+      process.nextTick(() => runGenerateJob(jobId, validationResult.data));
+      
+      // Return the job ID immediately
+      res.status(202).json({ jobId });
+      
+    } catch (error: any) {
+      console.error("Error scheduling generation job:", error);
       res.status(500).json({ 
-        message: error.message || "Failed to generate images" 
+        message: error.message || "Failed to schedule generation job" 
       });
     }
   });
