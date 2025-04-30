@@ -150,6 +150,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const { images, prompt, size, quality, n, mask } = validationResult.data;
       
+      // Track if user provided a mask
+      const userProvidedMask = !!mask;
+      
       // Create temp directory for image processing
       const tmpDir = path.join(__dirname, "../temp");
       fs.mkdirSync(tmpDir, { recursive: true });
@@ -163,25 +166,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return p;
         });
         
-        // Resolve mask
-        let maskPath: string;
-        if (mask) {
+        // Resolve mask only if provided by user
+        let maskPath: string | undefined;
+        if (userProvidedMask && mask) {
           maskPath = path.join(tmpDir, "mask.png");
           fs.writeFileSync(maskPath, Buffer.from(mask.replace(/^data:.*;base64,/, ""), "base64"));
-        } else {
-          // Create a blank transparent mask if none is provided
-          const { width, height } = await sharp(imgPaths[0]).metadata();
-          const blank = await sharp({
-            create: { 
-              width: width ?? 1024, 
-              height: height ?? 1024, 
-              channels: 4, 
-              background: { r: 0, g: 0, b: 0, alpha: 0 } 
-            }
-          }).png().toBuffer();
-          
-          maskPath = path.join(tmpDir, "mask.png");
-          fs.writeFileSync(maskPath, blank);
         }
         
         // Helper function to create uploadable files with correct MIME type
@@ -197,7 +186,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Build uploadables with proper MIME types
         const uploadables = await Promise.all(imgPaths.map(toUploadable));
-        const maskUpload = await toUploadable(maskPath);
         
         // Log the request to our API logger
         log({
@@ -206,7 +194,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           payload: {
             model: "gpt-image-1",
             images: imgPaths.map(p => p.substring(p.lastIndexOf('/') + 1)),
-            mask: mask ? "provided" : "blank",
+            usingMask: userProvidedMask,
             prompt,
             n,
             size, 
@@ -222,25 +210,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("Sending image edit request with params:", {
           model: "gpt-image-1",
           images: `${images.length} images`,
-          mask: mask ? "provided" : "blank",
+          usingMask: userProvidedMask ? "yes" : "no",
           prompt,
           n,
           size,
           quality
         });
         
-        // OpenAI call
-        // @ts-ignore - The OpenAI SDK types don't include all supported sizes
-        const response = await openai.images.edit({
+        // Build the edit params object
+        const editParams: any = {
           model: "gpt-image-1",
           image: uploadables,
-          mask: maskUpload,
           prompt,
           n,
           // Convert size to a compatible format for the API
           size: size === "auto" ? "1024x1024" : size,
           quality: quality as "auto" | "high" | "medium" | "low"
-        }).catch(err => {
+        };
+        
+        // Only include mask if user provided one
+        if (userProvidedMask && maskPath) {
+          const maskUpload = await toUploadable(maskPath);
+          editParams.mask = maskUpload;
+        }
+        
+        // OpenAI call
+        // @ts-ignore - The OpenAI SDK types don't include all supported sizes
+        const response = await openai.images.edit(editParams).catch(err => {
           // Log error to our API logger
           log({
             ts: new Date().toISOString(),
@@ -308,7 +304,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Cleanup temp files
         imgPaths.forEach(p => fs.unlinkSync(p));
-        fs.unlinkSync(maskPath);
+        if (maskPath) {
+          fs.unlinkSync(maskPath);
+        }
       } catch (error) {
         // Make sure to clean up temp directory even if there's an error
         if (fs.existsSync(tmpDir)) {
