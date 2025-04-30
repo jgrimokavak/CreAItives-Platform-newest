@@ -99,6 +99,7 @@ export class DatabaseStorage implements IStorage {
       fullUrl: `/uploads/full/${fileName}`,
       thumbUrl: `/uploads/thumb/${thumbName}`,
       sourceThumb: image.sourceThumb || null,
+      sourceImage: image.sourceImage || null, // Add sourceImage to database
       starred: "false",
       // Don't set deletedAt - it's null by default
     };

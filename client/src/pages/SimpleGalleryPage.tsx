@@ -31,6 +31,8 @@ interface GalleryImage {
   url?: string;
   fullUrl: string;
   thumbUrl: string;
+  sourceThumb?: string; // 128px thumbnail of the source image
+  sourceImage?: string; // Full-resolution source image
   starred?: boolean;
   deletedAt: string | null;
 }
