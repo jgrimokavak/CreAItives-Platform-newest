@@ -109,6 +109,15 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
     navigate('/');
   };
   
+  // Handle copy prompt
+  const handleCopyPrompt = (prompt: string) => {
+    navigator.clipboard.writeText(prompt);
+    toast({
+      title: 'Prompt copied',
+      description: 'The prompt has been copied to your clipboard'
+    });
+  };
+
   // Handle download
   const handleDownload = async (image: GalleryImage) => {
     try {
@@ -490,8 +499,22 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
             onDelete={(id) => handleTrash(id, false)}
             onStar={handleStar}
             onRestore={(id) => handleTrash(id, true)}
+            onCopyPrompt={handleCopyPrompt}
             onSelect={toggleSelection}
             selected={selectedIds.includes(image.id)}
+            onClick={() => {
+              // Show image in fullscreen when clicked
+              const img = document.createElement('div');
+              img.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/90';
+              img.onclick = () => document.body.removeChild(img);
+              
+              const imgEl = document.createElement('img');
+              imgEl.src = image.fullUrl;
+              imgEl.className = 'max-h-[90vh] max-w-[90vw] object-contain';
+              
+              img.appendChild(imgEl);
+              document.body.appendChild(img);
+            }}
           />
         ))}
       </div>

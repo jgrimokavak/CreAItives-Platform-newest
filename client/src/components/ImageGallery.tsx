@@ -113,6 +113,7 @@ export default function ImageGallery({ images, onClearResults }: ImageGalleryPro
               mode="preview"
               onEdit={handleSendToEditor}
               onDownload={handleDownload}
+              onCopyPrompt={handleCopyPrompt}
               // Add click handler to the image itself instead of an overlay
               onClick={() => setSelectedImage(image.url)}
             />

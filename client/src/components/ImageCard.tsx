@@ -6,7 +6,8 @@ import {
   PenToolIcon, 
   StarIcon, 
   Trash2Icon,
-  RotateCcwIcon
+  RotateCcwIcon,
+  CopyIcon
 } from "lucide-react";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -21,6 +22,7 @@ interface ImageCardProps {
   onStar?: (id: string, status: boolean) => void;
   onRestore?: (id: string) => void;
   onSelect?: (id: string, selected: boolean) => void;
+  onCopyPrompt?: (prompt: string) => void;  // Add handler for copying the prompt
   onClick?: () => void;  // Add onClick handler for full-size preview
   selected?: boolean;
 }
@@ -34,6 +36,7 @@ export default function ImageCard({
   onStar, 
   onRestore, 
   onSelect,
+  onCopyPrompt,
   onClick,
   selected
 }: ImageCardProps) {
@@ -173,6 +176,27 @@ export default function ImageCard({
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Restore</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+          
+          {onCopyPrompt && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onCopyPrompt(image.prompt);
+                    }}
+                  >
+                    <CopyIcon className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Copy Prompt</TooltipContent>
               </Tooltip>
             </TooltipProvider>
           )}
