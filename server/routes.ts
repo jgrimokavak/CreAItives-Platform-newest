@@ -275,6 +275,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Also save the full image as base64 for full-screen view
             const fullImageBuf = await fs.promises.readFile(imgPaths[0]);
             sourceImage = `data:image/png;base64,${fullImageBuf.toString("base64")}`;
+            
+            console.log("Created source thumbnail and image for edit:", {
+              thumbSize: sourceThumb.length,
+              fullSize: sourceImage.length,
+              sourcePath: imgPaths[0]
+            });
           }
         } catch (err) {
           console.warn("Failed to create source thumbnail or image:", err);

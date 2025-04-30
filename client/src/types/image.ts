@@ -7,6 +7,7 @@ export interface GeneratedImage {
   quality?: string;
   createdAt: string;
   sourceThumb?: string; // 128px thumbnail of the first reference image
+  sourceImage?: string; // Full-resolution source image
   width?: string | number;
   height?: string | number;
   thumbUrl?: string;
