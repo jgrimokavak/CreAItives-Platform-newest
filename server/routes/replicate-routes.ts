@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { models } from '../config/models';
+import { models, ModelConfig } from '../config/models';
 import { createPrediction, waitForPrediction } from '../replicate';
 import { log } from '../logger';
 import { GeneratedImage } from '@shared/schema';

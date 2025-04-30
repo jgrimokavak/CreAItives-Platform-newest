@@ -5,6 +5,7 @@ import { openai } from "./openai";
 import { toFile } from "openai";
 import { z } from "zod";
 import { generateImageSchema, editImageSchema } from "@shared/schema";
+import { openaiSchema } from "./config/models";
 import path from "path";
 import { fileURLToPath } from "url";
 import * as fs from "fs";
@@ -55,6 +56,13 @@ setInterval(() => {
 }, 5 * 60 * 1000); // Run every 5 minutes
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize Replicate model schemas and versions
+  try {
+    await initializeModels();
+    console.log("Initialized Replicate models");
+  } catch (error) {
+    console.error("Failed to initialize Replicate models:", error);
+  }
   // Helper function to run image generation job
   async function runGenerateJob(jobId: string, data: any) {
     console.log(`Starting job ${jobId} for image generation`);
@@ -591,6 +599,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Add gallery routes
   app.use('/api', galleryRoutes);
+  
+  // Add model routes (includes /api/models endpoint)
+  app.use('/api', modelRoutes);
 
   // Create HTTP server
   const httpServer = createServer(app);

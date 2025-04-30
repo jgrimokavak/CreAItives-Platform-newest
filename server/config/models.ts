@@ -1,6 +1,19 @@
 // Model definitions for OpenAI and Replicate
 
-export const models = [
+// Define the model interface
+export interface ModelConfig {
+  key: string;
+  provider: 'openai' | 'replicate';
+  visible: string[];
+  description: string;
+  slug?: string;
+  version?: string;
+  schema?: any;
+  defaults?: Record<string, any>;
+  unavailable?: boolean;
+}
+
+export const models: ModelConfig[] = [
   {
     key: "gpt-image-1",
     provider: "openai",

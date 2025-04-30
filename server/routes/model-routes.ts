@@ -1,12 +1,12 @@
 import { Router } from 'express';
-import { models, openaiSchema } from '../config/models';
+import { models, openaiSchema, ModelConfig } from '../config/models';
 import fetch from 'node-fetch';
 import { log } from '../logger';
 
 const router = Router();
 
 // Store model schemas and versions
-const modelCache = new Map();
+const modelCache = new Map<string, { version: string, schema: any }>();
 
 // Initialize model schemas from Replicate
 export async function initializeModels() {
@@ -23,6 +23,13 @@ export async function initializeModels() {
           }
         });
 
+        // Check if Replicate API token is available
+        if (!process.env.REPLICATE_API_TOKEN) {
+          console.warn(`No REPLICATE_API_TOKEN found in environment. Skipping model initialization for ${model.key}`);
+          model.unavailable = true;
+          continue;
+        }
+
         const response = await fetch(`https://api.replicate.com/v1/models/${model.slug}`, {
           headers: {
             'Authorization': `Token ${process.env.REPLICATE_API_TOKEN}`,
@@ -34,14 +41,20 @@ export async function initializeModels() {
         }
 
         const data = await response.json();
+        if (!data || !data.latest_version) {
+          throw new Error(`Invalid response from Replicate API for model ${model.slug}`);
+        }
+        
         const latestVersion = data.latest_version;
         
+        // Update model with version and schema
         model.version = latestVersion.id;
-        model.schema = latestVersion.openapi_schema.components.schemas.Input;
+        model.schema = latestVersion.openapi_schema?.components?.schemas?.Input || {};
         
+        // Cache the data
         modelCache.set(model.key, {
           version: latestVersion.id,
-          schema: latestVersion.openapi_schema.components.schemas.Input
+          schema: model.schema
         });
 
         log({
@@ -54,7 +67,7 @@ export async function initializeModels() {
             version: latestVersion.id
           }
         });
-      } catch (error) {
+      } catch (error: any) {
         console.error(`Failed to initialize Replicate model ${model.key}:`, error);
         log({
           ts: new Date().toISOString(),
