@@ -21,7 +21,11 @@ export interface ImageMetadata {
   sources: string[];
 }
 
-export async function persistImage(b64: string, meta: ImageMetadata) {
+export async function persistImage(b64: string, meta: ImageMetadata): Promise<{
+  id: string;
+  fullUrl: string;
+  thumbUrl: string;
+}> {
   const id = uuid();
   const imgBuf = Buffer.from(b64, 'base64');
   const root = path.join(__dirname, '../uploads');
@@ -46,7 +50,7 @@ export async function persistImage(b64: string, meta: ImageMetadata) {
       id,
       userId: meta.userId,
       prompt: meta.prompt,
-      model: 'gpt-image-1',
+      model: meta.params.model || 'gpt-image-1',
       params: meta.params,
       width: width || 1024, // Default if undefined
       height: height || 1024, // Default if undefined
@@ -61,14 +65,22 @@ export async function persistImage(b64: string, meta: ImageMetadata) {
     }
   });
 
+  // Create URLs for the image
+  const fullUrl = `/uploads/${fullPath}`;
+  const thumbUrl = `/uploads/${thumbPath}`;
+
   // Notify connected clients
   push('imageCreated', {
     image: {
       ...image,
-      fullUrl: `/uploads/${image.path}`,
-      thumbUrl: `/uploads/${image.thumbPath}`
+      fullUrl,
+      thumbUrl
     }
   });
 
-  return image;
+  return {
+    id: image.id,
+    fullUrl,
+    thumbUrl
+  };
 }

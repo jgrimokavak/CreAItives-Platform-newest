@@ -4,8 +4,51 @@ import { createPrediction, waitForPrediction } from '../replicate';
 import { log } from '../logger';
 import { GeneratedImage } from '@shared/schema';
 import { storage } from '../storage';
+import fetch from 'node-fetch';
+import path from 'path';
+import fs from 'fs';
+import { persistImage } from '../fs-storage';
 
 const router = Router();
+
+// Download image from URL and save it to uploads directory
+async function downloadAndSaveImage(url: string, userId: string = "system", prompt: string): Promise<{
+  fullUrl: string;
+  thumbUrl: string;
+}> {
+  try {
+    console.log(`Downloading image from Replicate: ${url}`);
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to download image: ${response.status} ${response.statusText}`);
+    }
+    
+    // Convert to base64
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const base64 = buffer.toString('base64');
+    
+    // Create metadata
+    const meta = {
+      prompt: prompt,
+      params: { url },
+      userId,
+      sources: []
+    };
+    
+    // Save image using the existing function
+    const savedImagePaths = await persistImage(base64, meta);
+    
+    return {
+      fullUrl: savedImagePaths.fullUrl,
+      thumbUrl: savedImagePaths.thumbUrl
+    };
+  } catch (error) {
+    console.error('Error downloading image:', error);
+    throw error;
+  }
+}
 
 // Handle Replicate image generation
 export async function generateWithReplicate(modelKey: string, inputs: any): Promise<GeneratedImage[]> {
@@ -84,7 +127,14 @@ export async function generateWithReplicate(modelKey: string, inputs: any): Prom
   
   // Create GeneratedImage objects from URLs
   for (let i = 0; i < imageUrls.length; i++) {
-    const url = imageUrls[i];
+    const remoteUrl = imageUrls[i];
+    
+    // Download and save the image locally
+    const { fullUrl, thumbUrl } = await downloadAndSaveImage(
+      remoteUrl, 
+      "system", 
+      inputs.prompt || "Generated image"
+    );
     
     // Extract size from aspect_ratio if provided
     let width = 1024;
@@ -104,9 +154,9 @@ export async function generateWithReplicate(modelKey: string, inputs: any): Prom
     
     const image: GeneratedImage = {
       id: `img_${Date.now()}_${i}`,
-      url: url,
-      fullUrl: url, // For Replicate, the URL is already a full URL
-      thumbUrl: url, // We'll use the same URL for thumbnail for now
+      url: fullUrl, // Use our local URL
+      fullUrl: fullUrl, // Use our local URL
+      thumbUrl: thumbUrl, // Use our local thumbnail URL
       prompt: inputs.prompt,
       size: sizeStr,
       model: modelKey,
