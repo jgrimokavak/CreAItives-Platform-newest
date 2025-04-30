@@ -10,10 +10,17 @@ import { fileURLToPath } from "url";
 import * as fs from "fs";
 import sharp from "sharp";
 import { log, getLogs } from "./logger";
+import multer from "multer";
 
 // Fix for __dirname in ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Set up multer for file uploads
+const upload = multer({
+  limits: { fileSize: 26 * 1024 * 1024 }, // 26MB limit (25MB + buffer)
+  storage: multer.memoryStorage() // Store files in memory
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API endpoint to generate images
@@ -137,34 +144,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // API endpoint to edit images
-  app.post("/api/edit-image", async (req, res) => {
+  app.post("/api/edit-image", 
+    upload.fields([
+      { name: 'image', maxCount: 16 },
+      { name: 'mask', maxCount: 1 }
+    ]),
+    async (req, res) => {
     try {
-      // Validate request body
-      const validationResult = editImageSchema.safeParse(req.body);
-      if (!validationResult.success) {
-        return res.status(400).json({ 
-          message: "Invalid request data", 
-          errors: validationResult.error.errors 
+      // Access form data fields
+      const prompt = req.body.prompt;
+      const size = req.body.size || "1024x1024";
+      const quality = req.body.quality || "high";
+      const n = parseInt(req.body.n || "1");
+      
+      if (!prompt) {
+        return res.status(400).json({
+          message: "Prompt is required"
         });
       }
       
-      const { images, prompt, size, quality, n, mask } = validationResult.data;
+      // Get uploaded files
+      const imgFiles = (req.files as any)?.image as Express.Multer.File[] || [];
+      const maskFile = (req.files as any)?.mask?.[0] as Express.Multer.File | undefined;
+      
+      // Check if files were uploaded
+      if (imgFiles.length === 0) {
+        return res.status(400).json({
+          message: "At least one image file is required"
+        });
+      }
+      
+      // Ensure we don't exceed 16 images
+      if (imgFiles.length > 16) {
+        return res.status(400).json({
+          message: "Maximum of 16 images allowed"
+        });
+      }
       
       // Track if user provided a mask
-      const userProvidedMask = !!mask;
+      const userProvidedMask = !!maskFile;
       
       // Create temp directory for image processing
       const tmpDir = path.join(__dirname, "../temp");
       fs.mkdirSync(tmpDir, { recursive: true });
       
       try {
-        // Write each image to PNG
-        const imgPaths = images.map((b64, i) => {
-          const buf = Buffer.from(b64.replace(/^data:.*;base64,/, ""), "base64");
-          const p = path.join(tmpDir, `img_${Date.now()}_${i}.png`);
-          fs.writeFileSync(p, buf);
-          return p;
-        });
+        // Process uploaded files
+        const imgPaths: string[] = [];
+        
+        // Save uploaded images to temp directory
+        for (let i = 0; i < imgFiles.length; i++) {
+          const file = imgFiles[i];
+          const filePath = path.join(tmpDir, `img_${Date.now()}_${i}${path.extname(file.originalname)}`);
+          fs.writeFileSync(filePath, file.buffer);
+          imgPaths.push(filePath);
+        }
         
         // Create a 128px thumbnail of the first reference image
         let sourceThumb: string | undefined;
@@ -180,11 +214,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.warn("Failed to create source thumbnail:", err);
         }
         
-        // Resolve mask only if provided by user
+        // Save mask file if provided
         let maskPath: string | undefined;
-        if (userProvidedMask && mask) {
-          maskPath = path.join(tmpDir, "mask.png");
-          fs.writeFileSync(maskPath, Buffer.from(mask.replace(/^data:.*;base64,/, ""), "base64"));
+        if (userProvidedMask && maskFile) {
+          maskPath = path.join(tmpDir, `mask_${Date.now()}${path.extname(maskFile.originalname)}`);
+          fs.writeFileSync(maskPath, maskFile.buffer);
         }
         
         // Helper function to create uploadable files with correct MIME type
@@ -207,13 +241,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           direction: "request",
           payload: {
             model: "gpt-image-1",
-            images: imgPaths.map(p => p.substring(p.lastIndexOf('/') + 1)),
+            images: imgPaths.map((p: string) => path.basename(p)),
             usingMask: userProvidedMask,
             prompt,
             n,
             size, 
             quality,
-            uploadableInfo: uploadables.map(u => ({
+            uploadableInfo: uploadables.map((u: any) => ({
               type: u.type,
               name: u.name,
               size: u.size
@@ -223,7 +257,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         console.log("Sending image edit request with params:", {
           model: "gpt-image-1",
-          images: `${images.length} images`,
+          images: `${imgFiles.length} images`,
           usingMask: userProvidedMask ? "yes" : "no",
           prompt,
           n,
@@ -283,7 +317,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         console.log("OpenAI image edit API response:", JSON.stringify({
           created: response.created,
-          data: response.data?.map(d => ({
+          data: response.data?.map((d: any) => ({
             b64_json: d.b64_json ? "data exists" : "no data",
             url: d.url ? "url exists" : "no url"
           })) || []
@@ -295,7 +329,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // Process and store the response
-        const generatedImages = response.data.map((image, index) => {
+        const generatedImages = response.data.map((image: any, index: number) => {
           // Use base64 data from response
           const imageUrl = `data:image/png;base64,${image.b64_json}`;
           
@@ -318,14 +352,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json({ images: generatedImages });
         
         // Cleanup temp files
-        imgPaths.forEach(p => fs.unlinkSync(p));
+        imgPaths.forEach((p: string) => fs.unlinkSync(p));
         if (maskPath) {
           fs.unlinkSync(maskPath);
         }
       } catch (error) {
         // Make sure to clean up temp directory even if there's an error
         if (fs.existsSync(tmpDir)) {
-          fs.readdirSync(tmpDir).forEach(file => {
+          fs.readdirSync(tmpDir).forEach((file: string) => {
             fs.unlinkSync(path.join(tmpDir, file));
           });
         }
