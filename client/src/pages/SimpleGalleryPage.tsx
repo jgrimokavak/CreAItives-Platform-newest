@@ -7,27 +7,22 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
-import { Loader2, Star, Trash2, FolderOpen, Download, PenTool, RotateCcw } from 'lucide-react';
+import { Loader2, FolderOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import ImageCard from '@/components/ImageCard';
 
 interface GalleryPageProps {
   mode?: 'gallery' | 'trash';
 }
 
-interface GalleryImage {
-  id: string;
-  prompt: string;
-  width: number | string;
-  height: number | string;
+// Use GeneratedImage type from shared definition
+import { GeneratedImage } from "@/types/image";
+
+// Extend the GeneratedImage with any gallery-specific properties
+interface GalleryImage extends GeneratedImage {
   fullUrl: string;
   thumbUrl: string;
-  starred: boolean;
   deletedAt: string | null;
-  createdAt: string;
-  model: string;
-  size: string;
-  quality?: string;
-  url?: string;
 }
 
 const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => {
@@ -472,145 +467,18 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       {/* Gallery grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
         {images.map((image) => (
-          <div 
+          <ImageCard
             key={image.id}
-            className="bg-card rounded-lg overflow-hidden shadow-sm border border-border hover:shadow-md transition-shadow group"
-          >
-            <div className="relative pb-[100%]">
-              {/* Image thumbnail */}
-              <img 
-                src={image.thumbUrl} 
-                alt={image.prompt}
-                className="absolute inset-0 w-full h-full object-cover"
-                loading="lazy"
-              />
-              
-              {/* Selection overlay */}
-              <div className="absolute top-2 left-2">
-                <Checkbox
-                  checked={selectedIds.includes(image.id)}
-                  onCheckedChange={() => toggleSelection(image.id)}
-                />
-              </div>
-              
-              {/* Actions overlay */}
-              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 p-2">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border"
-                        onClick={() => handleEdit(image)}
-                      >
-                        <PenTool className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Edit</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border"
-                        onClick={() => handleDownload(image)}
-                      >
-                        <Download className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Download</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                
-                {mode === 'gallery' && (
-                  <>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className={cn(
-                              "h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border",
-                              image.starred && "text-yellow-300 hover:text-yellow-300"
-                            )}
-                            onClick={() => handleStar(image.id, image.starred)}
-                          >
-                            <Star className={cn(
-                              "h-4 w-4",
-                              image.starred && "fill-current"
-                            )} />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>{image.starred ? "Unstar" : "Star"}</TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border hover:text-red-500"
-                            onClick={() => handleTrash(image.id, false)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Delete</TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </>
-                )}
-                
-                {mode === 'trash' && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border"
-                          onClick={() => handleTrash(image.id, true)}
-                        >
-                          <RotateCcw className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Restore</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
-              </div>
-              
-              {/* Starred indicator */}
-              {image.starred && mode === 'gallery' && (
-                <div className="absolute top-2 right-2 text-yellow-300">
-                  <Star className="h-5 w-5 fill-current" />
-                </div>
-              )}
-            </div>
-            
-            <CardContent className="p-3 space-y-2">
-              <p className="text-sm font-medium line-clamp-2">{image.prompt}</p>
-              <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                <span className="bg-muted/50 rounded-full px-2 py-0.5">
-                  {image.model}
-                </span>
-                <span className="bg-muted/50 rounded-full px-2 py-0.5">
-                  {image.size}
-                </span>
-                <span className="bg-muted/50 rounded-full px-2 py-0.5">
-                  {image.quality || 'standard'}
-                </span>
-              </div>
-            </CardContent>
-          </div>
+            image={image}
+            mode={mode}
+            onEdit={handleEdit}
+            onDownload={handleDownload}
+            onDelete={handleTrash}
+            onStar={handleStar}
+            onRestore={(id) => handleTrash(id, true)}
+            onSelect={toggleSelection}
+            selected={selectedIds.includes(image.id)}
+          />
         ))}
       </div>
     </div>

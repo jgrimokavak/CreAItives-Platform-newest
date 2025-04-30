@@ -1,0 +1,94 @@
+
+Unify card styles between “Create” preview and “Gallery”
+
+Goal
+----
+Both tabs should render images with identical layout, hover overlay, and action buttons.
+
+Steps
+-----
+
+1. **Create a single shared component**
+
+`client/src/components/ImageCard.tsx`
+```tsx
+interface ImageCardProps {
+  image: GeneratedImage;          // existing type
+  mode: "preview" | "gallery";    // determines action set
+  onEdit?: (img:GeneratedImage)=>void;
+  onDelete?: (img:GeneratedImage)=>void;
+  onDownload?: (img:GeneratedImage)=>void;
+}
+export default function ImageCard({ image, mode, ...actions }: ImageCardProps){
+  return (
+    <div className="relative rounded-xl overflow-hidden shadow-sm group">
+      <img src={image.thumbUrl ?? image.url}
+           className="w-full h-auto object-cover aspect-square" />
+
+      {/* hover overlay */}
+      <div className="absolute inset-0 bg-black/60 opacity-0
+                      group-hover:opacity-100 transition flex items-center justify-center gap-3">
+        {mode==="gallery" && (
+          <button onClick={()=>actions.onDelete?.(image)}><Trash2/></button>
+        )}
+        <button onClick={()=>actions.onDownload?.(image)}><DownloadCloud/></button>
+        <button onClick={()=>actions.onEdit?.(image)}><Pencil/></button>
+      </div>
+
+      {/* footer */}
+      <div className="p-3">
+        <p className="text-sm font-medium line-clamp-1">{image.prompt}</p>
+        <div className="flex flex-wrap gap-1 text-xs text-muted-foreground mt-1">
+          <span>{image.model}</span>
+          <span>{image.size}</span>
+          {image.params?.quality && <span>{image.params.quality}</span>}
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+2. **Replace usages**
+
+*Create tab* (`GeneratedImages.tsx` or similar):
+```tsx
+import ImageCard from "@/components/ImageCard";
+
+{images.map(img=>(
+  <ImageCard key={img.id}
+             image={img}
+             mode="preview"
+             onDownload={downloadImage}
+             onEdit={(i)=>ctx.setSourceImages([i.url])}
+/>
+))}
+```
+
+*Gallery tab*:
+```tsx
+<ImageCard
+   image={img}
+   mode="gallery"
+   onEdit={(i)=> navigate("/"); ctx.setSourceImages([i.fullUrl])}
+   onDelete={(i)=> toggleTrash(i.id)}
+   onDownload={downloadImage}
+/>
+```
+
+3. **Delete old duplicated components**
+
+Remove `GalleryImageCard.tsx` and `GeneratedImageCard.tsx` after confirming the new card covers all props (starred toggle etc. can be passed via extra buttons property).
+
+4. **Tailwind consistency**
+
+Both grids already use the same container classes (`grid gap-6 grid-cols-[repeat(auto-fill,minmax(260px,1fr))]`). No changes needed there.
+
+5. **Testing**
+
+* Generate image → appears in Create list with hover overlay.
+* Click ✎ → Edit tab pre-loads source.
+* Navigate to Gallery → identical card style, same overlay actions.
+* Star/delete in Gallery still works.
+
+Once confirmed, run `npm run format` to remove unused imports. 
