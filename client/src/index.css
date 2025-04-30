@@ -13,7 +13,7 @@
   --card-foreground: 20 14.3% 4.1%;
   --border: 20 5.9% 90%;
   --input: 20 5.9% 90%;
-  --primary: 162 85% 35%;  /* #10A37F OpenAI green */
+  --primary: 231 100% 41%;  /* #001dd1 Blue */
   --primary-foreground: 211 100% 99%;
   --secondary: 216 12% 13%; /* #202123 dark grey */
   --secondary-foreground: 0 0% 98%;
@@ -21,11 +21,11 @@
   --accent-foreground: 0 0% 98%;
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 60 9.1% 97.8%;
-  --ring: 162 85% 35%;  /* Match primary */
+  --ring: 231 100% 41%;  /* Match primary */
   --radius: 0.5rem;
 
   /* Chart colors for reference */
-  --chart-1: 162 85% 35%;
+  --chart-1: 231 100% 41%;
   --chart-2: 216 12% 13%;
   --chart-3: 240 5% 47%;
   --chart-4: 220 14% 96%;
@@ -34,12 +34,12 @@
   /* Sidebar colors for reference */
   --sidebar-background: 0 0% 100%;
   --sidebar-foreground: 20 14.3% 4.1%;
-  --sidebar-primary: 162 85% 35%;
+  --sidebar-primary: 231 100% 41%;
   --sidebar-primary-foreground: 211 100% 99%;
   --sidebar-accent: 240 5% 47%;
   --sidebar-accent-foreground: 0 0% 98%;
   --sidebar-border: 20 5.9% 90%;
-  --sidebar-ring: 162 85% 35%;
+  --sidebar-ring: 231 100% 41%;
 }
 
 .dark {
@@ -53,7 +53,7 @@
   --card-foreground: 0 0% 98%;
   --border: 240 3.7% 15.9%;
   --input: 240 3.7% 15.9%;
-  --primary: 162 85% 35%;  /* #10A37F OpenAI green */
+  --primary: 231 100% 41%;  /* #001dd1 Blue */
   --primary-foreground: 211 100% 99%;
   --secondary: 216 12% 13%; /* #202123 dark grey */
   --secondary-foreground: 0 0% 98%;
@@ -61,7 +61,7 @@
   --accent-foreground: 0 0% 98%;
   --destructive: 0 62.8% 30.6%;
   --destructive-foreground: 0 0% 98%;
-  --ring: 162 85% 35%; /* Match primary */
+  --ring: 231 100% 41%; /* Match primary */
   --radius: 0.5rem;
 }
 
