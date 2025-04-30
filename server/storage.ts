@@ -107,12 +107,23 @@ export class DatabaseStorage implements IStorage {
     // Save to database
     const [savedImage] = await db.insert(images).values(dbImage).returning();
     
-    // Notify clients about the new image with full URLs
+    // Notify clients about the new image with complete image data
     push('imageCreated', {
       image: {
         id: savedImage.id,
-        fullUrl: dbImage.fullUrl,
-        thumbUrl: dbImage.thumbUrl
+        url: savedImage.url,
+        prompt: savedImage.prompt,
+        size: savedImage.size,
+        model: savedImage.model,
+        createdAt: savedImage.createdAt ? new Date(savedImage.createdAt).toISOString() : new Date().toISOString(),
+        width: savedImage.width || '1024',
+        height: savedImage.height || '1024',
+        fullUrl: savedImage.fullUrl,
+        thumbUrl: savedImage.thumbUrl,
+        starred: savedImage.starred === "true",
+        sourceThumb: savedImage.sourceThumb,
+        sourceImage: savedImage.sourceImage,
+        deletedAt: savedImage.deletedAt ? new Date(savedImage.deletedAt).toISOString() : null
       }
     });
     

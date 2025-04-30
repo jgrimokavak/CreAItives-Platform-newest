@@ -89,22 +89,10 @@ export async function persistImage(b64: string, meta: ImageMetadata): Promise<{
   const fullUrl = `/uploads/${fullPath}`;
   const thumbUrl = `/uploads/${thumbPath}`;
 
-  // Notify connected clients
-  push('imageCreated', {
-    image: {
-      id,
-      url: fullUrl,
-      prompt: meta.prompt,
-      size: `${width || 1024}x${height || 1024}`,
-      model: meta.params.model || 'gpt-image-1',
-      createdAt: new Date().toISOString(),
-      width: width?.toString() || '1024',
-      height: height?.toString() || '1024',
-      fullUrl,
-      thumbUrl,
-      starred: false
-    }
-  });
+  // We're no longer using WebSocket broadcast here
+  // The routes.ts will handle notifying clients about new images when
+  // it calls storage.saveImage() after this function returns
+  // This prevents duplicate image entries in the gallery
 
   return {
     id,
