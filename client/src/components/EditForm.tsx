@@ -74,6 +74,30 @@ export default function EditForm({
       return;
     }
     
+    // Check file sizes
+    for (const file of files) {
+      if (file.size > 25 * 1024 * 1024) { // 25MB
+        toast({
+          title: "File too large",
+          description: `${file.name} exceeds the 25MB size limit`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+    
+    // Check file types
+    for (const file of files) {
+      if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+        toast({
+          title: "Unsupported file type",
+          description: `${file.name} is not a supported image type (PNG, JPEG, or WebP)`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+    
     // Add files to selected files
     setSelectedFiles(prev => [...prev, ...files]);
     
