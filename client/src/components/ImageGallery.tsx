@@ -132,15 +132,6 @@ export default function ImageGallery({ images, onClearResults }: ImageGalleryPro
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => setSelectedImage(image.url)}
-                  className="w-8 h-8 rounded-full bg-white shadow-md hover:bg-gray-100"
-                  title="View full size"
-                >
-                  <FaExpand className="w-3 h-3" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
                   onClick={() => handleSendToEditor(image)}
                   className="w-8 h-8 rounded-full bg-white shadow-md hover:bg-gray-100"
                   title="Edit this image"
