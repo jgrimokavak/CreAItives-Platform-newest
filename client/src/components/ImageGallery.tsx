@@ -153,10 +153,16 @@ export default function ImageGallery({ images, onClearResults }: ImageGalleryPro
                 <div className="flex flex-col">
                   <span className="text-xs text-accent">{image.size}</span>
                   <span className="text-xs text-accent mt-1">Model: {image.model}</span>
-                  {image.url && (
-                    <span className="text-xs text-emerald-600 mt-1 break-all line-clamp-1" title={image.url}>
-                      URL: {image.url.substring(0, 20)}...
-                    </span>
+                  {image.sourceThumb && (
+                    <div className="mt-2 flex items-center">
+                      <span className="text-xs text-accent mr-2">Source:</span>
+                      <img 
+                        src={image.sourceThumb} 
+                        alt="Source" 
+                        className="w-8 h-8 rounded object-cover border border-gray-200" 
+                        title="Reference image used for editing"
+                      />
+                    </div>
                   )}
                 </div>
                 <div className="flex space-x-2">

@@ -166,6 +166,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return p;
         });
         
+        // Create a 128px thumbnail of the first reference image
+        let sourceThumb: string | undefined;
+        try {
+          if (imgPaths.length > 0) {
+            const thumbBuf = await sharp(imgPaths[0])
+              .resize(128)
+              .png()
+              .toBuffer();
+            sourceThumb = `data:image/png;base64,${thumbBuf.toString("base64")}`;
+          }
+        } catch (err) {
+          console.warn("Failed to create source thumbnail:", err);
+        }
+        
         // Resolve mask only if provided by user
         let maskPath: string | undefined;
         if (userProvidedMask && mask) {
@@ -292,6 +306,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             size: size,
             model: "gpt-image-1",
             createdAt: new Date().toISOString(),
+            sourceThumb: sourceThumb
           };
           
           // Store the image in our storage
