@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { openai } from "./openai";
@@ -11,6 +11,8 @@ import * as fs from "fs";
 import sharp from "sharp";
 import { log, getLogs } from "./logger";
 import multer from "multer";
+import crypto from "crypto";
+import { GeneratedImage } from "@shared/schema";
 
 // Fix for __dirname in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -21,6 +23,30 @@ const upload = multer({
   limits: { fileSize: 26 * 1024 * 1024 }, // 26MB limit (25MB + buffer)
   storage: multer.memoryStorage() // Store files in memory
 });
+
+// Job queue interface
+interface Job {
+  id: string;
+  status: "pending" | "processing" | "done" | "error";
+  result?: GeneratedImage[];
+  error?: string;
+  createdAt: Date;
+}
+
+// In-memory job store
+const jobs = new Map<string, Job>();
+
+// Cleanup old jobs periodically (jobs older than 30 minutes)
+setInterval(() => {
+  const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+  // Use Array.from to convert the Map entries to an array for compatibility
+  Array.from(jobs.entries()).forEach(([id, job]) => {
+    if ((job.status === "done" || job.status === "error") && job.createdAt < thirtyMinutesAgo) {
+      jobs.delete(id);
+      console.log(`Cleaned up job ${id}`);
+    }
+  });
+}, 5 * 60 * 1000); // Run every 5 minutes
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API endpoint to generate images
@@ -143,13 +169,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // API endpoint to edit images
-  app.post("/api/edit-image", 
-    upload.fields([
-      { name: 'image', maxCount: 16 },
-      { name: 'mask', maxCount: 1 }
-    ]),
-    async (req, res) => {
+  // Helper function to process the edit job
+  async function runEditJob(jobId: string, req: Request) {
+    const job = jobs.get(jobId);
+    if (!job) return; // Job was deleted or doesn't exist
+    
+    job.status = "processing";
+    console.log(`Processing job ${jobId}: status=${job.status}`);
+    
     try {
       // Access form data fields
       const prompt = req.body.prompt;
@@ -157,28 +184,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const quality = req.body.quality || "high";
       const n = parseInt(req.body.n || "1");
       
-      if (!prompt) {
-        return res.status(400).json({
-          message: "Prompt is required"
-        });
-      }
-      
       // Get uploaded files
       const imgFiles = (req.files as any)?.image as Express.Multer.File[] || [];
       const maskFile = (req.files as any)?.mask?.[0] as Express.Multer.File | undefined;
       
       // Check if files were uploaded
       if (imgFiles.length === 0) {
-        return res.status(400).json({
-          message: "At least one image file is required"
-        });
+        job.status = "error";
+        job.error = "At least one image file is required";
+        return;
       }
       
       // Ensure we don't exceed 16 images
       if (imgFiles.length > 16) {
-        return res.status(400).json({
-          message: "Maximum of 16 images allowed"
-        });
+        job.status = "error";
+        job.error = "Maximum of 16 images allowed";
+        return;
       }
       
       // Track if user provided a mask
@@ -349,13 +370,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return newImage;
         });
         
-        res.json({ images: generatedImages });
+        // Update job with results
+        job.status = "done";
+        job.result = generatedImages;
+        console.log(`Job ${jobId} completed successfully with ${generatedImages.length} images`);
         
-        // Cleanup temp files
-        imgPaths.forEach((p: string) => fs.unlinkSync(p));
-        if (maskPath) {
-          fs.unlinkSync(maskPath);
-        }
+        // Cleanup temp files after a delay (10 minutes)
+        setTimeout(() => {
+          try {
+            for (const p of imgPaths) {
+              if (fs.existsSync(p)) {
+                fs.unlinkSync(p);
+              }
+            }
+            if (maskPath && fs.existsSync(maskPath)) {
+              fs.unlinkSync(maskPath);
+            }
+            console.log(`Job ${jobId}: Cleaned up temporary files`);
+          } catch (cleanupErr) {
+            console.error(`Job ${jobId}: Error during file cleanup:`, cleanupErr);
+          }
+        }, 10 * 60 * 1000); // 10 minutes
+        
       } catch (error) {
         // Make sure to clean up temp directory even if there's an error
         if (fs.existsSync(tmpDir)) {
@@ -366,11 +402,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
         throw error;
       }
     } catch (error: any) {
-      console.error("Error editing images:", error);
-      res.status(500).json({ 
-        message: error.message || "Failed to edit images" 
-      });
+      console.error(`Job ${jobId} error:`, error);
+      job.status = "error";
+      job.error = error.message || "Failed to edit images";
     }
+  }
+
+  // API endpoint for async image editing (using job queue)
+  app.post("/api/edit-image", 
+    upload.fields([
+      { name: 'image', maxCount: 16 },
+      { name: 'mask', maxCount: 1 }
+    ]),
+    (req, res) => {
+      try {
+        // Basic validation
+        const prompt = req.body.prompt;
+        if (!prompt) {
+          return res.status(400).json({ message: "Prompt is required" });
+        }
+        
+        // Get uploaded files
+        const imgFiles = (req.files as any)?.image as Express.Multer.File[] || [];
+        
+        // Check if files were uploaded
+        if (imgFiles.length === 0) {
+          return res.status(400).json({ message: "At least one image file is required" });
+        }
+        
+        // Ensure we don't exceed 16 images
+        if (imgFiles.length > 16) {
+          return res.status(400).json({ message: "Maximum of 16 images allowed" });
+        }
+        
+        // Create a new job
+        const jobId = crypto.randomUUID();
+        jobs.set(jobId, { 
+          id: jobId, 
+          status: "pending",
+          createdAt: new Date() 
+        });
+        
+        console.log(`Created job ${jobId} for edit request with ${imgFiles.length} images`);
+        
+        // Start the job processing in the background
+        process.nextTick(() => runEditJob(jobId, req));
+        
+        // Return the job ID immediately
+        res.status(202).json({ jobId });
+        
+      } catch (error: any) {
+        console.error("Error scheduling edit job:", error);
+        res.status(500).json({ message: error.message || "Failed to schedule edit job" });
+      }
+    });
+    
+  // API endpoint to check job status
+  app.get("/api/job/:id", (req, res) => {
+    const jobId = req.params.id;
+    const job = jobs.get(jobId);
+    
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+    
+    res.json(job);
   });
 
   // API endpoint to get logs

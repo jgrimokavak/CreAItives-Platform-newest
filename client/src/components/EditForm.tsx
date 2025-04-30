@@ -14,6 +14,7 @@ import { queryClient } from "@/lib/queryClient";
 import { GeneratedImage } from "@/types/image";
 import { editImageSchema } from "@shared/schema";
 import { useEditor } from "@/context/EditorContext";
+import { Progress } from "@/components/ui/progress";
 
 type EditFormValues = {
   prompt: string;
@@ -39,6 +40,7 @@ export default function EditForm({
   const [selectedMask, setSelectedMask] = useState<File | null>(null);
   const [previews, setPreviews] = useState<Record<string, string>>({});
   const [maskPreview, setMaskPreview] = useState<string | null>(null);
+  const [progress, setProgress] = useState(0);
   
   const imageInputRef = useRef<HTMLInputElement>(null);
   const maskInputRef = useRef<HTMLInputElement>(null);
@@ -220,7 +222,7 @@ export default function EditForm({
         formData.append("mask", selectedMask);
       }
       
-      // Use fetch directly for FormData
+      // Use fetch directly for FormData to submit the job
       const response = await fetch("/api/edit-image", {
         method: "POST",
         body: formData
@@ -228,10 +230,50 @@ export default function EditForm({
       
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to edit images");
+        throw new Error(errorData.message || "Failed to start image edit job");
       }
       
-      return response.json();
+      // Get the job ID from the response
+      const { jobId } = await response.json();
+      
+      // Poll for job completion
+      return new Promise((resolve, reject) => {
+        // Create a progress indicator (0-100)
+        let progress = 0;
+        
+        const pollInterval = setInterval(async () => {
+          try {
+            // Increment progress for UI feedback (up to 95%)
+            if (progress < 95) {
+              progress += 5;
+              // You can update a progress bar here if you implement one
+            }
+            
+            // Get job status
+            const jobResponse = await fetch(`/api/job/${jobId}`);
+            
+            if (!jobResponse.ok) {
+              clearInterval(pollInterval);
+              reject(new Error("Failed to check job status"));
+              return;
+            }
+            
+            const job = await jobResponse.json();
+            
+            if (job.status === "done") {
+              clearInterval(pollInterval);
+              resolve({ images: job.result });
+            } else if (job.status === "error") {
+              clearInterval(pollInterval);
+              reject(new Error(job.error || "Failed to edit images"));
+            }
+            // Otherwise continue polling
+          } catch (error: any) {
+            clearInterval(pollInterval);
+            reject(new Error(`Error polling job: ${error.message}`));
+          }
+        }, 2000); // Poll every 2 seconds
+      });
     },
     onSuccess: (data) => {
       setIsSubmitting(false);
