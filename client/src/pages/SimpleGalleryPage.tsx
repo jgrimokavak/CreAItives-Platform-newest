@@ -7,7 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
-import { Loader2, FolderOpen, Star, Trash2, RotateCcw } from 'lucide-react';
+import { Loader2, FolderOpen, Star, Trash2, RotateCcw, Trash } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ImageCard from '@/components/ImageCard';
 
@@ -197,11 +197,14 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
     }
   };
   
-  // Handle delete/restore
-  const handleTrash = async (id: string, isInTrash: boolean) => {
+  // Handle delete/restore/permanent delete
+  const handleTrash = async (id: string, isInTrash: boolean, permanent: boolean = false) => {
     try {
       // Update UI optimistically
-      if (isInTrash) {
+      if (permanent) {
+        // Permanently delete
+        setImages(prev => prev.filter(img => img.id !== id));
+      } else if (isInTrash) {
         // Restore from trash
         setImages(prev =>
           prev.map(img => img.id === id ? { ...img, deletedAt: null } : img)
@@ -218,7 +221,11 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(
-          isInTrash ? { restoreFromTrash: true } : { deleteToTrash: true }
+          permanent 
+            ? { permanentDelete: true } 
+            : isInTrash 
+              ? { restoreFromTrash: true } 
+              : { deleteToTrash: true }
         )
       });
       
@@ -226,12 +233,22 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
         throw new Error('Failed to update image');
       }
       
-      toast({
-        title: isInTrash ? 'Image restored' : 'Image moved to trash',
-        description: isInTrash
-          ? 'The image has been restored from trash'
-          : 'The image has been moved to trash'
-      });
+      if (permanent) {
+        toast({
+          title: 'Image permanently deleted',
+          description: 'The image has been permanently removed from the system'
+        });
+      } else if (isInTrash) {
+        toast({
+          title: 'Image restored',
+          description: 'The image has been restored from trash'
+        });
+      } else {
+        toast({
+          title: 'Image moved to trash',
+          description: 'The image has been moved to trash'
+        });
+      }
     } catch (error) {
       // Revert on error by refreshing the data
       fetchImages();
@@ -245,7 +262,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
   };
   
   // Handle bulk actions
-  const handleBulkAction = async (action: 'star' | 'unstar' | 'trash' | 'restore') => {
+  const handleBulkAction = async (action: 'star' | 'unstar' | 'trash' | 'restore' | 'delete-permanent') => {
     if (selectedIds.length === 0) return;
     
     try {
@@ -266,6 +283,9 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
             : img
           )
         );
+      } else if (action === 'delete-permanent') {
+        // Remove from UI immediately
+        setImages(prev => prev.filter(img => !selectedIds.includes(img.id)));
       }
       
       // Make the actual API call
@@ -278,7 +298,8 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
           ids: selectedIds,
           starred: action === 'star' ? true : action === 'unstar' ? false : undefined,
           deleteToTrash: action === 'trash' ? true : undefined,
-          restoreFromTrash: action === 'restore' ? true : undefined
+          restoreFromTrash: action === 'restore' ? true : undefined,
+          permanentDelete: action === 'delete-permanent' ? true : undefined
         })
       });
       
@@ -297,7 +318,9 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
             ? 'Images have been unmarked'
             : action === 'trash'
               ? 'Images have been moved to trash'
-              : 'Images have been restored'
+              : action === 'delete-permanent'
+                ? 'Images have been permanently deleted'
+                : 'Images have been restored'
       });
     } catch (error) {
       // Refresh data on error
@@ -468,6 +491,20 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
                   >
                     <RotateCcw className="h-4 w-4" />
                     Restore
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (window.confirm('Are you sure you want to permanently delete these images? This action cannot be undone.')) {
+                        handleBulkAction('delete-permanent');
+                      }
+                    }}
+                    className="gap-2 text-destructive hover:text-destructive"
+                  >
+                    <Trash className="h-4 w-4" />
+                    Delete Permanently
                   </Button>
                 </>
               )}
