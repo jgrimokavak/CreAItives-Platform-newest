@@ -1,7 +1,10 @@
-import { FaCopy, FaDownload, FaTrash } from "react-icons/fa";
+import { useState } from "react";
+import { FaCopy, FaDownload, FaTrash, FaEdit, FaExpand } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { GeneratedImage } from "@/types/image";
+import ImageModal from "./ImageModal";
+import { useLocation, useRoute } from "wouter";
 
 interface ImageGalleryProps {
   images: GeneratedImage[];
@@ -10,6 +13,8 @@ interface ImageGalleryProps {
 
 export default function ImageGallery({ images, onClearResults }: ImageGalleryProps) {
   const { toast } = useToast();
+  const [, navigate] = useLocation();
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   if (images.length === 0) {
     return null;
@@ -64,8 +69,22 @@ export default function ImageGallery({ images, onClearResults }: ImageGalleryPro
     });
   };
 
+  const handleSendToEditor = (image: GeneratedImage) => {
+    navigate("/edit", { state: { sourceImage: image.url } });
+    toast({
+      title: "Image ready for editing",
+      description: "Use the edit form to modify this image",
+    });
+  };
+
   return (
     <section className="mb-12">
+      {/* Image Modal for fullscreen viewing */}
+      <ImageModal 
+        imageUrl={selectedImage} 
+        onClose={() => setSelectedImage(null)} 
+      />
+      
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold">Your Generated Images</h2>
         <div>
@@ -91,7 +110,8 @@ export default function ImageGallery({ images, onClearResults }: ImageGalleryPro
               <img
                 src={image.url}
                 alt={image.prompt}
-                className="absolute inset-0 w-full h-full object-cover"
+                className="absolute inset-0 w-full h-full object-cover cursor-pointer"
+                onClick={() => setSelectedImage(image.url)}
                 onError={(e) => {
                   console.error("Image failed to load:", image.url);
                   const target = e.target as HTMLImageElement;
@@ -104,6 +124,26 @@ export default function ImageGallery({ images, onClearResults }: ImageGalleryPro
                   target.style.padding = "20px";
                 }}
               />
+              <div className="absolute top-2 right-2 flex space-x-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setSelectedImage(image.url)}
+                  className="w-8 h-8 rounded-full bg-white shadow-md hover:bg-gray-100"
+                  title="View full size"
+                >
+                  <FaExpand className="w-3 h-3" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => navigate("/edit", { state: { sourceImage: image.url } })}
+                  className="w-8 h-8 rounded-full bg-white shadow-md hover:bg-gray-100"
+                  title="Edit this image"
+                >
+                  <FaEdit className="w-3 h-3" />
+                </Button>
+              </div>
             </div>
             <div className="p-4">
               <p className="text-sm text-accent mb-2 line-clamp-2">

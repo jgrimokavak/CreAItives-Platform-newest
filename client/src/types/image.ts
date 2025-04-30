@@ -5,4 +5,5 @@ export interface GeneratedImage {
   size: string;
   model: string;
   createdAt: string;
+  sourceThumb?: string; // 128px thumbnail of the first reference image
 }

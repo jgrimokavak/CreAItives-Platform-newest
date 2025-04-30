@@ -1,4 +1,4 @@
-import { useState, useRef, ChangeEvent } from "react";
+import { useState, useRef, ChangeEvent, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,6 +13,7 @@ import { useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { GeneratedImage } from "@/types/image";
 import { editImageSchema } from "@shared/schema";
+import { useLocation } from "wouter";
 
 type EditFormValues = {
   prompt: string;
@@ -41,6 +42,42 @@ export default function EditForm({
   
   const imageInputRef = useRef<HTMLInputElement>(null);
   const maskInputRef = useRef<HTMLInputElement>(null);
+  const [location] = useLocation();
+
+  // Add support for handling images passed through navigation state
+  useEffect(() => {
+    // Check if we have a sourceImage from location state
+    const locationState = window.history.state?.state as { sourceImage?: string } | undefined;
+    
+    if (locationState?.sourceImage) {
+      const dataURL = locationState.sourceImage;
+      
+      // Create a unique file name
+      const fileName = `image_${Date.now()}.png`;
+      
+      // Set the preview directly
+      setPreviews(prev => ({ ...prev, [fileName]: dataURL }));
+      
+      // Convert data URL to File object for use with our form
+      fetch(dataURL)
+        .then(res => res.blob())
+        .then(blob => {
+          const file = new File([blob], fileName, { type: 'image/png' });
+          setSelectedFiles(prev => [...prev, file]);
+          
+          toast({
+            title: "Image loaded for editing",
+            description: "You can now add a mask and edit the image"
+          });
+        })
+        .catch(error => {
+          console.error("Error loading image from state:", error);
+        });
+      
+      // Clear the state to avoid reloading on component remounts
+      window.history.replaceState({}, document.title);
+    }
+  }, [toast]);
 
   const form = useForm<EditFormValues>({
     resolver: zodResolver(
