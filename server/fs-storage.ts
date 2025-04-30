@@ -42,8 +42,16 @@ export async function persistImage(b64: string, meta: ImageMetadata, customId?: 
   // Get image metadata
   const { width, height } = await sharp(imgBuf).metadata();
 
-  // Generate thumbnail
-  const thumbBuf = await sharp(imgBuf).resize(256).png().toBuffer();
+  // Generate higher quality thumbnail with proper aspect ratio
+  const thumbBuf = await sharp(imgBuf)
+    .resize({
+      width: 512, // Larger thumbnail size for better quality
+      height: 512,
+      fit: 'inside', // Maintain aspect ratio
+      withoutEnlargement: true, // Don't enlarge small images
+    })
+    .png({ quality: 90, compressionLevel: 8 }) // Higher quality PNG
+    .toBuffer();
 
   // Define paths
   const fullPath = `full/${id}.png`;

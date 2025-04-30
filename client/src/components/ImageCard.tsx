@@ -53,13 +53,15 @@ export default function ImageCard({
       onClick={onClick}
     >
       <div className="relative pb-[100%]">
-        {/* Image thumbnail */}
-        <img 
-          src={image.thumbUrl || image.url} 
-          alt={image.prompt}
-          className="absolute inset-0 w-full h-full object-cover"
+        {/* Image thumbnail with better aspect ratio handling */}
+        <div className="absolute inset-0 flex items-center justify-center bg-black/5">
+          <img 
+            src={image.thumbUrl || image.url} 
+            alt={image.prompt}
+            className="w-full h-full object-contain"
           loading="lazy"
         />
+        </div>
         
         {/* Selection overlay */}
         {onSelect && (
