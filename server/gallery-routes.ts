@@ -12,6 +12,9 @@ router.get('/gallery', async (req, res) => {
   try {
     const { cursor, limit = 50, starred, trash } = req.query;
     
+    console.log(`Gallery request received with params:`, 
+      { cursor, limit, starred: starred === 'true', trash: trash === 'true' });
+    
     // Get images from database with filtering for starred/trash
     const { items, nextCursor } = await storage.getAllImages({
       starred: starred === 'true',
@@ -19,6 +22,17 @@ router.get('/gallery', async (req, res) => {
       limit: Number(limit),
       cursor: cursor as string
     });
+    
+    console.log(`Returning ${items.length} images, nextCursor: ${nextCursor}`);
+    
+    // Log a few sample images for debugging
+    if (items.length > 0) {
+      console.log(`Sample image data:`, {
+        id: items[0].id,
+        starred: items[0].starred,
+        deletedAt: items[0].deletedAt
+      });
+    }
     
     res.json({
       items,

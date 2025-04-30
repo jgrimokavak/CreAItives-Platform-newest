@@ -142,11 +142,14 @@ export class DatabaseStorage implements IStorage {
   }> {
     const { starred, trash, limit = 20, cursor } = options;
     
+    console.log(`getAllImages called with options:`, JSON.stringify(options));
+    
     // Build query
     let query = db.select().from(images);
     
     // Filter by starred and trash status
     if (starred) {
+      console.log("Filtering for starred=true images");
       query = query.where(eq(images.starred, "true"));
     }
     
@@ -172,8 +175,14 @@ export class DatabaseStorage implements IStorage {
       }
     }
     
+    // Log the SQL for debugging
+    const sql = query.toSQL();
+    console.log("Generated SQL:", sql.sql);
+    console.log("SQL parameters:", sql.params);
+    
     // Execute query
     const results = await query;
+    console.log(`Query returned ${results.length} results`);
     
     // Check if there are more results
     const hasMore = results.length > limit;
@@ -187,12 +196,18 @@ export class DatabaseStorage implements IStorage {
     }
     
     // Convert to GeneratedImage type
-    const mappedItems = items.map(item => ({
-      ...item,
-      createdAt: item.createdAt ? new Date(item.createdAt).toISOString() : new Date().toISOString(),
-      starred: item.starred === "true",
-      deletedAt: item.deletedAt ? new Date(item.deletedAt).toISOString() : null
-    }));
+    const mappedItems = items.map(item => {
+      // This is important - make sure we properly convert the string "true"/"false" to boolean
+      const starredStatus = item.starred === "true";
+      console.log(`Image ${item.id} starred status: "${item.starred}" -> ${starredStatus}`);
+      
+      return {
+        ...item,
+        createdAt: item.createdAt ? new Date(item.createdAt).toISOString() : new Date().toISOString(),
+        starred: starredStatus,
+        deletedAt: item.deletedAt ? new Date(item.deletedAt).toISOString() : null
+      };
+    });
     
     return {
       items: mappedItems,
