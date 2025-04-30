@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,20 +9,37 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FaMagic } from "react-icons/fa";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { GeneratedImage } from "@/types/image";
 import { Progress } from "@/components/ui/progress";
 
-const promptSchema = z.object({
+// Model interface for the API response
+interface ModelInfo {
+  key: string;
+  provider: 'openai' | 'replicate';
+  schema: any;
+  visible: string[];
+  defaults: Record<string, any>;
+  description: string;
+}
+
+// Base schema with common fields
+const basePromptSchema = z.object({
   prompt: z.string().min(1, "Prompt is required").max(32000),
-  model: z.enum(["gpt-image-1", "dall-e-3", "dall-e-2"]),
-  size: z.enum(["auto", "1024x1024", "1536x1024", "1024x1536", "1792x1024", "1024x1792"]),
-  quality: z.enum(["auto", "standard", "hd", "high", "medium", "low"]),
-  style: z.enum(["vivid", "natural"]).optional(),
+  model: z.enum(["gpt-image-1", "dall-e-3", "dall-e-2", "imagen-3", "flux-pro"]),
   count: z.enum(["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]),
+  // Optional fields for all model types
+  size: z.enum(["auto", "1024x1024", "1536x1024", "1024x1536", "1792x1024", "1024x1792"]).optional(),
+  quality: z.enum(["auto", "standard", "hd", "high", "medium", "low"]).optional(),
+  style: z.enum(["vivid", "natural"]).optional(),
   background: z.enum(["auto", "transparent", "opaque"]).optional(),
+  aspect_ratio: z.enum(["1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3"]).optional(),
+  seed: z.coerce.number().optional(),
 });
+
+// Initial schema with basic validation
+const promptSchema = basePromptSchema;
 
 type PromptFormValues = z.infer<typeof promptSchema>;
 
@@ -41,6 +58,28 @@ export default function PromptForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [progress, setProgress] = useState(0);
 
+  const [availableModels, setAvailableModels] = useState<ModelInfo[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch models when component mounts
+  useEffect(() => {
+    const fetchModels = async () => {
+      try {
+        const response = await fetch('/api/models');
+        if (response.ok) {
+          const models = await response.json();
+          setAvailableModels(models);
+        }
+      } catch (error) {
+        console.error('Failed to fetch models:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchModels();
+  }, []);
+
   const form = useForm<PromptFormValues>({
     resolver: zodResolver(promptSchema),
     defaultValues: {
@@ -51,11 +90,13 @@ export default function PromptForm({
       style: "vivid",
       count: "1",
       background: "auto",
+      aspect_ratio: "1:1",
     },
   });
   
   // Watch for model changes to show appropriate options
   const selectedModel = form.watch("model");
+  const selectedModelInfo = availableModels.find(model => model.key === selectedModel);
 
   const generateMutation = useMutation<{images: GeneratedImage[]}, Error, PromptFormValues>({
     mutationFn: async (values: PromptFormValues) => {
@@ -214,24 +255,26 @@ export default function PromptForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="gpt-image-1">GPT-Image-1 (Latest & Recommended)</SelectItem>
-                      <SelectItem value="dall-e-3">DALL-E 3 (High Quality)</SelectItem>
-                      <SelectItem value="dall-e-2">DALL-E 2 (Faster)</SelectItem>
+                      {loading ? (
+                        <SelectItem value="gpt-image-1">Loading models...</SelectItem>
+                      ) : (
+                        availableModels.map(model => (
+                          <SelectItem key={model.key} value={model.key}>
+                            {model.key === "gpt-image-1" ? "GPT-Image-1 (Latest)" : 
+                             model.key === "dall-e-3" ? "DALL-E 3 (High Quality)" :
+                             model.key === "dall-e-2" ? "DALL-E 2 (Faster)" :
+                             model.key === "imagen-3" ? "Imagen-3 (Replicate)" :
+                             model.key === "flux-pro" ? "Flux-Pro (Replicate)" :
+                             model.key}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                     <div className="mt-2">
-                      {selectedModel === "gpt-image-1" && (
+                      {selectedModelInfo && (
                         <p className="text-xs text-slate-600">
-                          OpenAI's latest image model. Excellent for realistic images with fine details.
-                        </p>
-                      )}
-                      {selectedModel === "dall-e-3" && (
-                        <p className="text-xs text-slate-600">
-                          High-quality image generation with strong creative interpretation.
-                        </p>
-                      )}
-                      {selectedModel === "dall-e-2" && (
-                        <p className="text-xs text-slate-600">
-                          Faster image generation, but less detailed than newer models.
+                          {selectedModelInfo.description || 
+                            (selectedModelInfo.provider === "openai" ? "OpenAI model" : "Replicate model")}
                         </p>
                       )}
                     </div>
@@ -277,6 +320,12 @@ export default function PromptForm({
                           <SelectItem value="512x512">512 × 512</SelectItem>
                           <SelectItem value="256x256">256 × 256</SelectItem>
                         </>
+                      )}
+                      {/* Replicate models don't use 'size' but 'aspect_ratio' */}
+                      {(selectedModel === "imagen-3" || selectedModel === "flux-pro") && (
+                        <SelectItem value="auto" disabled>
+                          Not applicable - use aspect ratio instead
+                        </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -427,6 +476,73 @@ export default function PromptForm({
                   </FormItem>
                 )}
               />
+            </div>
+          )}
+          
+          {/* Add Replicate-specific parameters */}
+          {(selectedModel === "imagen-3" || selectedModel === "flux-pro") && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <FormField
+                control={form.control}
+                name="aspect_ratio"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Aspect Ratio</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value || "1:1"}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select aspect ratio" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="1:1">1:1 (Square)</SelectItem>
+                        <SelectItem value="16:9">16:9 (Landscape)</SelectItem>
+                        <SelectItem value="9:16">9:16 (Portrait)</SelectItem>
+                        <SelectItem value="4:3">4:3 (Standard)</SelectItem>
+                        <SelectItem value="3:4">3:4 (Portrait)</SelectItem>
+                        {selectedModel === "flux-pro" && (
+                          <>
+                            <SelectItem value="3:2">3:2 (Landscape)</SelectItem>
+                            <SelectItem value="2:3">2:3 (Portrait)</SelectItem>
+                          </>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-slate-500 mt-1">Choose the output image dimensions ratio.</p>
+                  </FormItem>
+                )}
+              />
+              
+              {/* Add seed parameter for Flux-Pro only */}
+              {selectedModel === "flux-pro" && (
+                <FormField
+                  control={form.control}
+                  name="seed"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Seed</FormLabel>
+                      <FormControl>
+                        <input
+                          type="number"
+                          min="0"
+                          max="2147483647"
+                          placeholder="Random seed (optional)"
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          {...field}
+                          onChange={(e) => {
+                            const value = e.target.value ? parseInt(e.target.value) : undefined;
+                            field.onChange(value);
+                          }}
+                        />
+                      </FormControl>
+                      <p className="text-xs text-slate-500 mt-1">Set for reproducible generation. Leave empty for random results.</p>
+                    </FormItem>
+                  )}
+                />
+              )}
             </div>
           )}
 
