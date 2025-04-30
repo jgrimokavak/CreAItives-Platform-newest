@@ -159,6 +159,8 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
   // Handle star/unstar
   const handleStar = async (id: string, starred: boolean) => {
     try {
+      console.log(`Star action: id=${id}, current starred status=${starred}`);
+      
       // Update the UI optimistically
       setImages(prev =>
         prev.map(img => img.id === id ? { ...img, starred: !starred } : img)
@@ -177,6 +179,11 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
         throw new Error('Failed to update image');
       }
       
+      // If we're in starred mode and unstarring, refresh the gallery to remove it
+      if (showStarredOnly && starred) {
+        fetchImages();
+      }
+      
       toast({
         title: starred ? 'Image unmarked' : 'Image starred',
         description: starred 
@@ -184,6 +191,8 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
           : 'The image has been added to your starred items'
       });
     } catch (error) {
+      console.error('Error starring image:', error);
+      
       // Revert on error
       setImages(prev =>
         prev.map(img => img.id === id ? { ...img, starred } : img)

@@ -138,7 +138,10 @@ export default function ImageCard({
                     )}
                     onClick={(e) => {
                       e.stopPropagation();
-                      onStar(image.id, !image.starred);
+                      e.preventDefault();
+                      if (onStar) {
+                        onStar(image.id, image.starred || false);
+                      }
                     }}
                   >
                     <StarIcon className={cn(
