@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { GeneratedImage } from "@/types/image";
 import ImageModal from "./ImageModal";
 import { useLocation, useRoute } from "wouter";
+import { useEditor } from "@/context/EditorContext";
 
 interface ImageGalleryProps {
   images: GeneratedImage[];
@@ -15,6 +16,7 @@ export default function ImageGallery({ images, onClearResults }: ImageGalleryPro
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const { setMode, setSourceImages } = useEditor();
 
   if (images.length === 0) {
     return null;
@@ -70,7 +72,9 @@ export default function ImageGallery({ images, onClearResults }: ImageGalleryPro
   };
 
   const handleSendToEditor = (image: GeneratedImage) => {
-    navigate("/edit", { state: { sourceImage: image.url } });
+    setSourceImages([image.url]);
+    setMode("edit");
+    window.scrollTo({ top: 0, behavior: "smooth" });
     toast({
       title: "Image ready for editing",
       description: "Use the edit form to modify this image",
@@ -137,7 +141,7 @@ export default function ImageGallery({ images, onClearResults }: ImageGalleryPro
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => navigate("/edit", { state: { sourceImage: image.url } })}
+                  onClick={() => handleSendToEditor(image)}
                   className="w-8 h-8 rounded-full bg-white shadow-md hover:bg-gray-100"
                   title="Edit this image"
                 >

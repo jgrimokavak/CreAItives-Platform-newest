@@ -13,7 +13,7 @@ import { useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { GeneratedImage } from "@/types/image";
 import { editImageSchema } from "@shared/schema";
-import { useLocation } from "wouter";
+import { useEditor } from "@/context/EditorContext";
 
 type EditFormValues = {
   prompt: string;
@@ -42,42 +42,53 @@ export default function EditForm({
   
   const imageInputRef = useRef<HTMLInputElement>(null);
   const maskInputRef = useRef<HTMLInputElement>(null);
-  const [location] = useLocation();
+  const { sourceImages, setSourceImages } = useEditor();
 
-  // Add support for handling images passed through navigation state
-  useEffect(() => {
-    // Check if we have a sourceImage from location state
-    const locationState = window.history.state?.state as { sourceImage?: string } | undefined;
+  // Function to load image from data URL
+  const presetFiles = async (dataURLs: string[]) => {
+    if (!dataURLs.length) return;
     
-    if (locationState?.sourceImage) {
-      const dataURL = locationState.sourceImage;
-      
+    const newPreviews: Record<string, string> = {};
+    const files: File[] = [];
+    
+    for (let i = 0; i < dataURLs.length; i++) {
+      const dataURL = dataURLs[i];
       // Create a unique file name
-      const fileName = `image_${Date.now()}.png`;
+      const fileName = `image_${Date.now()}_${i}.png`;
       
       // Set the preview directly
-      setPreviews(prev => ({ ...prev, [fileName]: dataURL }));
+      newPreviews[fileName] = dataURL;
       
-      // Convert data URL to File object for use with our form
-      fetch(dataURL)
-        .then(res => res.blob())
-        .then(blob => {
-          const file = new File([blob], fileName, { type: 'image/png' });
-          setSelectedFiles(prev => [...prev, file]);
-          
-          toast({
-            title: "Image loaded for editing",
-            description: "You can now add a mask and edit the image"
-          });
-        })
-        .catch(error => {
-          console.error("Error loading image from state:", error);
-        });
-      
-      // Clear the state to avoid reloading on component remounts
-      window.history.replaceState({}, document.title);
+      try {
+        // Convert data URL to File object for use with our form
+        const response = await fetch(dataURL);
+        const blob = await response.blob();
+        const file = new File([blob], fileName, { type: 'image/png' });
+        files.push(file);
+      } catch (error) {
+        console.error("Error loading image:", error);
+      }
     }
-  }, [toast]);
+    
+    if (Object.keys(newPreviews).length > 0) {
+      setPreviews(prev => ({ ...prev, ...newPreviews }));
+      setSelectedFiles(prev => [...prev, ...files]);
+      
+      toast({
+        title: "Image loaded for editing",
+        description: "You can now add a mask and edit the image"
+      });
+    }
+  };
+  
+  // Check for images passed via editor context
+  useEffect(() => {
+    if (sourceImages.length > 0) {
+      presetFiles(sourceImages);
+      // Clear the source images after loading
+      setSourceImages([]);
+    }
+  }, [sourceImages, toast, setSourceImages]);
 
   const form = useForm<EditFormValues>({
     resolver: zodResolver(
