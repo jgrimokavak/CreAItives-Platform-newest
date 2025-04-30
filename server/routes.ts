@@ -5,9 +5,14 @@ import { openai } from "./openai";
 import { toFile } from "openai";
 import { z } from "zod";
 import { generateImageSchema, editImageSchema } from "@shared/schema";
-import * as path from "path";
+import path from "path";
+import { fileURLToPath } from "url";
 import * as fs from "fs";
 import sharp from "sharp";
+
+// Fix for __dirname in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API endpoint to generate images
