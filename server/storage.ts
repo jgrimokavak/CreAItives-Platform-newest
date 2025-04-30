@@ -1,6 +1,6 @@
 import { users, images, type User, type InsertUser, type GeneratedImage } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, isNull, isNotNull } from "drizzle-orm";
+import { eq, desc, isNull, isNotNull, and } from "drizzle-orm";
 import * as fs from "fs";
 import * as path from "path";
 import { push } from "./ws";
@@ -147,16 +147,27 @@ export class DatabaseStorage implements IStorage {
     // Build query
     let query = db.select().from(images);
     
+    // Build conditions array
+    const conditions = [];
+    
     // Filter by starred and trash status
     if (starred) {
       console.log("Filtering for starred=true images");
-      query = query.where(eq(images.starred, "true"));
+      conditions.push(eq(images.starred, "true"));
     }
     
     if (trash) {
-      query = query.where(isNotNull(images.deletedAt));
+      conditions.push(isNotNull(images.deletedAt));
     } else {
-      query = query.where(isNull(images.deletedAt));
+      conditions.push(isNull(images.deletedAt));
+    }
+    
+    // Apply all conditions to the query
+    if (conditions.length === 1) {
+      query = query.where(conditions[0]);
+    } else if (conditions.length > 1) {
+      // For multiple conditions, use the 'and' operator
+      query = query.where(and(...conditions));
     }
     
     // Order by createdAt (latest first)
