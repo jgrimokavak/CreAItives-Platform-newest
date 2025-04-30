@@ -362,7 +362,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
     }
   };
   
-  // Fetch images when component mounts, mode changes, or starred filter changes
+  // Fetch images when component mounts, mode changes, starred filter, or search term changes
   useEffect(() => {
     fetchImages();
     
@@ -377,7 +377,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
     return () => {
       window.removeEventListener('gallery-updated', handleWebSocketMessage);
     };
-  }, [mode, showStarredOnly]);
+  }, [mode, showStarredOnly, debouncedSearchTerm]);
   
   // Empty state
   if (loading) {
@@ -453,6 +453,24 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
               {showStarredOnly ? "Starred Only" : "All Images"}
             </Button>
           )}
+          
+          {/* Search input */}
+          <div className="relative w-full max-w-xs">
+            <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search by prompt..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="pl-8 h-9 md:w-[200px] lg:w-[300px]"
+            />
+            {searchInput && (
+              <X
+                className="absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground cursor-pointer hover:text-foreground"
+                onClick={() => setSearchInput('')}
+              />
+            )}
+          </div>
           
           {/* Item count */}
           <div className="text-sm text-muted-foreground">
