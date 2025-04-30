@@ -38,7 +38,15 @@ export const images = pgTable("images", {
   prompt: text("prompt").notNull(),
   size: text("size").notNull(),
   model: text("model").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull()
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  // Added fields for gallery functionality
+  width: text("width").default("1024"),
+  height: text("height").default("1024"),
+  thumbUrl: text("thumb_url"),
+  fullUrl: text("full_url"),
+  sourceThumb: text("source_thumb"),
+  starred: text("starred").default("false"),
+  deletedAt: timestamp("deleted_at"),
 });
 
 export const insertImageSchema = createInsertSchema(images);
@@ -46,7 +54,7 @@ export const insertImageSchema = createInsertSchema(images);
 export type InsertImage = z.infer<typeof insertImageSchema>;
 export type Image = typeof images.$inferSelect;
 
-// For memory storage
+// For memory storage and client-server communication
 export interface GeneratedImage {
   id: string;
   url: string;
@@ -55,6 +63,12 @@ export interface GeneratedImage {
   model: string;
   createdAt: string;
   sourceThumb?: string; // 128px thumbnail of the first reference image
+  width?: string;
+  height?: string;
+  thumbUrl?: string;
+  fullUrl?: string;
+  starred?: boolean;
+  deletedAt?: string | null;
 }
 
 // Image edit schema
