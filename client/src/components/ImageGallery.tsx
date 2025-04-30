@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { FaCopy, FaDownload, FaTrash, FaEdit, FaExpand } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
+import { CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { GeneratedImage } from "@/types/image";
 import ImageModal from "./ImageModal";
@@ -108,7 +109,7 @@ export default function ImageGallery({ images, onClearResults }: ImageGalleryPro
         {images.map((image) => (
           <div
             key={image.id}
-            className="bg-card rounded-lg overflow-hidden shadow-sm border border-border hover:shadow-md transition-shadow"
+            className="bg-card rounded-lg overflow-hidden shadow-sm border border-border hover:shadow-md transition-shadow group"
           >
             <div className="relative pb-[100%]">
               <img
@@ -140,7 +141,7 @@ export default function ImageGallery({ images, onClearResults }: ImageGalleryPro
                 </Button>
               </div>
             </div>
-            <div className="p-3 space-y-2">
+            <CardContent className="p-3 space-y-2">
               <p className="text-sm font-medium line-clamp-2">{image.prompt}</p>
               <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
                 <span className="bg-muted/50 rounded-full px-2 py-0.5">
@@ -195,7 +196,7 @@ export default function ImageGallery({ images, onClearResults }: ImageGalleryPro
                   </Button>
                 </div>
               </div>
-            </div>
+            </CardContent>
           </div>
         ))}
       </div>
