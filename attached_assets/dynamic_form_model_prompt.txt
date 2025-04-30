@@ -1,0 +1,120 @@
+
+Dynamic form fields per model + prominent model selector
+========================================================
+
+Goal
+----
+• Show only the controls allowed for the currently selected model.  
+• GPT‑Image‑1: Prompt, Size, Quality, Number of Images.  
+• Imagen‑3: Prompt, Aspect Ratio, Negative Prompt.  
+• Flux‑Pro: Prompt, Aspect Ratio (fixed list, NO custom), Seed.  
+Other parameters are hidden and applied server‑side as defaults.
+
+Part A – Model configuration
+----------------------------
+`client/src/lib/modelCatalog.ts`
+```ts
+export const modelCatalog = {
+  "gpt-image-1": {
+    label: "GPT‑Image‑1 (Latest)",
+    description: "Most accurate, but slow.",
+    visible: ["prompt","size","quality","n"]
+  },
+  "imagen-3": {
+    label: "Imagen‑3 (Replicate)",
+    description: "Accurate, fast, consistent, but not very creative.",
+    visible: ["prompt","aspect_ratio","negative_prompt"]
+  },
+  "flux-pro": {
+    label: "Flux‑Pro (Replicate)",
+    description: "Fast, creative, high‑quality; less prompt‑accurate.",
+    visible: ["prompt","aspect_ratio","seed"]
+  }
+} as const;
+export type ModelKey = keyof typeof modelCatalog;
+```
+
+Part B – Model selector prominence
+----------------------------------
+1. **Move the Model dropdown above the Prompt field.**  
+   *CreatePage > PromptForm.tsx*:
+   ```tsx
+   <div className="grid gap-6">
+     <div>
+       <Label>Model</Label>
+       <ModelSelect value={modelKey} onChange={setModelKey}/>
+       <p className="text-muted-foreground text-sm mt-1">
+         {modelCatalog[modelKey].description}
+       </p>
+     </div>
+     <Textarea …prompt…/>
+   </div>
+   ```
+2. Add Tailwind class `font-semibold` and `ring-1 ring-primary/50` on focus to
+   give subtle emphasis without changing palette.
+
+Part C – DynamicForm component
+------------------------------
+`client/src/components/DynamicForm.tsx`
+```tsx
+const DynamicForm = ({ modelKey }: { modelKey: ModelKey }) => {
+  const fields = modelCatalog[modelKey].visible;
+
+  return (
+    <>
+      {fields.includes("size") && <SizeSelect …/>}
+      {fields.includes("quality") && <QualitySelect …/>}
+      {fields.includes("n") && <CountSelect …/>}
+
+      {fields.includes("aspect_ratio") && <AspectRatioSelect model={modelKey}/>}
+
+      {fields.includes("negative_prompt") && <Textarea label="Negative Prompt" …/>}
+
+      {fields.includes("seed") && <InputNumber label="Seed" …/>}
+    </>
+  );
+};
+```
+*Flux‑Pro*’s `AspectRatioSelect` gets options:
+```ts
+const fluxAspect = ["1:1","16:9","9:16","3:2","2:3","4:5","5:4","3:4","4:3"];
+```
+No “custom” entry.
+
+Part D – Form integration
+-------------------------
+`PromptForm.tsx`
+```tsx
+<ModelSelect …/>
+<Textarea name="prompt" …/>
+
+<DynamicForm modelKey={modelKey}/>
+<Button>Generate Images</Button>
+```
+
+Part E – Validation
+-------------------
+Update Zod client schema:
+```ts
+const common = z.object({ prompt: z.string().min(1) });
+const modelSchemas = {
+  "gpt-image-1": common.extend({ size:z.string(), quality:z.string(), n:z.number().int().min(1).max(10) }),
+  "imagen-3":    common.extend({ aspect_ratio:z.string(), negative_prompt:z.string().optional() }),
+  "flux-pro":    common.extend({ aspect_ratio:z.string(), seed:z.number().int().optional() })
+};
+```
+Pick `modelSchemas[modelKey]` at submit.
+
+Part F – Backend generate schema already updated; no change needed.
+
+Testing
+-------
+1. Switch models; verify controls appear/disappear instantly.  
+2. Flux‑Pro: no custom width/height field.  
+3. Form submission body contains only visible fields plus modelKey.  
+4. Generate succeeds for all three models.
+
+Deliverable
+-----------
+* `modelCatalog.ts`, `ModelSelect.tsx`, `DynamicForm.tsx`, modified `PromptForm.tsx`
+* Updated Zod validation.
