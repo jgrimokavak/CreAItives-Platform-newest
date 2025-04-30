@@ -158,7 +158,7 @@ export default function PromptForm({
         <div className="mb-6">
           <div className="flex justify-between mb-2 text-sm">
             <span>Generating images...</span>
-            <span>{progress}%</span>
+            <span>{Math.round(progress)}%</span>
           </div>
           <Progress value={progress} className="h-2" />
         </div>
