@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { GeneratedImage } from "@/types/image";
+import { Progress } from "@/components/ui/progress";
 
 const promptSchema = z.object({
   prompt: z.string().min(1, "Prompt is required").max(32000),
@@ -38,6 +39,7 @@ export default function PromptForm({
 }: PromptFormProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   const form = useForm<PromptFormValues>({
     resolver: zodResolver(promptSchema),
@@ -55,14 +57,37 @@ export default function PromptForm({
   // Watch for model changes to show appropriate options
   const selectedModel = form.watch("model");
 
-  const generateMutation = useMutation({
+  const generateMutation = useMutation<{images: GeneratedImage[]}, Error, PromptFormValues>({
     mutationFn: async (values: PromptFormValues) => {
+      // Reset progress
+      setProgress(0);
+      
       const response = await apiRequest(
         "POST",
         "/api/generate",
         values
       );
-      return response.json();
+      
+      // Start progress animation
+      setProgress(50);
+      
+      // Simulate progress updates for better user experience
+      const progressInterval = setInterval(() => {
+        setProgress(current => {
+          if (current >= 95) {
+            clearInterval(progressInterval);
+            return current;
+          }
+          return current + 5;
+        });
+      }, 1000);
+      
+      // Actual response handling
+      const result = await response.json();
+      setProgress(100);
+      clearInterval(progressInterval);
+      
+      return result;
     },
     onSuccess: (data) => {
       setIsSubmitting(false);
@@ -86,12 +111,22 @@ export default function PromptForm({
 
   const onSubmit = async (values: PromptFormValues) => {
     setIsSubmitting(true);
+    setProgress(0);
     onGenerateStart();
     generateMutation.mutate(values);
   };
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 max-w-3xl mx-auto">
+      {isSubmitting && (
+        <div className="mb-6">
+          <div className="flex justify-between mb-2 text-sm">
+            <span>Generating images...</span>
+            <span>{progress}%</span>
+          </div>
+          <Progress value={progress} className="h-2" />
+        </div>
+      )}
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <FormField

@@ -199,7 +199,7 @@ export default function EditForm({
     }
   };
 
-  const editMutation = useMutation({
+  const editMutation = useMutation<{images: GeneratedImage[]}, Error, EditFormValues>({
     mutationFn: async (values: EditFormValues) => {
       if (selectedFiles.length === 0) {
         throw new Error("Please select at least one image");
@@ -222,6 +222,9 @@ export default function EditForm({
         formData.append("mask", selectedMask);
       }
       
+      // Reset progress
+      setProgress(0);
+      
       // Use fetch directly for FormData to submit the job
       const response = await fetch("/api/edit-image", {
         method: "POST",
@@ -236,17 +239,24 @@ export default function EditForm({
       // Get the job ID from the response
       const { jobId } = await response.json();
       
+      // Set initial progress
+      setProgress(10);
+      
       // Poll for job completion
-      return new Promise((resolve, reject) => {
-        // Create a progress indicator (0-100)
-        let progress = 0;
+      return new Promise<{images: GeneratedImage[]}>((resolve, reject) => {
+        // Create a progress indicator (10-95)
+        let currentProgress = 10;
         
         const pollInterval = setInterval(async () => {
           try {
             // Increment progress for UI feedback (up to 95%)
-            if (progress < 95) {
-              progress += 5;
-              // You can update a progress bar here if you implement one
+            if (currentProgress < 95) {
+              // Slow down progress as we get higher to avoid reaching 95 too quickly
+              const increment = currentProgress < 30 ? 10 : 
+                               currentProgress < 60 ? 5 : 3;
+              
+              currentProgress = Math.min(95, currentProgress + increment);
+              setProgress(currentProgress);
             }
             
             // Get job status
@@ -261,6 +271,7 @@ export default function EditForm({
             const job = await jobResponse.json();
             
             if (job.status === "done") {
+              setProgress(100);
               clearInterval(pollInterval);
               resolve({ images: job.result });
             } else if (job.status === "error") {
@@ -297,12 +308,22 @@ export default function EditForm({
 
   const onSubmit = async (values: EditFormValues) => {
     setIsSubmitting(true);
+    setProgress(0);
     onEditStart();
     editMutation.mutate(values);
   };
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 max-w-3xl mx-auto">
+      {isSubmitting && (
+        <div className="mb-6">
+          <div className="flex justify-between mb-2 text-sm">
+            <span>Processing images...</span>
+            <span>{progress}%</span>
+          </div>
+          <Progress value={progress} className="h-2" />
+        </div>
+      )}
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <FormField
