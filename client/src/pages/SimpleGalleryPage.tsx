@@ -55,6 +55,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
   
   // Fetch gallery images
   const fetchImages = async () => {
+    console.log(`fetchImages called with search term: "${debouncedSearchTerm}"`);
     setLoading(true);
     setError(null);
     
@@ -62,7 +63,10 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       const params = new URLSearchParams();
       if (showStarredOnly) params.append('starred', 'true');
       if (mode === 'trash') params.append('trash', 'true');
-      if (debouncedSearchTerm) params.append('q', debouncedSearchTerm); // Backend expects 'q' parameter
+      if (debouncedSearchTerm && debouncedSearchTerm.trim() !== '') {
+        params.append('q', debouncedSearchTerm.trim()); // Backend expects 'q' parameter
+        console.log(`Added search parameter q=${debouncedSearchTerm.trim()}`);
+      }
       
       const url = `/api/gallery?${params.toString()}`;
       console.log('Fetching images with URL:', url);
@@ -74,7 +78,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       }
       
       const data = await response.json();
-      console.log('Gallery data:', data);
+      console.log(`Gallery data received: ${data.items?.length || 0} images`);
       
       // Ensure images have proper URLs
       const formattedImages = data.items || [];
@@ -464,10 +468,13 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
           )}
           
           {/* Search input */}
-          <div className="relative w-full max-w-xs">
+          <div className="relative w-full max-w-xs" 
+              onClick={(e) => e.stopPropagation()} // Stop click propagation
+              onSubmit={(e) => e.preventDefault()} // Prevent any form submission
+          >
             <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              type="text"
+              type="search" 
               placeholder="Search by prompt..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
@@ -476,6 +483,8 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
                 // Prevent form submission on Enter key
                 if (e.key === 'Enter') {
                   e.preventDefault();
+                  e.stopPropagation();
+                  return false;
                 }
               }}
             />
