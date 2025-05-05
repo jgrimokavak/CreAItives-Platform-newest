@@ -67,36 +67,69 @@ async function processUpscaleJob(jobId: string, req: any) {
   try {
     upscaleJobs[jobId].status = 'processing';
     
-    // Get file path
+    // Get file path and read the image
     const filePath = req.file.path;
     const originalImageBuffer = fs.readFileSync(filePath);
     
     // Process image with Sharp - resize if necessary to fit GPU memory constraints
-    // The error from Replicate shows max size is 2096704 pixels, so we'll aim for ~1.4M pixels max
-    // which is roughly 1200x1200 (actually 1.44M pixels)
-    const MAX_DIMENSION = 1200;
+    // The error from Replicate shows max size is 2096704 pixels max, 
+    // so we'll aim for a maximum of 1 million pixels (about 1000x1000) to be safe
+    const MAX_PIXELS = 1000000; // 1 million pixels
+    const MAX_DIMENSION = 1000; // No dimension should be larger than 1000px
     
     // Get image metadata to determine if resizing is needed
     const metadata = await sharp(originalImageBuffer).metadata();
     const width = metadata.width || 0;
     const height = metadata.height || 0;
+    const totalPixels = width * height;
     
+    console.log(`Original image dimensions: ${width}x${height}, total pixels: ${totalPixels}`);
+    
+    // Initialize variables for processing
     let processedImageBuffer = originalImageBuffer;
     let wasResized = false;
     
-    // Check if image is too large (more than MAX_DIMENSION in either dimension)
-    if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
-      console.log(`Image too large (${width}x${height}), resizing to fit ${MAX_DIMENSION}px max dimension`);
+    // Always resize if the image is too large on any dimension or has too many total pixels
+    if (width > MAX_DIMENSION || height > MAX_DIMENSION || totalPixels > MAX_PIXELS) {
+      console.log(`Image too large (${width}x${height}, ${totalPixels} pixels), resizing...`);
       
-      // Preserve aspect ratio
-      const resizeOptions = width > height 
-        ? { width: MAX_DIMENSION } 
-        : { height: MAX_DIMENSION };
-        
+      // Calculate new dimensions while maintaining aspect ratio
+      let newWidth = width;
+      let newHeight = height;
+      
+      // First, scale down based on maximum dimension
+      if (width > height && width > MAX_DIMENSION) {
+        newWidth = MAX_DIMENSION;
+        newHeight = Math.round(height * (MAX_DIMENSION / width));
+      } else if (height > width && height > MAX_DIMENSION) {
+        newHeight = MAX_DIMENSION;
+        newWidth = Math.round(width * (MAX_DIMENSION / height));
+      } else if (width === height && width > MAX_DIMENSION) {
+        newWidth = MAX_DIMENSION;
+        newHeight = MAX_DIMENSION;
+      }
+      
+      // Then, check if we still have too many pixels and reduce further if needed
+      if (newWidth * newHeight > MAX_PIXELS) {
+        const scaleFactor = Math.sqrt(MAX_PIXELS / (newWidth * newHeight));
+        newWidth = Math.floor(newWidth * scaleFactor);
+        newHeight = Math.floor(newHeight * scaleFactor);
+      }
+      
+      console.log(`Resizing to ${newWidth}x${newHeight} (${newWidth * newHeight} pixels)`);
+      
       processedImageBuffer = await sharp(originalImageBuffer)
-        .resize(resizeOptions)
+        .resize({
+          width: newWidth,
+          height: newHeight,
+          fit: 'inside'
+        })
         .jpeg({ quality: 90 })
         .toBuffer();
+        
+      // Verify the resized image dimensions
+      const resizedMetadata = await sharp(processedImageBuffer).metadata();
+      console.log(`Resized image dimensions: ${resizedMetadata.width}x${resizedMetadata.height}, total pixels: ${(resizedMetadata.width || 0) * (resizedMetadata.height || 0)}`);
         
       wasResized = true;
     }
