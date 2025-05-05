@@ -59,12 +59,13 @@ router.post('/upscale', upload.single('image'), async (req, res) => {
       const base64Image = imageBuffer.toString('base64');
       
       // Get parameters from the request or use defaults
-      const scale = parseInt(req.body.scale || '4', 10);
-      const faceEnhance = req.body.face_enhance === 'true';
+      const enhanceModel = req.body.enhance_model || 'Standard V2';
+      const upscaleFactor = req.body.upscale_factor || '4x';
+      const faceEnhancement = req.body.face_enhancement === 'true';
       
-      console.log(`Upscaling with parameters: scale=${scale}, face_enhance=${faceEnhance}`);
+      console.log(`Upscaling with parameters: enhance_model=${enhanceModel}, upscale_factor=${upscaleFactor}, face_enhancement=${faceEnhancement}`);
       
-      // Real-ESRGAN model on Replicate
+      // Topaz Image Upscale model on Replicate
       const response = await fetch('https://api.replicate.com/v1/predictions', {
         method: 'POST',
         headers: {
@@ -72,11 +73,17 @@ router.post('/upscale', upload.single('image'), async (req, res) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          version: "42fed1c4974146d4d2414e2be2c5277c7fcf05fcc3a73abf41610695738c1d7b",
+          version: "5c51d9c25fc4c65330eb833933bef0609644d208ef5e6dd0d629bb0f90e11627",
           input: { 
             image: `data:image/jpeg;base64,${base64Image}`,
-            scale: Math.min(Math.max(scale, 1), 4), // Ensure scale is between 1-4
-            face_enhance: faceEnhance
+            enhance_model: enhanceModel,
+            upscale_factor: upscaleFactor,
+            face_enhancement: faceEnhancement,
+            // Hidden parameters with defaults
+            output_format: "png",
+            subject_detection: "None",
+            face_enhancement_creativity: 1,
+            face_enhancement_strength: 1
           }
         })
       });

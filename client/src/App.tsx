@@ -5,7 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import SimpleGalleryPage from "@/pages/SimpleGalleryPage";
-import UpscalePage from "@/pages/UpscalePage";
+import UpscalePage from "./pages/UpscalePageNew";
 import { EditorProvider } from "@/context/EditorContext";
 import Sidebar from "@/components/Sidebar";
 import { useWebSocket } from "@/lib/websocket";
