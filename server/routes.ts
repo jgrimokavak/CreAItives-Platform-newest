@@ -570,7 +570,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(job);
   });
 
-  // API logs endpoint has been removed
+  // API logs endpoint is disabled and returns 404
+  app.get("/api/logs", (_req, res) => {
+    res.status(404).json({ message: "API logs have been disabled" });
+  });
 
   // Serve static uploads folder
   const uploadsPath = path.join(path.dirname(new URL(import.meta.url).pathname), '../uploads');
