@@ -58,6 +58,12 @@ router.post('/upscale', upload.single('image'), async (req, res) => {
       const imageBuffer = fs.readFileSync(filePath);
       const base64Image = imageBuffer.toString('base64');
       
+      // Get parameters from the request or use defaults
+      const scale = parseInt(req.body.scale || '4', 10);
+      const faceEnhance = req.body.face_enhance === 'true';
+      
+      console.log(`Upscaling with parameters: scale=${scale}, face_enhance=${faceEnhance}`);
+      
       // Real-ESRGAN model on Replicate
       const response = await fetch('https://api.replicate.com/v1/predictions', {
         method: 'POST',
@@ -69,8 +75,8 @@ router.post('/upscale', upload.single('image'), async (req, res) => {
           version: "42fed1c4974146d4d2414e2be2c5277c7fcf05fcc3a73abf41610695738c1d7b",
           input: { 
             image: `data:image/jpeg;base64,${base64Image}`,
-            scale: 4,
-            face_enhance: true
+            scale: Math.min(Math.max(scale, 1), 4), // Ensure scale is between 1-4
+            face_enhance: faceEnhance
           }
         })
       });

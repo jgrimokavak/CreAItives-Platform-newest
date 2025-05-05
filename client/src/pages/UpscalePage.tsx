@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
+import { Button } from "../components/ui/button";
 import {
   Card,
   CardContent,
@@ -9,9 +9,12 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import LoadingState from "@/components/LoadingState";
+} from "../components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
+import { Slider } from "../components/ui/slider";
+import { Switch } from "../components/ui/switch";
+import { Label } from "../components/ui/label";
+import { Loader2 } from "lucide-react";
 
 export default function UpscalePage() {
   const [, setLocation] = useLocation();
@@ -21,6 +24,10 @@ export default function UpscalePage() {
   const [outputUrl, setOutputUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  
+  // Add parameters from the schema
+  const [scale, setScale] = useState<number>(4); // Default from schema
+  const [faceEnhance, setFaceEnhance] = useState<boolean>(false); // Default from schema
 
   // Parse query parameters for source image
   useEffect(() => {
@@ -69,6 +76,8 @@ export default function UpscalePage() {
     try {
       const formData = new FormData();
       formData.append('image', selectedFile);
+      formData.append('scale', scale.toString());
+      formData.append('face_enhance', faceEnhance.toString());
 
       const response = await fetch('/api/upscale', {
         method: 'POST',
@@ -156,6 +165,42 @@ export default function UpscalePage() {
                 onChange={handleFileChange}
                 className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary/90 text-sm"
               />
+              
+              {/* Parameters from schema */}
+              <div className="space-y-4 mt-4 border-t pt-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="scale-slider">Scale Factor: {scale}x</Label>
+                    <span className="text-xs text-muted-foreground">Higher values = larger image</span>
+                  </div>
+                  <Slider
+                    id="scale-slider"
+                    min={1}
+                    max={4}
+                    step={1}
+                    value={[scale]}
+                    onValueChange={(value) => setScale(value[0])}
+                    disabled={uploading || isPolling}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Upscale factor (1-4x). Higher values generate larger images with more detail.
+                  </p>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="face-enhance"
+                    checked={faceEnhance}
+                    onCheckedChange={setFaceEnhance}
+                    disabled={uploading || isPolling}
+                  />
+                  <Label htmlFor="face-enhance">Face Enhancement</Label>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Applies special processing to improve faces in the image. 
+                  Recommended for portraits and photos with people.
+                </p>
+              </div>
             </div>
           </CardContent>
           <CardFooter>
@@ -165,8 +210,8 @@ export default function UpscalePage() {
               className="w-full"
             >
               {uploading || isPolling ? (
-                <span className="flex items-center">
-                  <LoadingState /> Processing...
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Processing...
                 </span>
               ) : (
                 "Upscale Image"
@@ -195,7 +240,7 @@ export default function UpscalePage() {
                 />
               ) : uploading || isPolling ? (
                 <div className="flex flex-col items-center justify-center p-8 text-center">
-                  <LoadingState />
+                  <Loader2 className="h-12 w-12 animate-spin text-primary" />
                   <p className="mt-4 text-muted-foreground">
                     Upscaling your image... This may take a minute.
                   </p>
