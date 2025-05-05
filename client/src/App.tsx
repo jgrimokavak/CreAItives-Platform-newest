@@ -5,7 +5,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import SimpleGalleryPage from "@/pages/SimpleGalleryPage";
-import ApiLogConsole from "@/components/ApiLogConsole";
 import { EditorProvider } from "@/context/EditorContext";
 import Sidebar from "@/components/Sidebar";
 import { useWebSocket } from "@/lib/websocket";
@@ -34,7 +33,6 @@ function App() {
           <WouterRouter>
             <Router />
           </WouterRouter>
-          <ApiLogConsole />
         </EditorProvider>
       </TooltipProvider>
     </QueryClientProvider>
