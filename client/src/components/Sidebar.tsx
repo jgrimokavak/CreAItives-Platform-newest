@@ -79,6 +79,9 @@ const Sidebar = ({ children }: SidebarProps) => {
           <SidebarLink to="/gallery" icon={<Images size={18} />}>
             Gallery
           </SidebarLink>
+          <SidebarLink to="/upscale" icon={<ZoomIn size={18} />}>
+            Upscale
+          </SidebarLink>
           <SidebarLink to="/trash" icon={<Trash2 size={18} />}>
             Trash
           </SidebarLink>
