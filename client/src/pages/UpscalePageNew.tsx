@@ -287,7 +287,10 @@ export default function UpscalePage() {
                 <div className="flex flex-col items-center justify-center p-8 text-center">
                   <Loader2 className="h-12 w-12 animate-spin text-primary" />
                   <p className="mt-4 text-muted-foreground">
-                    Upscaling your image... This can take up to a minute.
+                    Upscaling your image... This can take up to 2 minutes. AI upscaling is a complex process.
+                  </p>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    The larger your image and higher the upscale factor, the longer it takes.
                   </p>
                 </div>
               ) : (
