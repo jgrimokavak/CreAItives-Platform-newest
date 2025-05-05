@@ -1,8 +1,10 @@
 import { FaImage } from "react-icons/fa";
+import { Link } from "wouter";
+import { SiOpenai, SiReplit } from "react-icons/si";
 
 export default function Footer() {
   return (
-    <footer className="bg-muted border-t border-gray-200 py-8 mt-12">
+    <footer className="bg-muted border-t border-gray-200 py-6 mt-auto">
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="mb-4 md:mb-0">
@@ -13,20 +15,41 @@ export default function Footer() {
               <span className="font-medium">AI Image Generator</span>
             </div>
             <p className="text-sm text-accent mt-2">
-              Powered by OpenAI's DALL-E Models
+              Multi-model image generation platform
             </p>
           </div>
-          <div className="flex space-x-6">
-            <a href="#" className="text-accent hover:text-foreground transition-colors">
-              <span className="text-sm">Documentation</span>
-            </a>
-            <a href="#" className="text-accent hover:text-foreground transition-colors">
-              <span className="text-sm">Privacy Policy</span>
-            </a>
-            <a href="#" className="text-accent hover:text-foreground transition-colors">
-              <span className="text-sm">Terms of Service</span>
-            </a>
+          
+          {/* Model Support Section */}
+          <div className="mb-4 md:mb-0 flex flex-col items-center">
+            <span className="text-sm font-medium mb-2">Supported Models</span>
+            <div className="flex space-x-4 items-center">
+              <div className="flex items-center space-x-1">
+                <SiOpenai className="text-[#10A37F]" />
+                <span className="text-xs">GPT-Image-1, DALL-E 3</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <SiReplit className="text-[#5546FF]" />
+                <span className="text-xs">Imagen-3, Flux-Pro</span>
+              </div>
+            </div>
           </div>
+          
+          {/* Navigation Links */}
+          <div className="flex space-x-4">
+            <Link to="/" className="text-accent hover:text-primary transition-colors">
+              <span className="text-sm">Home</span>
+            </Link>
+            <Link to="/gallery" className="text-accent hover:text-primary transition-colors">
+              <span className="text-sm">Gallery</span>
+            </Link>
+            <Link to="/trash" className="text-accent hover:text-primary transition-colors">
+              <span className="text-sm">Trash</span>
+            </Link>
+          </div>
+        </div>
+        
+        <div className="mt-4 pt-4 border-t border-gray-200 text-center text-xs text-accent">
+          <p>© {new Date().getFullYear()} AI Image Generator. All images are stored locally.</p>
         </div>
       </div>
     </footer>
