@@ -8,11 +8,9 @@ import { queryClient } from './queryClient';
 export function setupWebSocket(onMessage: (ev: string, data: any) => void): WebSocket {
   try {
     // Create proper WebSocket URL based on environment
-    const base = import.meta.env.DEV
-      ? `ws://${window.location.hostname}:${import.meta.env.VITE_WS_PORT || window.location.port || 3000}`
-      : window.location.origin.replace(/^http/, 'ws');
-    
-    const wsUrl = `${base}/ws`;
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.host;
+    const wsUrl = `${protocol}//${host}/ws`;
     console.log(`Connecting to WebSocket at: ${wsUrl}`);
     
     const socket = new WebSocket(wsUrl);

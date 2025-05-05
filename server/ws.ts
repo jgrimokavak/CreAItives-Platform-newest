@@ -17,11 +17,15 @@ export const attachWS = (server: Server) => {
   // Handle upgrade requests
   server.on('upgrade', (req: IncomingMessage, socket, head) => {
     // Check if the path is /ws (our WebSocket endpoint)
-    if (req.url?.startsWith('/ws')) {
+    const pathname = new URL(req.url || '', `http://${req.headers.host}`).pathname;
+    if (pathname === '/ws') {
       // Temporarily disabled JWT verification until auth is implemented
       wss.handleUpgrade(req, socket, head, (ws) => {
         wss.emit('connection', ws, req);
       });
+    } else {
+      // Not a WebSocket request we handle
+      socket.destroy();
     }
   });
   
