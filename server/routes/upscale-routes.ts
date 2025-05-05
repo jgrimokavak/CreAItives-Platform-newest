@@ -22,10 +22,18 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+// Verify that we have the API token
+if (!process.env.REPLICATE_API_TOKEN) {
+  console.error('REPLICATE_API_TOKEN environment variable is not set. Upscale feature will not work.');
+}
+
 // Initialize Replicate client
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
 });
+
+// Log that we've initialized the client (but don't expose the token)
+console.log(`Initialized Replicate client with token: ${process.env.REPLICATE_API_TOKEN ? 'Available (hidden)' : 'MISSING'}`);
 
 // Create router
 const router = Router();
@@ -69,6 +77,7 @@ router.post('/upscale', upload.single('image'), async (req, res) => {
       console.log(`Upscaling with parameters: enhance_model=${enhanceModel}, upscale_factor=${upscaleFactor}, face_enhancement=${faceEnhancement}`);
       
       // Prepare input for Topaz Labs model
+      // Note: adapt parameter names according to the model requirements
       const input = {
         image: `data:image/jpeg;base64,${base64Image}`,
         enhance_model: enhanceModel,
@@ -81,11 +90,14 @@ router.post('/upscale', upload.single('image'), async (req, res) => {
         face_enhancement_strength: 1
       };
       
+      console.log('Sending request to Replicate with model: topazlabs/image-upscale');
+      
       // Run the prediction using the Replicate SDK
+      // Based on the example: const output = await replicate.run("topazlabs/image-upscale", { input });
       const output = await replicate.run(
-        "topazlabs/image-upscale", // Use the correct model name
+        "topazlabs/image-upscale", // Model identifier only, no version needed
         { input }
-      ) as unknown;
+      );
       
       // Delete the temporary file
       fs.unlinkSync(filePath);
@@ -106,8 +118,26 @@ router.post('/upscale', upload.single('image'), async (req, res) => {
             : '';
     } catch (error: any) {
       console.error('Upscale error:', error);
+      
+      // More detailed error logging
+      if (error.response) {
+        console.error('Response data:', error.response.data);
+        console.error('Response status:', error.response.status);
+      }
+      
+      // Create a more user-friendly error message
+      let errorMessage = 'Failed to upscale image: ';
+      if (error.message) {
+        errorMessage += error.message;
+      } else {
+        errorMessage += 'Unknown error occurred';
+      }
+      
+      // Add troubleshooting info
+      errorMessage += '. Please try again with a different image or check your API key.';
+      
       upscaleJobs[jobId].status = 'error';
-      upscaleJobs[jobId].error = error.message || 'Unknown upscale error';
+      upscaleJobs[jobId].error = errorMessage;
     }
   } catch (error: any) {
     console.error('Upscale request error:', error);

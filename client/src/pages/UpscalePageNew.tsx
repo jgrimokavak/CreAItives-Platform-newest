@@ -303,8 +303,14 @@ export default function UpscalePage() {
                 <AlertDescription>
                   {error}
                   <p className="mt-2 text-sm">
-                    This could be due to server load, invalid image format, or connection issues.
-                    Please try again with a different image or try later.
+                    This could be due to:
+                    <ul className="list-disc list-inside mt-1 space-y-1">
+                      <li>Temporary service issues with the Replicate API</li>
+                      <li>Invalid image format (try JPEG or PNG)</li>
+                      <li>Image size too large (try compressing it first)</li>
+                      <li>Network connection problems</li>
+                    </ul>
+                    Please try again with a different image or try again later.
                   </p>
                 </AlertDescription>
               </Alert>
