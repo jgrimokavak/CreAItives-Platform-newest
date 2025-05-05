@@ -148,13 +148,20 @@ export default function UpscalePage() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-col space-y-4">
-              <div className="bg-muted rounded-md aspect-square flex items-center justify-center overflow-hidden">
+              <div className="bg-muted rounded-md aspect-square flex items-center justify-center overflow-hidden relative">
                 {previewUrl ? (
-                  <img
-                    src={previewUrl}
-                    alt="Source preview"
-                    className="max-h-full max-w-full object-contain"
-                  />
+                  <>
+                    <img
+                      src={previewUrl}
+                      alt="Source preview"
+                      className="max-h-full max-w-full object-contain"
+                    />
+                    {previewUrl && (
+                      <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs py-1 px-2 rounded">
+                        Large images will be automatically resized for processing
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <div className="text-muted-foreground">No image selected</div>
                 )}
