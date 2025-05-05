@@ -1,0 +1,67 @@
+
+Add Upscale tab (Real‑ESRGAN) **without saving to Gallery**
+==========================================================
+
+Changes relative to *add_upscale_feature.txt*
+
+Backend
+-------
+
+1. **/api/upscale**  
+   *Do not call `persistImage`.*
+   ```ts
+   // after prediction succeeds
+   res.json({ url: final.output });   // direct CDN URL from Replicate
+   ```
+
+2. Job queue unchanged (still returns `{ jobId }` then `{ url }`).
+
+3. No database writes; cleanup job unaffected.
+
+Front‑end
+---------
+
+1. **UpscalePage.tsx**
+   ```tsx
+   const [outputUrl,setOutputUrl] = useState<string|null>(null);
+
+   // after polling finishes
+   setOutputUrl(data.url);
+   ```
+
+2. **Disclaimer**
+   Place above the Download button:
+   ```tsx
+   <Alert variant="warning" className="mb-4">
+     Upscaled images are <strong>not stored</strong>. They’ll disappear once you
+     leave or refresh this page. Click <em>Download</em> to keep a copy.
+   </Alert>
+   ```
+
+3. **Download button**
+   ```tsx
+   <Button asChild>
+     <a href={outputUrl} download>Download Upscaled Image</a>
+   </Button>
+   ```
+
+4. **No ⬆ badge in gallery**
+   Remove code that tried to push `imageCreated` for upscales.
+
+ImageCard integration
+---------------------
+*Keep the new “⬆ Upscale” button in ImageCard; it navigates to `/upscale` with
+the selected image. Upscaled result is transient and never appears in Gallery.*
+
+Testing
+-------
+1. Open any image → press ⬆ → Upscale tab preloads.  
+2. Run upscale → result shown, download works, disclaimer visible.  
+3. Navigate back to Gallery → no new card added.  
+4. Refresh Upscale tab → output disappears (as intended).
+
+Deliverables
+------------
+* Updated `/api/upscale` (no persist)  
+* UpscalePage with disclaimer + download button  
+* Remove gallery push logic.

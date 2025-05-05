@@ -1,0 +1,240 @@
+import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import LoadingState from "@/components/LoadingState";
+import { apiRequest } from "@/lib/queryClient";
+
+export default function UpscalePage() {
+  const [, setLocation] = useLocation();
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [jobId, setJobId] = useState<string | null>(null);
+  const [outputUrl, setOutputUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  // Parse query parameters for source image
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sourceUrl = params.get('sourceUrl');
+
+    if (sourceUrl) {
+      // If we have a source URL, set it as the preview
+      setPreviewUrl(sourceUrl);
+
+      // Convert the URL to a blob and create a File from it
+      fetch(sourceUrl)
+        .then(response => response.blob())
+        .then(blob => {
+          const file = new File([blob], "source-image.jpg", { type: "image/jpeg" });
+          setSelectedFile(file);
+        })
+        .catch(error => {
+          console.error("Error loading source image:", error);
+          setError("Failed to load source image. Please try again with a different image.");
+        });
+    }
+  }, []);
+
+  // Handle file selection
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setSelectedFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+    setOutputUrl(null); // Reset output when a new file is selected
+    setError(null);
+  };
+
+  // Handle upscale button click
+  const handleUpscale = async () => {
+    if (!selectedFile) {
+      setError("Please select an image to upscale");
+      return;
+    }
+
+    setUploading(true);
+    setError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('image', selectedFile);
+
+      const response = await apiRequest('/api/upscale', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          // Do not set Content-Type here, as the browser will set it correctly with the boundary
+        },
+      });
+
+      setJobId(response.jobId);
+    } catch (err: any) {
+      console.error("Error starting upscale job:", err);
+      setError(err.message || "Failed to start upscale process");
+      setUploading(false);
+    }
+  };
+
+  // Poll job status if we have a jobId
+  const { isLoading: isPolling } = useQuery({
+    queryKey: ['/api/upscale/status', jobId],
+    queryFn: async () => {
+      if (!jobId) return null;
+      
+      const data = await apiRequest(`/api/upscale/status/${jobId}`);
+      
+      if (data.status === 'done') {
+        setOutputUrl(data.url);
+        setJobId(null); // Stop polling
+        setUploading(false);
+      } else if (data.status === 'error') {
+        setError(data.error || "Upscale failed");
+        setJobId(null); // Stop polling
+        setUploading(false);
+      }
+      
+      return data;
+    },
+    enabled: !!jobId,
+    refetchInterval: jobId ? 2000 : false,
+    retry: 3
+  });
+
+  return (
+    <div className="container max-w-5xl mx-auto py-8 px-4">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold mb-2">Upscale Image</h1>
+        <p className="text-accent">
+          Enhance image resolution and quality using Real-ESRGAN AI model
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Source Image Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Source Image</CardTitle>
+            <CardDescription>
+              Select an image file to upscale (up to 4x resolution)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col space-y-4">
+              <div className="bg-muted rounded-md aspect-square flex items-center justify-center overflow-hidden">
+                {previewUrl ? (
+                  <img
+                    src={previewUrl}
+                    alt="Source preview"
+                    className="max-h-full max-w-full object-contain"
+                  />
+                ) : (
+                  <div className="text-muted-foreground">No image selected</div>
+                )}
+              </div>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary/90 text-sm"
+              />
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button
+              onClick={handleUpscale}
+              disabled={!selectedFile || uploading || isPolling}
+              className="w-full"
+            >
+              {uploading || isPolling ? (
+                <span className="flex items-center">
+                  <LoadingState /> Processing...
+                </span>
+              ) : (
+                "Upscale Image"
+              )}
+            </Button>
+          </CardFooter>
+        </Card>
+
+        {/* Result Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Enhanced Result</CardTitle>
+            <CardDescription>
+              {outputUrl
+                ? "Your upscaled image is ready"
+                : "The enhanced image will appear here"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-muted rounded-md aspect-square flex items-center justify-center overflow-hidden">
+              {outputUrl ? (
+                <img
+                  src={outputUrl}
+                  alt="Upscaled result"
+                  className="max-h-full max-w-full object-contain"
+                />
+              ) : uploading || isPolling ? (
+                <div className="flex flex-col items-center justify-center p-8 text-center">
+                  <LoadingState />
+                  <p className="mt-4 text-muted-foreground">
+                    Upscaling your image... This may take a minute.
+                  </p>
+                </div>
+              ) : (
+                <div className="text-muted-foreground">
+                  Upscaled result will appear here
+                </div>
+              )}
+            </div>
+
+            {error && (
+              <Alert variant="destructive" className="mt-4">
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            {outputUrl && (
+              <Alert variant="warning" className="mt-4">
+                <AlertTitle>Temporary Result</AlertTitle>
+                <AlertDescription>
+                  Upscaled images are <strong>not stored</strong>. They'll disappear once you
+                  leave or refresh this page. Click <em>Download</em> to keep a copy.
+                </AlertDescription>
+              </Alert>
+            )}
+          </CardContent>
+          <CardFooter className="flex justify-between">
+            <Button
+              variant="outline"
+              onClick={() => setLocation("/")}
+            >
+              Back to Generator
+            </Button>
+            
+            {outputUrl && (
+              <Button asChild>
+                <a href={outputUrl} download="upscaled-image.jpg">
+                  Download Upscaled Image
+                </a>
+              </Button>
+            )}
+          </CardFooter>
+        </Card>
+      </div>
+    </div>
+  );
+}

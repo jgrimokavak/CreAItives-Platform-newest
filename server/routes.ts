@@ -20,6 +20,7 @@ import { setupCleanupJob } from "./cleanup";
 import { persistImage } from "./fs-storage";
 import { models } from "./config/models";
 import modelRoutes, { initializeModels } from "./routes/model-routes";
+import upscaleRoutes from "./routes/upscale-routes";
 
 // Fix for __dirname in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -602,6 +603,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Add model routes (includes /api/models endpoint)
   app.use('/api', modelRoutes);
+  
+  // Add upscale routes
+  app.use('/api', upscaleRoutes);
 
   // Create HTTP server
   const httpServer = createServer(app);
