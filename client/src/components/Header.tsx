@@ -1,4 +1,4 @@
-import { FaImage, FaGithub } from "react-icons/fa";
+import { FaImage } from "react-icons/fa";
 import { Link } from "wouter";
 import { IoMdImages } from "react-icons/io";
 import { MdDelete } from "react-icons/md";
@@ -41,22 +41,6 @@ export default function Header() {
               </Button>
             </TooltipTrigger>
             <TooltipContent>View deleted images</TooltipContent>
-          </Tooltip>
-          
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="icon" asChild>
-                <a 
-                  href="https://github.com" 
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-accent hover:text-foreground transition-colors"
-                >
-                  <FaGithub className="text-lg" />
-                </a>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>View source code</TooltipContent>
           </Tooltip>
         </div>
       </div>

@@ -1,6 +1,5 @@
 import { FaImage } from "react-icons/fa";
 import { Link } from "wouter";
-import { SiOpenai, SiReplit } from "react-icons/si";
 
 export default function Footer() {
   return (
@@ -19,19 +18,13 @@ export default function Footer() {
             </p>
           </div>
           
-          {/* Model Support Section */}
-          <div className="mb-4 md:mb-0 flex flex-col items-center">
-            <span className="text-sm font-medium mb-2">Supported Models</span>
-            <div className="flex space-x-4 items-center">
-              <div className="flex items-center space-x-1">
-                <SiOpenai className="text-[#10A37F]" />
-                <span className="text-xs">GPT-Image-1, DALL-E 3</span>
-              </div>
-              <div className="flex items-center space-x-1">
-                <SiReplit className="text-[#5546FF]" />
-                <span className="text-xs">Imagen-3, Flux-Pro</span>
-              </div>
-            </div>
+          {/* Kavak Logo */}
+          <div className="mb-4 md:mb-0 flex items-center">
+            <img 
+              src="/images/kavak-logo.png" 
+              alt="Kavak" 
+              className="h-8" 
+            />
           </div>
           
           {/* Navigation Links */}
