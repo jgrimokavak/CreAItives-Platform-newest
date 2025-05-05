@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import LoadingState from "@/components/LoadingState";
-import { apiRequest } from "@/lib/queryClient";
 
 export default function UpscalePage() {
   const [, setLocation] = useLocation();
@@ -71,15 +70,17 @@ export default function UpscalePage() {
       const formData = new FormData();
       formData.append('image', selectedFile);
 
-      const response = await apiRequest('/api/upscale', {
+      const response = await fetch('/api/upscale', {
         method: 'POST',
         body: formData,
-        headers: {
-          // Do not set Content-Type here, as the browser will set it correctly with the boundary
-        },
       });
 
-      setJobId(response.jobId);
+      if (!response.ok) {
+        throw new Error(`Upload failed: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      setJobId(data.jobId);
     } catch (err: any) {
       console.error("Error starting upscale job:", err);
       setError(err.message || "Failed to start upscale process");
@@ -93,7 +94,13 @@ export default function UpscalePage() {
     queryFn: async () => {
       if (!jobId) return null;
       
-      const data = await apiRequest(`/api/upscale/status/${jobId}`);
+      const response = await fetch(`/api/upscale/status/${jobId}`);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch status: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
       
       if (data.status === 'done') {
         setOutputUrl(data.url);
