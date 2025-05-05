@@ -10,18 +10,12 @@ export function setupWebSocket(onMessage: (ev: string, data: any) => void): WebS
     // Create proper WebSocket URL based on environment
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.host;
-    const wsUrl = host ? 
-      `${protocol}//${host}/ws` : 
-      `ws://0.0.0.0:5000/ws`;
-    
-    // Log the constructed URL for debugging
-    console.log('Attempting WebSocket connection to:', wsUrl);
+    const wsUrl = `${protocol}//${host}/ws`;
     
     // Create the socket with proper error handling
     let socket: WebSocket;
     try {
       socket = new WebSocket(wsUrl);
-      console.log(`Connecting to WebSocket at: ${wsUrl}`);
     } catch (wsError) {
       console.warn('WebSocket initialization error:', wsError);
       return createDummySocket();
@@ -91,7 +85,6 @@ export function useWebSocket() {
   const handleMessage = (ev: string, data: any) => {
     switch (ev) {
       case 'imageCreated':
-        console.log('Image created:', data.image);
         // Invalidate gallery queries when new images are created
         queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
         // Dispatch custom event for components listening for gallery updates
@@ -99,7 +92,6 @@ export function useWebSocket() {
         break;
         
       case 'imageUpdated':
-        console.log('Image updated:', data);
         // Invalidate gallery queries when images are updated (starred, trashed)
         queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
         // Dispatch custom event for components listening for gallery updates
@@ -107,7 +99,6 @@ export function useWebSocket() {
         break;
         
       case 'imageDeleted':
-        console.log('Image deleted:', data);
         // Invalidate gallery queries when images are deleted
         queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
         // Dispatch custom event for components listening for gallery updates
@@ -115,13 +106,12 @@ export function useWebSocket() {
         break;
         
       case 'gallery-updated':
-        console.log('Gallery updated:', data);
         // Invalidate gallery queries when the gallery is updated
         queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
         break;
         
       default:
-        console.log('Unknown WebSocket event:', ev, data);
+        console.log('Unknown WebSocket event:', ev);
     }
   };
   
@@ -144,8 +134,6 @@ export function useWebSocket() {
     // Set up reconnection logic with exponential backoff
     if (socketRef.current) {
       socketRef.current.onclose = (event) => {
-        console.log('WebSocket disconnected:', event.code, event.reason);
-        
         // Clear any existing reconnect timeout
         if (reconnectTimeoutRef.current) {
           clearTimeout(reconnectTimeoutRef.current);
@@ -161,10 +149,7 @@ export function useWebSocket() {
           
           reconnectAttemptRef.current++; // Increment for next reconnect attempt
           
-          console.log(`Reconnecting in ${Math.round(delay/1000)}s (attempt ${reconnectAttemptRef.current})...`);
-          
           reconnectTimeoutRef.current = setTimeout(() => {
-            console.log('Attempting to reconnect...');
             connectWebSocket();
           }, delay);
         }

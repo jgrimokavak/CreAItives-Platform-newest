@@ -8,7 +8,6 @@ import SimpleGalleryPage from "@/pages/SimpleGalleryPage";
 import { EditorProvider } from "@/context/EditorContext";
 import Sidebar from "@/components/Sidebar";
 import { useWebSocket } from "@/lib/websocket";
-import ApiLogConsole from "@/components/ApiLogConsole.tsx";
 
 function Router() {
   // Set up WebSocket connection for real-time updates
@@ -33,7 +32,6 @@ function App() {
         <EditorProvider>
           <WouterRouter>
             <Router />
-            <ApiLogConsole />
           </WouterRouter>
         </EditorProvider>
       </TooltipProvider>
