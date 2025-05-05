@@ -570,10 +570,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(job);
   });
 
-  // API endpoint to get logs
-  app.get("/api/logs", (_req, res) => {
-    res.json({ logs: getLogs() });
-  });
+  // API logs endpoint has been removed
 
   // Serve static uploads folder
   const uploadsPath = path.join(path.dirname(new URL(import.meta.url).pathname), '../uploads');
