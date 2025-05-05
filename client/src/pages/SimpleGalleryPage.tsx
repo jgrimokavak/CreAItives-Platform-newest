@@ -134,6 +134,12 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       description: 'The prompt has been copied to your clipboard'
     });
   };
+  
+  // Navigate to upscale page with the selected image
+  const handleUpscale = (image: GalleryImage) => {
+    // Navigate to upscale page with the image URL as a query parameter
+    navigate(`/upscale?sourceUrl=${encodeURIComponent(image.fullUrl || image.url || '')}`);
+  };
 
   // Handle download
   const handleDownload = async (image: GalleryImage) => {
@@ -618,6 +624,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
             onStar={handleStar}
             onRestore={(id) => handleTrash(id, true)}
             onCopyPrompt={handleCopyPrompt}
+            onUpscale={(img) => handleUpscale(image)}
             onSelect={toggleSelection}
             selected={selectedIds.includes(image.id)}
             onClick={() => {

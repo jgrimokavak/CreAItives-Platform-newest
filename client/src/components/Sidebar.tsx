@@ -6,7 +6,8 @@ import {
   Images, 
   Trash2, 
   Menu,
-  X
+  X,
+  ZoomIn
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
