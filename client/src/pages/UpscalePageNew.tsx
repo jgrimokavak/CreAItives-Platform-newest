@@ -143,7 +143,7 @@ export default function UpscalePage() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold mb-2">Upscale Image</h1>
         <p className="text-accent">
-          Enhance image resolution and quality using Topaz Labs AI technology
+          Enhance image resolution and quality using Topaz Photo Enhance AI technology
         </p>
       </div>
 
@@ -163,7 +163,7 @@ export default function UpscalePage() {
           <CardHeader>
             <CardTitle>Source Image</CardTitle>
             <CardDescription>
-              Select an image file to upscale using Topaz Labs AI
+              Select an image file to upscale using Topaz Photo Enhance AI
             </CardDescription>
           </CardHeader>
           <CardContent>

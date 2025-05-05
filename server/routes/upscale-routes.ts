@@ -65,7 +65,7 @@ router.post('/upscale', upload.single('image'), async (req, res) => {
       
       console.log(`Upscaling with parameters: enhance_model=${enhanceModel}, upscale_factor=${upscaleFactor}, face_enhancement=${faceEnhancement}`);
       
-      // Topaz Image Upscale model on Replicate
+      // Topaz Photo Enhance model on Replicate
       const response = await fetch('https://api.replicate.com/v1/predictions', {
         method: 'POST',
         headers: {
@@ -73,7 +73,8 @@ router.post('/upscale', upload.single('image'), async (req, res) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          version: "5c51d9c25fc4c65330eb833933bef0609644d208ef5e6dd0d629bb0f90e11627",
+          // Updated to use a valid model version for topazlabs/photo-enhance
+          version: "3683731c45a47e1d9cfe6db203160152683ca6cac69fea35d3b935e52f447a91",
           input: { 
             image: `data:image/jpeg;base64,${base64Image}`,
             enhance_model: enhanceModel,
