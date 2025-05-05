@@ -11,16 +11,23 @@ export function setupWebSocket(onMessage: (ev: string, data: any) => void): WebS
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.host;
     const wsUrl = `${protocol}//${host}/ws`;
-    console.log(`Connecting to WebSocket at: ${wsUrl}`);
     
-    const socket = new WebSocket(wsUrl);
+    // Create the socket with proper error handling
+    let socket: WebSocket;
+    try {
+      socket = new WebSocket(wsUrl);
+      console.log(`Connecting to WebSocket at: ${wsUrl}`);
+    } catch (wsError) {
+      console.warn('WebSocket initialization error:', wsError);
+      return createDummySocket();
+    }
     
     socket.onopen = () => {
       console.log('WebSocket connected');
     };
     
     socket.onerror = (error) => {
-      console.error('WebSocket error:', error);
+      console.warn('WebSocket error event:', error);
     };
     
     socket.onmessage = (event) => {
@@ -28,36 +35,40 @@ export function setupWebSocket(onMessage: (ev: string, data: any) => void): WebS
         const { ev, data } = JSON.parse(event.data);
         onMessage(ev, data);
       } catch (error) {
-        console.error('Error parsing WebSocket message:', error);
+        console.warn('Error parsing WebSocket message:', error);
       }
     };
     
     return socket;
   } catch (error) {
-    console.error('Failed to create WebSocket connection:', error);
-    // Create a dummy WebSocket for graceful degradation
-    return {
-      readyState: WebSocket.CLOSED,
-      close: () => {},
-      onclose: null,
-      onerror: null,
-      onmessage: null,
-      onopen: null,
-      addEventListener: () => {},
-      removeEventListener: () => {},
-      dispatchEvent: () => false,
-      send: () => {},
-      binaryType: 'blob',
-      bufferedAmount: 0,
-      extensions: '',
-      protocol: '',
-      url: '',
-      CONNECTING: WebSocket.CONNECTING,
-      OPEN: WebSocket.OPEN,
-      CLOSING: WebSocket.CLOSING,
-      CLOSED: WebSocket.CLOSED
-    } as unknown as WebSocket;
+    console.warn('Failed to set up WebSocket:', error);
+    return createDummySocket();
   }
+}
+
+// Helper function to create a dummy WebSocket object for graceful degradation
+function createDummySocket(): WebSocket {
+  return {
+    readyState: WebSocket.CLOSED,
+    close: () => {},
+    onclose: null,
+    onerror: null,
+    onmessage: null,
+    onopen: null,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => false,
+    send: () => {},
+    binaryType: 'blob',
+    bufferedAmount: 0,
+    extensions: '',
+    protocol: '',
+    url: '',
+    CONNECTING: WebSocket.CONNECTING,
+    OPEN: WebSocket.OPEN,
+    CLOSING: WebSocket.CLOSING,
+    CLOSED: WebSocket.CLOSED
+  } as unknown as WebSocket;
 }
 
 /**
