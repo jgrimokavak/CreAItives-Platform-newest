@@ -3,9 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
-import fetch from 'node-fetch';
-import FormData from 'form-data';
-import { waitForPrediction } from '../replicate';
+import Replicate from 'replicate';
 
 // Set up multer for temporary file storage
 const storage = multer.diskStorage({
@@ -23,6 +21,11 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage });
+
+// Initialize Replicate client
+const replicate = new Replicate({
+  auth: process.env.REPLICATE_API_TOKEN,
+});
 
 // Create router
 const router = Router();
@@ -53,7 +56,7 @@ router.post('/upscale', upload.single('image'), async (req, res) => {
     try {
       upscaleJobs[jobId].status = 'processing';
       
-      // Call Replicate API for Real-ESRGAN upscaling
+      // Prepare the image
       const filePath = req.file.path;
       const imageBuffer = fs.readFileSync(filePath);
       const base64Image = imageBuffer.toString('base64');
@@ -65,43 +68,42 @@ router.post('/upscale', upload.single('image'), async (req, res) => {
       
       console.log(`Upscaling with parameters: enhance_model=${enhanceModel}, upscale_factor=${upscaleFactor}, face_enhancement=${faceEnhancement}`);
       
-      // Topaz Photo Enhance model on Replicate
-      const response = await fetch('https://api.replicate.com/v1/predictions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Token ${process.env.REPLICATE_API_TOKEN}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          // Updated to use a valid model version for topazlabs/photo-enhance
-          version: "3683731c45a47e1d9cfe6db203160152683ca6cac69fea35d3b935e52f447a91",
-          input: { 
-            image: `data:image/jpeg;base64,${base64Image}`,
-            enhance_model: enhanceModel,
-            upscale_factor: upscaleFactor,
-            face_enhancement: faceEnhancement,
-            // Hidden parameters with defaults
-            output_format: "png",
-            subject_detection: "None",
-            face_enhancement_creativity: 1,
-            face_enhancement_strength: 1
-          }
-        })
-      });
+      // Prepare input for Topaz Labs model
+      const input = {
+        image: `data:image/jpeg;base64,${base64Image}`,
+        enhance_model: enhanceModel,
+        upscale_factor: upscaleFactor,
+        face_enhancement: faceEnhancement,
+        // Hidden parameters with defaults
+        output_format: "png",
+        subject_detection: "None",
+        face_enhancement_creativity: 1,
+        face_enhancement_strength: 1
+      };
       
-      if (!response.ok) {
-        throw new Error(`Error from Replicate: ${await response.text()}`);
-      }
-      
-      const prediction = await response.json() as { id: string };
-      const final = await waitForPrediction(prediction.id);
+      // Run the prediction using the Replicate SDK
+      const output = await replicate.run(
+        "topazlabs/image-upscale", // Use the correct model name
+        { input }
+      ) as unknown;
       
       // Delete the temporary file
       fs.unlinkSync(filePath);
       
-      // Set the result URL (directly from Replicate CDN)
+      // Log output type for debugging
+      console.log('Replicate output type:', typeof output);
+      console.log('Replicate output value:', JSON.stringify(output).substring(0, 200) + '...');
+      
+      // Set the result URL
       upscaleJobs[jobId].status = 'done';
-      upscaleJobs[jobId].result = final.output;
+      // Handle the output which can be a string URL or an array (where first item is the URL)
+      upscaleJobs[jobId].result = typeof output === 'string' 
+        ? output 
+        : Array.isArray(output) && output.length > 0
+          ? output[0]
+          : typeof output === 'object' && output !== null && 'url' in output
+            ? (output as any).url
+            : '';
     } catch (error: any) {
       console.error('Upscale error:', error);
       upscaleJobs[jobId].status = 'error';
