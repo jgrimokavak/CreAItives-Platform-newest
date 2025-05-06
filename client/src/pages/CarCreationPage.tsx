@@ -599,8 +599,17 @@ const CarCreationPage: React.FC = () => {
                   color={form.watch('color')}
                   background={form.watch('background')}
                   onEdit={(img) => {
-                    // Navigate to edit page with this image
-                    setLocation(`/edit?image=${img.id}`);
+                    // Add debug logs
+                    console.log("Edit button clicked with image:", img);
+                    
+                    // The issue is there's no /edit route in the app
+                    // Let's navigate to the home page with the source image parameter
+                    const sourceUrl = img.fullUrl || img.url;
+                    console.log("Navigating to edit with source URL:", sourceUrl);
+                    
+                    // Navigate to home page with this image as source
+                    setLocation(`/?sourceImage=${encodeURIComponent(sourceUrl)}`);
+                    console.log("Navigation attempted to home with source image");
                   }}
                   onUpscale={(img) => {
                     // Navigate to upscale page with the image URL

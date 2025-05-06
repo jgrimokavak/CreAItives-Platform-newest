@@ -64,10 +64,21 @@ export default function CarImageCard({
 
   // Handle edit button click
   const handleEdit = (e: MouseEvent) => {
+    console.log("Edit button clicked in component");
+    // Ensure event doesn't propagate or trigger default behavior
     e.stopPropagation();
     e.preventDefault();
+    
     if (onEdit) {
-      onEdit(image);
+      console.log("Calling onEdit with image:", image);
+      try {
+        onEdit(image);
+        console.log("onEdit callback completed");
+      } catch (error) {
+        console.error("Error in onEdit callback:", error);
+      }
+    } else {
+      console.log("onEdit callback is not defined");
     }
   };
 
