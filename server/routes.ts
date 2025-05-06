@@ -21,7 +21,7 @@ import { persistImage } from "./fs-storage";
 import { models } from "./config/models";
 import modelRoutes, { initializeModels } from "./routes/model-routes";
 import upscaleRoutes from "./routes/upscale-routes";
-import { listMakes, listModels, listBodyStyles, listTrims, flushCarCache } from "./carData";
+import { listMakes, listModels, listBodyStyles, listTrims, flushCarCache, loadCarData, getLastFetchTime, setupCarDataAutoRefresh } from "./carData";
 import axios from "axios";
 
 // Helper function to create a file-safe name from prompt text
@@ -648,7 +648,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/cars/models", async (req, res) => res.json(await listModels(req.query.make as string)));
   app.get("/api/cars/bodyStyles", async (req, res) => res.json(await listBodyStyles(req.query.make as string, req.query.model as string)));
   app.get("/api/cars/trims", async (req, res) => res.json(await listTrims(req.query.make as string, req.query.model as string, req.query.bodyStyle as string)));
-  app.post("/api/cars/refresh", (_req, res) => { flushCarCache(); res.json({ok: true}); });
+  
+  // Endpoint to manually refresh car data
+  app.post("/api/cars/refresh", async (_req, res) => { 
+    flushCarCache(); 
+    
+    // Force refresh data from source
+    try {
+      const rows = await loadCarData(true);
+      res.json({
+        success: true, 
+        message: 'Car data refreshed successfully',
+        count: rows.length,
+        lastFetch: getLastFetchTime()
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Error refreshing car data',
+        error: String(error)
+      });
+    }
+  });
   
   // Car generation endpoint
   app.post("/api/car-generate", upload.single("dummy"), async (req, res) => {
@@ -736,6 +757,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Initialize cleanup job for trashed images
   setupCleanupJob();
+  
+  // Initialize car data auto-refresh
+  setupCarDataAutoRefresh();
   
   return httpServer;
 }
