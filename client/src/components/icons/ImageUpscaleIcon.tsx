@@ -19,16 +19,18 @@ export const ImageUpscaleIcon: React.FC<IconProps> = ({ className = "", size = 2
       strokeLinejoin="round" 
       className={className}
     >
-      {/* Top arrow */}
-      <path d="M11 7h5v5" />
-      <path d="M16 7L7 16" />
+      {/* Arrow in top right */}
+      <path d="M7 7h5v5" />
+      <path d="M17 7l-5 5" />
       
-      {/* Empty square */}
-      <rect x="3" y="13" width="8" height="8" rx="2" />
+      {/* Image box */}
+      <rect x="3" y="14" width="7" height="7" rx="1" />
       
-      {/* Bottom right diagonal lines */}
-      <path d="M13 13h4" />
-      <path d="M17 13v4" />
+      {/* Bottom right corner */}
+      <path d="M14 14h7" />
+      <path d="M14 21h7" />
+      <path d="M14 14v7" />
+      <path d="M21 14v7" />
     </svg>
   );
 };
