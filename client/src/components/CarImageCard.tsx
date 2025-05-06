@@ -1,4 +1,4 @@
-import { useState, MouseEvent } from "react";
+import { useState } from "react";
 import { CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -44,79 +44,17 @@ export default function CarImageCard({
 }: CarImageCardProps) {
   const [isHovered, setIsHovered] = useState(false);
 
-  // Handle download button click
-  const handleDownload = (e: MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-    if (onDownload) {
-      onDownload(image);
-    }
-  };
-
-  // Handle copy prompt button click
-  const handleCopyPrompt = (e: MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-    if (onCopyPrompt) {
-      onCopyPrompt(image.prompt);
-    }
-  };
-
-  // Handle edit button click
-  const handleEdit = (e: MouseEvent) => {
-    console.log("Edit button clicked in component");
-    // Ensure event doesn't propagate or trigger default behavior
-    e.stopPropagation();
-    e.preventDefault();
-    
-    if (onEdit) {
-      console.log("Calling onEdit with image:", image);
-      try {
-        onEdit(image);
-        console.log("onEdit callback completed");
-      } catch (error) {
-        console.error("Error in onEdit callback:", error);
-      }
-    } else {
-      console.log("onEdit callback is not defined");
-    }
-  };
-
-  // Handle upscale button click
-  const handleUpscale = (e: MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-    if (onUpscale) {
-      onUpscale(image);
-    }
-  };
-
   return (
     <div 
       key={image.id}
       className="bg-card rounded-lg overflow-hidden shadow-sm border border-border hover:shadow-md transition-shadow group cursor-pointer"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={(e) => {
-        // Prevent outer container from triggering fullscreen
-        // We only want the image area to be clickable for fullscreen
-        console.log("CarImageCard: Card container clicked, not triggering fullscreen");
-        e.stopPropagation();
-      }}
+      onClick={onClick}
     >
       <div className="relative pb-[100%]">
         {/* Image thumbnail with better aspect ratio handling */}
-        <div 
-          className="absolute inset-0 flex items-center justify-center bg-black/5"
-          onClick={(e) => {
-            // Make the image area clickable for fullscreen view
-            e.stopPropagation();
-            if (onClick) {
-              console.log("CarImageCard: Image area clicked, calling onClick handler for fullscreen");
-              onClick();
-            }
-          }}
-        >
+        <div className="absolute inset-0 flex items-center justify-center bg-black/5">
           <img 
             src={image.thumbUrl || image.url} 
             alt={image.prompt}
@@ -126,86 +64,90 @@ export default function CarImageCard({
         </div>
         
         {/* Actions overlay */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          {/* Action buttons */}
-          <div 
-            className="opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 absolute inset-0 flex items-center justify-center"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex space-x-2">
-              {onEdit && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border"
-                        onClick={handleEdit}
-                      >
-                        <PenToolIcon className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Edit</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-              
-              {onUpscale && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border"
-                        onClick={handleUpscale}
-                      >
-                        <ImageUpscale className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Upscale</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-              
-              {onDownload && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border"
-                        onClick={handleDownload}
-                      >
-                        <DownloadIcon className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Download</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-              
-              {onCopyPrompt && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border"
-                        onClick={handleCopyPrompt}
-                      >
-                        <CopyIcon className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Copy Prompt</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-            </div>
-          </div>
+        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 p-2">
+          {onEdit && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit(image);
+                    }}
+                  >
+                    <PenToolIcon className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Edit</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+          
+          {onUpscale && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onUpscale(image);
+                    }}
+                  >
+                    <ImageUpscale className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Upscale</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+          
+          {onDownload && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDownload(image);
+                    }}
+                  >
+                    <DownloadIcon className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Download</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+          
+          {onCopyPrompt && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onCopyPrompt(image.prompt);
+                    }}
+                  >
+                    <CopyIcon className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Copy Prompt</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
         </div>
       </div>
       

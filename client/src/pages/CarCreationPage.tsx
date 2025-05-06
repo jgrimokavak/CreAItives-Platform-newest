@@ -409,7 +409,7 @@ const CarCreationPage: React.FC = () => {
   };
 
   return (
-    <React.Fragment>
+    <>
       {/* Image Modal for fullscreen viewing - outside the container to avoid z-index issues */}
       {selectedImage && (
         <ImageModal 
@@ -700,7 +700,7 @@ const CarCreationPage: React.FC = () => {
         </div>
       </div>
     </div>
-    </React.Fragment>
+    </>
   );
 };
 
