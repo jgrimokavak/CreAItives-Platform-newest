@@ -23,6 +23,9 @@ import modelRoutes, { initializeModels } from "./routes/model-routes";
 import upscaleRoutes from "./routes/upscale-routes";
 import { listMakes, listModels, listBodyStyles, listTrims, flushCarCache, loadCarData, getLastFetchTime, setupCarDataAutoRefresh } from "./carData";
 import axios from "axios";
+import Papa from "papaparse";
+import cron from "node-cron";
+import { jobs as batchJobs, queue, processBatch, cleanupOldZips, type Row as BatchRow } from "./batch";
 
 // Helper function to create a file-safe name from prompt text
 export function createFileSafeNameFromPrompt(prompt: string, maxLength: number = 50): string {
@@ -94,6 +97,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   } catch (error) {
     console.error("Failed to initialize Replicate models:", error);
   }
+
+  // Set up periodic cleanup for old ZIP files
+  cron.schedule("0 * * * *", () => cleanupOldZips());
+  
+  // Serve the downloads directory
+  app.use("/downloads", express.static("/tmp", { maxAge: "1d" }));
   // Helper function to run image generation job
   async function runGenerateJob(jobId: string, data: any) {
     console.log(`Starting job ${jobId} for image generation`);
@@ -669,6 +678,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
         error: String(error)
       });
     }
+  });
+  
+  // Batch car image generation endpoint
+  app.post("/api/car-batch", upload.single("file"), async (req, res) => {
+    if (!req.file?.buffer) return res.status(400).json({ error: "CSV file is required" });
+    
+    const text = req.file.buffer.toString("utf8");
+    const parsed = Papa.parse<BatchRow>(text, { header: true, skipEmptyLines: true });
+    
+    if (parsed.errors.length) {
+      return res.status(400).json({ 
+        error: "Malformed CSV", 
+        details: parsed.errors 
+      });
+    }
+    
+    const rows = parsed.data.slice(0, 50);
+    if (!rows.length) {
+      return res.status(400).json({ error: "No data rows found" });
+    }
+    
+    if (parsed.data.length > 50) {
+      return res.status(400).json({ error: "Row limit exceeded (50 max)" });
+    }
+    
+    const jobId = crypto.randomUUID();
+    batchJobs.set(jobId, {
+      id: jobId,
+      total: rows.length,
+      done: 0,
+      failed: 0,
+      errors: []
+    });
+    
+    // Queue the batch processing job
+    queue.add(() => processBatch(jobId, rows))
+      .catch(err => console.error("Batch job failed:", err));
+    
+    // Return immediately with job ID
+    res.status(202).json({ jobId });
+  });
+  
+  // Batch job status endpoint
+  app.get("/api/batch/:id", (req, res) => {
+    const job = batchJobs.get(req.params.id);
+    if (!job) return res.status(404).json({ error: "Job not found" });
+    
+    res.json({
+      total: job.total,
+      done: job.done,
+      failed: job.failed,
+      percent: Math.round((job.done + job.failed) / job.total * 100),
+      zipUrl: job.zipPath ? `/downloads/${path.basename(job.zipPath)}` : null
+    });
   });
   
   // Car generation endpoint
