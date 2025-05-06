@@ -26,7 +26,7 @@ interface ImageCardProps {
   onRestore?: (id: string) => void;
   onSelect?: (id: string, selected: boolean) => void;
   onCopyPrompt?: (prompt: string) => void;  // Add handler for copying the prompt
-  onUpscale?: (img: GeneratedImage) => void; // Add handler for upscaling
+  onUpscale?: () => void; // Handler for upscaling
   onClick?: () => void;  // Add onClick handler for full-size preview
   selected?: boolean;
 }
@@ -263,7 +263,7 @@ export default function ImageCard({
                     className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border"
                     onClick={(e) => {
                       e.stopPropagation();
-                      onUpscale(image);
+                      onUpscale();
                     }}
                   >
                     <ZoomInIcon className="h-4 w-4" />
