@@ -155,7 +155,19 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `image-${image.id}.png`;
+      
+      // Create a clean filename from the prompt
+      const cleanPrompt = image.prompt
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '')    // Remove non-word chars
+        .replace(/\s+/g, '_')         // Replace spaces with underscores
+        .replace(/_+/g, '_')          // Replace multiple underscores with single ones
+        .substring(0, 50);            // Limit length
+        
+      // Make sure we have a valid filename
+      const filename = cleanPrompt || 'image';
+      a.download = `${filename}.png`;
+      
       document.body.appendChild(a);
       a.click();
       
