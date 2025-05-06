@@ -77,6 +77,9 @@ const Sidebar = ({ children }: SidebarProps) => {
           <SidebarLink to="/" icon={<Sparkles size={18} />}>
             Create
           </SidebarLink>
+          <SidebarLink to="/car" icon={<CarFront size={18} />}>
+            Car Creation
+          </SidebarLink>
           <SidebarLink to="/gallery" icon={<Images size={18} />}>
             Gallery
           </SidebarLink>
@@ -85,9 +88,6 @@ const Sidebar = ({ children }: SidebarProps) => {
           </SidebarLink>
           <SidebarLink to="/trash" icon={<Trash2 size={18} />}>
             Trash
-          </SidebarLink>
-          <SidebarLink to="/car" icon={<CarFront size={18} />}>
-            Car Creation
           </SidebarLink>
         </nav>
       </div>
