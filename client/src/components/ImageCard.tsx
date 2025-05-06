@@ -9,9 +9,9 @@ import {
   TrashIcon,
   RotateCcwIcon,
   CopyIcon,
-  ImageIcon,
-  ZoomInIcon
+  ImageIcon
 } from "lucide-react";
+import ImageUpscale from "./icons/ImageUpscale";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { GeneratedImage } from "@/types/image";
@@ -266,7 +266,7 @@ export default function ImageCard({
                       onUpscale(image);
                     }}
                   >
-                    <ZoomInIcon className="h-4 w-4" />
+                    <ImageUpscale className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Upscale</TooltipContent>
