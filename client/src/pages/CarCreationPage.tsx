@@ -317,13 +317,19 @@ const CarCreationPage: React.FC = () => {
   const handleDownload = async (image: GeneratedImage) => {
     try {
       let url;
+      const imageUrl = image.fullUrl || image.url;
       
       // If the URL is a data URL (base64), use it directly
-      if (image.url.startsWith('data:')) {
-        url = image.url;
+      if (imageUrl.startsWith('data:')) {
+        url = imageUrl;
       } else {
         // Otherwise, fetch the image from the URL
-        const response = await fetch(image.url);
+        const response = await fetch(imageUrl);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+        }
+        
         const blob = await response.blob();
         url = window.URL.createObjectURL(blob);
       }
@@ -341,15 +347,30 @@ const CarCreationPage: React.FC = () => {
         .replace(/_+/g, '_')          // Replace multiple underscores with single ones
         .substring(0, 50);            // Limit length
       
-      // Make sure we have a valid filename
-      const filename = cleanPrompt || 'car-image';
+      // Generate a filename based on the car details
+      let filename = 'car-image';
+      
+      if (watchMake !== 'None') {
+        filename = `${watchMake}`;
+        if (watchModel !== 'None') {
+          filename += `_${watchModel}`;
+        }
+        if (watchBodyStyle !== 'None') {
+          filename += `_${watchBodyStyle}`;
+        }
+        filename = filename.toLowerCase().replace(/\s+/g, '_');
+      } else if (cleanPrompt) {
+        filename = cleanPrompt;
+      }
+      
       a.download = `${filename}.png`;
       
       document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       
       // Clean up the URL only if it was created from a blob
-      if (!image.url.startsWith('data:')) {
+      if (!imageUrl.startsWith('data:')) {
         window.URL.revokeObjectURL(url);
       }
       
@@ -361,7 +382,7 @@ const CarCreationPage: React.FC = () => {
       console.error("Download error:", error);
       toast({
         title: "Download failed",
-        description: "Failed to download the image",
+        description: "Failed to download the image. Error: " + (error instanceof Error ? error.message : String(error)),
         variant: "destructive"
       });
     }
