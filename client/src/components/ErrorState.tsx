@@ -1,36 +1,33 @@
-import React from "react";
-import { AlertCircle, X } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { FaExclamationCircle } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 
 interface ErrorStateProps {
   message: string;
-  onDismiss?: () => void;
-  title?: string;
+  onDismiss: () => void;
 }
 
-const ErrorState: React.FC<ErrorStateProps> = ({
-  message,
-  onDismiss,
-  title = "Error"
-}) => {
+export default function ErrorState({ message, onDismiss }: ErrorStateProps) {
   return (
-    <Alert variant="destructive" className="relative">
-      {onDismiss && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute top-2 right-2 h-6 w-6"
-          onClick={onDismiss}
-        >
-          <X className="h-4 w-4" />
-        </Button>
-      )}
-      <AlertCircle className="h-4 w-4" />
-      <AlertTitle>{title}</AlertTitle>
-      <AlertDescription>{message}</AlertDescription>
-    </Alert>
+    <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg mb-8">
+      <div className="flex">
+        <div className="flex-shrink-0 mr-3">
+          <FaExclamationCircle className="text-red-500" />
+        </div>
+        <div>
+          <h3 className="font-medium">Error generating images</h3>
+          <p className="text-sm mt-1">
+            {message || "Please check your prompt and try again. If the problem persists, try again later."}
+          </p>
+          <Button
+            variant="link"
+            size="sm"
+            onClick={onDismiss}
+            className="text-sm font-medium underline mt-2 p-0 h-auto"
+          >
+            Dismiss
+          </Button>
+        </div>
+      </div>
+    </div>
   );
-};
-
-export default ErrorState;
+}

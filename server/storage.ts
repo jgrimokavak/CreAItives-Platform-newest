@@ -1,4 +1,4 @@
-import { users, images, carMakes, carModels, type User, type InsertUser, type GeneratedImage, type CarMake, type CarModel, type InsertCarMake, type InsertCarModel } from "@shared/schema";
+import { users, images, type User, type InsertUser, type GeneratedImage } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, isNull, isNotNull, and, ilike, lt } from "drizzle-orm";
 import * as fs from "fs";
@@ -19,15 +19,6 @@ export interface IStorage {
   updateImage(id: string, updates: Partial<GeneratedImage>): Promise<GeneratedImage | undefined>;
   deleteImage(id: string, permanent?: boolean): Promise<void>;
   bulkUpdateImages(ids: string[], updates: Partial<GeneratedImage>): Promise<void>;
-  
-  // Car-related methods
-  getAllCarMakes(): Promise<CarMake[]>;
-  getCarMakeById(id: string): Promise<CarMake | undefined>;
-  getCarModelsByMakeId(makeId: string): Promise<CarModel[]>;
-  getCarModelById(id: string): Promise<CarModel | undefined>;
-  createCarMake(make: InsertCarMake): Promise<CarMake>;
-  createCarModel(model: InsertCarModel): Promise<CarModel>;
-  clearCarData(): Promise<void>; // Used for CSV import
 }
 
 // Database storage implementation
@@ -448,44 +439,6 @@ export class DatabaseStorage implements IStorage {
         }
       });
     }
-  }
-
-  // Car-related methods implementation
-  async getAllCarMakes(): Promise<CarMake[]> {
-    return await db.select().from(carMakes).orderBy(carMakes.name);
-  }
-  
-  async getCarMakeById(id: string): Promise<CarMake | undefined> {
-    const [make] = await db.select().from(carMakes).where(eq(carMakes.id, id));
-    return make;
-  }
-  
-  async getCarModelsByMakeId(makeId: string): Promise<CarModel[]> {
-    return await db.select().from(carModels)
-      .where(eq(carModels.makeId, makeId))
-      .orderBy(carModels.name);
-  }
-  
-  async getCarModelById(id: string): Promise<CarModel | undefined> {
-    const [model] = await db.select().from(carModels).where(eq(carModels.id, id));
-    return model;
-  }
-  
-  async createCarMake(make: InsertCarMake): Promise<CarMake> {
-    const [newMake] = await db.insert(carMakes).values(make).returning();
-    return newMake;
-  }
-  
-  async createCarModel(model: InsertCarModel): Promise<CarModel> {
-    const [newModel] = await db.insert(carModels).values(model).returning();
-    return newModel;
-  }
-  
-  async clearCarData(): Promise<void> {
-    // First delete all models (due to foreign key constraints)
-    await db.delete(carModels);
-    // Then delete all makes
-    await db.delete(carMakes);
   }
 }
 
