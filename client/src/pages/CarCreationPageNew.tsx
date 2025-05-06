@@ -226,18 +226,30 @@ export default function CarCreationPageNew() {
   // Car generation mutation
   const generateMutation = useMutation({
     mutationFn: async (values: CarFormValues) => {
-      const response = await fetch("/api/cars/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values)
-      });
+      console.log("Starting car generation API call with values:", JSON.stringify(values));
+      
+      try {
+        const response = await fetch("/api/cars/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(values)
+        });
+        
+        console.log("API response received:", response.status, response.statusText);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to generate car image");
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("API error:", errorData);
+          throw new Error(errorData.message || "Failed to generate car image");
+        }
+
+        const jsonData = await response.json();
+        console.log("API success - received data:", jsonData);
+        return jsonData;
+      } catch (error) {
+        console.error("Exception during API call:", error);
+        throw error;
       }
-
-      return await response.json();
     },
     onSuccess: (data) => {
       setGeneratedImage(data.image);
@@ -590,10 +602,22 @@ export default function CarCreationPageNew() {
                       // Get current form values directly
                       const values = form.getValues();
                       
+                      // Add debugging to see the actual values being sent
+                      console.log("Submitting form values:", JSON.stringify(values));
+                      
                       // Process form values
                       setIsGenerating(true);
                       setError(null);
-                      generateMutation.mutate(values);
+                      
+                      // Attempt to generate the image
+                      try {
+                        generateMutation.mutate(values);
+                        console.log("Mutation initiated");
+                      } catch (error) {
+                        console.error("Error initiating mutation:", error);
+                        setError("Failed to initiate car generation request");
+                        setIsGenerating(false);
+                      }
                     }}
                   >
                     {isGenerating ? (
