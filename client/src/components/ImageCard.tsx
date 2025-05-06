@@ -26,7 +26,7 @@ interface ImageCardProps {
   onRestore?: (id: string) => void;
   onSelect?: (id: string, selected: boolean) => void;
   onCopyPrompt?: (prompt: string) => void;  // Add handler for copying the prompt
-  onUpscale?: () => void; // Handler for upscaling
+  onUpscale?: (image: GeneratedImage) => void; // Handler for upscaling
   onClick?: () => void;  // Add onClick handler for full-size preview
   selected?: boolean;
 }
