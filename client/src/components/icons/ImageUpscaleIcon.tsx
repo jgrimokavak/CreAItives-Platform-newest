@@ -1,11 +1,4 @@
-import React from 'react';
-
-interface IconProps {
-  className?: string;
-  size?: number;
-}
-
-export const ImageUpscaleIcon: React.FC<IconProps> = ({ className = "", size = 24 }) => {
+const ImageUpscaleIcon = ({ className = "", size = 24 }) => {
   return (
     <svg 
       xmlns="http://www.w3.org/2000/svg" 
@@ -19,14 +12,9 @@ export const ImageUpscaleIcon: React.FC<IconProps> = ({ className = "", size = 2
       strokeLinejoin="round" 
       className={className}
     >
-      {/* Arrow in top right */}
-      <path d="M7 7h5v5" />
-      <path d="M17 7l-5 5" />
-      
-      {/* Image box */}
+      <path d="M6 6h5v5" />
+      <path d="M16 6l-5 5" />
       <rect x="3" y="14" width="7" height="7" rx="1" />
-      
-      {/* Bottom right corner */}
       <path d="M14 14h7" />
       <path d="M14 21h7" />
       <path d="M14 14v7" />
