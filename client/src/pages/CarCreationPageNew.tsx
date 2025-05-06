@@ -79,6 +79,49 @@ export default function CarCreationPageNew() {
   const selectedModel = form.watch("model");
   const selectedBodyStyle = form.watch("body_style");
 
+  // Function to refresh all car data
+  const refreshCarData = useCallback(async () => {
+    setIsLoadingMakes(true);
+    try {
+      // Force refresh the car data from Google Sheets
+      await loadCarData(true);
+      
+      // Reload makes with the fresh data
+      const makes = await getCarMakes();
+      setMakes(makes);
+      
+      // Reset form state after refresh
+      if (selectedMake) {
+        const models = await getCarModels(selectedMake);
+        setModels(models);
+        
+        if (selectedModel) {
+          const bodyStyles = await getBodyStyles(selectedMake, selectedModel);
+          setBodyStyles(bodyStyles);
+          
+          if (selectedBodyStyle) {
+            const trims = await getTrims(selectedMake, selectedModel, selectedBodyStyle);
+            setTrims(trims);
+          }
+        }
+      }
+      
+      toast({
+        title: "Data refreshed",
+        description: "Car data has been refreshed from Google Sheets",
+      });
+    } catch (error) {
+      console.error("Error refreshing car data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to refresh car data from Google Sheets",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingMakes(false);
+    }
+  }, [toast, selectedMake, selectedModel, selectedBodyStyle]);
+
   // Load makes on initial load
   useEffect(() => {
     async function loadMakes() {
@@ -243,16 +286,42 @@ export default function CarCreationPageNew() {
 
   return (
     <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-8 flex items-center">
-        <Car className="mr-2" />
-        Car Creation
-      </h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold flex items-center">
+          <Car className="mr-2" />
+          Car Creation
+        </h1>
+        
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={refreshCarData}
+          disabled={isLoadingMakes || isGenerating}
+          className="flex items-center gap-2"
+        >
+          {isLoadingMakes ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Refreshing...
+            </>
+          ) : (
+            <>
+              <RefreshCw className="h-4 w-4" />
+              Refresh Car Data
+            </>
+          )}
+        </Button>
+      </div>
       
       <Card>
         <CardHeader>
           <CardTitle>Create Custom Car Image</CardTitle>
-          <CardDescription>
-            Select car attributes and generate a hyper-realistic car image using Google Imagen-3
+          <CardDescription className="space-y-2">
+            <p>Select car attributes and generate a hyper-realistic car image using Google Imagen-3</p>
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
+              <RefreshCw className="h-3 w-3" />
+              Car data automatically updates from Google Sheets every 5 minutes. Click the refresh button to update manually.
+            </p>
           </CardDescription>
         </CardHeader>
         <CardContent>
