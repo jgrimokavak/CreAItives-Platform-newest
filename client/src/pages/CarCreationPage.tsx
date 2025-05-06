@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import type { GeneratedImage } from '@/types/image';
 import { Card, CardContent } from '@/components/ui/card';
 import ImageCard from '@/components/ImageCard';
+import ImageModal from '@/components/ImageModal';
 import { useToast } from '@/hooks/use-toast';
 
 // Car generation form schema
@@ -41,6 +42,7 @@ const CarCreationPage: React.FC = () => {
   const [bg, setBg] = useState<"white" | "hub">("white");
   const [progress, setProgress] = useState<number | null>(null);
   const [image, setImage] = useState<GeneratedImage | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const form = useForm<CarGenerationFormValues>({
     resolver: zodResolver(carGenerationSchema),
@@ -311,6 +313,69 @@ const CarCreationPage: React.FC = () => {
     }
   });
 
+  // Image download handler
+  const handleDownload = async (image: GeneratedImage) => {
+    try {
+      let url;
+      
+      // If the URL is a data URL (base64), use it directly
+      if (image.url.startsWith('data:')) {
+        url = image.url;
+      } else {
+        // Otherwise, fetch the image from the URL
+        const response = await fetch(image.url);
+        const blob = await response.blob();
+        url = window.URL.createObjectURL(blob);
+      }
+      
+      // Create a download link
+      const a = document.createElement("a");
+      a.style.display = "none";
+      a.href = url;
+      
+      // Create a clean filename from the prompt
+      const cleanPrompt = image.prompt
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '')    // Remove non-word chars
+        .replace(/\s+/g, '_')         // Replace spaces with underscores
+        .replace(/_+/g, '_')          // Replace multiple underscores with single ones
+        .substring(0, 50);            // Limit length
+      
+      // Make sure we have a valid filename
+      const filename = cleanPrompt || 'car-image';
+      a.download = `${filename}.png`;
+      
+      document.body.appendChild(a);
+      a.click();
+      
+      // Clean up the URL only if it was created from a blob
+      if (!image.url.startsWith('data:')) {
+        window.URL.revokeObjectURL(url);
+      }
+      
+      toast({
+        title: "Image downloaded",
+        description: "Car image has been downloaded successfully"
+      });
+    } catch (error) {
+      console.error("Download error:", error);
+      toast({
+        title: "Download failed",
+        description: "Failed to download the image",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Copy prompt handler
+  const handleCopyPrompt = (prompt: string) => {
+    navigator.clipboard.writeText(prompt);
+    toast({
+      title: "Prompt copied",
+      description: "Prompt has been copied to clipboard"
+    });
+  };
+
   // Form submission handler
   const handleGenerate = () => {
     const values = form.getValues();
@@ -319,6 +384,12 @@ const CarCreationPage: React.FC = () => {
 
   return (
     <div className="container max-w-6xl mx-auto py-6">
+      {/* Image Modal for fullscreen viewing */}
+      <ImageModal 
+        imageUrl={selectedImage} 
+        onClose={() => setSelectedImage(null)} 
+      />
+      
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold">Car Creation</h1>
         <Button 
@@ -501,71 +572,9 @@ const CarCreationPage: React.FC = () => {
                 <ImageCard
                   image={image}
                   mode="preview"
-                  onDownload={(img) => {
-                    // Create a function to properly download the image
-                    const downloadImage = async () => {
-                      try {
-                        let url;
-                        
-                        // If the URL is a data URL (base64), use it directly
-                        if (img.url.startsWith('data:')) {
-                          url = img.url;
-                        } else {
-                          // Otherwise, fetch the image from the URL
-                          const response = await fetch(img.url);
-                          const blob = await response.blob();
-                          url = window.URL.createObjectURL(blob);
-                        }
-                        
-                        // Create a download link
-                        const a = document.createElement('a');
-                        a.style.display = 'none';
-                        a.href = url;
-                        
-                        // Create a clean filename from the prompt
-                        const cleanPrompt = img.prompt
-                          .toLowerCase()
-                          .replace(/[^\w\s-]/g, '')    // Remove non-word chars
-                          .replace(/\s+/g, '_')        // Replace spaces with underscores
-                          .replace(/_+/g, '_')         // Replace multiple underscores with single ones
-                          .substring(0, 50);           // Limit length
-                        
-                        // Make sure we have a valid filename
-                        const filename = cleanPrompt || 'car-image';
-                        a.download = `${filename}.png`;
-                        
-                        document.body.appendChild(a);
-                        a.click();
-                        
-                        // Clean up the URL only if it was created from a blob
-                        if (!img.url.startsWith('data:')) {
-                          window.URL.revokeObjectURL(url);
-                        }
-                        
-                        toast({
-                          title: "Image downloaded",
-                          description: "Car image has been downloaded successfully",
-                        });
-                      } catch (error) {
-                        console.error('Download error:', error);
-                        toast({
-                          title: "Download failed",
-                          description: "Failed to download the car image",
-                          variant: "destructive",
-                        });
-                      }
-                    };
-                    
-                    downloadImage();
-                  }}
-                  onCopyPrompt={(prompt) => {
-                    navigator.clipboard.writeText(prompt);
-                    toast({
-                      title: "Prompt copied",
-                      description: "Prompt has been copied to clipboard",
-                    });
-                  }}
-                  onClick={() => window.open(image.url, '_blank')}
+                  onDownload={handleDownload}
+                  onCopyPrompt={handleCopyPrompt}
+                  onClick={() => setSelectedImage(image.fullUrl || image.url)}
                 />
               </div>
               
