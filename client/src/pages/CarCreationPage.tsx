@@ -19,6 +19,7 @@ import CarImageCard from '@/components/CarImageCard';
 import ImageModal from '@/components/ImageModal';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
+import { useEditor } from '@/context/EditorContext';
 
 // Car generation form schema
 const carGenerationSchema = z.object({
@@ -37,6 +38,7 @@ type CarGenerationFormValues = z.infer<typeof carGenerationSchema>;
 const CarCreationPage: React.FC = () => {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const { setMode, setSourceImages } = useEditor();
   const [makes, setMakes] = useState<string[]>([]);
   const [models, setModels] = useState<string[]>([]);
   const [bodyStyles, setBodyStyles] = useState<string[]>([]);
@@ -599,17 +601,19 @@ const CarCreationPage: React.FC = () => {
                   color={form.watch('color')}
                   background={form.watch('background')}
                   onEdit={(img) => {
-                    // Add debug logs
                     console.log("Edit button clicked with image:", img);
                     
-                    // The issue is there's no /edit route in the app
-                    // Let's navigate to the home page with the source image parameter
+                    // Use the same edit handler approach as the gallery page
                     const sourceUrl = img.fullUrl || img.url;
-                    console.log("Navigating to edit with source URL:", sourceUrl);
+                    console.log("Setting up edit mode with image URL:", sourceUrl);
                     
-                    // Navigate to home page with this image as source
-                    setLocation(`/?sourceImage=${encodeURIComponent(sourceUrl)}`);
-                    console.log("Navigation attempted to home with source image");
+                    // Set editor context for edit mode
+                    setMode('edit');
+                    setSourceImages([sourceUrl]);
+                    
+                    // Navigate to the home page
+                    console.log("Navigating to home for editing...");
+                    setLocation('/');
                   }}
                   onUpscale={(img) => {
                     // Navigate to upscale page with the image URL
