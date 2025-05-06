@@ -85,7 +85,10 @@ export default function ImageGallery({ images, onClearResults }: ImageGalleryPro
   // Handle upscale
   const handleUpscale = (image: GeneratedImage) => {
     // Navigate to upscale page with the image URL as a query parameter
-    navigate(`/upscale?sourceUrl=${encodeURIComponent(image.url)}`);
+    // Use the fullUrl if available, otherwise fallback to url
+    const imageUrl = image.fullUrl || image.url;
+    console.log(`Upscaling image with URL: ${imageUrl}`);
+    navigate(`/upscale?sourceUrl=${encodeURIComponent(imageUrl)}`);
   };
 
   return (

@@ -263,7 +263,7 @@ export default function ImageCard({
                     className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border"
                     onClick={(e) => {
                       e.stopPropagation();
-                      onUpscale();
+                      onUpscale(image);
                     }}
                   >
                     <ImageUpscale className="h-4 w-4" />
