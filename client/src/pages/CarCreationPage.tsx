@@ -439,16 +439,7 @@ const CarCreationPage: React.FC = () => {
               className="flex-1"
             >
               <CarFront className="mr-2 h-5 w-5" />
-              Generate
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              onClick={refreshData}
-              disabled={generateMutation.isPending}
-            >
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Refresh car data
+              Generate Car Image
             </Button>
           </div>
           
@@ -472,13 +463,29 @@ const CarCreationPage: React.FC = () => {
         <div>
           {image ? (
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold">Generated Image</h2>
-              <div className="border rounded-lg overflow-hidden">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold">Generated Car Image</h2>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    const link = document.createElement('a');
+                    link.href = image.url;
+                    link.download = `car-${new Date().getTime()}.png`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }}
+                >
+                  Download
+                </Button>
+              </div>
+              
+              <div className="border rounded-lg overflow-hidden shadow-sm">
                 <ImageCard 
                   image={image} 
                   mode="preview" 
                   onDownload={(img) => {
-                    // Download the image
                     const link = document.createElement('a');
                     link.href = img.url;
                     link.download = `car-${new Date().getTime()}.png`;
@@ -488,15 +495,23 @@ const CarCreationPage: React.FC = () => {
                   }}
                 />
               </div>
-              <p className="text-sm text-gray-500">Image saved to gallery automatically.</p>
+              
+              <div className="bg-blue-50 text-blue-800 p-3 rounded-lg text-sm flex items-center border border-blue-100">
+                <div className="mr-2 bg-blue-100 rounded-full p-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-info"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                </div>
+                Image has been saved to your gallery automatically.
+              </div>
             </div>
           ) : (
-            <div className="flex items-center justify-center h-full min-h-[300px] bg-gray-50 border rounded-lg">
-              <div className="text-center p-6">
-                <CarFront className="mx-auto h-12 w-12 text-gray-300" />
-                <h3 className="mt-4 text-lg font-medium text-gray-900">No image generated yet</h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  Fill out the form and click Generate to create a car image.
+            <div className="flex items-center justify-center h-full min-h-[400px] bg-card/50 border rounded-lg shadow-sm">
+              <div className="text-center p-8">
+                <div className="bg-primary/10 rounded-full p-4 inline-block mb-2">
+                  <CarFront className="mx-auto h-10 w-10 text-primary/80" />
+                </div>
+                <h3 className="mt-4 text-xl font-medium">No Car Image Generated Yet</h3>
+                <p className="mt-2 text-muted-foreground max-w-md">
+                  Select a make, model, body style, and customize details like color and year, then click Generate to create your car image.
                 </p>
               </div>
             </div>
