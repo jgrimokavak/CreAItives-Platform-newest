@@ -518,7 +518,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
             <div className="relative flex-1">
               <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                type="search" 
+                type="text" 
                 placeholder="Search by prompt..."
                 value={searchInput}
                 onChange={(e) => {
@@ -527,11 +527,14 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
                 }}
                 className="pl-8 h-9 md:w-[200px] lg:w-[300px] border-slate-300 focus:border-primary transition-colors"
                 onKeyDown={(e) => {
-                  // Prevent form submission on Enter key
+                  // Process Enter key to trigger search
                   if (e.key === 'Enter') {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('Enter key press in search prevented default action');
+                    if (searchInput.trim()) {
+                      handleSearch();
+                    }
+                    console.log('Enter key press in search triggered search');
                     return false;
                   }
                 }}
