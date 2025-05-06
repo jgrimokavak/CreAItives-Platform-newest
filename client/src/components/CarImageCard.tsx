@@ -109,19 +109,29 @@ export default function CarImageCard({
         <div 
           className="absolute inset-0 flex items-center justify-center bg-black/5"
           onClick={(e) => {
-            // Make the image area clickable for fullscreen view
+            // Make the image container clickable for fullscreen view as well
             e.stopPropagation();
             if (onClick) {
-              console.log("CarImageCard: Image area clicked, calling onClick handler for fullscreen");
+              console.log("CarImageCard: Image container clicked, calling onClick handler for fullscreen");
               onClick();
             }
           }}
+          style={{ cursor: 'zoom-in' }} // Add zoom-in cursor to indicate this area is clickable too
         >
           <img 
             src={image.thumbUrl || image.url} 
             alt={image.prompt}
             className="w-full h-full object-contain"
             loading="lazy"
+            onClick={(e) => {
+              // Make the image itself clickable for fullscreen view
+              e.stopPropagation();
+              if (onClick) {
+                console.log("CarImageCard: Image clicked, calling onClick handler for fullscreen");
+                onClick();
+              }
+            }}
+            style={{ cursor: 'zoom-in', zIndex: 5 }} // Add zoom-in cursor and ensure it's above other elements
           />
         </div>
         
