@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, uniqueIndex, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -117,3 +117,45 @@ export const editImageSchema = z.object({
 });
 
 export type EditImageInput = z.infer<typeof editImageSchema>;
+
+// Car Make and Model schemas for the car creation feature
+export const carMakes = pgTable("car_makes", {
+  id: text("id").primaryKey().default(""),
+  name: text("name").notNull().unique(),
+}, (table) => {
+  return {
+    nameIdx: uniqueIndex("car_make_name_idx").on(table.name),
+  }
+});
+
+export const carModels = pgTable("car_models", {
+  id: text("id").primaryKey().default(""),
+  name: text("name").notNull(),
+  makeId: text("make_id").notNull().references(() => carMakes.id, { onDelete: "cascade" }),
+}, (table) => {
+  return {
+    makeIdIdx: index("car_make_id_idx").on(table.makeId),
+    uniqueNameMake: uniqueIndex("car_model_name_make_idx").on(table.name, table.makeId),
+  }
+});
+
+export const insertCarMakeSchema = createInsertSchema(carMakes);
+export const insertCarModelSchema = createInsertSchema(carModels);
+
+export type InsertCarMake = z.infer<typeof insertCarMakeSchema>;
+export type InsertCarModel = z.infer<typeof insertCarModelSchema>;
+export type CarMake = typeof carMakes.$inferSelect;
+export type CarModel = typeof carModels.$inferSelect;
+
+// Car generation schema
+export const carGenerateSchema = z.object({
+  makeId: z.string(),
+  modelId: z.string(),
+  year: z.number().int().min(1990).max(2025),
+  body_style: z.string(),
+  color: z.string(),
+  aspect_ratio: z.enum(["1:1", "16:9", "9:16", "3:4", "4:3"]),
+  bg: z.enum(["white", "hub"])
+});
+
+export type CarGenerateInput = z.infer<typeof carGenerateSchema>;

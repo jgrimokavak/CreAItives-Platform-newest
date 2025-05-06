@@ -1,4 +1,4 @@
-import { users, images, type User, type InsertUser, type GeneratedImage } from "@shared/schema";
+import { users, images, carMakes, carModels, type User, type InsertUser, type GeneratedImage, type CarMake, type CarModel, type InsertCarMake, type InsertCarModel } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, isNull, isNotNull, and, ilike, lt } from "drizzle-orm";
 import * as fs from "fs";
@@ -19,6 +19,15 @@ export interface IStorage {
   updateImage(id: string, updates: Partial<GeneratedImage>): Promise<GeneratedImage | undefined>;
   deleteImage(id: string, permanent?: boolean): Promise<void>;
   bulkUpdateImages(ids: string[], updates: Partial<GeneratedImage>): Promise<void>;
+  
+  // Car-related methods
+  getAllCarMakes(): Promise<CarMake[]>;
+  getCarMakeById(id: string): Promise<CarMake | undefined>;
+  getCarModelsByMakeId(makeId: string): Promise<CarModel[]>;
+  getCarModelById(id: string): Promise<CarModel | undefined>;
+  createCarMake(make: InsertCarMake): Promise<CarMake>;
+  createCarModel(model: InsertCarModel): Promise<CarModel>;
+  clearCarData(): Promise<void>; // Used for CSV import
 }
 
 // Database storage implementation
