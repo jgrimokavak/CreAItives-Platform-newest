@@ -26,6 +26,7 @@ export interface ImageMetadata {
   params: any;
   userId: string;
   sources: string[];
+  model?: string; // Added model field for car generation
 }
 
 export async function persistImage(b64: string, meta: ImageMetadata, customId?: string): Promise<{
@@ -76,7 +77,7 @@ export async function persistImage(b64: string, meta: ImageMetadata, customId?: 
       url: `/uploads/${fullPath}`,
       prompt: meta.prompt,
       size: sizeStr,
-      model: meta.params.model || 'gpt-image-1',
+      model: meta.model || meta.params.model || 'gpt-image-1',
       width: widthStr,
       height: heightStr,
       thumbUrl: `/uploads/${thumbPath}`,

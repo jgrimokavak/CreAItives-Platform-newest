@@ -75,14 +75,26 @@ export default function CarCreationPage() {
   // Get selected make ID
   const selectedMakeId = form.watch("makeId");
 
+  // Define types for car data
+  interface CarMake {
+    id: string;
+    name: string;
+  }
+
+  interface CarModel {
+    id: string;
+    name: string;
+    makeId: string;
+  }
+
   // Fetch car makes
-  const { data: makes, isLoading: isLoadingMakes } = useQuery({
+  const { data: makes = [], isLoading: isLoadingMakes } = useQuery<CarMake[]>({
     queryKey: ["/api/cars/makes"],
     staleTime: 24 * 60 * 60 * 1000, // Cache for 24 hours
   });
 
   // Fetch car models when make changes
-  const { data: models, isLoading: isLoadingModels } = useQuery({
+  const { data: models = [], isLoading: isLoadingModels } = useQuery<CarModel[]>({
     queryKey: ["/api/cars/models", selectedMakeId],
     staleTime: 24 * 60 * 60 * 1000, // Cache for 24 hours
     enabled: !!selectedMakeId, // Only fetch when makeId is selected
@@ -196,7 +208,7 @@ export default function CarCreationPage() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {makes?.map((make: any) => (
+                              {makes.map((make) => (
                                 <SelectItem key={make.id} value={make.id}>
                                   {make.name}
                                 </SelectItem>
@@ -231,7 +243,7 @@ export default function CarCreationPage() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {models?.map((model: any) => (
+                              {models.map((model) => (
                                 <SelectItem key={model.id} value={model.id}>
                                   {model.name}
                                 </SelectItem>

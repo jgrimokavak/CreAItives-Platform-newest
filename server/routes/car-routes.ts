@@ -128,7 +128,9 @@ router.post('/admin/car-csv', upload.single('file'), async (req, res) => {
           }
           
           // Clean up the temporary file
-          fs.unlinkSync(req.file.path);
+          if (req.file && req.file.path) {
+            fs.unlinkSync(req.file.path);
+          }
           
           res.json({
             success: true,
