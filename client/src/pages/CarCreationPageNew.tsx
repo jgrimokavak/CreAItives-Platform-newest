@@ -226,30 +226,18 @@ export default function CarCreationPageNew() {
   // Car generation mutation
   const generateMutation = useMutation({
     mutationFn: async (values: CarFormValues) => {
-      console.log("Starting car generation API call with values:", JSON.stringify(values));
-      
-      try {
-        const response = await fetch("/api/cars/generate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(values)
-        });
-        
-        console.log("API response received:", response.status, response.statusText);
+      const response = await fetch("/api/cars/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values)
+      });
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error("API error:", errorData);
-          throw new Error(errorData.message || "Failed to generate car image");
-        }
-
-        const jsonData = await response.json();
-        console.log("API success - received data:", jsonData);
-        return jsonData;
-      } catch (error) {
-        console.error("Exception during API call:", error);
-        throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to generate car image");
       }
+
+      return await response.json();
     },
     onSuccess: (data) => {
       setGeneratedImage(data.image);
@@ -275,12 +263,7 @@ export default function CarCreationPageNew() {
   });
 
   // Form submission handler
-  const onSubmit = async (values: CarFormValues, e?: React.BaseSyntheticEvent) => {
-    // Prevent default form submission which causes page reload
-    if (e) {
-      e.preventDefault();
-    }
-    
+  const onSubmit = async (values: CarFormValues) => {
     setIsGenerating(true);
     setError(null);
     generateMutation.mutate(values);
@@ -347,7 +330,7 @@ export default function CarCreationPageNew() {
             {/* Form section */}
             <div>
               <Form {...form}>
-                <div className="space-y-4">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                   {/* Make and Model */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
@@ -595,30 +578,9 @@ export default function CarCreationPageNew() {
 
                   {/* Submit Button */}
                   <Button
-                    type="button"
+                    type="submit"
                     className="w-full mt-6"
                     disabled={isGenerating}
-                    onClick={() => {
-                      // Get current form values directly
-                      const values = form.getValues();
-                      
-                      // Add debugging to see the actual values being sent
-                      console.log("Submitting form values:", JSON.stringify(values));
-                      
-                      // Process form values
-                      setIsGenerating(true);
-                      setError(null);
-                      
-                      // Attempt to generate the image
-                      try {
-                        generateMutation.mutate(values);
-                        console.log("Mutation initiated");
-                      } catch (error) {
-                        console.error("Error initiating mutation:", error);
-                        setError("Failed to initiate car generation request");
-                        setIsGenerating(false);
-                      }
-                    }}
                   >
                     {isGenerating ? (
                       <>
@@ -629,7 +591,7 @@ export default function CarCreationPageNew() {
                       <>Generate Car Image</>
                     )}
                   </Button>
-                </div>
+                </form>
               </Form>
             </div>
 

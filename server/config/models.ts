@@ -24,7 +24,6 @@ export const models: ModelConfig[] = [
     key: "imagen-3",
     provider: "replicate",
     slug: "google/imagen-3",
-    version: "a1b48e6471cc2d2c4463885c6f702785d188fcadaf4159128e525a2626f36c01",
     defaults: { 
       safety_filter_level: "block_only_high" 
     },
@@ -35,7 +34,6 @@ export const models: ModelConfig[] = [
     key: "flux-pro",
     provider: "replicate",
     slug: "black-forest-labs/flux-1.1-pro",
-    version: "c31590f67c7349d50d6275d9c654ac78a52cf613095a3a368195c2df2c2ddef2",
     defaults: {
       output_format: "png",
       prompt_upsampling: false,
