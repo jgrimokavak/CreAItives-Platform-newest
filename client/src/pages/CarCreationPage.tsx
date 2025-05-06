@@ -420,7 +420,7 @@ const CarCreationPage: React.FC = () => {
       
       <div className="container max-w-6xl mx-auto py-6">
       
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-2">
         <h1 className="text-3xl font-bold">Car Creation</h1>
         <Button 
           variant="outline" 
@@ -432,6 +432,9 @@ const CarCreationPage: React.FC = () => {
           Refresh Car Data
         </Button>
       </div>
+      <p className="text-muted-foreground mb-6">
+        Select a make, model, body style, and customize details like color and year, then click Generate to create your car image.
+      </p>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Form Section */}
@@ -680,7 +683,7 @@ const CarCreationPage: React.FC = () => {
                 </div>
                 <h3 className="mt-4 text-xl font-medium">No Car Image Generated Yet</h3>
                 <p className="mt-2 text-muted-foreground max-w-md">
-                  Select a make, model, body style, and customize details like color and year, then click Generate to create your car image.
+                  Fill out the form and click Generate to see your car image here.
                 </p>
               </div>
             </div>
