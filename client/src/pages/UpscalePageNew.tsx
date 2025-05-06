@@ -49,28 +49,47 @@ export default function UpscalePage() {
       // If we have a source URL, set it as the preview
       setPreviewUrl(sourceUrl);
 
-      // Try to extract a filename from the URL if possible
+      // Try to extract a filename from the URL if possible or use the prompt text
       try {
-        // Get the base name from the URL (everything after the last slash)
-        const urlParts = sourceUrl.split('/');
-        const baseName = urlParts[urlParts.length - 1];
-        
-        // If there's a query string or parameters, remove them
-        const fileNameWithoutParams = baseName.split('?')[0];
-        
-        // Remove the extension
-        const fileName = fileNameWithoutParams.replace(/\.[^/.]+$/, "");
-        
-        // If we have a valid filename (not empty and without strange characters)
-        if (fileName && /^[a-zA-Z0-9_-]+$/.test(fileName)) {
-          setOriginalFileName(fileName);
-        } else {
-          // Use a timestamp as fallback if the URL doesn't contain a valid filename
-          setOriginalFileName(`image-${Date.now()}`);
-        }
+        // First, we'll fetch the image data which might contain metadata about the original prompt
+        fetch(`/api/gallery?searchQuery=`)
+          .then(response => response.json())
+          .then(data => {
+            // Look for the image in the gallery data
+            const urlParts = sourceUrl.split('/');
+            const baseName = urlParts[urlParts.length - 1];
+            // Extract the image ID from the filename
+            const imageId = baseName.split('.')[0]; // Extract part before extension
+            
+            // Try to find this image in the gallery
+            const matchingImage = data.items.find((item: any) => 
+              item.id === imageId || item.fullUrl.includes(imageId) || item.url.includes(imageId)
+            );
+            
+            if (matchingImage && matchingImage.prompt) {
+              // Create a clean filename from the prompt
+              const cleanPrompt = matchingImage.prompt
+                .toLowerCase()
+                .replace(/[^\w\s-]/g, '')    // Remove non-word chars
+                .replace(/\s+/g, '_')         // Replace spaces with underscores
+                .replace(/_+/g, '_')          // Replace multiple underscores with single ones
+                .substring(0, 50);            // Limit length
+              
+              // Make sure we have a valid filename
+              const filename = cleanPrompt || 'image';
+              setOriginalFileName(filename);
+            } else {
+              // If no matching image found, use a basic filename
+              setOriginalFileName('image');
+            }
+          })
+          .catch(err => {
+            console.log("Could not fetch gallery data, using default filename");
+            setOriginalFileName('image');
+          });
       } catch (err) {
         console.log("Could not extract filename from URL, using default");
-        setOriginalFileName(`image-${Date.now()}`);
+        setOriginalFileName('image');
       }
 
       // Convert the URL to a blob and create a File from it
@@ -92,9 +111,18 @@ export default function UpscalePage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Extract the original file name without extension
-    const fileName = file.name.replace(/\.[^/.]+$/, "");
-    setOriginalFileName(fileName);
+    // Extract and clean the original file name without extension
+    const rawFileName = file.name.replace(/\.[^/.]+$/, "");
+    
+    // Create a clean filename
+    const cleanFilename = rawFileName
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, '')    // Remove non-word chars
+      .replace(/\s+/g, '_')         // Replace spaces with underscores
+      .replace(/_+/g, '_')          // Replace multiple underscores with single ones
+      .substring(0, 50);            // Limit length
+    
+    setOriginalFileName(cleanFilename || 'image');
     
     setSelectedFile(file);
     setPreviewUrl(URL.createObjectURL(file));
