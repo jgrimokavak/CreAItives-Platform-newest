@@ -253,7 +253,7 @@ export default function ImageCard({
             </TooltipProvider>
           )}
 
-          {mode === 'gallery' && onUpscale && (
+          {(mode === 'gallery' || mode === 'preview') && onUpscale && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>

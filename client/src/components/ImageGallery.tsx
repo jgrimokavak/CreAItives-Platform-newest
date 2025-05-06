@@ -81,6 +81,12 @@ export default function ImageGallery({ images, onClearResults }: ImageGalleryPro
       description: "Use the edit form to modify this image",
     });
   };
+  
+  // Handle upscale
+  const handleUpscale = (image: GeneratedImage) => {
+    // Navigate to upscale page with the image URL as a query parameter
+    navigate(`/upscale?sourceUrl=${encodeURIComponent(image.url)}`);
+  };
 
   return (
     <section className="mb-12">
@@ -114,6 +120,7 @@ export default function ImageGallery({ images, onClearResults }: ImageGalleryPro
               onEdit={handleSendToEditor}
               onDownload={handleDownload}
               onCopyPrompt={handleCopyPrompt}
+              onUpscale={handleUpscale}
               // Add click handler to the image itself instead of an overlay
               onClick={() => setSelectedImage(image.url)}
             />
