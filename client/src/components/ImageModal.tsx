@@ -45,9 +45,15 @@ export default function ImageModal({ imageUrl, onClose }: ImageModalProps) {
   }
   
   console.log("ImageModal: Rendering with image URL:", imageUrl);
+  
+  // Force the modal to the top of the stacking context
+  // This ensures it appears above all other content
+  const modalStyle = {
+    zIndex: 9999
+  };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
+    <div className="fixed inset-0 flex items-center justify-center bg-black/80" style={modalStyle}>
       <div 
         ref={modalRef}
         className="relative w-full h-full max-w-[90vw] max-h-[90vh] flex items-center justify-center p-4"

@@ -409,12 +409,16 @@ const CarCreationPage: React.FC = () => {
   };
 
   return (
-    <div className="container max-w-6xl mx-auto py-6">
-      {/* Image Modal for fullscreen viewing */}
-      <ImageModal 
-        imageUrl={selectedImage} 
-        onClose={() => setSelectedImage(null)} 
-      />
+    <React.Fragment>
+      {/* Image Modal for fullscreen viewing - outside the container to avoid z-index issues */}
+      {selectedImage && (
+        <ImageModal 
+          imageUrl={selectedImage} 
+          onClose={() => setSelectedImage(null)} 
+        />
+      )}
+      
+      <div className="container max-w-6xl mx-auto py-6">
       
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold">Car Creation</h1>
@@ -623,6 +627,7 @@ const CarCreationPage: React.FC = () => {
               </div>
               
               <div className="relative">
+                {/* Image card with actions */}
                 <CarImageCard
                   image={image}
                   make={watchMake !== 'None' ? watchMake : undefined}
@@ -658,6 +663,18 @@ const CarCreationPage: React.FC = () => {
                     setSelectedImage(image.fullUrl || image.url);
                   }}
                 />
+                
+                {/* Additional fullscreen button for more obvious interaction */}
+                <button 
+                  className="absolute bottom-2 right-2 p-2 bg-black/50 rounded-full text-white hover:bg-black/70 transition-colors z-10"
+                  onClick={() => {
+                    console.log("Fullscreen button clicked, showing image:", image.fullUrl || image.url);
+                    setSelectedImage(image.fullUrl || image.url);
+                  }}
+                  aria-label="View fullscreen"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 3 6 6m0-6-6 6"/><path d="M9 21 3 15m0 6 6-6"/><rect width="12" height="12" x="6" y="6"/></svg>
+                </button>
               </div>
               
               <div className="bg-blue-50 text-blue-800 p-3 rounded-lg text-sm flex items-center border border-blue-100">
@@ -683,6 +700,7 @@ const CarCreationPage: React.FC = () => {
         </div>
       </div>
     </div>
+    </React.Fragment>
   );
 };
 
