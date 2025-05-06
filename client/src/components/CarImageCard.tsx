@@ -97,7 +97,13 @@ export default function CarImageCard({
       className="bg-card rounded-lg overflow-hidden shadow-sm border border-border hover:shadow-md transition-shadow group cursor-pointer"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={onClick}
+      onClick={(e) => {
+        // This ensures the click event doesn't get stopped unless clicking on action buttons
+        if (onClick) {
+          console.log("CarImageCard: Image container clicked, calling onClick handler");
+          onClick();
+        }
+      }}
     >
       <div className="relative pb-[100%]">
         {/* Image thumbnail with better aspect ratio handling */}

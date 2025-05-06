@@ -39,7 +39,12 @@ export default function ImageModal({ imageUrl, onClose }: ImageModalProps) {
     };
   }, [imageUrl, onClose]);
 
-  if (!imageUrl) return null;
+  if (!imageUrl) {
+    console.log("ImageModal: No image URL provided, not rendering modal");
+    return null;
+  }
+  
+  console.log("ImageModal: Rendering with image URL:", imageUrl);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">

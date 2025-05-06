@@ -653,7 +653,10 @@ const CarCreationPage: React.FC = () => {
                     setLocation(`/upscale?sourceUrl=${encodeURIComponent(imageUrl)}`);
                   }}
                   onDownload={handleDownload}
-                  onClick={() => setSelectedImage(image.fullUrl || image.url)}
+                  onClick={() => {
+                    console.log("Image clicked, setting fullscreen image:", image.fullUrl || image.url);
+                    setSelectedImage(image.fullUrl || image.url);
+                  }}
                 />
               </div>
               
