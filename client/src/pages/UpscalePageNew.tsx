@@ -32,6 +32,7 @@ export default function UpscalePage() {
   const [outputUrl, setOutputUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   
   // Add parameters from the schema
   const [enhanceModel, setEnhanceModel] = useState<string>("Standard V2"); // Default from schema
@@ -338,10 +339,52 @@ export default function UpscalePage() {
             </Button>
             
             {outputUrl && (
-              <Button asChild>
-                <a href={outputUrl} download="upscaled-image.png">
-                  Download Upscaled Image
-                </a>
+              <Button 
+                onClick={() => {
+                  // Create a function to properly download the image
+                  const downloadImage = async () => {
+                    try {
+                      setDownloading(true);
+                      // Fetch the image from the URL
+                      const response = await fetch(outputUrl);
+                      const blob = await response.blob();
+                      
+                      // Create a temporary link element
+                      const link = document.createElement('a');
+                      link.href = URL.createObjectURL(blob);
+                      link.download = 'upscaled-image.png'; // Set the filename
+                      
+                      // Append to the document, click it, and then remove it
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                      
+                      // Clean up the object URL
+                      URL.revokeObjectURL(link.href);
+                      
+                      // Small delay to show downloading status
+                      setTimeout(() => {
+                        setDownloading(false);
+                      }, 1000);
+                    } catch (err) {
+                      console.error('Error downloading image:', err);
+                      // Show an error message if download fails
+                      setError('Failed to download image. Try right-clicking the result and selecting "Save Image As".');
+                      setDownloading(false);
+                    }
+                  };
+                  
+                  downloadImage();
+                }}
+                disabled={downloading}
+              >
+                {downloading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Downloading...
+                  </span>
+                ) : (
+                  "Download Upscaled Image"
+                )}
               </Button>
             )}
           </CardFooter>
