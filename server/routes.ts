@@ -643,8 +643,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Add upscale routes
   app.use('/api', upscaleRoutes);
   
-  // Add car routes
-  app.use('/api/cars', carRoutes);
+  // Add old car routes - keep for backward compatibility
+  app.use('/api/cars-old', carRoutes);
+  
+  // Add new car routes with CSV data
+  app.use('/api/cars', carRoutesNew);
 
   // Create HTTP server
   const httpServer = createServer(app);

@@ -9,21 +9,33 @@ export interface CarData {
   trim: string;
 }
 
-// In-memory cache for CSV data
-let cachedCarData: CarData[] | null = null;
+// In-memory cache for CSV data with timestamp
+let carDataCache: {
+  data: CarData[] | null;
+  timestamp: number;
+  loading: boolean;
+} = {
+  data: null,
+  timestamp: 0,
+  loading: false
+};
 
-// Function to load and parse the CSV data
-export async function loadCarData(): Promise<CarData[]> {
-  // Return cached data if available
-  if (cachedCarData) {
-    return cachedCarData;
-  }
+// Cache expiration time in milliseconds (5 minutes)
+const CACHE_EXPIRATION = 5 * 60 * 1000;
 
+// Google Sheets CSV URL
+const GOOGLE_SHEETS_URL = 
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQc5Sd7xctNiRi0VSuBBW00QIyx-0bg_9bg6Ut4b-7gxsqLsxtKFxXFwrnYynzLnaOpGeandg1BckbA/pub?gid=0&single=true&output=csv";
+
+// Function to fetch and parse the CSV data directly from Google Sheets
+async function fetchCarDataFromSheets(): Promise<CarData[]> {
   try {
+    // Add a cache-busting parameter to ensure we get fresh data
+    const cacheBuster = new Date().getTime();
+    const url = `${GOOGLE_SHEETS_URL}&_cb=${cacheBuster}`;
+    
     // Fetch the CSV file
-    const response = await fetch(
-      "https://docs.google.com/spreadsheets/d/e/2PACX-1vQc5Sd7xctNiRi0VSuBBW00QIyx-0bg_9bg6Ut4b-7gxsqLsxtKFxXFwrnYynzLnaOpGeandg1BckbA/pub?gid=0&single=true&output=csv"
-    );
+    const response = await fetch(url);
     
     if (!response.ok) {
       throw new Error(`Failed to fetch CSV data: ${response.statusText}`);
@@ -34,7 +46,6 @@ export async function loadCarData(): Promise<CarData[]> {
     
     // Parse the CSV data
     const rows = csvText.split('\n');
-    const headers = rows[0].split(',');
     
     // Create array of car data objects
     const carData: CarData[] = [];
@@ -54,12 +65,55 @@ export async function loadCarData(): Promise<CarData[]> {
       }
     }
     
-    // Cache the data
-    cachedCarData = carData;
     return carData;
   } catch (error) {
-    console.error("Error loading car data:", error);
-    return [];
+    console.error("Error loading car data from Google Sheets:", error);
+    throw error;
+  }
+}
+
+// Load car data with smart caching (will refresh data if cache expired)
+export async function loadCarData(forceRefresh = false): Promise<CarData[]> {
+  const now = Date.now();
+  const isCacheExpired = (now - carDataCache.timestamp) > CACHE_EXPIRATION;
+  
+  // Use cache if available and not expired, unless force refresh is requested
+  if (carDataCache.data && !isCacheExpired && !forceRefresh) {
+    console.log("Using cached car data");
+    return carDataCache.data;
+  }
+  
+  // Return cached data if currently loading to prevent multiple simultaneous requests
+  if (carDataCache.loading && carDataCache.data) {
+    console.log("Already loading car data, using cached data for now");
+    return carDataCache.data;
+  }
+  
+  try {
+    carDataCache.loading = true;
+    console.log("Fetching fresh car data from Google Sheets");
+    
+    const freshData = await fetchCarDataFromSheets();
+    
+    // Update cache
+    carDataCache = {
+      data: freshData,
+      timestamp: now,
+      loading: false
+    };
+    
+    console.log(`Loaded ${freshData.length} car records from Google Sheets`);
+    return freshData;
+  } catch (error) {
+    carDataCache.loading = false;
+    
+    // If cache exists but refresh failed, return cached data with a warning
+    if (carDataCache.data) {
+      console.warn("Failed to refresh car data, using cached data instead");
+      return carDataCache.data;
+    }
+    
+    throw error;
   }
 }
 

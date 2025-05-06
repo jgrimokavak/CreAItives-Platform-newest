@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,12 +13,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
-import { Car, Loader2 } from "lucide-react";
+import { Car, Loader2, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { GeneratedImage } from "@/types/image";
 import ErrorState from "@/components/ErrorState";
 import ImageCard from "@/components/ImageCard";
-import { getCarMakes, getCarModels, getBodyStyles, getTrims } from "@/lib/carData";
+import { loadCarData, getCarMakes, getCarModels, getBodyStyles, getTrims } from "@/lib/carData";
 
 // Form schema for car creation
 const carFormSchema = z.object({
