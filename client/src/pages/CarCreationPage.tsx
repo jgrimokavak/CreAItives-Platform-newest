@@ -190,9 +190,27 @@ const CarCreationPage: React.FC = () => {
 
   // Refresh car data handler
   const refreshData = () => {
+    toast({
+      title: "Refreshing data",
+      description: "Fetching the latest car data from source...",
+    });
+    
     fetch('/api/cars/refresh', { method: 'POST' })
-      .then(() => fetchMakes())
-      .catch(err => console.error('Error refreshing car data:', err));
+      .then(() => {
+        fetchMakes();
+        toast({
+          title: "Data refreshed",
+          description: "Car data has been updated successfully",
+        });
+      })
+      .catch(err => {
+        console.error('Error refreshing car data:', err);
+        toast({
+          title: "Refresh failed",
+          description: "Failed to refresh car data. Please try again.",
+          variant: "destructive"
+        });
+      });
   };
 
   // Generate car image mutation
@@ -276,10 +294,20 @@ const CarCreationPage: React.FC = () => {
       setImage(data);
       // Invalidate gallery cache to make sure the new image shows up
       queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
+      
+      toast({
+        title: "Image generated",
+        description: "Car image has been generated successfully and saved to your gallery"
+      });
     },
     onError: (error: Error) => {
       console.error('Error generating car image:', error);
       setProgress(null);
+      toast({
+        title: "Generation failed",
+        description: error.message || "Failed to generate car image. Please try again.",
+        variant: "destructive"
+      });
     }
   });
 
@@ -469,7 +497,7 @@ const CarCreationPage: React.FC = () => {
                 <h2 className="text-xl font-bold">Generated Image</h2>
               </div>
               
-              <div key={image.id} className="relative">
+              <div className="relative">
                 <ImageCard
                   image={image}
                   mode="preview"
@@ -513,8 +541,18 @@ const CarCreationPage: React.FC = () => {
                         if (!img.url.startsWith('data:')) {
                           window.URL.revokeObjectURL(url);
                         }
+                        
+                        toast({
+                          title: "Image downloaded",
+                          description: "Car image has been downloaded successfully",
+                        });
                       } catch (error) {
                         console.error('Download error:', error);
+                        toast({
+                          title: "Download failed",
+                          description: "Failed to download the car image",
+                          variant: "destructive",
+                        });
                       }
                     };
                     
