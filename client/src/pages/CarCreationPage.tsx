@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import type { GeneratedImage } from '@/types/image';
 import { Card, CardContent } from '@/components/ui/card';
 import ImageCard from '@/components/ImageCard';
+import { useToast } from '@/hooks/use-toast';
 
 // Car generation form schema
 const carGenerationSchema = z.object({
@@ -32,6 +33,7 @@ const carGenerationSchema = z.object({
 type CarGenerationFormValues = z.infer<typeof carGenerationSchema>;
 
 const CarCreationPage: React.FC = () => {
+  const { toast } = useToast();
   const [makes, setMakes] = useState<string[]>([]);
   const [models, setModels] = useState<string[]>([]);
   const [bodyStyles, setBodyStyles] = useState<string[]>([]);
@@ -463,36 +465,69 @@ const CarCreationPage: React.FC = () => {
         <div>
           {image ? (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold">Generated Car Image</h2>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => {
-                    const link = document.createElement('a');
-                    link.href = image.url;
-                    link.download = `car-${new Date().getTime()}.png`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                  }}
-                >
-                  Download
-                </Button>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold">Generated Image</h2>
               </div>
               
-              <div className="border rounded-lg overflow-hidden shadow-sm">
-                <ImageCard 
-                  image={image} 
-                  mode="preview" 
+              <div key={image.id} className="relative">
+                <ImageCard
+                  image={image}
+                  mode="preview"
                   onDownload={(img) => {
-                    const link = document.createElement('a');
-                    link.href = img.url;
-                    link.download = `car-${new Date().getTime()}.png`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
+                    // Create a function to properly download the image
+                    const downloadImage = async () => {
+                      try {
+                        let url;
+                        
+                        // If the URL is a data URL (base64), use it directly
+                        if (img.url.startsWith('data:')) {
+                          url = img.url;
+                        } else {
+                          // Otherwise, fetch the image from the URL
+                          const response = await fetch(img.url);
+                          const blob = await response.blob();
+                          url = window.URL.createObjectURL(blob);
+                        }
+                        
+                        // Create a download link
+                        const a = document.createElement('a');
+                        a.style.display = 'none';
+                        a.href = url;
+                        
+                        // Create a clean filename from the prompt
+                        const cleanPrompt = img.prompt
+                          .toLowerCase()
+                          .replace(/[^\w\s-]/g, '')    // Remove non-word chars
+                          .replace(/\s+/g, '_')        // Replace spaces with underscores
+                          .replace(/_+/g, '_')         // Replace multiple underscores with single ones
+                          .substring(0, 50);           // Limit length
+                        
+                        // Make sure we have a valid filename
+                        const filename = cleanPrompt || 'car-image';
+                        a.download = `${filename}.png`;
+                        
+                        document.body.appendChild(a);
+                        a.click();
+                        
+                        // Clean up the URL only if it was created from a blob
+                        if (!img.url.startsWith('data:')) {
+                          window.URL.revokeObjectURL(url);
+                        }
+                      } catch (error) {
+                        console.error('Download error:', error);
+                      }
+                    };
+                    
+                    downloadImage();
                   }}
+                  onCopyPrompt={(prompt) => {
+                    navigator.clipboard.writeText(prompt);
+                    toast({
+                      title: "Prompt copied",
+                      description: "Prompt has been copied to clipboard",
+                    });
+                  }}
+                  onClick={() => window.open(image.url, '_blank')}
                 />
               </div>
               
