@@ -22,6 +22,34 @@ import { models } from "./config/models";
 import modelRoutes, { initializeModels } from "./routes/model-routes";
 import upscaleRoutes from "./routes/upscale-routes";
 
+// Helper function to create a file-safe name from prompt text
+function createFileSafeNameFromPrompt(prompt: string, maxLength: number = 50): string {
+  // Remove non-alphanumeric characters and replace spaces with hyphens
+  let safeName = prompt
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')    // Remove non-word chars
+    .replace(/[\s_-]+/g, '-')    // Replace spaces and underscores with hyphens
+    .replace(/^-+|-+$/g, '');    // Remove leading/trailing hyphens
+  
+  // Truncate to maxLength characters
+  if (safeName.length > maxLength) {
+    safeName = safeName.substring(0, maxLength);
+    // Don't cut in the middle of a word if possible
+    if (safeName.lastIndexOf('-') > maxLength - 15) {
+      safeName = safeName.substring(0, safeName.lastIndexOf('-'));
+    }
+  }
+  
+  // Make sure we don't have an empty string (fallback to 'image')
+  if (!safeName) {
+    safeName = 'image';
+  }
+  
+  // Add a timestamp for uniqueness
+  return `${safeName}-${Date.now()}`;
+}
+
 // Fix for __dirname in ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -166,8 +194,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.warn(`Job ${jobId}: No image URL or base64 data found in OpenAI response`);
           }
 
+          // Create ID based on the prompt for better readability
+          const promptBasedId = `img_${createFileSafeNameFromPrompt(prompt)}_${index}`;
+          
           const newImage: GeneratedImage = {
-            id: `img_${Date.now()}_${index}`,
+            id: promptBasedId,
             url: imageUrl,
             fullUrl: fullUrl,
             thumbUrl: thumbUrl,
@@ -455,8 +486,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Use base64 data from response
           const imageUrl = `data:image/png;base64,${image.b64_json}`;
           
+          // Create ID based on the prompt for better readability
+          const promptBasedId = `img_${createFileSafeNameFromPrompt(prompt)}_${index}`;
+          
           const newImage = {
-            id: `img_${Date.now()}_${index}`,
+            id: promptBasedId,
             url: imageUrl,
             prompt: prompt,
             size: size,
