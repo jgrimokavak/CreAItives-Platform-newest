@@ -50,6 +50,11 @@ const CarCreationPage: React.FC = () => {
   const [image, setImage] = useState<GeneratedImage | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   
+  // Batch mode state
+  const [carCreationMode, setCarCreationMode] = useState<"single" | "batch">("single");
+  const [batchJobId, setBatchJobId] = useState<string | null>(null);
+  const [isUploadingBatch, setIsUploadingBatch] = useState<boolean>(false);
+  
   // Generate years from 1990 to current year
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: currentYear - 1990 + 1 }, (_, i) => String(currentYear - i));
@@ -404,6 +409,54 @@ const CarCreationPage: React.FC = () => {
 
   // Handler functions for image actions
 
+  // Batch CSV upload handler
+  const handleBatchUpload = async (file: File) => {
+    setIsUploadingBatch(true);
+    
+    try {
+      // Create form data for the CSV upload
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      // Send the CSV to the batch endpoint
+      const response = await fetch('/api/car-batch', {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to start batch job');
+      }
+      
+      const data = await response.json();
+      
+      if (data.jobId) {
+        setBatchJobId(data.jobId);
+        toast({
+          title: "Batch job started",
+          description: "Your batch car generation job has started processing",
+        });
+      } else {
+        throw new Error('No job ID returned from server');
+      }
+    } catch (error) {
+      console.error('Batch upload error:', error);
+      toast({
+        title: "Batch upload failed",
+        description: error instanceof Error ? error.message : 'Unknown error starting batch job',
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploadingBatch(false);
+    }
+  };
+  
+  // Reset batch state
+  const resetBatch = () => {
+    setBatchJobId(null);
+  };
+
   // Form submission handler
   const handleGenerate = () => {
     const values = form.getValues();
@@ -427,7 +480,7 @@ const CarCreationPage: React.FC = () => {
         <Button 
           variant="outline" 
           onClick={refreshData}
-          disabled={generateMutation.isPending}
+          disabled={generateMutation.isPending || isUploadingBatch}
           className="flex items-center gap-2"
         >
           <RefreshCw className="h-4 w-4" />
@@ -435,10 +488,21 @@ const CarCreationPage: React.FC = () => {
         </Button>
       </div>
       <p className="text-muted-foreground mb-6">
-        Select a make, model, body style, and customize details like color and year, then click Generate to create your car image.
+        Generate car images one at a time or in batch mode using a CSV file with up to 50 cars.
       </p>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <Tabs 
+        value={carCreationMode} 
+        onValueChange={(value) => setCarCreationMode(value as "single" | "batch")}
+        className="mb-6"
+      >
+        <TabsList className="grid w-full md:w-80 grid-cols-2">
+          <TabsTrigger value="single">Single</TabsTrigger>
+          <TabsTrigger value="batch">Batch</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="single">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Form Section */}
         <div className="space-y-6 bg-card p-6 rounded-lg shadow-sm border">
           <div className="grid grid-cols-2 gap-4">
@@ -692,6 +756,51 @@ const CarCreationPage: React.FC = () => {
           )}
         </div>
       </div>
+        </TabsContent>
+        
+        <TabsContent value="batch">
+          <div className="space-y-8">
+            {batchJobId ? (
+              <BatchProgress 
+                jobId={batchJobId} 
+                onComplete={() => queryClient.invalidateQueries({ queryKey: ['/api/gallery'] })}
+                onReset={resetBatch}
+              />
+            ) : (
+              <div className="bg-card border rounded-lg shadow-sm p-6 max-w-4xl mx-auto">
+                <div className="mb-6">
+                  <h3 className="text-xl font-bold mb-2">Batch Car Generation</h3>
+                  <p className="text-muted-foreground">
+                    Upload a CSV file with car details to generate multiple car images at once. 
+                    The CSV should include columns like make, model, body_style, trim, year, color, background, and aspect_ratio.
+                  </p>
+                </div>
+                
+                <CSVUpload onUpload={handleBatchUpload} isLoading={isUploadingBatch} />
+                
+                <div className="mt-6 bg-slate-50 border border-slate-200 rounded-md p-4">
+                  <h4 className="font-medium mb-2">CSV Format Instructions:</h4>
+                  <ul className="text-sm space-y-1 list-disc list-inside">
+                    <li><strong>make:</strong> The car manufacturer (e.g., "Audi", "Bmw")</li>
+                    <li><strong>model:</strong> The car model (e.g., "Q5", "X5")</li>
+                    <li><strong>body_style:</strong> The car body style (e.g., "SUV", "Sedan")</li>
+                    <li><strong>trim:</strong> Specific trim level (e.g., "Sport", "Premium")</li>
+                    <li><strong>year:</strong> Model year (e.g., "2025", "2024")</li>
+                    <li><strong>color:</strong> Car color (e.g., "silver", "blue", "red")</li>
+                    <li><strong>background:</strong> Either "white" for studio or "hub" for showroom</li>
+                    <li><strong>aspect_ratio:</strong> One of "1:1", "16:9", "9:16", "4:3", "3:4"</li>
+                  </ul>
+                  <p className="text-xs mt-3 text-muted-foreground">
+                    All columns are optional. If a column is missing, the AI will use its default values.
+                    Maximum 50 rows per batch job.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
+      
     </div>
     </>
   );

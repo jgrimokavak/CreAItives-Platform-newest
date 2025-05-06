@@ -55,7 +55,7 @@ const BatchProgress: React.FC<BatchProgressProps> = ({ jobId, onComplete, onRese
         }
         
         // If all images are done or failed, stop polling
-        if (data.done + data.failed >= data.total) {
+        if (data && data.done + data.failed >= data.total) {
           setPolling(false);
         }
       } catch (error) {
@@ -174,7 +174,7 @@ const BatchProgress: React.FC<BatchProgressProps> = ({ jobId, onComplete, onRese
           </Button>
         )}
         
-        {status?.failed > 0 && status.zipUrl && (
+        {status && status.failed > 0 && status.zipUrl && (
           <Button
             variant="outline"
             onClick={() => window.open(`${status.zipUrl?.replace('.zip', '')}/failed_rows.json`, '_blank')}
