@@ -10,11 +10,7 @@ export function setupWebSocket(onMessage: (ev: string, data: any) => void): WebS
     // Create proper WebSocket URL based on environment
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.host;
-    
-    // Ensure we're using the current host and not localhost for WebSocket connection
     const wsUrl = `${protocol}//${host}/ws`;
-    
-    console.log("Connecting to WebSocket at:", wsUrl);
     
     // Create the socket with proper error handling
     let socket: WebSocket;
@@ -51,22 +47,17 @@ export function setupWebSocket(onMessage: (ev: string, data: any) => void): WebS
 
 // Helper function to create a dummy WebSocket object for graceful degradation
 function createDummySocket(): WebSocket {
-  console.log('Using fallback dummy WebSocket - real-time updates disabled');
-  
-  // Create a dummy object that has all WebSocket methods and properties but doesn't actually connect
-  const dummySocket = {
+  return {
     readyState: WebSocket.CLOSED,
     close: () => {},
     onclose: null,
     onerror: null,
     onmessage: null,
     onopen: null,
-    addEventListener: (event: string, listener: any) => {},
-    removeEventListener: (event: string, listener: any) => {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
     dispatchEvent: () => false,
-    send: (data: string) => {
-      console.log('Dummy socket send called - message not sent:', data);
-    },
+    send: () => {},
     binaryType: 'blob',
     bufferedAmount: 0,
     extensions: '',
@@ -77,15 +68,6 @@ function createDummySocket(): WebSocket {
     CLOSING: WebSocket.CLOSING,
     CLOSED: WebSocket.CLOSED
   } as unknown as WebSocket;
-  
-  // Immediately trigger onopen to simulate a successful connection
-  setTimeout(() => {
-    if (dummySocket.onopen) {
-      dummySocket.onopen(new Event('open'));
-    }
-  }, 100);
-  
-  return dummySocket;
 }
 
 /**
