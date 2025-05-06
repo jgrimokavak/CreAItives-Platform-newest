@@ -18,6 +18,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import CarImageCard from '@/components/CarImageCard';
 import ImageModal from '@/components/ImageModal';
 import { useToast } from '@/hooks/use-toast';
+import { useLocation } from 'wouter';
 
 // Car generation form schema
 const carGenerationSchema = z.object({
@@ -35,6 +36,7 @@ type CarGenerationFormValues = z.infer<typeof carGenerationSchema>;
 
 const CarCreationPage: React.FC = () => {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [makes, setMakes] = useState<string[]>([]);
   const [models, setModels] = useState<string[]>([]);
   const [bodyStyles, setBodyStyles] = useState<string[]>([]);
@@ -605,16 +607,16 @@ const CarCreationPage: React.FC = () => {
                   background={form.watch('background')}
                   onEdit={(img) => {
                     // Navigate to edit page with this image
-                    window.location.href = `/edit?image=${img.id}`;
+                    setLocation(`/edit?image=${img.id}`);
                   }}
                   onUpscale={(img) => {
                     // Navigate to upscale page with the image URL
                     const imageUrl = img.fullUrl || img.url;
-                    window.location.href = `/upscale?sourceUrl=${encodeURIComponent(imageUrl)}`;
+                    setLocation(`/upscale?sourceUrl=${encodeURIComponent(imageUrl)}`);
                   }}
                   onDownload={handleDownload}
-                  onCopyPrompt={handleCopyPrompt}
                   onClick={() => setSelectedImage(image.fullUrl || image.url)}
+                  // No copy prompt button on this page
                 />
               </div>
               
