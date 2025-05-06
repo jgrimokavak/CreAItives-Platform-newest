@@ -21,6 +21,8 @@ import { persistImage } from "./fs-storage";
 import { models } from "./config/models";
 import modelRoutes, { initializeModels } from "./routes/model-routes";
 import upscaleRoutes from "./routes/upscale-routes";
+import { listMakes, listModels, listBodyStyles, listTrims, flushCarCache } from "./carData";
+import axios from "axios";
 
 // Helper function to create a file-safe name from prompt text
 export function createFileSafeNameFromPrompt(prompt: string, maxLength: number = 50): string {
@@ -640,6 +642,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Add upscale routes
   app.use('/api', upscaleRoutes);
+  
+  // Car generation routes
+  app.get("/api/cars/makes", async (_req, res) => res.json(await listMakes()));
+  app.get("/api/cars/models", async (req, res) => res.json(await listModels(req.query.make as string)));
+  app.get("/api/cars/bodyStyles", async (req, res) => res.json(await listBodyStyles(req.query.make as string, req.query.model as string)));
+  app.get("/api/cars/trims", async (req, res) => res.json(await listTrims(req.query.make as string, req.query.model as string, req.query.bodyStyle as string)));
+  app.post("/api/cars/refresh", (_req, res) => { flushCarCache(); res.json({ok: true}); });
+  
+  // Car generation endpoint
+  app.post("/api/car-generate", upload.single("dummy"), async (req, res) => {
+    try {
+      const { make, model, body_style, trim, year, color, aspect_ratio="1:1", background="white" } = req.body;
+      
+      const TEMPLATES = {
+        white: `A hyper-realistic photo of a modern {{year}} {{make}} {{model}} {{body_style}} with metallic {{color}} paint ... **pure white backdrop** ...`,
+        hub: `A hyper-realistic photo of a modern {{year}} {{make}} {{model}} {{body_style}} with metallic {{color}} paint ... **matte dark gray floor, white wall** ...`
+      } as const;
+      
+      const template = TEMPLATES[background === "hub" ? "hub" : "white"];
+      
+      const prompt = template
+        .replace("{{year}}", year || "")
+        .replace("{{make}}", make || "")
+        .replace("{{model}}", model || "")
+        .replace("{{body_style}}", body_style || "")
+        .replace("{{color}}", color || "")
+        .replace(/\s+/g, " ").trim();
+      
+      console.log(`Car generation request with prompt: ${prompt}`);
+      
+      // Check if REPLICATE_API_TOKEN is set
+      if (!process.env.REPLICATE_API_TOKEN) {
+        return res.status(500).json({ error: "REPLICATE_API_TOKEN environment variable is not set" });
+      }
+      
+      // Replicate call
+      const response = await axios.post("https://api.replicate.com/v1/predictions", {
+        version: "latest", // replicate will pick latest imagen-3
+        input: {
+          prompt,
+          aspect_ratio,
+          negative_prompt: "",
+          safety_filter_level: "block_only_high"
+        }
+      }, {
+        headers: { 
+          Authorization: `Bearer ${process.env.REPLICATE_API_TOKEN}`, 
+          "Content-Type": "application/json" 
+        }
+      });
+      
+      const pred = response.data;
+      
+      // Use the existing waitForPrediction function from replicate.ts
+      const { waitForPrediction } = await import('./replicate');
+      const final = await waitForPrediction(pred.id);
+      
+      // final.output is a URL; fetch → buffer
+      if (!final.output) {
+        return res.status(500).json({ error: "No output URL returned from Replicate" });
+      }
+      
+      const outputUrl = final.output as string;
+      const imageResponse = await axios.get(outputUrl, { responseType: "arraybuffer" });
+      const imgBuf = imageResponse.data;
+      const b64 = Buffer.from(imgBuf).toString("base64");
+      
+      const image = await persistImage(b64, {
+        prompt,
+        params: { aspect_ratio, background },
+        userId: "demo",
+        sources: []
+      });
+      
+      res.json({ image });
+    } catch (error: any) {
+      console.error("Error generating car image:", error);
+      res.status(500).json({ error: error.message || "Failed to generate car image" });
+    }
+  });
 
   // Create HTTP server
   const httpServer = createServer(app);

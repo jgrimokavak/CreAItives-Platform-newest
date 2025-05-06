@@ -7,7 +7,8 @@ import {
   Trash2, 
   Menu,
   X,
-  ImageUpscale
+  ImageUpscale,
+  CarFront
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -84,6 +85,9 @@ const Sidebar = ({ children }: SidebarProps) => {
           </SidebarLink>
           <SidebarLink to="/trash" icon={<Trash2 size={18} />}>
             Trash
+          </SidebarLink>
+          <SidebarLink to="/car" icon={<CarFront size={18} />}>
+            Car Creation
           </SidebarLink>
         </nav>
       </div>
