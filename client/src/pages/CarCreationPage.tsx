@@ -316,8 +316,16 @@ const CarCreationPage: React.FC = () => {
   // Image download handler
   const handleDownload = async (image: GeneratedImage) => {
     try {
+      if (!image) {
+        throw new Error("No image found to download");
+      }
+
       let url;
       const imageUrl = image.fullUrl || image.url;
+      
+      if (!imageUrl) {
+        throw new Error("Image URL is missing");
+      }
       
       // If the URL is a data URL (base64), use it directly
       if (imageUrl.startsWith('data:')) {
@@ -339,28 +347,30 @@ const CarCreationPage: React.FC = () => {
       a.style.display = "none";
       a.href = url;
       
-      // Create a clean filename from the prompt
-      const cleanPrompt = image.prompt
-        .toLowerCase()
-        .replace(/[^\w\s-]/g, '')    // Remove non-word chars
-        .replace(/\s+/g, '_')         // Replace spaces with underscores
-        .replace(/_+/g, '_')          // Replace multiple underscores with single ones
-        .substring(0, 50);            // Limit length
-      
       // Generate a filename based on the car details
       let filename = 'car-image';
       
-      if (watchMake !== 'None') {
-        filename = `${watchMake}`;
-        if (watchModel !== 'None') {
-          filename += `_${watchModel}`;
+      const carMake = watchMake || '';
+      const carModel = watchModel || '';
+      const carBodyStyle = watchBodyStyle || '';
+      
+      // Only use form values if they are not 'None'
+      if (carMake && carMake !== 'None') {
+        filename = carMake;
+        
+        if (carModel && carModel !== 'None') {
+          filename += `_${carModel}`;
         }
-        if (watchBodyStyle !== 'None') {
-          filename += `_${watchBodyStyle}`;
+        
+        if (carBodyStyle && carBodyStyle !== 'None') {
+          filename += `_${carBodyStyle}`;
         }
-        filename = filename.toLowerCase().replace(/\s+/g, '_');
-      } else if (cleanPrompt) {
-        filename = cleanPrompt;
+        
+        // Clean up the filename
+        filename = filename.toLowerCase()
+          .replace(/[^\w\s-]/g, '')  // Remove non-word chars
+          .replace(/\s+/g, '_')      // Replace spaces with underscores
+          .replace(/_+/g, '_');      // Replace multiple underscores with single ones
       }
       
       a.download = `${filename}.png`;
@@ -385,6 +395,29 @@ const CarCreationPage: React.FC = () => {
         description: "Failed to download the image. Error: " + (error instanceof Error ? error.message : String(error)),
         variant: "destructive"
       });
+    }
+  };
+  
+  // Handle editing an image
+  const handleEdit = (image: GeneratedImage) => {
+    // Navigate to edit page or open edit modal
+    toast({
+      title: "Edit feature",
+      description: "Editing will be available in a future update"
+    });
+  };
+  
+  // Handle upscaling an image
+  const handleUpscale = (image: GeneratedImage) => {
+    // Navigate to upscale page with the image URL
+    const imageUrl = image.fullUrl || image.url;
+    if (imageUrl) {
+      toast({
+        title: "Upscale feature",
+        description: "Upscaling will be available in a future update"
+      });
+      // This would navigate to the upscale page in a real implementation
+      // navigate(`/upscale?sourceUrl=${encodeURIComponent(imageUrl)}`);
     }
   };
 
@@ -599,6 +632,8 @@ const CarCreationPage: React.FC = () => {
                   year={form.watch('year')}
                   color={form.watch('color')}
                   background={form.watch('background')}
+                  onEdit={handleEdit}
+                  onUpscale={handleUpscale}
                   onDownload={handleDownload}
                   onCopyPrompt={handleCopyPrompt}
                   onClick={() => setSelectedImage(image.fullUrl || image.url)}
