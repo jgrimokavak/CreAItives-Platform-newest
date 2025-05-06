@@ -144,7 +144,7 @@ export default function UpscalePage() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold mb-2">Upscale Image</h1>
         <p className="text-accent">
-          Enhance image resolution and quality using Topaz Labs Image Upscale AI technology
+          Enhance image resolution and quality using Upscale AI technology
         </p>
       </div>
 
@@ -152,9 +152,8 @@ export default function UpscalePage() {
         <Info className="h-4 w-4" />
         <AlertTitle>How This Works</AlertTitle>
         <AlertDescription>
-          Upload any image to enhance its quality and increase its resolution using advanced AI. 
-          Choose the enhancement model that best suits your image type, set the upscale factor, 
-          and toggle face enhancement for images with people. The process typically takes up to a minute.
+          Upload any image to enhance quality and resolution using AI. Select a model, 
+          set upscale factor, and enable face enhancement if needed. Process takes about a minute.
         </AlertDescription>
       </Alert>
 
@@ -164,7 +163,7 @@ export default function UpscalePage() {
           <CardHeader>
             <CardTitle>Source Image</CardTitle>
             <CardDescription>
-              Select an image file to upscale using Topaz Labs Image Upscale AI
+              Select an image file to upscale
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -190,7 +189,7 @@ export default function UpscalePage() {
               {/* Parameters from schema */}
               <div className="space-y-4 mt-4 border-t pt-4">
                 <div className="space-y-2">
-                  <Label htmlFor="enhance-model">Enhancement Model</Label>
+                  <Label htmlFor="enhance-model">Upscale Model</Label>
                   <Select 
                     value={enhanceModel} 
                     onValueChange={setEnhanceModel}
@@ -200,14 +199,15 @@ export default function UpscalePage() {
                       <SelectValue placeholder="Select a model" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Standard V2">Standard V2 (General Purpose)</SelectItem>
-                      <SelectItem value="High Fidelity V2">High Fidelity V2 (Preserves Details)</SelectItem>
-                      <SelectItem value="Text Refine">Text Refine (Optimized for Text)</SelectItem>
+                      <SelectItem value="Standard V2">Universal Enhancer (General Purpose)</SelectItem>
+                      <SelectItem value="High Fidelity V2">Detail Master (Preserves Details)</SelectItem>
+                      <SelectItem value="Text Refine">Text Wizard (Optimized for Text)</SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">
-                    Choose the model that best matches your image content. Standard V2 works well for most images,
-                    High Fidelity preserves original details, and Text Refine optimizes text clarity.
+                    {enhanceModel === "Standard V2" && "Universal Enhancer works well for most images with balanced enhancement. Great for photos, art, and general images."}
+                    {enhanceModel === "High Fidelity V2" && "Detail Master preserves fine texture and important details in your images while minimizing artifacts. Best choice for detailed photos and art."}
+                    {enhanceModel === "Text Refine" && "Text Wizard specializes in making text sharp and legible in documents, screenshots, and images containing writing."}
                   </p>
                 </div>
                 
