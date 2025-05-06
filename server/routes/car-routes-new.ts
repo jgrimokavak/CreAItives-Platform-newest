@@ -9,23 +9,80 @@ import { z } from 'zod';
 
 const router = Router();
 
+/**
+ * Generates a car description based on provided parameters
+ * Handles cases where some parameters might be empty
+ */
+function generateCarDescription(params: {
+  year?: number;
+  make?: string;
+  model?: string;
+  body_style?: string;
+  trim?: string;
+  color?: string;
+}): string {
+  const { year, make, model, body_style, trim, color } = params;
+  
+  // Build description parts, only including fields that have values
+  const parts: string[] = [];
+  
+  // Add year if provided
+  if (year) {
+    parts.push(`${year}`);
+  }
+  
+  // Add make if provided
+  if (make && make !== "None") {
+    parts.push(make);
+  }
+  
+  // Add model if provided
+  if (model && model !== "None") {
+    parts.push(model);
+  }
+  
+  // Add body style if provided
+  if (body_style && body_style !== "None") {
+    parts.push(body_style);
+  }
+  
+  // Add trim if provided
+  if (trim && trim !== "None") {
+    parts.push(trim);
+  }
+  
+  // Final description
+  const description = parts.length > 0 ? parts.join(" ") : "modern car";
+  
+  // Add color description
+  const colorDesc = (color && color !== "None") ? `with metallic ${color} paint` : "with metallic paint";
+  
+  return `${description} ${colorDesc}`;
+}
+
 // Prompt templates for car image generation
 const PROMPTS = {
-  white: `A hyper-realistic photo of a modern {{year}} {{make}} {{model}} {{body_style}} {{trim}} with metallic {{color}} paint, parked indoors in a photography studio under cool artificial lighting. The front of the car is positioned at a 35-degree angle from the camera, facing slightly to the left, clearly showing both front headlights and the right side of the vehicle. The headlights are turned on. The side windows are fully tinted with black film. The car is placed on a seamless pure white background that extends infinitely in all directions.`,
+  white: (params: any) => {
+    const carDescription = generateCarDescription(params);
+    return `A hyper-realistic photo of a ${carDescription}, parked indoors in a photography studio under cool artificial lighting. The front of the car is positioned at a 35-degree angle from the camera, facing slightly to the left, clearly showing both front headlights and the right side of the vehicle. The headlights are turned on. The side windows are fully tinted with black film. The car is placed on a seamless pure white background that extends infinitely in all directions.`;
+  },
   
-  hub: `A hyper-realistic photo of a modern {{year}} {{make}} {{model}} {{body_style}} {{trim}} with metallic {{color}} paint, parked indoors in a photography studio under cool artificial lighting. The front of the car is positioned at a 35-degree angle from the camera, facing slightly to the left, clearly showing both front headlights and the right side of the vehicle. The headlights are turned on. The side windows are fully tinted with black film. The floor is matte dark gray, smooth and subtle. The backdrop is a soft gradient from dark gray to black.`
+  hub: (params: any) => {
+    const carDescription = generateCarDescription(params);
+    return `A hyper-realistic photo of a ${carDescription}, parked indoors in a photography studio under cool artificial lighting. The front of the car is positioned at a 35-degree angle from the camera, facing slightly to the left, clearly showing both front headlights and the right side of the vehicle. The headlights are turned on. The side windows are fully tinted with black film. The floor is matte dark gray, smooth and subtle. The backdrop is a soft gradient from dark gray to black.`;
+  }
 };
 
 // Car generation schema
 const carGenerateSchema = z.object({
-  make: z.string().min(1, "Car make is required"),
-  model: z.string().min(1, "Car model is required"),
-  body_style: z.string().min(1, "Body style is required"),
-  trim: z.string().min(1, "Trim is required"),
-  year: z.number().int().min(1990).max(2025),
-  color: z.string().min(1, "Color is required"),
-  aspect_ratio: z.enum(["1:1", "16:9", "9:16", "3:4", "4:3"]),
-  bg: z.enum(["white", "hub"])
+  make: z.string().optional().default(""),
+  model: z.string().optional().default(""),
+  body_style: z.string().optional().default(""),
+  trim: z.string().optional().default(""),
+  year: z.number().int().min(1990).max(2025).optional(),
+  color: z.string().optional().default(""),
+  aspect_ratio: z.enum(["1:1", "16:9", "9:16", "3:4", "4:3"]).optional().default("16:9"),
+  bg: z.enum(["white", "hub"]).optional().default("white")
 });
 
 // Car image generation endpoint
@@ -42,8 +99,8 @@ router.post('/generate', async (req, res) => {
     
     const { make, model, body_style, trim, year, color, aspect_ratio, bg } = validationResult.data;
     
-    // Render the prompt template
-    const prompt = Mustache.render(PROMPTS[bg], {
+    // Generate the prompt using our template functions
+    const prompt = PROMPTS[bg]({
       year, 
       make, 
       model, 

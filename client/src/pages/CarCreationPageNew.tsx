@@ -22,18 +22,19 @@ import { loadCarData, getCarMakes, getCarModels, getBodyStyles, getTrims } from 
 
 // Form schema for car creation
 const carFormSchema = z.object({
-  make: z.string().min(1, "Car make is required"),
-  model: z.string().min(1, "Car model is required"),
-  body_style: z.string().min(1, "Body style is required"),
-  trim: z.string().min(1, "Trim is required"),
+  make: z.string().optional().default(""),
+  model: z.string().optional().default(""),
+  body_style: z.string().optional().default(""),
+  trim: z.string().optional().default(""),
   year: z.coerce
     .number()
     .int()
     .min(1990, "Year must be 1990 or later")
-    .max(2025, "Year must be 2025 or earlier"),
-  color: z.string().min(1, "Color is required"),
-  aspect_ratio: z.enum(["1:1", "16:9", "9:16", "3:4", "4:3"]),
-  bg: z.enum(["white", "hub"])
+    .max(2025, "Year must be 2025 or earlier")
+    .optional(),
+  color: z.string().optional().default(""),
+  aspect_ratio: z.enum(["1:1", "16:9", "9:16", "3:4", "4:3"]).optional().default("16:9"),
+  bg: z.enum(["white", "hub"]).optional().default("white")
 });
 
 type CarFormValues = z.infer<typeof carFormSchema>;
@@ -349,6 +350,7 @@ export default function CarCreationPageNew() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
+                              <SelectItem value="None">None</SelectItem>
                               {makes.map((make) => (
                                 <SelectItem key={make} value={make}>
                                   {make}
@@ -376,7 +378,7 @@ export default function CarCreationPageNew() {
                           <Select 
                             onValueChange={field.onChange} 
                             value={field.value}
-                            disabled={!selectedMake || isLoadingModels || isGenerating}
+                            disabled={isLoadingModels || isGenerating}
                           >
                             <FormControl>
                               <SelectTrigger>
@@ -384,6 +386,7 @@ export default function CarCreationPageNew() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
+                              <SelectItem value="None">None</SelectItem>
                               {models.map((model) => (
                                 <SelectItem key={model} value={model}>
                                   {model}
@@ -414,7 +417,7 @@ export default function CarCreationPageNew() {
                           <Select
                             onValueChange={field.onChange}
                             value={field.value}
-                            disabled={!selectedModel || isLoadingBodyStyles || isGenerating}
+                            disabled={isLoadingBodyStyles || isGenerating}
                           >
                             <FormControl>
                               <SelectTrigger>
@@ -422,6 +425,7 @@ export default function CarCreationPageNew() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
+                              <SelectItem value="None">None</SelectItem>
                               {bodyStyles.map((style) => (
                                 <SelectItem key={style} value={style}>
                                   {style}
@@ -449,7 +453,7 @@ export default function CarCreationPageNew() {
                           <Select
                             onValueChange={field.onChange}
                             value={field.value}
-                            disabled={!selectedBodyStyle || isLoadingTrims || isGenerating}
+                            disabled={isLoadingTrims || isGenerating}
                           >
                             <FormControl>
                               <SelectTrigger>
@@ -457,6 +461,7 @@ export default function CarCreationPageNew() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
+                              <SelectItem value="None">None</SelectItem>
                               {trims.map((trim) => (
                                 <SelectItem key={trim} value={trim}>
                                   {trim}
