@@ -525,7 +525,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
                   console.log(`Search input changed to: "${e.target.value}"`);
                   setSearchInput(e.target.value);
                 }}
-                className="pl-8 h-9 md:w-[200px] lg:w-[300px] border-slate-300 focus:border-primary transition-colors"
+                className="pl-8 pr-8 h-9 md:w-[200px] lg:w-[300px] border-slate-300 focus:border-primary transition-colors"
                 onKeyDown={(e) => {
                   // Process Enter key to trigger search
                   if (e.key === 'Enter') {
@@ -541,7 +541,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
               />
               {searchInput && (
                 <X
-                  className="absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground cursor-pointer hover:text-foreground"
+                  className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground cursor-pointer hover:text-foreground"
                   onClick={clearSearch}
                 />
               )}
