@@ -22,6 +22,7 @@ import { models } from "./config/models";
 import modelRoutes, { initializeModels } from "./routes/model-routes";
 import upscaleRoutes from "./routes/upscale-routes";
 import carRoutes from "./routes/car-routes";
+import carRoutesNew from "./routes/car-routes-new";
 
 // Helper function to create a file-safe name from prompt text
 export function createFileSafeNameFromPrompt(prompt: string, maxLength: number = 50): string {
