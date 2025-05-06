@@ -16,7 +16,7 @@ export type BatchJob = {
   done: number;
   failed: number;
   zipPath?: string;
-  errors: {row: number; reason: string}[];
+  errors: {row: number; reason: string; details?: string}[];
 };
 
 export const jobs = new Map<string, BatchJob>();
@@ -62,37 +62,62 @@ export async function processBatch(id: string, rows: Row[]) {
       // Build prompt from template
       const prompt = buildPrompt(r);
       console.log(`Processing row ${i+1}/${rows.length}: ${prompt.substring(0, 50)}...`);
+      console.log(`Row data:`, JSON.stringify(r));
       
       // Set default aspect ratio if not specified
       const aspect_ratio = r.aspect_ratio || "1:1";
       
       // Create prediction with Replicate
-      const prediction = await createPrediction(imagenModel.version, {
-        prompt, 
-        aspect_ratio, 
-        negative_prompt: "", 
-        safety_filter_level: "block_only_high"
-      });
+      console.log(`Creating prediction with model version: ${imagenModel.version}`);
       
-      // Wait for prediction to complete
-      const result = await waitForPrediction(prediction.id);
-      
-      if (result.status !== 'succeeded' || !result.output) {
-        throw new Error(`Prediction failed: ${result.error || 'Unknown error'}`);
+      try {
+        const prediction = await createPrediction(imagenModel.version, {
+          prompt, 
+          aspect_ratio, 
+          negative_prompt: "", 
+          safety_filter_level: "block_only_high"
+        });
+        
+        console.log(`Prediction created with ID: ${prediction.id}, waiting for result...`);
+        
+        // Wait for prediction to complete
+        const result = await waitForPrediction(prediction.id);
+        console.log(`Prediction result status: ${result.status}`);
+        
+        if (result.status !== 'succeeded') {
+          console.error(`Prediction failed with status: ${result.status}`);
+          console.error(`Error details:`, result.error);
+          throw new Error(`Prediction failed: ${result.error || 'Unknown error'}`);
+        }
+        
+        if (!result.output) {
+          console.error(`No output in prediction result:`, result);
+          throw new Error('Prediction result has no output');
+        }
+        
+        // Download the generated image
+        const outputUrl = result.output as string;
+        console.log(`Downloading image from: ${outputUrl}`);
+        const imgResponse = await axios.get(outputUrl, { responseType: "arraybuffer" });
+        const imgBuf = imgResponse.data;
+        
+        // Save image to temp directory
+        const filename = makeFilename(r, i);
+        fs.writeFileSync(path.join(tmpDir, filename), Buffer.from(imgBuf));
+        console.log(`Saved image as: ${filename}`);
+        job.done++;
+      } catch (predictionError: any) {
+        console.error(`Prediction error for row ${i+1}:`, predictionError);
+        throw predictionError;
       }
-      
-      // Download the generated image
-      const outputUrl = result.output as string;
-      const imgResponse = await axios.get(outputUrl, { responseType: "arraybuffer" });
-      const imgBuf = imgResponse.data;
-      
-      // Save image to temp directory
-      const filename = makeFilename(r, i);
-      fs.writeFileSync(path.join(tmpDir, filename), Buffer.from(imgBuf));
-      job.done++;
     } catch (e: any) {
+      console.error(`Failed to process row ${i+1}:`, e);
       job.failed++;
-      job.errors.push({ row: i+2, reason: e.message?.slice(0, 200) || 'Unknown error' });
+      job.errors.push({ 
+        row: i+2, 
+        reason: e.message?.slice(0, 200) || 'Unknown error',
+        details: JSON.stringify(e)?.slice(0, 500)
+      });
     }
   }
 

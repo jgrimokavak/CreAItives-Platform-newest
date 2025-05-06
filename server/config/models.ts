@@ -24,6 +24,7 @@ export const models: ModelConfig[] = [
     key: "imagen-3",
     provider: "replicate",
     slug: "google/imagen-3",
+    version: "7b810c804e806d0b3a64b074c2f42c9a89914d7b45ebba78b20c5029fba959c0",
     defaults: { 
       safety_filter_level: "block_only_high" 
     },

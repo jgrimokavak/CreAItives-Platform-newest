@@ -134,24 +134,56 @@ export async function waitForPrediction(id: string, timeoutMs = 600000): Promise
   let pollInterval = 1000;
   const maxPollInterval = 5000;
   
-  while (true) {
-    if (Date.now() - startTime > timeoutMs) {
-      throw new Error(`Prediction timed out after ${timeoutMs / 1000} seconds`);
+  try {
+    while (true) {
+      if (Date.now() - startTime > timeoutMs) {
+        throw new Error(`Prediction timed out after ${timeoutMs / 1000} seconds`);
+      }
+      
+      try {
+        prediction = await getPrediction(id);
+      } catch (error) {
+        console.error(`Error fetching prediction status for ID ${id}:`, error);
+        throw new Error(`Failed to get prediction status: ${error instanceof Error ? error.message : String(error)}`);
+      }
+      
+      // Log progress with more details about the prediction
+      console.log(`Prediction ${id} status: ${prediction.status}`);
+      
+      if (prediction.status === 'failed' && prediction.error) {
+        console.error(`Prediction ${id} failed with error:`, prediction.error);
+        throw new Error(`Prediction failed: ${prediction.error}`);
+      }
+      
+      if (prediction.status === 'canceled') {
+        console.error(`Prediction ${id} was canceled`);
+        throw new Error('Prediction was canceled');
+      }
+      
+      if (prediction.status === 'succeeded') {
+        if (!prediction.output) {
+          console.error(`Prediction ${id} succeeded but has no output:`, prediction);
+          throw new Error('Prediction succeeded but has no output');
+        }
+        console.log(`Prediction ${id} succeeded with output:`, 
+          typeof prediction.output === 'string' ? 
+            prediction.output.substring(0, 100) + '...' : 
+            JSON.stringify(prediction.output).substring(0, 100) + '...'
+        );
+        return prediction;
+      }
+      
+      // Exponential backoff with maximum interval
+      pollInterval = Math.min(pollInterval * 1.5, maxPollInterval);
+      
+      console.log(`Waiting for prediction ${id}, status: ${prediction.status} (polling in ${Math.round(pollInterval / 1000)}s)`);
+      
+      // Wait before polling again
+      await new Promise(resolve => setTimeout(resolve, pollInterval));
     }
-    
-    prediction = await getPrediction(id);
-    
-    if (prediction.status === 'succeeded' || prediction.status === 'failed' || prediction.status === 'canceled') {
-      return prediction;
-    }
-    
-    // Exponential backoff with maximum interval
-    pollInterval = Math.min(pollInterval * 1.5, maxPollInterval);
-    
-    // Log progress
-    console.log(`Waiting for prediction ${id}, status: ${prediction.status} (polling in ${Math.round(pollInterval / 1000)}s)`);
-    
-    // Wait before polling again
-    await new Promise(resolve => setTimeout(resolve, pollInterval));
+  } catch (error) {
+    // Add more context to the error
+    console.error(`Error in waitForPrediction for ID ${id}:`, error);
+    throw error;
   }
 }
