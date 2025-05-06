@@ -1,0 +1,186 @@
+
+Batch Car Image Generation – Robust Implementation Guide
+========================================================
+
+**Scope**  
+Extend the existing **Car Creation** page with a **Batch** mode: upload a CSV (≤ 50 rows) and download a ZIP of generated images via Replicate **google/imagen‑3**. Single‑image mode remains unchanged. **Do not modify** `ImageCard`.
+
+Prerequisites
+-------------
+- Add these npm packages:
+  ```
+  npm install multer papaparse p-queue archiver axios
+  ```
+- Ensure environment variables:
+  ```
+  REPLICATE_API_TOKEN=...
+  ```
+- Confirm `/tmp` directory exists and is writable.
+
+CSV specification
+-----------------
+- **Header row**, case‑insensitive.
+- Columns allowed:  
+  `make, model, body_style, trim, year, color, background (white|hub), aspect_ratio (1:1,16:9,9:16,4:3,3:4)`
+- **Max rows:** 50. Reject larger.
+
+Part 1 – Backend setup
+-----------------------
+
+### 1.1 Import & init
+```ts
+import multer from "multer";
+import Papa from "papaparse";
+import PQueue from "p-queue";
+import archiver from "archiver";
+import path from "path";
+import fs from "fs";
+import axios from "axios";
+import crypto from "crypto";
+
+const upload = multer();
+type Row = Partial<Record<"make"|"model"|"body_style"|"trim"|"year"|"color"|"background"|"aspect_ratio", string>>;
+type BatchJob = { id:string; total:number; done:number; failed:number; zipPath?:string; errors:{row:number;reason:string}[]; };
+const jobs = new Map<string,BatchJob>();
+const queue = new PQueue({ concurrency: 3, timeout: 300_000, throwOnTimeout: true });
+```
+
+### 1.2 POST `/api/car-batch`
+```ts
+app.post("/api/car-batch", upload.single("file"), async (req,res)=>{
+  if (!req.file?.buffer) return res.status(400).json({error:"CSV file is required"});
+  const text = req.file.buffer.toString("utf8");
+  const parsed = Papa.parse<Row>(text, {header:true, skipEmptyLines:true});
+  if (parsed.errors.length) return res.status(400).json({error:"Malformed CSV", details: parsed.errors});
+  const rows = parsed.data.slice(0,50);
+  if (!rows.length) return res.status(400).json({error:"No data rows found"});
+  if (parsed.data.length > 50) return res.status(400).json({error:"Row limit exceeded (50 max)"});
+
+  const jobId = crypto.randomUUID();
+  jobs.set(jobId,{id:jobId,total:rows.length,done:0,failed:0,errors:[]});
+  queue.add(() => processBatch(jobId, rows))
+    .catch(err => console.error("Batch job failed:", err));
+  res.status(202).json({jobId});
+});
+```
+
+### 1.3 GET `/api/batch/:id`
+```ts
+app.get("/api/batch/:id", (req,res)=>{
+  const job = jobs.get(req.params.id);
+  if (!job) return res.status(404).json({error:"Job not found"});
+  res.json({
+    total: job.total,
+    done:  job.done,
+    failed: job.failed,
+    percent: Math.round((job.done+job.failed)/job.total*100),
+    zipUrl: job.zipPath? `/downloads/${path.basename(job.zipPath)}` : null
+  });
+});
+```
+
+### 1.4 `processBatch`
+```ts
+async function processBatch(id:string, rows:Row[]) {
+  const tmpDir = path.join("/tmp", `batch_${id}`);
+  fs.mkdirSync(tmpDir, { recursive: true });
+  const job = jobs.get(id)!;
+
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    try {
+      const prompt = buildPrompt(r);
+      const resp = await axios.post("https://api.replicate.com/v1/predictions", {
+        version: "latest", input: { prompt, aspect_ratio: r.aspect_ratio || "1:1", negative_prompt:"", safety_filter_level:"block_only_high" }
+      }, { headers: { Authorization:`Bearer ${process.env.REPLICATE_API_TOKEN}` }});
+      const result = await pollUntilSuccess(resp.data.id);
+      const imgBuf = await axios.get(result.output, { responseType:"arraybuffer" }).then(r=>r.data);
+      const filename = makeFilename(r, i);
+      fs.writeFileSync(path.join(tmpDir, filename), Buffer.from(imgBuf));
+      job.done++;
+    } catch (e:any) {
+      job.failed++;
+      job.errors.push({row: i+2, reason: e.message.slice(0,200)});
+    }
+  }
+
+  // ZIP creation
+  const zipPath = path.join("/tmp", `${id}.zip`);
+  await new Promise((resolve, reject) => {
+    const output = fs.createWriteStream(zipPath);
+    const archive = archiver("zip", { zlib: { level: 9 } });
+    archive.pipe(output);
+    archive.directory(tmpDir, false);
+    if (job.errors.length) {
+      archive.append(JSON.stringify(job.errors, null, 2), { name: "failed_rows.json" });
+    }
+    archive.finalize();
+    output.on("close", resolve);
+    archive.on("error", reject);
+  });
+
+  job.zipPath = zipPath;
+  fs.rmSync(tmpDir, { recursive: true, force: true });
+}
+```
+
+### 1.5 Helpers
+```ts
+function makeFilename(r:Row, idx:number){
+  const parts = ["make","model","year","body_style","trim","background"]
+    .map(k => ((r as any)[k]||"").replace(/\s+/g,"_"))
+    .filter(Boolean);
+  return (parts.join("-") || `car-${idx}`) + ".png";
+}
+function buildPrompt(r:Row){
+  const tpl = (r.background==="hub")? PROMPTS.hub : PROMPTS.white;
+  return tpl.replace(/{{(\w+)}}/g, (_,key)=> (r as any)[key]||"").replace(/\s+/g," ").trim();
+}
+```
+
+### 1.6 Static download & cleanup
+```ts
+app.use("/downloads", express.static("/tmp", { maxAge: "1d" }));
+cron.schedule("0 * * * *", ()=>{
+  fs.readdirSync("/tmp").filter(f=>f.endsWith(".zip")).forEach(f=>{
+    const p = path.join("/tmp", f);
+    if (Date.now() - fs.statSync(p).mtimeMs > 6*3600*1000) fs.unlinkSync(p);
+  });
+});
+```
+
+Part 2 – Front‑end
+------------------
+
+1. **UI toggle**  
+   ```tsx
+   <Tabs items={["Single","Batch"]} value={mode} onChange={setMode}/>
+   ```
+
+2. **CSVUpload component**  
+   - Drop-zone accepting `.csv`, 5MB limit.  
+   - Parse with PapaParse; highlight unknown headers.  
+   - Preview first 10 rows.  
+   - Block > 50 rows.  
+   - **Start Batch** → `multipart/form-data` POST `/api/car-batch`.
+
+3. **BatchProgress component**  
+   - Poll `/api/batch/${jobId}` every 2s.  
+   - Show progress bar, counts, download button when ready.  
+   - Display error count, link to `failed_rows.json`.
+
+4. **Defaults & validation**  
+   - If a column missing, default: `background="white"`, `aspect_ratio="1:1"`.  
+   - Accept empty strings.  
+   - Validate client-side header names and row count.
+
+5. **UX copy**  
+   “Upload CSV (max 50 rows) with columns: make, model, body_style, trim, year, color, background (white/hub), aspect_ratio (1:1,16:9,9:16,4:3,3:4). The batch runs 3 images in parallel. You’ll receive a ZIP when finished. Failed rows recorded in failed_rows.json.”
+
+**Testing**  
+- 3-row CSV → 3 images in ZIP.  
+- 55 rows → reject before submission.  
+- Introduce a bad prompt → recorded in errors.  
+- Failover: network error retries once per row, then marks failed.
+
+**Do not modify** the existing **ImageCard** component or other pages.
