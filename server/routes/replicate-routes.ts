@@ -136,8 +136,13 @@ export async function generateWithReplicate(modelKey: string, inputs: any): Prom
   for (let i = 0; i < imageUrls.length; i++) {
     const remoteUrl = imageUrls[i];
     
-    // Generate a consistent ID for both file storage and database
-    const imageId = `img_${Date.now()}_${i}`;
+    // Import the createFileSafeNameFromPrompt function from routes.ts
+    // Use the imported function to create an ID based on the prompt
+    const { createFileSafeNameFromPrompt } = await import('../routes');
+    
+    // Generate a consistent ID for both file storage and database based on prompt
+    const promptText = inputs.prompt || "Generated image";
+    const imageId = `img_${createFileSafeNameFromPrompt(promptText)}_${i}`;
     
     // Extract size from aspect_ratio if provided
     let width = 1024;

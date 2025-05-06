@@ -23,7 +23,7 @@ import modelRoutes, { initializeModels } from "./routes/model-routes";
 import upscaleRoutes from "./routes/upscale-routes";
 
 // Helper function to create a file-safe name from prompt text
-function createFileSafeNameFromPrompt(prompt: string, maxLength: number = 50): string {
+export function createFileSafeNameFromPrompt(prompt: string, maxLength: number = 50): string {
   // Remove non-alphanumeric characters and replace spaces with hyphens
   let safeName = prompt
     .toLowerCase()
