@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 // Import the local GeneratedImage type used by ImageCard
 import type { GeneratedImage } from '@/types/image';
 import { Card, CardContent } from '@/components/ui/card';
-import ImageCard from '@/components/ImageCard';
+import CarImageCard from '@/components/CarImageCard';
 import ImageModal from '@/components/ImageModal';
 import { useToast } from '@/hooks/use-toast';
 
@@ -569,9 +569,15 @@ const CarCreationPage: React.FC = () => {
               </div>
               
               <div className="relative">
-                <ImageCard
+                <CarImageCard
                   image={image}
-                  mode="preview"
+                  make={watchMake !== 'None' ? watchMake : undefined}
+                  model={watchModel !== 'None' ? watchModel : undefined}
+                  bodyStyle={watchBodyStyle !== 'None' ? watchBodyStyle : undefined}
+                  trim={form.watch('trim') !== 'None' ? form.watch('trim') : undefined}
+                  year={form.watch('year')}
+                  color={form.watch('color')}
+                  background={form.watch('background')}
                   onDownload={handleDownload}
                   onCopyPrompt={handleCopyPrompt}
                   onClick={() => setSelectedImage(image.fullUrl || image.url)}
