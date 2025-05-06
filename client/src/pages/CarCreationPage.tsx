@@ -43,13 +43,13 @@ const CarCreationPage: React.FC = () => {
   const form = useForm<CarGenerationFormValues>({
     resolver: zodResolver(carGenerationSchema),
     defaultValues: {
-      year: '',
+      year: '2025',  // Set default year to 2025
       aspect_ratio: '1:1',
       make: 'None',
       model: 'None',
       body_style: 'None',
       trim: 'None',
-      color: '',
+      color: 'silver', // Set default color to silver
       background: 'white'
     }
   });
@@ -288,12 +288,23 @@ const CarCreationPage: React.FC = () => {
   };
 
   return (
-    <div className="container max-w-6xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Car Creation</h1>
+    <div className="container max-w-6xl mx-auto py-6">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold">Car Creation</h1>
+        <Button 
+          variant="outline" 
+          onClick={refreshData}
+          disabled={generateMutation.isPending}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Refresh Car Data
+        </Button>
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Form Section */}
-        <div className="space-y-6 bg-white p-6 rounded-lg shadow-sm border">
+        <div className="space-y-6 bg-card p-6 rounded-lg shadow-sm border">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="make">Make</Label>

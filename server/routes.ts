@@ -698,9 +698,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ error: "REPLICATE_API_TOKEN environment variable is not set" });
       }
       
-      // Replicate call
+      // Get the Imagen-3 model from the configured models
+      const imagenModel = models.find(m => m.key === 'imagen-3');
+      if (!imagenModel || !imagenModel.version) {
+        return res.status(500).json({ error: "Imagen-3 model not properly initialized" });
+      }
+      
+      console.log(`Using Replicate model: google/imagen-3 version: ${imagenModel.version}`);
+      
+      // Replicate call with specific version
       const response = await axios.post("https://api.replicate.com/v1/predictions", {
-        version: "latest", // replicate will pick latest imagen-3
+        version: imagenModel.version,
         input: {
           prompt,
           aspect_ratio,
