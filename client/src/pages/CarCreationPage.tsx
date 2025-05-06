@@ -47,12 +47,16 @@ const CarCreationPage: React.FC = () => {
   const [progress, setProgress] = useState<number | null>(null);
   const [image, setImage] = useState<GeneratedImage | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  
+  // Generate years from 1990 to current year
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: currentYear - 1990 + 1 }, (_, i) => String(currentYear - i));
 
   const form = useForm<CarGenerationFormValues>({
     resolver: zodResolver(carGenerationSchema),
     defaultValues: {
       year: '2025',  // Set default year to 2025
-      aspect_ratio: '1:1',
+      aspect_ratio: '4:3',  // Changed default to 4:3
       make: 'None',
       model: 'None',
       body_style: 'None',
@@ -506,23 +510,51 @@ const CarCreationPage: React.FC = () => {
             
             <div className="space-y-2">
               <Label htmlFor="year">Year</Label>
-              <Input
-                id="year"
-                type="number"
-                min={1990}
-                max={2025}
-                placeholder="e.g. 2023"
-                {...form.register('year')}
-              />
+              <Select
+                value={form.watch('year')}
+                onValueChange={(value) => setValue('year', value)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select year" />
+                </SelectTrigger>
+                <SelectContent>
+                  {years.map((year) => (
+                    <SelectItem key={year} value={year}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="color">Color</Label>
-              <Input
-                id="color"
-                placeholder="e.g. red"
-                {...form.register('color')}
-              />
+              <Select
+                value={form.watch('color')}
+                onValueChange={(value) => setValue('color', value)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select color" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="silver">Silver</SelectItem>
+                  <SelectItem value="black">Black</SelectItem>
+                  <SelectItem value="white">White</SelectItem>
+                  <SelectItem value="red">Red</SelectItem>
+                  <SelectItem value="blue">Blue</SelectItem>
+                  <SelectItem value="green">Green</SelectItem>
+                  <SelectItem value="yellow">Yellow</SelectItem>
+                  <SelectItem value="orange">Orange</SelectItem>
+                  <SelectItem value="gray">Gray</SelectItem>
+                  <SelectItem value="brown">Brown</SelectItem>
+                  <SelectItem value="burgundy">Burgundy</SelectItem>
+                  <SelectItem value="navy blue">Navy Blue</SelectItem>
+                  <SelectItem value="gold">Gold</SelectItem>
+                  <SelectItem value="bronze">Bronze</SelectItem>
+                  <SelectItem value="pearl white">Pearl White</SelectItem>
+                  <SelectItem value="metallic blue">Metallic Blue</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             
             <div className="space-y-2">
