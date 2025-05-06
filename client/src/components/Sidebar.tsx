@@ -6,9 +6,9 @@ import {
   Images, 
   Trash2, 
   Menu,
-  X,
-  ZoomIn
+  X
 } from 'lucide-react';
+import ImageUpscale from './icons/ImageUpscale';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface SidebarLinkProps {
@@ -79,7 +79,7 @@ const Sidebar = ({ children }: SidebarProps) => {
           <SidebarLink to="/gallery" icon={<Images size={18} />}>
             Gallery
           </SidebarLink>
-          <SidebarLink to="/upscale" icon={<ZoomIn size={18} />}>
+          <SidebarLink to="/upscale" icon={<ImageUpscale size={18} />}>
             Upscale
           </SidebarLink>
           <SidebarLink to="/trash" icon={<Trash2 size={18} />}>
