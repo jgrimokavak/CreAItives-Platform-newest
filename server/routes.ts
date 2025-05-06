@@ -677,8 +677,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { make, model, body_style, trim, year, color, aspect_ratio="1:1", background="white" } = req.body;
       
       const TEMPLATES = {
-        white: `A hyper-realistic photo of a modern {{year}} {{make}} {{model}} {{body_style}} with metallic {{color}} paint ... **pure white backdrop** ...`,
-        hub: `A hyper-realistic photo of a modern {{year}} {{make}} {{model}} {{body_style}} with metallic {{color}} paint ... **matte dark gray floor, white wall** ...`
+        white: `A hyper-realistic photo of a modern {{year}} {{make}} {{model}} {{body_style}} with metallic {{color}} paint, parked indoors in a photography studio under cool artificial lighting. The front of the car is positioned at a 35-degree angle from the camera, facing slightly to the left, clearly showing both front headlights and the right side of the vehicle. The headlights are turned on. The side windows are fully tinted with black film. The car is placed on a seamless pure white backdrop with soft, even studio lighting that eliminates harsh shadows.`,
+        hub: `A hyper-realistic photo of a modern {{year}} {{make}} {{model}} {{body_style}} with metallic {{color}} paint, parked indoors in a photography studio under cool artificial lighting. The front of the car is positioned at a 35-degree angle from the camera, facing slightly to the left, clearly showing both front headlights and the right side of the vehicle. The headlights are turned on. The side windows are fully tinted with black film. The floor is matte dark gray and the backdrop is a clean white wall, creating a professional automotive showroom appearance.`
       } as const;
       
       const template = TEMPLATES[background === "hub" ? "hub" : "white"];

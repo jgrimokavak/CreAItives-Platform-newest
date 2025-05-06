@@ -1,0 +1,13 @@
+the prompts are being sent like 
+
+hub:
+"A hyper-realistic photo of a modern 2025 Honda CR-V SUV with metallic silver paint ... **matte dark gray floor, white wall** ..."
+
+white background:
+"A hyper-realistic photo of a modern 2025 Honda CR-V SUV with metallic silver paint ... **pure white backdrop** ..."
+
+when they should be 
+
+ "HUB background": A hyper-realistic photo of a modern  {{year}} {{make}} {{model}} {{body_style}} with metallic {{color}} paint, parked indoors in a photography studio under cool artificial lighting. The front of the car is positioned at a 35-degree angle from the camera, facing slightly to the left, clearly showing both front headlights and the right side of the vehicle. The headlights are turned on. The side windows are fully tinted with black film. The floor is matte dark gray, smooth and clean, with no visible marks, and has a circular shape. The background wall is completely white and uniform, with no decorative elements or visible textures, providing a clean and neutral backdrop that highlights the car. The lighting is soft and even, casting subtle shadows on the floor that emphasize the vehicle's contours and details. The image has professional quality similar to an official dealership promotional photo, no license plate, blank license plate.
+
+-"White background": A hyper-realistic photo of a modern {{year}} {{make}} {{model}} {{body_style}} with metallic {{color}} paint, parked indoors in a photography studio under cool artificial lighting. The front of the car is positioned at a 35-degree angle from the camera, facing slightly to the left, clearly showing both front headlights and the right side of the vehicle. The headlights are turned on. The side windows are fully tinted with black film. The car is placed on a seamless pure white backdrop that extends from the floor to the wall, creating a smooth and continuous surface with no visible edges, textures, or marks. The lighting is soft and even, casting subtle shadows that emphasize the vehicle's contours and details. The image has professional quality but is low resolution, as if it had been compressed—similar to an official dealership promotional photo. ultra-realistic lighting, 8k, no license plate, blank license plate.
