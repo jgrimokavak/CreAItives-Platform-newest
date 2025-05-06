@@ -263,7 +263,12 @@ export default function CarCreationPageNew() {
   });
 
   // Form submission handler
-  const onSubmit = async (values: CarFormValues) => {
+  const onSubmit = async (values: CarFormValues, e?: React.BaseSyntheticEvent) => {
+    // Prevent default form submission which causes page reload
+    if (e) {
+      e.preventDefault();
+    }
+    
     setIsGenerating(true);
     setError(null);
     generateMutation.mutate(values);
@@ -330,7 +335,7 @@ export default function CarCreationPageNew() {
             {/* Form section */}
             <div>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <div className="space-y-4">
                   {/* Make and Model */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
@@ -578,9 +583,18 @@ export default function CarCreationPageNew() {
 
                   {/* Submit Button */}
                   <Button
-                    type="submit"
+                    type="button"
                     className="w-full mt-6"
                     disabled={isGenerating}
+                    onClick={() => {
+                      // Get current form values directly
+                      const values = form.getValues();
+                      
+                      // Process form values
+                      setIsGenerating(true);
+                      setError(null);
+                      generateMutation.mutate(values);
+                    }}
                   >
                     {isGenerating ? (
                       <>
@@ -591,7 +605,7 @@ export default function CarCreationPageNew() {
                       <>Generate Car Image</>
                     )}
                   </Button>
-                </form>
+                </div>
               </Form>
             </div>
 
