@@ -21,6 +21,7 @@ import { persistImage } from "./fs-storage";
 import { models } from "./config/models";
 import modelRoutes, { initializeModels } from "./routes/model-routes";
 import upscaleRoutes from "./routes/upscale-routes";
+import carRoutes from "./routes/car-routes";
 
 // Helper function to create a file-safe name from prompt text
 export function createFileSafeNameFromPrompt(prompt: string, maxLength: number = 50): string {
@@ -640,6 +641,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Add upscale routes
   app.use('/api', upscaleRoutes);
+  
+  // Add car routes
+  app.use('/api/cars', carRoutes);
 
   // Create HTTP server
   const httpServer = createServer(app);

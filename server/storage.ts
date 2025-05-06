@@ -449,6 +449,44 @@ export class DatabaseStorage implements IStorage {
       });
     }
   }
+
+  // Car-related methods implementation
+  async getAllCarMakes(): Promise<CarMake[]> {
+    return await db.select().from(carMakes).orderBy(carMakes.name);
+  }
+  
+  async getCarMakeById(id: string): Promise<CarMake | undefined> {
+    const [make] = await db.select().from(carMakes).where(eq(carMakes.id, id));
+    return make;
+  }
+  
+  async getCarModelsByMakeId(makeId: string): Promise<CarModel[]> {
+    return await db.select().from(carModels)
+      .where(eq(carModels.makeId, makeId))
+      .orderBy(carModels.name);
+  }
+  
+  async getCarModelById(id: string): Promise<CarModel | undefined> {
+    const [model] = await db.select().from(carModels).where(eq(carModels.id, id));
+    return model;
+  }
+  
+  async createCarMake(make: InsertCarMake): Promise<CarMake> {
+    const [newMake] = await db.insert(carMakes).values(make).returning();
+    return newMake;
+  }
+  
+  async createCarModel(model: InsertCarModel): Promise<CarModel> {
+    const [newModel] = await db.insert(carModels).values(model).returning();
+    return newModel;
+  }
+  
+  async clearCarData(): Promise<void> {
+    // First delete all models (due to foreign key constraints)
+    await db.delete(carModels);
+    // Then delete all makes
+    await db.delete(carMakes);
+  }
 }
 
 // Create database storage instance
