@@ -339,28 +339,32 @@ const CarCreationPage: React.FC = () => {
       a.style.display = "none";
       a.href = url;
       
-      // Create a clean filename from the prompt
-      const cleanPrompt = image.prompt
-        .toLowerCase()
-        .replace(/[^\w\s-]/g, '')    // Remove non-word chars
-        .replace(/\s+/g, '_')         // Replace spaces with underscores
-        .replace(/_+/g, '_')          // Replace multiple underscores with single ones
-        .substring(0, 50);            // Limit length
-      
-      // Generate a filename based on the car details
+      // Generate a safe filename, handling the case where prompt might be undefined
       let filename = 'car-image';
       
-      if (watchMake !== 'None') {
+      // First try to use car details for the filename
+      if (watchMake && watchMake !== 'None') {
         filename = `${watchMake}`;
-        if (watchModel !== 'None') {
+        if (watchModel && watchModel !== 'None') {
           filename += `_${watchModel}`;
         }
-        if (watchBodyStyle !== 'None') {
+        if (watchBodyStyle && watchBodyStyle !== 'None') {
           filename += `_${watchBodyStyle}`;
         }
-        filename = filename.toLowerCase().replace(/\s+/g, '_');
-      } else if (cleanPrompt) {
-        filename = cleanPrompt;
+        filename = filename.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '_').replace(/_+/g, '_');
+      } 
+      // If no car details or as a fallback, use prompt if available
+      else if (image.prompt) {
+        const cleanPrompt = image.prompt
+          .toLowerCase()
+          .replace(/[^\w\s-]/g, '')    // Remove non-word chars
+          .replace(/\s+/g, '_')         // Replace spaces with underscores
+          .replace(/_+/g, '_')          // Replace multiple underscores with single ones
+          .substring(0, 50);            // Limit length
+        
+        if (cleanPrompt) {
+          filename = cleanPrompt;
+        }
       }
       
       a.download = `${filename}.png`;
@@ -599,6 +603,15 @@ const CarCreationPage: React.FC = () => {
                   year={form.watch('year')}
                   color={form.watch('color')}
                   background={form.watch('background')}
+                  onEdit={(img) => {
+                    // Navigate to edit page with this image
+                    window.location.href = `/edit?image=${img.id}`;
+                  }}
+                  onUpscale={(img) => {
+                    // Navigate to upscale page with the image URL
+                    const imageUrl = img.fullUrl || img.url;
+                    window.location.href = `/upscale?sourceUrl=${encodeURIComponent(imageUrl)}`;
+                  }}
                   onDownload={handleDownload}
                   onCopyPrompt={handleCopyPrompt}
                   onClick={() => setSelectedImage(image.fullUrl || image.url)}

@@ -1,0 +1,30 @@
+still not working. also, remember there should be "edit, upscale, download, copy prompt" buttons. here is the console error when trying to download: "client:536 WebSocket connection to 'wss://5389eaac-d777-4888-8fb4-93a6c9d84b94-00-k06p3jmm6w9s.riker.replit.dev/?token=tH9eUAak3U0n' failed: 
+setupWebSocket @ client:536
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=tH9eUAak3U0n' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+chunk-WERSD76P.js?v=0cab1387:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+websocket.ts:25 WebSocket connected
+CarCreationPage.tsx:382 Download error: TypeError: Cannot read properties of undefined (reading 'toLowerCase')
+    at handleDownload (CarCreationPage.tsx:344:10)
+handleDownload @ CarCreationPage.tsx:382
+await in handleDownload
+handleDownload @ CarImageCard.tsx:52
+overrideProps.<computed> @ chunk-5S42QOQO.js?v=0cab1387:115
+callCallback2 @ chunk-WERSD76P.js?v=0cab1387:3674
+invokeGuardedCallbackDev @ chunk-WERSD76P.js?v=0cab1387:3699
+invokeGuardedCallback @ chunk-WERSD76P.js?v=0cab1387:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-WERSD76P.js?v=0cab1387:3736
+executeDispatch @ chunk-WERSD76P.js?v=0cab1387:7014
+processDispatchQueueItemsInOrder @ chunk-WERSD76P.js?v=0cab1387:7034
+processDispatchQueue @ chunk-WERSD76P.js?v=0cab1387:7043
+dispatchEventsForPlugins @ chunk-WERSD76P.js?v=0cab1387:7051
+(anonymous) @ chunk-WERSD76P.js?v=0cab1387:7174
+batchedUpdates$1 @ chunk-WERSD76P.js?v=0cab1387:18913
+batchedUpdates @ chunk-WERSD76P.js?v=0cab1387:3579
+dispatchEventForPluginEventSystem @ chunk-WERSD76P.js?v=0cab1387:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-WERSD76P.js?v=0cab1387:5478
+dispatchEvent @ chunk-WERSD76P.js?v=0cab1387:5472
+dispatchDiscreteEvent @ chunk-WERSD76P.js?v=0cab1387:5449
+"
