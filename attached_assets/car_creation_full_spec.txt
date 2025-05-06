@@ -1,0 +1,207 @@
+
+🚀 Add “Car Creation” feature (from scratch)
+===========================================
+
+**Context:** Existing site already has Create, Edit, Upscale, Gallery pages—
+leave those untouched. ImageCard component must NOT be modified.
+
+Feature summary
+---------------
+A new **Car Creation** page that lets the user generate dealership‐style car
+renders via Replicate **google/imagen‑3**. All car metadata is loaded from a
+Google Sheets CSV. The user picks any subset of attributes; the backend builds
+a fixed prompt template (“White background” or “HUB background”) and generates
+one image, which is then saved to the Gallery.
+
+Environment variables
+---------------------
+```
+REPLICATE_API_TOKEN=xxxxxxxx
+CAR_SHEET_CSV=https://docs.google.com/spreadsheets/d/<ID>/export?format=csv
+```
+
+CSV columns: `make,model,body_style,trim`
+
+Part 1  Utility: carData.ts (server)
+-----------------------------------
+```ts
+import NodeCache from "node-cache";
+import axios from "axios";
+import Papa from "papaparse";
+
+const cache = new NodeCache({ stdTTL: 300 });   // 5 min
+
+type Row = { make:string; model:string; body_style:string; trim:string };
+
+export async function loadCarData(): Promise<Row[]> {
+  const cached = cache.get<Row[]>("carRows");
+  if (cached) return cached;
+
+  const { data } = await axios.get(process.env.CAR_SHEET_CSV!, { responseType:"text" });
+  const { data: rows } = Papa.parse<Row>(data, { header:true, skipEmptyLines:true });
+  cache.set("carRows", rows as Row[]);
+  return rows as Row[];
+}
+
+export async function listMakes() {
+  const rows = await loadCarData();
+  return [...new Set(rows.map(r=>r.make).filter(Boolean))].sort();
+}
+
+export async function listModels(make:string) {
+  const rows = await loadCarData();
+  return [...new Set(rows.filter(r=>r.make===make).map(r=>r.model).filter(Boolean))].sort();
+}
+
+export async function listBodyStyles(make:string, model:string) {
+  const rows = await loadCarData();
+  return [...new Set(rows.filter(r=>r.make===make && r.model===model).map(r=>r.body_style).filter(Boolean))];
+}
+
+export async function listTrims(make:string, model:string, body_style:string) {
+  const rows = await loadCarData();
+  return [...new Set(rows.filter(r=>r.make===make && r.model===model && r.body_style===body_style).map(r=>r.trim).filter(Boolean))];
+}
+
+export function flushCarCache() { cache.flushAll(); }
+```
+
+Part 2  Server routes
+---------------------
+```ts
+// GET endpoints
+app.get("/api/cars/makes",        async (_req,res)=> res.json(await listMakes()));
+app.get("/api/cars/models",       async (req,res)=> res.json(await listModels(req.query.make as string)));
+app.get("/api/cars/bodyStyles",   async (req,res)=> res.json(await listBodyStyles(req.query.make as string, req.query.model as string)));
+app.get("/api/cars/trims",        async (req,res)=> res.json(await listTrims(req.query.make as string, req.query.model as string, req.query.bodyStyle as string)));
+app.post("/api/cars/refresh",     (_req,res)=> { flushCarCache(); res.json({ok:true}); });
+
+// POST /api/car-generate
+app.post("/api/car-generate", upload.single("dummy"), async (req,res)=>{
+  const { make, model, body_style, trim, year, color, aspect_ratio="1:1", background="white" } = req.body;
+
+  const TEMPLATES = {
+    white: `A hyper-realistic photo of a modern {{year}} {{make}} {{model}} {{body_style}} with metallic {{color}} paint ... **pure white backdrop** ...`,
+    hub:   `A hyper-realistic photo of a modern {{year}} {{make}} {{model}} {{body_style}} with metallic {{color}} paint ... **matte dark gray floor, white wall** ...`
+  } as const;
+
+  const template = TEMPLATES[background === "hub" ? "hub" : "white"];
+
+  const prompt = template
+    .replace("{{year}}",        year  || "")
+    .replace("{{make}}",        make  || "")
+    .replace("{{model}}",       model || "")
+    .replace("{{body_style}}",  body_style || "")
+    .replace("{{color}}",       color || "")
+    .replace(/\s+/g," ").trim();
+
+  // Replicate call
+  const pred = await axios.post("https://api.replicate.com/v1/predictions",{
+    version: "latest",   // replicate will pick latest imagen-3
+    input: {
+      prompt,
+      aspect_ratio,
+      negative_prompt: "",
+      safety_filter_level: "block_only_high"
+    }
+  },{
+    headers:{ Authorization:`Bearer ${process.env.REPLICATE_API_TOKEN}`, "Content-Type":"application/json" }
+  }).then(r=>r.data);
+
+  const final = await pollUntilSuccess(pred.id);   // reuse existing helper
+  // final.output is a URL; fetch → buffer
+  const imgBuf = await axios.get(final.output, {responseType:"arraybuffer"}).then(r=>r.data);
+  const b64 = Buffer.from(imgBuf).toString("base64");
+
+  const image = await persistImage(b64,{
+    prompt,
+    model:"imagen-3-car",
+    params:{ aspect_ratio, background },
+    userId:"demo",
+    sources:[]
+  });
+
+  res.json({ image });
+});
+```
+
+Part 3  Front‑end UI
+--------------------
+
+### 3.1 Sidebar
+```tsx
+<SidebarLink to="/car" icon={<CarFront/>}>Car Creation</SidebarLink>
+```
+
+### 3.2 CarCreationPage.tsx
+```tsx
+const [make,setMake]         = useState<string>("None");
+const [model,setModel]       = useState<string>("None");
+const [body,setBody]         = useState<string>("None");
+const [trim,setTrim]         = useState<string>("None");
+
+useEffect(()=> fetchMakes(), []);
+useEffect(()=> { if (make!=="None") fetchModels(make); }, [make]);
+… // cascades
+
+<Form>
+  <Select label="Make"  options={["None",...makes]}  value={make}  onChange={setMake}/>
+  <Select label="Model" options={["None",...models]} value={model} onChange={setModel}/>
+  <Select label="Body Style" options={["None",...bodyStyles]} … />
+  <Select label="Trim" options={["None",...trims]} … />
+
+  <NumberInput label="Year" min={1990} max={2025}/>
+  <Input label="Color" placeholder="red"/>
+  <Tabs items={["White Studio","HUB"]} value={bg} onChange={setBg}/>
+  <Select label="Aspect Ratio" options={["1:1","16:9","9:16","4:3","3:4"]}/>
+
+  <Button onClick={handleGenerate} disabled={loading}>Generate</Button>
+  <Button variant="ghost" onClick={refreshData}><RefreshCw className="mr-1"/>Refresh car data</Button>
+</Form>
+
+{progress && <ProgressBar value={progress}/>}
+{image && <GeneratedPreview image={image}/>}
+```
+* All fields optional; “None” is sent as empty string.
+
+### 3.3 Data refresh
+```tsx
+const refreshData = ()=> fetch("/api/cars/refresh",{method:"POST"}).then(()=> fetchMakes());
+```
+
+### 3.4 GeneratedPreview
+Reuse existing component from Create tab; Download button available; gallery
+saves automatically via WebSocket.
+
+Part 4  Validation
+------------------
+Client Zod:
+```ts
+z.object({
+  year: z.string().optional(),
+  aspect_ratio: z.enum(["1:1","16:9","9:16","4:3","3:4"]),
+  make: z.string().optional(),
+  model: z.string().optional(),
+  body_style: z.string().optional(),
+  trim: z.string().optional(),
+  color: z.string().optional(),
+  background: z.enum(["white","hub"]).default("white")
+})
+```
+
+Part 5  Testing
+---------------
+* With all fields blank → generates generic modern sedan.  
+* Choose Ford only → prompt fills Ford.  
+* Refresh button pulls new make added in sheet.  
+* Image appears in gallery with prompt string.
+
+**Reminder:** do *not* modify `ImageCard` component.
+
+Deliverables
+------------
+* `server/carData.ts` utility + server routes  
+* `CarCreationPage.tsx` + route `/car`  
+* Updated sidebar  
+* `/api/car-generate` implementation  
+* Poll helper if not existing  
