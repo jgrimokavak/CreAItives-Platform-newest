@@ -33,6 +33,7 @@ export default function UpscalePage() {
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [originalFileName, setOriginalFileName] = useState<string>("image");
   
   // Add parameters from the schema
   const [enhanceModel, setEnhanceModel] = useState<string>("Standard V2"); // Default from schema
@@ -47,6 +48,30 @@ export default function UpscalePage() {
     if (sourceUrl) {
       // If we have a source URL, set it as the preview
       setPreviewUrl(sourceUrl);
+
+      // Try to extract a filename from the URL if possible
+      try {
+        // Get the base name from the URL (everything after the last slash)
+        const urlParts = sourceUrl.split('/');
+        const baseName = urlParts[urlParts.length - 1];
+        
+        // If there's a query string or parameters, remove them
+        const fileNameWithoutParams = baseName.split('?')[0];
+        
+        // Remove the extension
+        const fileName = fileNameWithoutParams.replace(/\.[^/.]+$/, "");
+        
+        // If we have a valid filename (not empty and without strange characters)
+        if (fileName && /^[a-zA-Z0-9_-]+$/.test(fileName)) {
+          setOriginalFileName(fileName);
+        } else {
+          // Use a timestamp as fallback if the URL doesn't contain a valid filename
+          setOriginalFileName(`image-${Date.now()}`);
+        }
+      } catch (err) {
+        console.log("Could not extract filename from URL, using default");
+        setOriginalFileName(`image-${Date.now()}`);
+      }
 
       // Convert the URL to a blob and create a File from it
       fetch(sourceUrl)
@@ -67,6 +92,10 @@ export default function UpscalePage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // Extract the original file name without extension
+    const fileName = file.name.replace(/\.[^/.]+$/, "");
+    setOriginalFileName(fileName);
+    
     setSelectedFile(file);
     setPreviewUrl(URL.createObjectURL(file));
     setOutputUrl(null); // Reset output when a new file is selected
@@ -352,7 +381,10 @@ export default function UpscalePage() {
                       // Create a temporary link element
                       const link = document.createElement('a');
                       link.href = URL.createObjectURL(blob);
-                      link.download = 'upscaled-image.png'; // Set the filename
+                      
+                      // Create the filename with the original name and upscale factor
+                      const cleanFactor = upscaleFactor.replace('x', ''); // Remove 'x' to avoid 4x-x in filename
+                      link.download = `${originalFileName}-${cleanFactor}x-upscale.png`;
                       
                       // Append to the document, click it, and then remove it
                       document.body.appendChild(link);
