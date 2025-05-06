@@ -2,6 +2,12 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
+// Set CAR_SHEET_CSV env variable if not already set
+if (!process.env.CAR_SHEET_CSV) {
+  process.env.CAR_SHEET_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQc5Sd7xctNiRi0VSuBBW00QIyx-0bg_9bg6Ut4b-7gxsqLsxtKFxXFwrnYynzLnaOpGeandg1BckbA/pub?gid=0&single=true&output=csv";
+  console.log("Set CAR_SHEET_CSV environment variable.");
+}
+
 const app = express();
 // Increase request size limit to handle image uploads (50MB)
 app.use(express.json({ limit: '50mb' }));
