@@ -25,12 +25,12 @@ const ImageCard: React.FC<ImageCardProps> = ({
     : (image.thumbUrl || image.url);
   
   // Format the creation date
-  const formattedDate = image.createdAt ? new Date(image.createdAt).toLocaleString() : new Date().toLocaleString();
+  const formattedDate = new Date(image.createdAt).toLocaleString();
   
-  // Create a short preview of the prompt (safely handle missing prompt)
-  const promptPreview = image.prompt && typeof image.prompt === 'string'
-    ? (image.prompt.length > 70 ? `${image.prompt.substring(0, 70)}...` : image.prompt)
-    : "Generated image";
+  // Create a short preview of the prompt
+  const promptPreview = image.prompt.length > 70 
+    ? `${image.prompt.substring(0, 70)}...` 
+    : image.prompt;
   
   return (
     <Card className="overflow-hidden h-full flex flex-col">
@@ -50,7 +50,7 @@ const ImageCard: React.FC<ImageCardProps> = ({
             {promptPreview}
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            Model: {image.model || "Custom"}
+            Model: {image.model}
           </p>
         </CardContent>
       )}
