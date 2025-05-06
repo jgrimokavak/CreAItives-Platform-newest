@@ -43,7 +43,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [showStarredOnly, setShowStarredOnly] = useState(false);
   const [searchInput, setSearchInput] = useState('');
-  const debouncedSearchTerm = useDebounce(searchInput, 500); // 500ms delay
+  const [searchTerm, setSearchTerm] = useState(''); // This will be used for actual searching
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
@@ -53,9 +53,20 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
   // Real data from database
   const [images, setImages] = useState<GalleryImage[]>([]);
   
+  // Handle search submission
+  const handleSearch = () => {
+    setSearchTerm(searchInput.trim());
+  };
+  
+  // Handle search clear
+  const clearSearch = () => {
+    setSearchInput('');
+    setSearchTerm('');
+  };
+  
   // Fetch gallery images
   const fetchImages = async () => {
-    console.log(`fetchImages called with search term: "${debouncedSearchTerm}"`);
+    console.log(`fetchImages called with search term: "${searchTerm}"`);
     setLoading(true);
     setError(null);
     
@@ -63,9 +74,9 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       const params = new URLSearchParams();
       if (showStarredOnly) params.append('starred', 'true');
       if (mode === 'trash') params.append('trash', 'true');
-      if (debouncedSearchTerm && debouncedSearchTerm.trim() !== '') {
-        params.append('q', debouncedSearchTerm.trim()); // Backend expects 'q' parameter
-        console.log(`Added search parameter q=${debouncedSearchTerm.trim()}`);
+      if (searchTerm && searchTerm.trim() !== '') {
+        params.append('q', searchTerm.trim()); // Backend expects 'q' parameter
+        console.log(`Added search parameter q=${searchTerm.trim()}`);
       }
       
       const url = `/api/gallery?${params.toString()}`;
@@ -403,12 +414,12 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
   
   // Separate effect for search term changes
   useEffect(() => {
-    console.log(`Search term changed to: "${debouncedSearchTerm}"`);
+    console.log(`Search term changed to: "${searchTerm}"`);
     
     // Always fetch images when the search term changes
     // This allows showing all images when search is cleared
     fetchImages();
-  }, [debouncedSearchTerm]);
+  }, [searchTerm]);
   
   // Empty state
   if (loading) {
@@ -435,27 +446,36 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       <div className="flex flex-col justify-center items-center h-[70vh] text-center">
         <FolderOpen className="w-16 h-16 text-slate-300 mb-4" />
         <h2 className="text-xl font-semibold mb-2">
-          {mode === 'gallery' 
-            ? showStarredOnly 
-              ? 'No starred images yet' 
-              : 'Your gallery is empty'
-            : 'Trash is empty'
+          {searchTerm 
+            ? 'No results found'
+            : mode === 'gallery' 
+              ? showStarredOnly 
+                ? 'No starred images yet' 
+                : 'Your gallery is empty'
+              : 'Trash is empty'
           }
         </h2>
         <p className="text-slate-500 max-w-md mb-6">
-          {mode === 'gallery' 
-            ? showStarredOnly
-              ? 'Images you star will appear here for quick access'
-              : 'Generate some amazing images to start building your collection'
-            : 'Items you delete will appear here for 30 days before being permanently removed'
+          {searchTerm 
+            ? `No images matching "${searchTerm}" were found`
+            : mode === 'gallery' 
+              ? showStarredOnly
+                ? 'Images you star will appear here for quick access'
+                : 'Generate some amazing images to start building your collection'
+              : 'Items you delete will appear here for 30 days before being permanently removed'
           }
         </p>
-        {mode === 'gallery' && showStarredOnly && (
+        {searchTerm && (
+          <Button onClick={clearSearch} variant="outline" className="mb-2">
+            Clear search
+          </Button>
+        )}
+        {mode === 'gallery' && showStarredOnly && !searchTerm && (
           <Button onClick={() => setShowStarredOnly(false)}>
             View all images
           </Button>
         )}
-        {mode === 'gallery' && !showStarredOnly && (
+        {mode === 'gallery' && !showStarredOnly && !searchTerm && (
           <Button onClick={() => navigate('/')}>
             Create images
           </Button>
@@ -487,40 +507,50 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
           
           {/* Search input */}
           <form 
-            className="relative w-full max-w-xs"
+            className="relative w-full max-w-sm flex items-center gap-2"
             onClick={(e) => e.stopPropagation()} 
             onSubmit={(e) => {
-              e.preventDefault(); // Prevent any form submission
-              console.log('Search form submit prevented');
+              e.preventDefault(); // Prevent default form submission
+              handleSearch(); // Use our custom handler instead
               return false;
             }}
           >
-            <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="search" 
-              placeholder="Search by prompt..."
-              value={searchInput}
-              onChange={(e) => {
-                console.log(`Search input changed to: "${e.target.value}"`);
-                setSearchInput(e.target.value);
-              }}
-              className="pl-8 h-9 md:w-[200px] lg:w-[300px]"
-              onKeyDown={(e) => {
-                // Prevent form submission on Enter key
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  console.log('Enter key press in search prevented default action');
-                  return false;
-                }
-              }}
-            />
-            {searchInput && (
-              <X
-                className="absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground cursor-pointer hover:text-foreground"
-                onClick={() => setSearchInput('')}
+            <div className="relative flex-1">
+              <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="search" 
+                placeholder="Search by prompt..."
+                value={searchInput}
+                onChange={(e) => {
+                  console.log(`Search input changed to: "${e.target.value}"`);
+                  setSearchInput(e.target.value);
+                }}
+                className="pl-8 h-9 md:w-[200px] lg:w-[300px] border-slate-300 focus:border-primary transition-colors"
+                onKeyDown={(e) => {
+                  // Prevent form submission on Enter key
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Enter key press in search prevented default action');
+                    return false;
+                  }
+                }}
               />
-            )}
+              {searchInput && (
+                <X
+                  className="absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground cursor-pointer hover:text-foreground"
+                  onClick={clearSearch}
+                />
+              )}
+            </div>
+            <Button 
+              type="submit" 
+              size="sm"
+              className="h-9"
+              disabled={!searchInput.trim()}
+            >
+              Search
+            </Button>
           </form>
           
           {/* Item count */}
