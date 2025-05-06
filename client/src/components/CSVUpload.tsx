@@ -66,8 +66,11 @@ const CSVUpload: React.FC<CSVUploadProps> = ({ onUpload, isLoading }) => {
   
   // Validate the CSV file
   const validateCSVFile = (file: File) => {
+    console.log(`Validating CSV file: ${file.name}, size: ${file.size} bytes, type: ${file.type}`);
+    
     // Check file type - only allow CSV files
     if (!file.name.toLowerCase().endsWith('.csv')) {
+      console.error(`Invalid file type: ${file.type}, expected CSV`);
       toast({
         title: "Invalid file type",
         description: "Please upload a CSV file with the .csv extension",
@@ -79,6 +82,7 @@ const CSVUpload: React.FC<CSVUploadProps> = ({ onUpload, isLoading }) => {
     // Check file size - 5MB limit
     const MAX_FILE_SIZE = 5 * 1024 * 1024;
     if (file.size > MAX_FILE_SIZE) {
+      console.error(`File too large: ${file.size} bytes, max allowed: ${MAX_FILE_SIZE} bytes`);
       toast({
         title: "File too large",
         description: "CSV file must be less than 5MB",
@@ -87,23 +91,36 @@ const CSVUpload: React.FC<CSVUploadProps> = ({ onUpload, isLoading }) => {
       return;
     }
     
+    console.log(`File passed initial validation, starting CSV parsing...`);
+    
     // Parse and validate the CSV content
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
       complete: (results) => {
+        console.log(`Papa Parse complete - Found ${results.data.length} rows`);
+        console.log(`Headers found:`, results.meta.fields);
+        
+        if (results.errors.length > 0) {
+          console.error(`Papa Parse errors:`, results.errors);
+        }
+        
         const data = results.data as any[];
         const errors: string[] = [];
         const warnings: string[] = [];
         
         // Check if we have data
         if (data.length === 0) {
-          errors.push("CSV file contains no data rows");
+          const error = "CSV file contains no data rows";
+          console.error(error);
+          errors.push(error);
         }
         
         // Check row limit (max 50)
         if (data.length > 50) {
-          errors.push(`CSV contains ${data.length} rows, which exceeds the maximum limit of 50 rows`);
+          const error = `CSV contains ${data.length} rows, which exceeds the maximum limit of 50 rows`;
+          console.error(error);
+          errors.push(error);
         }
         
         // Check for unknown columns
@@ -113,7 +130,9 @@ const CSVUpload: React.FC<CSVUploadProps> = ({ onUpload, isLoading }) => {
         );
         
         if (unknownColumns.length > 0) {
-          warnings.push(`Unknown columns detected: ${unknownColumns.join(', ')}. These will be ignored.`);
+          const warning = `Unknown columns detected: ${unknownColumns.join(', ')}. These will be ignored.`;
+          console.warn(warning);
+          warnings.push(warning);
         }
         
         // Check if we have required columns (at least make and model)
@@ -121,15 +140,22 @@ const CSVUpload: React.FC<CSVUploadProps> = ({ onUpload, isLoading }) => {
         const hasModel = fileColumns.some(col => col.toLowerCase() === 'model');
         
         if (!hasMake) {
-          warnings.push("'make' column not found in CSV. Cars will be generated without make details.");
+          const warning = "'make' column not found in CSV. Cars will be generated without make details.";
+          console.warn(warning);
+          warnings.push(warning);
         }
         
         if (!hasModel) {
-          warnings.push("'model' column not found in CSV. Cars will be generated without model details.");
+          const warning = "'model' column not found in CSV. Cars will be generated without model details.";
+          console.warn(warning);
+          warnings.push(warning);
         }
         
+        // Log sample data for debugging
+        console.log(`Sample data (first row):`, data.length > 0 ? data[0] : 'No data');
+        
         // Set validation result
-        setValidationResult({
+        const validationResult = {
           isValid: errors.length === 0,
           data: data.slice(0, 10), // Preview first 10 rows only
           rowCount: data.length,
@@ -137,16 +163,22 @@ const CSVUpload: React.FC<CSVUploadProps> = ({ onUpload, isLoading }) => {
           warnings,
           hasUnknownColumns: unknownColumns.length > 0,
           unknownColumns
-        });
+        };
+        
+        console.log(`Validation result:`, validationResult);
+        setValidationResult(validationResult);
         
         // Store the file if valid
         if (errors.length === 0) {
+          console.log(`CSV validation successful, storing file for upload`);
           setSelectedFile(file);
         } else {
+          console.error(`CSV validation failed: ${errors.join(', ')}`);
           setSelectedFile(null);
         }
       },
       error: (error) => {
+        console.error(`Papa Parse error:`, error);
         toast({
           title: "CSV parsing error",
           description: error.message,
@@ -161,7 +193,10 @@ const CSVUpload: React.FC<CSVUploadProps> = ({ onUpload, isLoading }) => {
   // Handle upload button click
   const handleUpload = () => {
     if (selectedFile) {
+      console.log(`Initiating upload for file: ${selectedFile.name}, size: ${selectedFile.size} bytes`);
       onUpload(selectedFile);
+    } else {
+      console.error('Upload attempted but no file is selected');
     }
   };
   

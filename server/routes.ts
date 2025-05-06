@@ -682,12 +682,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Batch car image generation endpoint
   app.post("/api/car-batch", upload.single("file"), async (req, res) => {
-    if (!req.file?.buffer) return res.status(400).json({ error: "CSV file is required" });
+    console.log(`Received batch car generation request: ${req.file?.originalname || 'No file'}, size: ${req.file?.size || 0} bytes`);
+    
+    if (!req.file?.buffer) {
+      console.error(`Batch request error: CSV file is required`);
+      return res.status(400).json({ error: "CSV file is required" });
+    }
     
     const text = req.file.buffer.toString("utf8");
+    console.log(`CSV file parsed to text (${text.length} chars), first 100 chars: ${text.substring(0, 100)}...`);
+    
     const parsed = Papa.parse<BatchRow>(text, { header: true, skipEmptyLines: true });
+    console.log(`CSV parsed with ${parsed.data.length} rows and ${parsed.errors.length} errors`);
     
     if (parsed.errors.length) {
+      console.error(`CSV parsing errors:`, parsed.errors);
       return res.status(400).json({ 
         error: "Malformed CSV", 
         details: parsed.errors 
@@ -695,15 +704,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     const rows = parsed.data.slice(0, 50);
+    console.log(`Using first ${rows.length} rows from CSV for batch processing`);
+    
     if (!rows.length) {
+      console.error(`Batch request error: No data rows found in CSV`);
       return res.status(400).json({ error: "No data rows found" });
     }
     
     if (parsed.data.length > 50) {
+      console.warn(`CSV contains ${parsed.data.length} rows, truncating to 50 rows`);
       return res.status(400).json({ error: "Row limit exceeded (50 max)" });
     }
     
     const jobId = crypto.randomUUID();
+    console.log(`Created batch job with ID: ${jobId} for ${rows.length} cars`);
+    
     batchJobs.set(jobId, {
       id: jobId,
       total: rows.length,
@@ -712,26 +727,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       errors: []
     });
     
+    // Sample first row data to verify structure
+    if (rows.length > 0) {
+      console.log(`Sample first row data:`, rows[0]);
+    }
+    
     // Queue the batch processing job
+    console.log(`Adding job ${jobId} to processing queue...`);
     queue.add(() => processBatch(jobId, rows))
-      .catch(err => console.error("Batch job failed:", err));
+      .then(() => console.log(`Batch job ${jobId} completed processing`))
+      .catch(err => console.error(`Batch job ${jobId} failed:`, err));
     
     // Return immediately with job ID
+    console.log(`Responding with job ID: ${jobId}`);
     res.status(202).json({ jobId });
   });
   
   // Batch job status endpoint
   app.get("/api/batch/:id", (req, res) => {
-    const job = batchJobs.get(req.params.id);
-    if (!job) return res.status(404).json({ error: "Job not found" });
+    const jobId = req.params.id;
+    console.log(`Received batch job status request for ID: ${jobId}`);
     
-    res.json({
+    const job = batchJobs.get(jobId);
+    if (!job) {
+      console.error(`Batch job with ID ${jobId} not found`);
+      return res.status(404).json({ error: "Job not found" });
+    }
+    
+    const response = {
       total: job.total,
       done: job.done,
       failed: job.failed,
       percent: Math.round((job.done + job.failed) / job.total * 100),
       zipUrl: job.zipPath ? `/downloads/${path.basename(job.zipPath)}` : null
-    });
+    };
+    
+    console.log(`Batch job ${jobId} status:`, response);
+    res.json(response);
   });
   
   // Car generation endpoint
