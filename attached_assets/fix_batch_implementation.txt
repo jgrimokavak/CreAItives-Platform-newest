@@ -1,0 +1,86 @@
+
+Fix Batch Car Image Generation Implementation
+============================================
+
+**Goal:** Refactor and harden the `/api/car-batch` endpoint and related code so that batch jobs are scheduled correctly, respond immediately with a jobId, delegate all processing to `processBatch`, and enable front-end polling to complete the ZIP download flow.
+
+1. Refactor `/api/car-batch` handler
+   - **File:** `server/routes.ts` (or wherever batch route lives)
+   - Replace the existing batch logic with:
+     ```ts
+     import { processBatch, jobs, queue } from "./batch";
+
+     app.post("/api/car-batch", upload.single("file"), (req, res) => {
+       if (!req.file?.buffer) 
+         return res.status(400).json({ error: "CSV file is required" });
+
+       // Parse CSV with PapaParse
+       const text = req.file.buffer.toString("utf8");
+       const parsed = Papa.parse<Row>(text, { header: true, skipEmptyLines: true });
+       if (parsed.errors.length) 
+         return res.status(400).json({ error: "Malformed CSV", details: parsed.errors });
+
+       const rows = parsed.data.slice(0, 50);
+       if (parsed.data.length > 50) 
+         return res.status(400).json({ error: "Row limit exceeded (max 50)" });
+       if (!rows.length) 
+         return res.status(400).json({ error: "No data rows found" });
+
+       const jobId = crypto.randomUUID();
+       jobs.set(jobId, { id: jobId, total: rows.length, done: 0, failed: 0, errors: [] });
+       queue.add(() => processBatch(jobId, rows))
+            .catch(err => console.error("Batch job error:", err));
+
+       return res.status(202).json({ jobId });
+     });
+     ```
+   - **Remove** any Replicate or ZIP logic from this handler.
+
+2. Ensure `processBatch` is correct
+   - **File:** `server/batch.ts`
+   - Confirm `export async function processBatch(jobId: string, rows: Row[]) { ... }`:
+     - Builds prompt for each row.
+     - Calls Replicate API and awaits success.
+     - Writes image files into `tmp/batch_<jobId>/`.
+     - On each row success/failure increments `done`/`failed` and collects errors.
+     - After all rows, zips the folder + error file (`failed_rows.json`).
+     - Sets `jobs.get(jobId)!.zipPath = "/tmp/<jobId>.zip"`.
+     - Cleans up the tmp folder.
+
+3. Verify `GET /api/batch/:id`
+   - Returns:
+     ```json
+     {
+       "total": number,
+       "done": number,
+       "failed": number,
+       "percent": number,
+       "zipUrl": string|null
+     }
+     ```
+   - Use `jobs.get(jobId)` to read current progress and `zipPath`.
+
+4. Front‑end adjustments
+   - **CSVUpload** component:
+     - POSTs to `/api/car-batch` with `multipart/form-data`.
+     - Handles 202 response: `{ jobId }`.
+     - On error shows descriptive toast.
+   - **BatchProgress** component:
+     - Polls `/api/batch/${jobId}` every 2 s.
+     - Renders progress bar and counts.
+     - When `zipUrl` becomes non-null, shows **Download ZIP** button.
+     - Shows “X rows failed” if `failed > 0` with link to `failed_rows.json`.
+
+5. Add debug logging
+   - In `/api/car-batch` log received CSV parsing summary.
+   - In `processBatch` log each row’s prompt and success/failure.
+   - In the front-end, console.log jobId and polling responses.
+
+6. Testing checklist
+   - Submit a 3-row CSV → receive `{ jobId }` immediately; polling completes; ZIP downloads contains 3 images.
+   - Submit 55 rows → request rejected with “Row limit exceeded (max 50)”.
+   - Introduce a malformed CSV → 400 “Malformed CSV” with details.
+   - Simulate a Replicate API failure for one row → job completes, ZIP includes `failed_rows.json`.
+   - Verify cleanup cron deletes old ZIPs after 6 h.
+
+**Reminder:** Do not modify the existing `ImageCard` or other pages. Only touch batch-related files.

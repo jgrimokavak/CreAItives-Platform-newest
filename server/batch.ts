@@ -44,17 +44,25 @@ export function buildPrompt(r: Row): string {
 
 // Main batch processing function
 export async function processBatch(id: string, rows: Row[]) {
+  console.log(`Starting batch job ${id} with ${rows.length} rows`);
+  
   const tmpDir = path.join("/tmp", `batch_${id}`);
   fs.mkdirSync(tmpDir, { recursive: true });
+  console.log(`Created temp directory: ${tmpDir}`);
+  
   const job = jobs.get(id)!;
 
   // Get Imagen-3 model config
   const imagenModel = models.find(m => m.key === 'imagen-3');
   if (!imagenModel || !imagenModel.version) {
+    console.error(`Imagen-3 model not properly configured. Model config:`, imagenModel);
     job.failed = job.total;
     job.errors.push({ row: 0, reason: "Imagen-3 model not properly configured" });
     return;
   }
+  
+  console.log(`Using Imagen-3 model version: ${imagenModel.version}`);
+  console.log(`Starting to process ${rows.length} rows for batch job ${id}`);
 
   for (let i = 0; i < rows.length; i++) {
     const r = rows[i];
@@ -122,43 +130,103 @@ export async function processBatch(id: string, rows: Row[]) {
   }
 
   // Create ZIP file with all generated images
+  console.log(`Creating ZIP file for job ${id} with ${job.done} successful images and ${job.failed} failed items`);
   const zipPath = path.join("/tmp", `${id}.zip`);
-  await new Promise<void>((resolve, reject) => {
-    const output = createWriteStream(zipPath);
-    const archive = archiver("zip", { zlib: { level: 9 } });
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const output = createWriteStream(zipPath);
+      const archive = archiver("zip", { zlib: { level: 9 } });
+      
+      output.on("close", () => {
+        console.log(`ZIP file created: ${zipPath}, size: ${archive.pointer()} bytes`);
+        resolve();
+      });
+      
+      archive.on("error", (err) => {
+        console.error(`Error creating ZIP file:`, err);
+        reject(err);
+      });
+      
+      archive.on("warning", (err) => {
+        if (err.code === "ENOENT") {
+          console.warn(`ZIP warning:`, err);
+        } else {
+          console.error(`ZIP warning:`, err);
+          reject(err);
+        }
+      });
+      
+      archive.pipe(output);
+      
+      // Add all files from the temp directory
+      console.log(`Adding files from ${tmpDir} to the ZIP archive`);
+      archive.directory(tmpDir, false);
+      
+      // Add the errors file if there are any errors
+      if (job.errors.length) {
+        console.log(`Adding failed_rows.json with ${job.errors.length} error entries`);
+        archive.append(JSON.stringify(job.errors, null, 2), { name: "failed_rows.json" });
+      }
+      
+      console.log(`Finalizing ZIP archive...`);
+      archive.finalize();
+    });
     
-    output.on("close", () => resolve());
-    archive.on("error", (err) => reject(err));
+    // Update the job with the ZIP path
+    job.zipPath = zipPath;
+    console.log(`Job ${id} updated with zipPath: ${zipPath}`);
     
-    archive.pipe(output);
-    archive.directory(tmpDir, false);
-    
-    if (job.errors.length) {
-      archive.append(JSON.stringify(job.errors, null, 2), { name: "failed_rows.json" });
-    }
-    
-    archive.finalize();
-  });
-
-  job.zipPath = zipPath;
+  } catch (zipError) {
+    console.error(`Failed to create ZIP file for job ${id}:`, zipError);
+    job.errors.push({ 
+      row: 0, 
+      reason: `Failed to create ZIP file: ${zipError instanceof Error ? zipError.message : String(zipError)}`,
+      details: JSON.stringify(zipError)?.slice(0, 500) 
+    });
+  }
   
   // Clean up temp directory
-  fs.rmSync(tmpDir, { recursive: true, force: true });
+  try {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+    console.log(`Cleaned up temp directory: ${tmpDir}`);
+  } catch (cleanupError) {
+    console.error(`Error cleaning up temp directory ${tmpDir}:`, cleanupError);
+  }
+  
   console.log(`Batch job ${id} completed: ${job.done} successful, ${job.failed} failed`);
 }
 
 // Cleanup function for old ZIP files (called periodically)
 export function cleanupOldZips(maxAgeHours = 6) {
+  console.log(`Running ZIP cleanup for files older than ${maxAgeHours} hours`);
+  
   try {
-    fs.readdirSync("/tmp")
-      .filter(f => f.endsWith(".zip"))
-      .forEach(f => {
-        const p = path.join("/tmp", f);
-        if (Date.now() - fs.statSync(p).mtimeMs > maxAgeHours * 3600 * 1000) {
+    const files = fs.readdirSync("/tmp").filter(f => f.endsWith(".zip"));
+    console.log(`Found ${files.length} ZIP files in /tmp directory`);
+    
+    let cleaned = 0;
+    
+    files.forEach(f => {
+      const p = path.join("/tmp", f);
+      
+      try {
+        const stats = fs.statSync(p);
+        const ageMs = Date.now() - stats.mtimeMs;
+        const ageHours = ageMs / (3600 * 1000);
+        
+        if (ageHours > maxAgeHours) {
+          console.log(`Deleting old ZIP file: ${f} (age: ${ageHours.toFixed(2)} hours)`);
           fs.unlinkSync(p);
-          console.log(`Cleaned up old ZIP file: ${f}`);
+          cleaned++;
+        } else {
+          console.log(`Keeping ZIP file: ${f} (age: ${ageHours.toFixed(2)} hours)`);
         }
-      });
+      } catch (statError) {
+        console.error(`Error checking file stats for ${p}:`, statError);
+      }
+    });
+    
+    console.log(`ZIP cleanup completed. Deleted ${cleaned} old files.`);
   } catch (error) {
     console.error("Error cleaning up old ZIP files:", error);
   }

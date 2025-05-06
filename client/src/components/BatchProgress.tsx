@@ -30,21 +30,28 @@ const BatchProgress: React.FC<BatchProgressProps> = ({ jobId, onComplete, onRese
     if (!jobId || !polling) return;
     
     const fetchStatus = async () => {
+      console.log(`Polling batch job status for job ID: ${jobId}`);
       try {
         const response = await fetch(`/api/batch/${jobId}`);
         
         if (!response.ok) {
           const errorData = await response.json();
+          console.error(`Error response from batch status API:`, errorData);
           throw new Error(errorData.error || 'Failed to fetch batch job status');
         }
         
         const data = await response.json();
+        console.log(`Batch job status:`, data);
         setStatus(data);
         
         // If the job is complete (has a ZIP URL), stop polling
         if (data.zipUrl) {
+          console.log(`Batch job ${jobId} completed with ZIP URL: ${data.zipUrl}`);
           setPolling(false);
-          if (onComplete) onComplete();
+          if (onComplete) {
+            console.log(`Calling onComplete callback`);
+            onComplete();
+          }
           
           // Show success toast
           toast({
@@ -56,6 +63,7 @@ const BatchProgress: React.FC<BatchProgressProps> = ({ jobId, onComplete, onRese
         
         // If all images are done or failed, stop polling
         if (data && data.done + data.failed >= data.total) {
+          console.log(`All images processed (${data.done} done, ${data.failed} failed). Stopping polling.`);
           setPolling(false);
         }
       } catch (error) {

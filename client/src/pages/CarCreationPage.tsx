@@ -409,33 +409,42 @@ const CarCreationPage: React.FC = () => {
 
   // Batch CSV upload handler
   const handleBatchUpload = async (file: File) => {
+    console.log(`Starting batch upload for file: ${file.name}, size: ${file.size} bytes`);
     setIsUploadingBatch(true);
     
     try {
       // Create form data for the CSV upload
       const formData = new FormData();
       formData.append('file', file);
+      console.log(`FormData created with file appended`);
       
       // Send the CSV to the batch endpoint
+      console.log(`Sending POST request to /api/car-batch`);
       const response = await fetch('/api/car-batch', {
         method: 'POST',
         body: formData
       });
       
+      console.log(`Received response from batch endpoint with status: ${response.status}`);
+      
       if (!response.ok) {
         const errorData = await response.json();
+        console.error(`Batch upload error response:`, errorData);
         throw new Error(errorData.error || 'Failed to start batch job');
       }
       
       const data = await response.json();
+      console.log(`Batch job created successfully:`, data);
       
       if (data.jobId) {
+        console.log(`Setting batch job ID: ${data.jobId}`);
         setBatchJobId(data.jobId);
         toast({
           title: "Batch job started",
           description: "Your batch car generation job has started processing",
         });
       } else {
+        console.error(`Received success response but no jobId was returned:`, data);
         throw new Error('No job ID returned from server');
       }
     } catch (error) {
@@ -447,6 +456,7 @@ const CarCreationPage: React.FC = () => {
       });
     } finally {
       setIsUploadingBatch(false);
+      console.log(`Batch upload process completed`);
     }
   };
   
