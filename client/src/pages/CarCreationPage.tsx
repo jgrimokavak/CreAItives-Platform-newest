@@ -394,14 +394,7 @@ const CarCreationPage: React.FC = () => {
     }
   };
 
-  // Copy prompt handler
-  const handleCopyPrompt = (prompt: string) => {
-    navigator.clipboard.writeText(prompt);
-    toast({
-      title: "Prompt copied",
-      description: "Prompt has been copied to clipboard"
-    });
-  };
+  // Handler functions for image actions
 
   // Form submission handler
   const handleGenerate = () => {
@@ -616,7 +609,6 @@ const CarCreationPage: React.FC = () => {
                   }}
                   onDownload={handleDownload}
                   onClick={() => setSelectedImage(image.fullUrl || image.url)}
-                  // No copy prompt button on this page
                 />
               </div>
               
