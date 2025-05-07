@@ -10,12 +10,12 @@ import NavTabs, { TabContent } from "@/components/NavTabs";
 import { useEditor } from "@/context/EditorContext";
 
 export default function Home() {
-  const [searchParams] = new URLSearchParams(window.location.search);
+  const searchParams = new URLSearchParams(window.location.search);
   const [mode, setMode] = useState<"generate" | "edit">(searchParams.get("mode") as "generate" | "edit" || "generate");
   const [images, setImages] = useState<GeneratedImage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const {  } = useEditor();
+  const { mode: editorMode } = useEditor();
 
   const handleGenerateStart = () => {
     setIsLoading(true);
