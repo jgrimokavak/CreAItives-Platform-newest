@@ -412,9 +412,9 @@ export default function ImageCard({
               
               // Priority 3: Try to calculate a ratio from width/height if available
               if (image.width && image.height) {
-                const w = parseInt(image.width);
-                const h = parseInt(image.height);
-                if (w && h) {
+                const w = parseInt(image.width as string);
+                const h = parseInt(image.height as string);
+                if (!isNaN(w) && !isNaN(h)) {
                   // For common ratios, use standard notation
                   if (w === h) return (
                     <span className="bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-2.5 py-0.5 flex items-center shadow-sm">

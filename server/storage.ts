@@ -263,7 +263,10 @@ export class DatabaseStorage implements IStorage {
           sourceThumb: item.sourceThumb,
           sourceImage: item.sourceImage,
           starred: starredStatus,
-          deletedAt: item.deletedAt ? new Date(item.deletedAt).toISOString() : null
+          deletedAt: item.deletedAt ? new Date(item.deletedAt).toISOString() : null,
+          // Include new fields for enhanced display
+          aspectRatio: item.aspectRatio,
+          quality: item.quality
         };
       });
       
@@ -297,7 +300,9 @@ export class DatabaseStorage implements IStorage {
       ...image,
       createdAt: image.createdAt ? new Date(image.createdAt).toISOString() : new Date().toISOString(),
       starred: image.starred === "true",
-      deletedAt: image.deletedAt ? new Date(image.deletedAt).toISOString() : null
+      deletedAt: image.deletedAt ? new Date(image.deletedAt).toISOString() : null,
+      aspectRatio: image.aspectRatio,
+      quality: image.quality
     };
   }
 
@@ -342,7 +347,9 @@ export class DatabaseStorage implements IStorage {
       ...updatedImage,
       createdAt: updatedImage.createdAt ? new Date(updatedImage.createdAt).toISOString() : new Date().toISOString(),
       starred: updatedImage.starred === "true",
-      deletedAt: updatedImage.deletedAt ? new Date(updatedImage.deletedAt).toISOString() : null
+      deletedAt: updatedImage.deletedAt ? new Date(updatedImage.deletedAt).toISOString() : null,
+      aspectRatio: updatedImage.aspectRatio,
+      quality: updatedImage.quality
     };
   }
 
