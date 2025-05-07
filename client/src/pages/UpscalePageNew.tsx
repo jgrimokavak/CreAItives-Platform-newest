@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { 
   Select,
   SelectContent,
@@ -31,7 +32,9 @@ import {
   Download, 
   Upload, 
   Zap, 
-  Image as ImageIcon
+  Image as ImageIcon,
+  ArrowRight,
+  Maximize2
 } from "lucide-react";
 
 export default function UpscalePage() {
@@ -44,6 +47,10 @@ export default function UpscalePage() {
   const [uploading, setUploading] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [originalFileName, setOriginalFileName] = useState<string>("image");
+  
+  // Image resolution states
+  const [sourceResolution, setSourceResolution] = useState<{width: number; height: number} | null>(null);
+  const [targetResolution, setTargetResolution] = useState<{width: number; height: number} | null>(null);
   
   // Add parameters from the schema
   const [enhanceModel, setEnhanceModel] = useState<string>("Standard V2"); // Default from schema
@@ -108,6 +115,15 @@ export default function UpscalePage() {
         .then(blob => {
           const file = new File([blob], "source-image.jpg", { type: "image/jpeg" });
           setSelectedFile(file);
+          
+          // Get dimensions of the image from the gallery
+          getImageDimensions(sourceUrl)
+            .then(dimensions => {
+              setSourceResolution(dimensions);
+            })
+            .catch(err => {
+              console.error("Error measuring image dimensions:", err);
+            });
         })
         .catch(error => {
           console.error("Error loading source image:", error);
@@ -115,6 +131,34 @@ export default function UpscalePage() {
         });
     }
   }, []);
+
+  // Calculate target resolution whenever source resolution or upscale factor changes
+  useEffect(() => {
+    if (sourceResolution) {
+      const factor = parseInt(upscaleFactor.replace('x', ''));
+      setTargetResolution({
+        width: Math.round(sourceResolution.width * factor),
+        height: Math.round(sourceResolution.height * factor)
+      });
+    }
+  }, [sourceResolution, upscaleFactor]);
+
+  // Function to analyze image dimensions
+  const getImageDimensions = (url: string): Promise<{width: number, height: number}> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        resolve({
+          width: img.naturalWidth,
+          height: img.naturalHeight
+        });
+      };
+      img.onerror = () => {
+        reject(new Error("Failed to load image"));
+      };
+      img.src = url;
+    });
+  };
 
   // Handle file selection
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -134,10 +178,20 @@ export default function UpscalePage() {
     
     setOriginalFileName(cleanFilename || 'image');
     
+    const fileUrl = URL.createObjectURL(file);
     setSelectedFile(file);
-    setPreviewUrl(URL.createObjectURL(file));
+    setPreviewUrl(fileUrl);
     setOutputUrl(null); // Reset output when a new file is selected
     setError(null);
+    
+    // Get the dimensions of the selected image
+    getImageDimensions(fileUrl)
+      .then(dimensions => {
+        setSourceResolution(dimensions);
+      })
+      .catch(err => {
+        console.error("Error measuring image dimensions:", err);
+      });
   };
 
   // Handle upscale button click
@@ -413,6 +467,51 @@ export default function UpscalePage() {
                     </p>
                   </div>
                 </div>
+                
+                {/* Resolution Calculator */}
+                {sourceResolution && (
+                  <div className="mt-6 pt-6 border-t">
+                    <div className="flex items-center justify-between mb-3">
+                      <Label className="font-medium flex items-center">
+                        <Maximize2 className="h-4 w-4 mr-2 text-muted-foreground" />
+                        Resolution
+                      </Label>
+                      <Badge variant="outline" className="text-xs font-normal">
+                        {upscaleFactor} Enhancement
+                      </Badge>
+                    </div>
+                    
+                    <div className="bg-muted/20 rounded-lg p-3">
+                      <div className="flex items-center justify-between text-sm">
+                        <div>
+                          <div className="text-xs text-muted-foreground mb-1">Current</div>
+                          <div className="font-medium">
+                            {sourceResolution.width} × {sourceResolution.height}
+                          </div>
+                        </div>
+                        
+                        <ArrowRight className="h-4 w-4 text-muted-foreground mx-2" />
+                        
+                        <div>
+                          <div className="text-xs text-muted-foreground mb-1">After Upscaling</div>
+                          <div className="font-medium text-primary">
+                            {targetResolution?.width} × {targetResolution?.height}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="text-xs text-muted-foreground mt-3">
+                        {targetResolution && targetResolution.width * targetResolution.height > 25000000 ? (
+                          <p className="text-amber-600">
+                            <span className="bg-amber-100 px-1 rounded">Note:</span> Very large output image. Processing may take longer.
+                          </p>
+                        ) : (
+                          <p>Resolution calculated from the current image file.</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </CardContent>
