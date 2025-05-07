@@ -359,11 +359,22 @@ export default function ImageCard({
           <div className="flex items-center justify-between">
             <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Prompt</h4>
             <div className="h-px flex-1 bg-border/50 mx-2"></div>
-            <span className="text-[10px] text-muted-foreground/70 font-mono">{new Date(image.createdAt).toLocaleDateString()}</span>
+            <span className="text-[10px] text-muted-foreground/70 font-mono">
+              {new Date(image.createdAt).toLocaleDateString(undefined, {
+                month: 'short',
+                day: 'numeric',
+                year: '2-digit'
+              })}
+            </span>
           </div>
-          <p className="text-sm font-medium leading-5 line-clamp-2 text-foreground/90 p-1 bg-muted/20 rounded border-l-2 border-primary/30">
-            {image.prompt}
-          </p>
+          
+          {/* Enhanced prompt display with better typography and visual design */}
+          <div className="relative group">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/10 to-primary/5 rounded-md blur opacity-25 group-hover:opacity-40 transition duration-200"></div>
+            <p className="relative text-sm font-medium leading-relaxed line-clamp-2 p-2 bg-card/90 dark:bg-card-foreground/10 rounded-md shadow-sm text-foreground/90 border-l-2 border-primary">
+              {image.prompt}
+            </p>
+          </div>
         </div>
         
         {/* Parameters section with color coding */}
@@ -371,56 +382,78 @@ export default function ImageCard({
           <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Parameters</h4>
           
           <div className="flex flex-wrap gap-2 text-xs">
-            {/* Model tag - blue color scheme */}
+            {/* AI Model tag - blue color scheme */}
             <span className="bg-blue-50 text-blue-700 border border-blue-200 rounded-full px-2.5 py-0.5 flex items-center">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5"></span>
               {image.model}
             </span>
             
-            {/* Size tag - purple color scheme */}
-            <span className="bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-2.5 py-0.5 flex items-center">
-              <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mr-1.5"></span>
-              {image.size}
-            </span>
+            {/* Aspect Ratio tag - primary color based on calculated ratio */}
+            {(() => {
+              // Parse the size string to extract ratio information
+              const sizeMatch = image.size?.match(/(\d+)x(\d+)/i); 
+              
+              // If we have a valid size format with dimensions
+              if (sizeMatch && sizeMatch.length === 3) {
+                const width = parseInt(sizeMatch[1]);
+                const height = parseInt(sizeMatch[2]);
+                
+                if (!isNaN(width) && !isNaN(height) && height !== 0) {
+                  const ratio = width / height;
+                  let ratioText;
+                  
+                  // Convert to standard ratio notation
+                  if (Math.abs(ratio - 1) < 0.01) ratioText = "1:1";
+                  else if (Math.abs(ratio - 4/3) < 0.01) ratioText = "4:3";
+                  else if (Math.abs(ratio - 16/9) < 0.01) ratioText = "16:9";
+                  else if (Math.abs(ratio - 3/2) < 0.01) ratioText = "3:2";
+                  else ratioText = width + ":" + height;
+                  
+                  return (
+                    <span className="bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-2.5 py-0.5 flex items-center">
+                      <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mr-1.5"></span>
+                      {ratioText}
+                    </span>
+                  );
+                }
+              }
+              
+              // Fallback to just showing the original size string
+              return (
+                <span className="bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-2.5 py-0.5 flex items-center">
+                  <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mr-1.5"></span>
+                  {image.size}
+                </span>
+              );
+            })()}
+            
+            {/* Resolution dimensions tag - amber color scheme - only show if different from size */}
+            {(() => {
+              const sizeMatch = image.size?.match(/(\d+)x(\d+)/i); 
+              const widthFromSize = sizeMatch ? parseInt(sizeMatch[1]) : null;
+              const heightFromSize = sizeMatch ? parseInt(sizeMatch[2]) : null;
+              
+              // Only show dimensions if they're different from what's in the size property
+              // or if size doesn't contain dimensions
+              if (image.width && image.height && 
+                  (!sizeMatch || 
+                   String(image.width) !== String(widthFromSize) || 
+                   String(image.height) !== String(heightFromSize))) {
+                return (
+                  <span className="bg-amber-50 text-amber-700 border border-amber-200 rounded-full px-2.5 py-0.5 flex items-center">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5"></span>
+                    {image.width}×{image.height}
+                  </span>
+                );
+              }
+              return null;
+            })()}
             
             {/* Quality tag - green color scheme */}
             {image.quality && (
               <span className="bg-green-50 text-green-700 border border-green-200 rounded-full px-2.5 py-0.5 flex items-center">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>
                 {image.quality}
-              </span>
-            )}
-            
-            {/* Dimensions tag - amber color scheme */}
-            {(image.width && image.height) && (
-              <span className="bg-amber-50 text-amber-700 border border-amber-200 rounded-full px-2.5 py-0.5 flex items-center">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5"></span>
-                {image.width}×{image.height}
-              </span>
-            )}
-            
-            {/* Aspect Ratio tag - rose color scheme - calculate if width/height available or use provided */}
-            {(image.aspectRatio || (image.width && image.height)) && (
-              <span className="bg-rose-50 text-rose-700 border border-rose-200 rounded-full px-2.5 py-0.5 flex items-center">
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mr-1.5"></span>
-                {image.aspectRatio || 
-                 // Calculate aspect ratio if not provided but width/height are available
-                 (image.width && image.height) ? 
-                  (() => {
-                    const w = Number(image.width);
-                    const h = Number(image.height);
-                    if (!isNaN(w) && !isNaN(h) && h !== 0) {
-                      const ratio = w / h;
-                      // Return common aspect ratio names or numerical value
-                      if (Math.abs(ratio - 1) < 0.01) return "1:1";
-                      if (Math.abs(ratio - 4/3) < 0.01) return "4:3"; 
-                      if (Math.abs(ratio - 16/9) < 0.01) return "16:9";
-                      if (Math.abs(ratio - 3/2) < 0.01) return "3:2";
-                      return ratio.toFixed(2);
-                    }
-                    return null;
-                  })() : null
-                }
               </span>
             )}
           </div>
