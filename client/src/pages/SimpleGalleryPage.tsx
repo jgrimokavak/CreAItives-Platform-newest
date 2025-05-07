@@ -49,13 +49,9 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
   const [filterOpen, setFilterOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState<{
     models: string[];
-    sizes: string[];
-    qualities: string[];
     starred: boolean;
   }>({
     models: [],
-    sizes: [],
-    qualities: [],
     starred: false
   });
   const { toast } = useToast();
@@ -457,40 +453,33 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
   // Extract unique metadata values from images
   const getFilterOptions = (images: GalleryImage[]) => {
     const models = new Set<string>();
-    const sizes = new Set<string>();
-    const qualities = new Set<string>();
+    
+    // Add car-generator model to the options even if there are no images with this model yet
+    models.add('car-generator');
     
     images.forEach(img => {
       if (img.model) models.add(img.model);
-      if (img.size) sizes.add(img.size);
-      if (img.quality) qualities.add(img.quality || 'standard');
     });
     
     return {
-      models: Array.from(models).sort(),
-      sizes: Array.from(sizes).sort(),
-      qualities: Array.from(qualities).sort()
+      models: Array.from(models).sort()
     };
   };
   
   // Apply filters to images
   const applyFilters = (images: GalleryImage[]) => {
-    if (!activeFilters.models.length && !activeFilters.sizes.length && !activeFilters.qualities.length) {
+    if (!activeFilters.models.length) {
       return images;
     }
     
     return images.filter(img => {
       const modelMatch = activeFilters.models.length === 0 || activeFilters.models.includes(img.model);
-      const sizeMatch = activeFilters.sizes.length === 0 || activeFilters.sizes.includes(img.size);
-      const qualityMatch = activeFilters.qualities.length === 0 || 
-                          activeFilters.qualities.includes(img.quality || 'standard');
-      
-      return modelMatch && sizeMatch && qualityMatch;
+      return modelMatch;
     });
   };
   
   // Toggle filter selection
-  const toggleFilter = (type: 'models' | 'sizes' | 'qualities', value: string) => {
+  const toggleFilter = (type: 'models', value: string) => {
     setActiveFilters(prev => {
       const current = [...prev[type]];
       const index = current.indexOf(value);
@@ -512,8 +501,6 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
   const clearFilters = () => {
     setActiveFilters({
       models: [],
-      sizes: [],
-      qualities: [],
       starred: false
     });
   };
@@ -714,7 +701,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
-                      variant={activeFilters.starred || activeFilters.models.length > 0 || activeFilters.sizes.length > 0 || activeFilters.qualities.length > 0 ? "default" : "outline"}
+                      variant={activeFilters.starred || activeFilters.models.length > 0 ? "default" : "outline"}
                       size="sm"
                       onClick={() => setFilterOpen(!filterOpen)}
                       className="gap-2"
@@ -733,14 +720,14 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
                         <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
                       </svg>
                       Filters
-                      {(activeFilters.starred || activeFilters.models.length > 0 || activeFilters.sizes.length > 0 || activeFilters.qualities.length > 0) && (
+                      {(activeFilters.starred || activeFilters.models.length > 0) && (
                         <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
-                          {(activeFilters.starred ? 1 : 0) + activeFilters.models.length + activeFilters.sizes.length + activeFilters.qualities.length}
+                          {(activeFilters.starred ? 1 : 0) + activeFilters.models.length}
                         </span>
                       )}
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="bottom">Filter by star status, model, size, quality</TooltipContent>
+                  <TooltipContent side="bottom">Filter by star status or model</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             )}
