@@ -62,14 +62,8 @@ export function AISuggestionBadges({
   
   return (
     <div className="space-y-4 mt-4 p-5 relative overflow-hidden bg-gradient-to-r from-violet-50 via-indigo-50 to-purple-50 rounded-lg border border-purple-200 shadow-sm">
-      {/* Animated background pattern */}
-      <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,rgba(255,255,255,0.6),rgba(255,255,255,0.9))] opacity-50"></div>
-      
-      {/* Soft glow effect */}
-      <div className="absolute -inset-1 bg-gradient-to-r from-violet-500/5 via-purple-500/5 to-indigo-500/5 blur-xl"></div>
-      
       {/* Header */}
-      <div className="relative z-10">
+      <div>
         <div className="flex items-center justify-between">
           <h3 className="text-base font-medium text-purple-800 flex items-center">
             <span className="bg-gradient-to-r from-purple-500 to-indigo-500 p-1.5 rounded-md mr-2 shadow-sm">
@@ -84,7 +78,7 @@ export function AISuggestionBadges({
             Active
           </div>
         </div>
-        <p className="text-xs text-slate-600 mt-1 relative z-10 pl-9">
+        <p className="text-xs text-slate-600 mt-1 pl-9">
           Click any suggestion to enhance your prompt. Suggestions are tailored to your input and selected model.
         </p>
       </div>
@@ -99,7 +93,7 @@ export function AISuggestionBadges({
         if (availableSuggestions.length === 0 && !isLoading) return null;
         
         return (
-          <div key={category} className="relative z-10">
+          <div key={category}>
             <div className="flex items-center mb-2">
               <h4 className="text-sm font-medium text-purple-700">{categoryLabels[category]}</h4>
               {isLoading && (
