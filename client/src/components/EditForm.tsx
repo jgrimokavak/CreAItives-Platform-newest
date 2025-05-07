@@ -400,8 +400,13 @@ export default function EditForm({
               </div>
             </div>
             
-            <div className="grid grid-cols-1 gap-5 bg-muted/40 p-4 rounded-lg border border-border/50">
-              <FormField
+            <div className="bg-muted/40 p-4 rounded-lg border border-border/50">
+              <h2 className="text-lg font-semibold text-foreground mb-1">Image Settings</h2>
+              <p className="text-xs text-muted-foreground mb-4">
+                Configure your image editing options
+              </p>
+              <div className="grid grid-cols-1 gap-5">
+                <FormField
                 control={form.control}
                 name="size"
                 render={({ field }) => (
@@ -502,6 +507,7 @@ export default function EditForm({
                   </FormItem>
                 )}
               />
+              </div>
             </div>
 
             <div className="flex justify-center pt-2">

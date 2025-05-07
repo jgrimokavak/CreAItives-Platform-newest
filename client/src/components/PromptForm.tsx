@@ -251,7 +251,10 @@ export default function PromptForm({
 
             {/* Dynamic form fields based on the selected model */}
             <div className="p-4 bg-muted/40 rounded-lg border border-border/50">
-              <h3 className="text-sm font-medium mb-3">Image Settings</h3>
+              <h2 className="text-lg font-semibold text-foreground mb-1">Image Settings</h2>
+              <p className="text-xs text-muted-foreground mb-4">
+                Configure your image generation options
+              </p>
               <DynamicForm modelKey={modelKey} form={form} />
             </div>
 
