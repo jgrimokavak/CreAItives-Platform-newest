@@ -510,9 +510,9 @@ const CarCreationPage: React.FC = () => {
           </TabsList>
           
           <TabsContent value="single">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-              {/* Form Section */}
-              <div className="space-y-6 bg-card p-6 rounded-lg shadow-sm border">
+            <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+              {/* Left Column - Form Section */}
+              <div className="w-full lg:w-1/2 space-y-6 bg-card p-6 rounded-lg shadow-sm border">
                 {/* Header with icon */}
                 <div className="flex items-center space-x-3 border-b pb-4 mb-4">
                   <div className="bg-primary/10 p-2 rounded-full">
@@ -807,8 +807,8 @@ const CarCreationPage: React.FC = () => {
                 )}
               </div>
               
-              {/* Preview Section */}
-              <div>
+              {/* Right Column - Preview Section */}
+              <div className="w-full lg:w-1/2">
                 {image ? (
                   <div className="space-y-4">
                     {/* Preview header with title and car specification */}

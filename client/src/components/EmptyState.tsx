@@ -2,7 +2,7 @@ import { Image as ImageIcon, Sparkles, ArrowUp } from "lucide-react";
 
 export default function EmptyState() {
   return (
-    <div className="text-center py-12 bg-muted/30 rounded-xl border border-border/50 flex flex-col items-center justify-center">
+    <div className="text-center py-12 h-full bg-muted/30 rounded-xl border border-border/50 flex flex-col items-center justify-center">
       <div className="mb-6 relative w-24 h-24 flex items-center justify-center">
         <div className="absolute inset-0 bg-primary/5 rounded-full animate-pulse"></div>
         <div className="relative bg-primary/10 rounded-full p-6">
@@ -15,14 +15,14 @@ export default function EmptyState() {
       
       <div className="max-w-md mx-auto space-y-4 px-4">
         <p className="text-muted-foreground text-sm">
-          Describe what you want to create in the prompt field above, 
+          Describe what you want to create in the prompt field on the left, 
           then click the Create Images button to generate AI images.
         </p>
         
         <div className="flex justify-center">
           <div className="flex items-center text-sm text-primary/80 animate-bounce">
-            <ArrowUp className="h-4 w-4 mr-1.5" />
-            <span>Start by filling out the form above</span>
+            <ArrowUp className="h-4 w-4 mr-1.5 rotate-[315deg]" />
+            <span>Start by filling out the form on the left</span>
           </div>
         </div>
       </div>
