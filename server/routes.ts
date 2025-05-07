@@ -947,7 +947,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const image = await persistImage(b64, {
         prompt,
-        params: { aspect_ratio, background },
+        params: { aspect_ratio, background, model: "car-generator" },
         userId: "demo",
         sources: []
       });
