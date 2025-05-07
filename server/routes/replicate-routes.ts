@@ -171,6 +171,22 @@ export async function generateWithReplicate(modelKey: string, inputs: any): Prom
     );
     
     // Create the GeneratedImage object using the SAME ID
+    // Process aspect ratio
+    let aspectRatio = inputs.aspect_ratio;
+    
+    // If aspect ratio is not explicitly provided, derive it from dimensions
+    if (!aspectRatio) {
+      const ratioMap: Record<string, string> = {
+        "1024x1024": "1:1",
+        "1024x1792": "9:16",
+        "1792x1024": "16:9",
+        "1024x1536": "2:3",
+        "1536x1024": "3:2"
+      };
+      
+      aspectRatio = ratioMap[sizeStr] || "1:1";
+    }
+    
     const image: GeneratedImage = {
       id: id, // Use the same ID that was used in the file system
       url: fullUrl,
@@ -182,8 +198,8 @@ export async function generateWithReplicate(modelKey: string, inputs: any): Prom
       createdAt: new Date().toISOString(),
       width: width.toString(),
       height: height.toString(),
-      // Store the exact aspect ratio selected by the user
-      aspectRatio: inputs.aspect_ratio || undefined,
+      aspectRatio: aspectRatio,
+      quality: inputs.quality || null
     };
     
     // We no longer need to call storage.saveImage here

@@ -1,0 +1,98 @@
+fix_aspect_ratio_badge_v2_prompt.txt
+=================================================
+
+Objective:
+Align database, API, and front‑end so ImageCard badges show the exact aspect ratio (e.g. “16:9”) without distortion.
+
+1. Persist `aspectRatio` correctly in Prisma
+   - Open **prisma/schema.prisma**.
+     ```prisma
+     model Image {
+       id          String   @id @default(cuid())
+       url         String
+       thumbUrl    String
+       size        String?            // e.g. "1024x1792"
+       aspectRatio String             // e.g. "9:16"
+       prompt      String
+       model       String
+       createdAt   DateTime @default(now())
+     }
+     ```
+   - Run:
+     ```
+     npx prisma migrate dev --name add_aspect_ratio
+     ```
+
+2. Save `aspectRatio` in every worker
+   - **GPT‑Image‑1 worker** (`gptWorker.ts`):
+     ```ts
+     const ratioMap: Record<string,string> = {
+       "1024x1024": "1:1",
+       "1024x1792": "9:16",
+       "1792x1024": "16:9",
+     };
+     const aspectRatio = ratioMap[size] ?? "1:1";
+
+     await prisma.image.create({
+       data: { url, thumbUrl, size, aspectRatio, prompt, model }
+     });
+     ```
+   - **Imagen‑3 / Flux‑Pro workers**: forward the selected `aspect_ratio` field as `aspectRatio`.
+
+3. Expose `aspectRatio` in gallery API
+   - In **routes/gallery.ts** (or resolver):
+     ```ts
+     const images = await prisma.image.findMany({
+       where: { /* existing filters */ },
+       select: {
+         id: true,
+         url: true,
+         thumbUrl: true,
+         aspectRatio: true,   // ← add
+         prompt: true,
+         model: true,
+         createdAt: true,
+       }
+     });
+     ```
+
+4. Back‑fill existing rows
+   - Create **scripts/backfillAspectRatio.ts**:
+     ```ts
+     import { prisma } from "../src/lib/prisma";
+
+     await prisma.$executeRawUnsafe(`
+       UPDATE "Image"
+       SET "aspectRatio" = CASE
+         WHEN size = '1024x1792' THEN '9:16'
+         WHEN size = '1792x1024' THEN '16:9'
+         ELSE '1:1'
+       END
+       WHERE "aspectRatio" IS NULL;
+     `);
+     process.exit();
+     ```
+   - Run once:
+     ```
+     ts-node scripts/backfillAspectRatio.ts
+     ```
+
+5. Render badge text only, no dynamic `aspect-*` class
+   - Edit **components/ImageCard.tsx**:
+     ```tsx
+     {image.aspectRatio && (
+       <Badge className="whitespace-nowrap bg-muted/60">
+         {image.aspectRatio}
+       </Badge>
+     )}
+     ```
+   - Remove any remaining `className={\`aspect-\${...}\`}` or `sizeToAspect()` util.
+
+Testing
+- Generate an image for every ratio (1:1, 16:9, 9:16) → open Gallery → each card shows compact pill with exact text.
+- Inspect DOM: badge has **no** `aspect-*` Tailwind class.
+- Query DB: `SELECT size, "aspectRatio" FROM "Image" ORDER BY "createdAt" DESC LIMIT 3;` returns matching ratios.
+
+Reminders & Constraints
+- Do **not** alter existing Tailwind color palette or badge component style.
+- Ensure all new code builds with `tsc` and Prisma migration runs in production.

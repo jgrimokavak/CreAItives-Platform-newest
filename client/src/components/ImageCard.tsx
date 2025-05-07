@@ -388,87 +388,53 @@ export default function ImageCard({
               {image.model}
             </Badge>
             
-            {/* Aspect Ratio badge - standardized, always display */}
-            {(() => {
-              // Priority 1: Use explicitly stored aspect ratio (new format)
-              if (image.aspectRatio) {
-                return (
-                  <Badge variant="outline" className="bg-purple-50/80 text-purple-700 border-purple-200 whitespace-nowrap">
-                    {image.aspectRatio}
-                  </Badge>
-                );
-              }
-              
-              // Priority 2: Check if size field contains a ratio format (e.g., "1:1", "16:9")
-              if (image.size && image.size.includes(':')) {
-                return (
-                  <Badge variant="outline" className="bg-purple-50/80 text-purple-700 border-purple-200 whitespace-nowrap">
-                    {image.size}
-                  </Badge>
-                );
-              }
-              
-              // Priority 3: Calculate based on common dimensions
-              if (image.size) {
-                const ratioMap: Record<string, string> = {
-                  "1024x1024": "1:1",
-                  "1024x1792": "9:16",
-                  "1792x1024": "16:9",
-                  "1024x1536": "2:3",
-                  "1536x1024": "3:2"
-                };
-                
-                // Check if we have a mapping for this size
-                const aspectRatio = ratioMap[image.size];
-                if (aspectRatio) {
-                  return (
-                    <Badge variant="outline" className="bg-purple-50/80 text-purple-700 border-purple-200 whitespace-nowrap">
-                      {aspectRatio}
-                    </Badge>
-                  );
+            {/* Aspect Ratio badge - simplified, no dynamic aspect-* classes */}
+            <Badge variant="outline" className="bg-purple-50/80 text-purple-700 border-purple-200 whitespace-nowrap">
+              {(() => {
+                // Priority 1: Use explicitly stored aspect ratio (best option)
+                if (image.aspectRatio) {
+                  return image.aspectRatio;
                 }
-              }
-              
-              // Priority 4: Calculate from width/height
-              if (image.width && image.height) {
-                const w = parseInt(image.width as string);
-                const h = parseInt(image.height as string);
                 
-                if (!isNaN(w) && !isNaN(h)) {
-                  // Check for common aspect ratios
-                  if (w === h) {
-                    return (
-                      <Badge variant="outline" className="bg-purple-50/80 text-purple-700 border-purple-200 whitespace-nowrap">
-                        1:1
-                      </Badge>
-                    );
-                  }
+                // Priority 2: Check if size field contains a ratio format (e.g., "1:1", "16:9")
+                if (image.size && image.size.includes(':')) {
+                  return image.size;
+                }
+                
+                // Priority 3: Map from common dimensions
+                if (image.size) {
+                  const ratioMap: Record<string, string> = {
+                    "1024x1024": "1:1",
+                    "1024x1792": "9:16",
+                    "1792x1024": "16:9",
+                    "1024x1536": "2:3",
+                    "1536x1024": "3:2"
+                  };
                   
-                  if (Math.abs(w/h - 16/9) < 0.01) {
-                    return (
-                      <Badge variant="outline" className="bg-purple-50/80 text-purple-700 border-purple-200 whitespace-nowrap">
-                        16:9
-                      </Badge>
-                    );
-                  }
-                  
-                  if (Math.abs(h/w - 16/9) < 0.01) {
-                    return (
-                      <Badge variant="outline" className="bg-purple-50/80 text-purple-700 border-purple-200 whitespace-nowrap">
-                        9:16
-                      </Badge>
-                    );
+                  const aspectRatio = ratioMap[image.size];
+                  if (aspectRatio) {
+                    return aspectRatio;
                   }
                 }
-              }
-              
-              // Default fallback
-              return (
-                <Badge variant="outline" className="bg-purple-50/80 text-purple-700 border-purple-200 whitespace-nowrap">
-                  1:1
-                </Badge>
-              );
-            })()}
+                
+                // Priority 4: Calculate from dimensions
+                if (image.width && image.height) {
+                  const w = parseInt(image.width as string);
+                  const h = parseInt(image.height as string);
+                  
+                  if (!isNaN(w) && !isNaN(h)) {
+                    if (w === h) return "1:1";
+                    if (Math.abs(w/h - 16/9) < 0.01) return "16:9";
+                    if (Math.abs(h/w - 16/9) < 0.01) return "9:16";
+                    if (Math.abs(w/h - 4/3) < 0.01) return "4:3";
+                    if (Math.abs(h/w - 4/3) < 0.01) return "3:4";
+                  }
+                }
+                
+                // Default fallback
+                return "1:1";
+              })()}
+            </Badge>
             
             {/* Resolution dimensions badge */}
             {image.width && image.height && (
