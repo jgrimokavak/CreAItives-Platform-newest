@@ -776,31 +776,74 @@ const CarCreationPage: React.FC = () => {
               ) : (
                 <div className="bg-card border rounded-lg shadow-sm p-6 max-w-4xl mx-auto">
                   <div className="mb-6">
-                    <h3 className="text-xl font-bold mb-2">Batch Car Generation</h3>
-                    <p className="text-muted-foreground">
-                      Upload a CSV file with car details to generate multiple car images at once. 
-                      The CSV should include columns like make, model, body_style, trim, year, color, background, and aspect_ratio.
-                    </p>
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="bg-primary/10 p-2 rounded-full">
+                        <CarFront className="h-6 w-6 text-primary" />
+                      </div>
+                      <h3 className="text-xl font-bold">Batch Car Generation</h3>
+                    </div>
+                    <div className="flex flex-col gap-3">
+                      <p className="text-muted-foreground">
+                        Generate multiple car images in one batch by uploading a CSV file with your specifications.
+                        Perfect for creating images for inventory, marketing materials, or pre-visualizing a series of vehicle configurations.
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-1">
+                        <div className="flex items-center gap-2 text-sm">
+                          <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">1</div>
+                          <span>Prepare your CSV file</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">2</div>
+                          <span>Upload and validate</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">3</div>
+                          <span>Download ZIP when complete</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   
                   <CSVUpload onUpload={handleBatchUpload} isLoading={isUploadingBatch} />
                   
-                  <div className="mt-6 bg-slate-50 border border-slate-200 rounded-md p-4">
-                    <h4 className="font-medium mb-2">CSV Format Instructions:</h4>
-                    <ul className="text-sm space-y-1 list-disc list-inside">
-                      <li><strong>make:</strong> The car manufacturer (e.g., "Audi", "Bmw")</li>
-                      <li><strong>model:</strong> The car model (e.g., "Q5", "X5")</li>
-                      <li><strong>body_style:</strong> The car body style (e.g., "SUV", "Sedan")</li>
-                      <li><strong>trim:</strong> Specific trim level (e.g., "Sport", "Premium")</li>
-                      <li><strong>year:</strong> Model year (e.g., "2025", "2024")</li>
-                      <li><strong>color:</strong> Car color (e.g., "silver", "blue", "red")</li>
-                      <li><strong>background:</strong> Either "white" for studio or "hub" for showroom</li>
-                      <li><strong>aspect_ratio:</strong> One of "1:1", "16:9", "9:16", "4:3", "3:4"</li>
-                    </ul>
-                    <p className="text-xs mt-3 text-muted-foreground">
-                      All columns are optional. If a column is missing, the AI will use its default values.
-                      Maximum 50 rows per batch job.
-                    </p>
+                  <div className="mt-6 bg-card border rounded-md overflow-hidden">
+                    <div className="bg-muted px-4 py-3 border-b">
+                      <h4 className="font-medium flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-primary"></span>
+                        CSV Format Guide
+                      </h4>
+                    </div>
+                    
+                    <div className="p-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                        {[
+                          { name: 'make', example: 'Audi, BMW', desc: 'Car manufacturer' },
+                          { name: 'model', example: 'Q5, X5', desc: 'Car model' },
+                          { name: 'body_style', example: 'SUV, Sedan', desc: 'Car type' },
+                          { name: 'trim', example: 'Sport, Premium', desc: 'Trim level' },
+                          { name: 'year', example: '2025, 2024', desc: 'Model year' },
+                          { name: 'color', example: 'silver, blue, red', desc: 'Car color' },
+                          { name: 'background', example: 'white, hub', desc: 'Studio or showroom' },
+                          { name: 'aspect_ratio', example: '4:3, 16:9, 1:1', desc: 'Image proportions' }
+                        ].map(col => (
+                          <div key={col.name} className="bg-muted/50 rounded-md p-3 border">
+                            <div className="font-mono text-sm text-primary-foreground bg-primary/90 rounded px-2 py-1 inline-block mb-1.5">{col.name}</div>
+                            <div className="text-xs text-muted-foreground">{col.desc}</div>
+                            <div className="text-xs mt-1 font-medium truncate">{col.example}</div>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <div className="bg-primary/5 rounded-md p-3 text-sm border border-primary/10">
+                        <h5 className="font-medium mb-1 text-primary-foreground/90">CSV Tips</h5>
+                        <ul className="text-xs space-y-1 list-disc list-inside text-muted-foreground">
+                          <li>All columns are optional. Default values will be used for missing columns.</li>
+                          <li>The first row must contain column headers (names) as shown above.</li>
+                          <li>Maximum 50 cars per batch for optimal performance.</li>
+                          <li>Simple CSV editor: <a href="https://www.tablesgenerator.com/csv_tables" target="_blank" rel="noreferrer" className="text-primary underline hover:no-underline">Tables Generator</a></li>
+                        </ul>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
