@@ -12,6 +12,7 @@ import {
   Home
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import kavakLogo from '@assets/LOGO_W (low quality)-01.png';
 
 interface SidebarLinkProps {
   to: string;
@@ -70,8 +71,8 @@ const Sidebar = ({ children }: SidebarProps) => {
           'flex flex-col'
         )}
       >
-        <div className="p-4 text-xl font-bold border-b border-slate-200">
-          AI Image Studio
+        <div className="p-4 border-b border-slate-200 flex justify-center items-center">
+          <img src={kavakLogo} alt="Kavak Logo" className="h-8" />
         </div>
         
         <nav className="flex-1 p-4 space-y-1">
