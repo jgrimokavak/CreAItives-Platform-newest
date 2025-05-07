@@ -41,20 +41,22 @@ interface GalleryImage {
 
 const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [showStarredOnly, setShowStarredOnly] = useState(false);
   const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState(''); // This will be used for actual searching
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectionMode, setSelectionMode] = useState<'none' | 'selecting'>('none');
   const [filterOpen, setFilterOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState<{
     models: string[];
     sizes: string[];
     qualities: string[];
+    starred: boolean;
   }>({
     models: [],
     sizes: [],
-    qualities: []
+    qualities: [],
+    starred: false
   });
   const { toast } = useToast();
   const [_, navigate] = useLocation();
@@ -82,7 +84,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
     
     try {
       const params = new URLSearchParams();
-      if (showStarredOnly) params.append('starred', 'true');
+      if (activeFilters.starred) params.append('starred', 'true');
       if (mode === 'trash') params.append('trash', 'true');
       if (searchTerm && searchTerm.trim() !== '') {
         params.append('q', searchTerm.trim()); // Backend expects 'q' parameter
@@ -241,7 +243,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       console.log('Star response:', data);
       
       // If we're in starred mode and unstarring, refresh the gallery to remove it
-      if (showStarredOnly && !newStarredState) {
+      if (activeFilters.starred && !newStarredState) {
         console.log('Refreshing gallery after unstarring in starred mode');
         fetchImages();
       }
@@ -464,7 +466,8 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
     setActiveFilters({
       models: [],
       sizes: [],
-      qualities: []
+      qualities: [],
+      starred: false
     });
   };
 
@@ -489,7 +492,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
     return () => {
       window.removeEventListener('gallery-updated', handleWebSocketMessage);
     };
-  }, [mode, showStarredOnly]);
+  }, [mode, activeFilters.starred]);
   
   // Separate effect for search term changes
   useEffect(() => {
@@ -541,7 +544,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
             {searchTerm 
               ? 'No results found'
               : mode === 'gallery' 
-                ? showStarredOnly 
+                ? activeFilters.starred 
                   ? 'No starred images yet' 
                   : 'Your gallery is empty'
                 : 'Trash is empty'
@@ -552,7 +555,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
             {searchTerm 
               ? `No images matching "${searchTerm}" were found`
               : mode === 'gallery' 
-                ? showStarredOnly
+                ? activeFilters.starred
                   ? 'Images you star will appear here for quick access'
                   : 'Generate some amazing images to start building your collection'
                 : 'Items you delete will appear here for 30 days before being permanently removed'
@@ -567,14 +570,18 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
               </Button>
             )}
             
-            {mode === 'gallery' && showStarredOnly && !searchTerm && (
-              <Button onClick={() => setShowStarredOnly(false)} variant="outline" className="gap-2">
+            {mode === 'gallery' && activeFilters.starred && !searchTerm && (
+              <Button 
+                onClick={() => setActiveFilters(prev => ({...prev, starred: false}))} 
+                variant="outline" 
+                className="gap-2"
+              >
                 <FolderOpen className="h-4 w-4" />
                 View all images
               </Button>
             )}
             
-            {mode === 'gallery' && !showStarredOnly && !searchTerm && (
+            {mode === 'gallery' && !activeFilters.starred && !searchTerm && (
               <Button onClick={() => navigate('/')} className="gap-2">
                 <Sparkles className="h-4 w-4" />
                 Create images
@@ -607,54 +614,39 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
             
             {/* Filters for gallery mode */}
             {mode === 'gallery' && (
-              <>
-                <Button
-                  variant={showStarredOnly ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setShowStarredOnly(!showStarredOnly)}
-                  className="gap-2"
-                >
-                  <Star className={cn(
-                    "h-4 w-4", 
-                    showStarredOnly ? "fill-current text-yellow-400" : ""
-                  )} />
-                  {showStarredOnly ? "Starred" : "All Images"}
-                </Button>
-                
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant={Object.values(activeFilters).some(arr => arr.length > 0) ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setFilterOpen(!filterOpen)}
-                        className="gap-2"
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant={activeFilters.starred || activeFilters.models.length > 0 || activeFilters.sizes.length > 0 || activeFilters.qualities.length > 0 ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setFilterOpen(!filterOpen)}
+                      className="gap-2"
+                    >
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        width="15" 
+                        height="15" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        strokeWidth="2" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round"
                       >
-                        <svg 
-                          xmlns="http://www.w3.org/2000/svg" 
-                          width="15" 
-                          height="15" 
-                          viewBox="0 0 24 24" 
-                          fill="none" 
-                          stroke="currentColor" 
-                          strokeWidth="2" 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round"
-                        >
-                          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
-                        </svg>
-                        Filters
-                        {Object.values(activeFilters).some(arr => arr.length > 0) && (
-                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
-                            {activeFilters.models.length + activeFilters.sizes.length + activeFilters.qualities.length}
-                          </span>
-                        )}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">Filter by model, size, quality</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </>
+                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                      </svg>
+                      Filters
+                      {(activeFilters.starred || activeFilters.models.length > 0 || activeFilters.sizes.length > 0 || activeFilters.qualities.length > 0) && (
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
+                          {(activeFilters.starred ? 1 : 0) + activeFilters.models.length + activeFilters.sizes.length + activeFilters.qualities.length}
+                        </span>
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">Filter by star status, model, size, quality</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
             
             {/* Search input */}
@@ -876,6 +868,30 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
               </div>
             </div>
             
+            {/* Starred filter - shown at the top for prominence */}
+            <div className="mb-4">
+              <div className="flex items-center gap-2 h-10">
+                <Button
+                  variant={activeFilters.starred ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setActiveFilters(prev => ({...prev, starred: !prev.starred}))}
+                  className="gap-2 h-9"
+                >
+                  <Star className={cn(
+                    "h-4 w-4", 
+                    activeFilters.starred ? "fill-current text-yellow-400" : ""
+                  )} />
+                  {activeFilters.starred ? "Showing Starred Only" : "Show Starred Images"}
+                </Button>
+                
+                {activeFilters.starred && (
+                  <p className="text-xs text-muted-foreground">
+                    Only showing images you've marked with a star
+                  </p>
+                )}
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Models */}
               <div className="space-y-2">
@@ -947,7 +963,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
               </span> 
               <span>
                 {filteredImages.length === 1 ? 'result' : 'results'} 
-                {Object.values(activeFilters).some(arr => arr.length > 0) ? ' with current filters' : ''}
+                {(activeFilters.starred || activeFilters.models.length > 0 || activeFilters.sizes.length > 0 || activeFilters.qualities.length > 0) ? ' with current filters' : ''}
               </span>
             </div>
           </div>
