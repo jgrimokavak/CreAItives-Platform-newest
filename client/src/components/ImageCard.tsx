@@ -359,85 +359,53 @@ export default function ImageCard({
           <div className="flex items-center justify-between">
             <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Prompt</h4>
             <div className="h-px flex-1 bg-border/50 mx-2"></div>
-            <span className="text-[10px] text-muted-foreground/70 font-mono">
-              {new Date(image.createdAt).toLocaleDateString(undefined, {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
-              })}
-            </span>
+            <span className="text-[10px] text-muted-foreground/70 font-mono">{new Date(image.createdAt).toLocaleDateString()}</span>
           </div>
-          
-          <div className="group relative">
-            <p className="text-sm font-medium leading-5 line-clamp-2 text-foreground/90 p-2 bg-muted/20 rounded border-l-2 border-primary/30 hover:border-primary transition-colors">
-              {image.prompt}
-            </p>
-            
-            {/* Show full prompt on hover if it's truncated */}
-            {image.prompt.length > 60 && (
-              <div className="absolute z-10 left-0 right-0 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity duration-200 delay-300">
-                <div className="mt-1 p-3 bg-popover border rounded-md shadow-md text-sm max-w-md max-h-48 overflow-y-auto">
-                  {image.prompt}
-                </div>
-              </div>
-            )}
-          </div>
+          <p className="text-sm font-medium leading-5 line-clamp-2 text-foreground/90 p-1 bg-muted/20 rounded border-l-2 border-primary/30">
+            {image.prompt}
+          </p>
         </div>
         
         {/* Parameters section with color coding */}
         <div className="space-y-1.5">
-          <div className="flex items-center">
-            <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Parameters</h4>
-            <div className="h-px flex-1 bg-border/50 ml-2"></div>
-          </div>
+          <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Parameters</h4>
           
           <div className="flex flex-wrap gap-2 text-xs">
-            {/* Extract and normalize tags to avoid duplications */}
-            {(() => {
-              // Create a set of unique tags
-              const tagSet = new Set<string>();
-              const tags: {text: string; type: 'model' | 'size' | 'quality' | 'dimension' | 'aspect'}[] = [];
-              
-              // Add model tag (always blue)
-              tags.push({
-                text: image.model,
-                type: 'model'
-              });
-              tagSet.add(image.model.toLowerCase());
-              
-              // Only add size tag if it's not already included in the model name
-              if (!image.model.toLowerCase().includes(image.size.toLowerCase())) {
-                tags.push({
-                  text: image.size,
-                  type: 'size'
-                });
-                tagSet.add(image.size.toLowerCase());
-              }
-              
-              // Only add quality tag if present and not a duplicate
-              if (image.quality && !tagSet.has(image.quality.toLowerCase())) {
-                tags.push({
-                  text: image.quality,
-                  type: 'quality'
-                });
-                tagSet.add(image.quality.toLowerCase());
-              }
-              
-              // Add dimensions tag if available
-              if (image.width && image.height) {
-                const dimensionText = `${image.width}×${image.height}`;
-                if (!tagSet.has(dimensionText.toLowerCase())) {
-                  tags.push({
-                    text: dimensionText,
-                    type: 'dimension'
-                  });
-                  tagSet.add(dimensionText.toLowerCase());
-                }
-              }
-              
-              // Calculate and add aspect ratio if width/height available or if provided
-              const aspectRatio = image.aspectRatio || 
-                (image.width && image.height) ? 
+            {/* Model tag - blue color scheme */}
+            <span className="bg-blue-50 text-blue-700 border border-blue-200 rounded-full px-2.5 py-0.5 flex items-center">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5"></span>
+              {image.model}
+            </span>
+            
+            {/* Size tag - purple color scheme */}
+            <span className="bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-2.5 py-0.5 flex items-center">
+              <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mr-1.5"></span>
+              {image.size}
+            </span>
+            
+            {/* Quality tag - green color scheme */}
+            {image.quality && (
+              <span className="bg-green-50 text-green-700 border border-green-200 rounded-full px-2.5 py-0.5 flex items-center">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>
+                {image.quality}
+              </span>
+            )}
+            
+            {/* Dimensions tag - amber color scheme */}
+            {(image.width && image.height) && (
+              <span className="bg-amber-50 text-amber-700 border border-amber-200 rounded-full px-2.5 py-0.5 flex items-center">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5"></span>
+                {image.width}×{image.height}
+              </span>
+            )}
+            
+            {/* Aspect Ratio tag - rose color scheme - calculate if width/height available or use provided */}
+            {(image.aspectRatio || (image.width && image.height)) && (
+              <span className="bg-rose-50 text-rose-700 border border-rose-200 rounded-full px-2.5 py-0.5 flex items-center">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mr-1.5"></span>
+                {image.aspectRatio || 
+                 // Calculate aspect ratio if not provided but width/height are available
+                 (image.width && image.height) ? 
                   (() => {
                     const w = Number(image.width);
                     const h = Number(image.height);
@@ -451,65 +419,10 @@ export default function ImageCard({
                       return ratio.toFixed(2);
                     }
                     return null;
-                  })() : null;
-              
-              if (aspectRatio && !tagSet.has(aspectRatio.toLowerCase())) {
-                tags.push({
-                  text: aspectRatio,
-                  type: 'aspect'
-                });
-              }
-              
-              // Render all unique tags with appropriate styling
-              return tags.map((tag, index) => {
-                // Define color schemes based on tag type
-                let bgColor = "bg-blue-50";
-                let textColor = "text-blue-700";
-                let borderColor = "border-blue-200";
-                let dotColor = "bg-blue-500";
-                
-                switch(tag.type) {
-                  case 'model':
-                    // Blue for model (default)
-                    break; 
-                  case 'size':
-                    bgColor = "bg-purple-50";
-                    textColor = "text-purple-700";
-                    borderColor = "border-purple-200";
-                    dotColor = "bg-purple-500";
-                    break;
-                  case 'quality':
-                    bgColor = "bg-green-50";
-                    textColor = "text-green-700";
-                    borderColor = "border-green-200";
-                    dotColor = "bg-green-500";
-                    break;
-                  case 'dimension':
-                    bgColor = "bg-amber-50";
-                    textColor = "text-amber-700";
-                    borderColor = "border-amber-200";
-                    dotColor = "bg-amber-500";
-                    break;
-                  case 'aspect':
-                    bgColor = "bg-rose-50";
-                    textColor = "text-rose-700";
-                    borderColor = "border-rose-200";
-                    dotColor = "bg-rose-500";
-                    break;
+                  })() : null
                 }
-                
-                return (
-                  <span 
-                    key={`${tag.type}-${index}`}
-                    className={`${bgColor} ${textColor} border ${borderColor} rounded-full px-2.5 py-0.5 flex items-center hover:shadow-sm transition-all group`}
-                    title={`${tag.type}: ${tag.text}`}
-                  >
-                    <span className={`w-1.5 h-1.5 rounded-full ${dotColor} mr-1.5 group-hover:scale-125 transition-transform`}></span>
-                    <span className="font-medium">{tag.text}</span>
-                  </span>
-                );
-              });
-            })()}
+              </span>
+            )}
           </div>
         </div>
       </CardContent>
