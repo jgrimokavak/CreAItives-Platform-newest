@@ -41,10 +41,32 @@ const PROMPTS = {
 
 // Helper to create filename from row data
 export function makeFilename(r: Row, idx: number): string {
-  const parts = ["make", "model", "year", "body_style", "trim", "background"]
-    .map(k => ((r as any)[k] || "").replace(/\s+/g, "_"))
-    .filter(Boolean);
-  return (parts.join("-") || `car-${idx}`) + ".png";
+  // Get all available parts
+  const make = ((r.make || "").trim()).replace(/\s+/g, "_");
+  const model = ((r.model || "").trim()).replace(/\s+/g, "_");
+  const year = ((r.year || "").trim()).replace(/\s+/g, "_");
+  const bodyStyle = ((r.body_style || "").trim()).replace(/\s+/g, "_");
+  const trim = ((r.trim || "").trim()).replace(/\s+/g, "_");
+  const color = ((r.color || "").trim()).replace(/\s+/g, "_");
+  const background = ((r.background || "").trim()).replace(/\s+/g, "_");
+  
+  // Format: Year_Make_Model_BodyStyle_Color_Background.png
+  // Only include parts that are available
+  let parts = [];
+  
+  if (year) parts.push(year);
+  if (make) parts.push(make);
+  if (model) parts.push(model);
+  if (bodyStyle) parts.push(bodyStyle);
+  if (trim) parts.push(trim);
+  if (color) parts.push(color);
+  if (background) parts.push(background);
+  
+  // If no parts are available, use a fallback name with index
+  const filename = parts.length > 0 ? parts.join("-") : `car-${idx}`;
+  
+  // Add a numerical suffix to avoid filename conflicts
+  return `${filename}-${idx+1}.png`;
 }
 
 // Helper to build prompt from template
@@ -63,10 +85,22 @@ export async function createZipForBatchJob(id: string, job: BatchJob, tmpDir: st
     return { success: false };
   }
   
+  // Create a more descriptive filename based on job details
+  const timestamp = new Date().toISOString().replace(/[:T.-]/g, "").slice(0, 14); // YYYYMMDDHHMMSS
+  const completionStatus = job.status === "stopped" ? "partial" : 
+                          job.status === "failed" ? "partial_with_errors" : "complete";
+  const countInfo = `${job.done}of${job.total}`;
+  
+  // Create a descriptive filename: car_batch_YYYYMMDDHHMMSS_status_count.zip
+  const zipFilename = `car_batch_${timestamp}_${completionStatus}_${countInfo}.zip`;
+  
   // Create paths for both temp and downloads directory
-  const tmpZipPath = path.join("/tmp", `${id}.zip`);
+  const tmpZipPath = path.join("/tmp", zipFilename);
   const downloadDir = path.join(process.cwd(), "downloads");
-  const downloadZipPath = path.join(downloadDir, `${id}.zip`);
+  const downloadZipPath = path.join(downloadDir, zipFilename);
+  
+  // Store the original ID for reference and debugging
+  console.log(`Creating ZIP file ${zipFilename} for job ID: ${id}`);
   
   // Make sure downloads directory exists
   if (!fs.existsSync(downloadDir)) {
