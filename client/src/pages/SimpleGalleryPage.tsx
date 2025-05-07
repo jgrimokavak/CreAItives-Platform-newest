@@ -421,11 +421,15 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
     fetchImages();
   }, [searchTerm]);
   
-  // Empty state
+  // Loading state
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-[70vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="flex flex-col justify-center items-center h-[70vh]">
+        <div className="relative w-16 h-16 mb-4">
+          <Loader2 className="w-16 h-16 animate-spin text-primary/30" />
+          <Loader2 className="w-16 h-16 animate-spin text-primary absolute top-0 left-0 opacity-70" style={{animationDuration: '3s'}} />
+        </div>
+        <p className="text-muted-foreground">Loading gallery...</p>
       </div>
     );
   }
@@ -434,8 +438,13 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
   if (error) {
     return (
       <div className="flex flex-col justify-center items-center h-[70vh] text-center">
-        <p className="text-red-500 mb-4">{error}</p>
-        <Button onClick={fetchImages}>Try Again</Button>
+        <div className="bg-red-50 border border-red-100 rounded-lg p-8 shadow-sm max-w-md">
+          <p className="text-red-500 mb-4 text-lg">{error}</p>
+          <Button onClick={fetchImages} className="gap-2">
+            <RotateCcw className="h-4 w-4" />
+            Try Again
+          </Button>
+        </div>
       </div>
     );
   }
@@ -443,43 +452,57 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
   // Empty state
   if (images.length === 0) {
     return (
-      <div className="flex flex-col justify-center items-center h-[70vh] text-center">
-        <FolderOpen className="w-16 h-16 text-slate-300 mb-4" />
-        <h2 className="text-xl font-semibold mb-2">
-          {searchTerm 
-            ? 'No results found'
-            : mode === 'gallery' 
-              ? showStarredOnly 
-                ? 'No starred images yet' 
-                : 'Your gallery is empty'
-              : 'Trash is empty'
-          }
-        </h2>
-        <p className="text-slate-500 max-w-md mb-6">
-          {searchTerm 
-            ? `No images matching "${searchTerm}" were found`
-            : mode === 'gallery' 
-              ? showStarredOnly
-                ? 'Images you star will appear here for quick access'
-                : 'Generate some amazing images to start building your collection'
-              : 'Items you delete will appear here for 30 days before being permanently removed'
-          }
-        </p>
-        {searchTerm && (
-          <Button onClick={clearSearch} variant="outline" className="mb-2">
-            Clear search
-          </Button>
-        )}
-        {mode === 'gallery' && showStarredOnly && !searchTerm && (
-          <Button onClick={() => setShowStarredOnly(false)}>
-            View all images
-          </Button>
-        )}
-        {mode === 'gallery' && !showStarredOnly && !searchTerm && (
-          <Button onClick={() => navigate('/')}>
-            Create images
-          </Button>
-        )}
+      <div className="flex flex-col justify-center items-center h-[70vh] text-center p-4">
+        <div className="bg-background border border-border rounded-xl p-8 shadow-sm max-w-md">
+          <div className="bg-muted/30 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
+            <FolderOpen className="w-12 h-12 text-muted-foreground/50" />
+          </div>
+          
+          <h2 className="text-xl font-semibold mb-3">
+            {searchTerm 
+              ? 'No results found'
+              : mode === 'gallery' 
+                ? showStarredOnly 
+                  ? 'No starred images yet' 
+                  : 'Your gallery is empty'
+                : 'Trash is empty'
+            }
+          </h2>
+          
+          <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+            {searchTerm 
+              ? `No images matching "${searchTerm}" were found`
+              : mode === 'gallery' 
+                ? showStarredOnly
+                  ? 'Images you star will appear here for quick access'
+                  : 'Generate some amazing images to start building your collection'
+                : 'Items you delete will appear here for 30 days before being permanently removed'
+            }
+          </p>
+          
+          <div className="flex flex-wrap gap-3 justify-center">
+            {searchTerm && (
+              <Button onClick={clearSearch} variant="outline" className="gap-2">
+                <X className="h-4 w-4" />
+                Clear search
+              </Button>
+            )}
+            
+            {mode === 'gallery' && showStarredOnly && !searchTerm && (
+              <Button onClick={() => setShowStarredOnly(false)} variant="outline" className="gap-2">
+                <FolderOpen className="h-4 w-4" />
+                View all images
+              </Button>
+            )}
+            
+            {mode === 'gallery' && !showStarredOnly && !searchTerm && (
+              <Button onClick={() => navigate('/')} className="gap-2">
+                <Sparkles className="h-4 w-4" />
+                Create images
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
     );
   }
@@ -710,7 +733,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       </div>
       
       {/* Gallery grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 p-6">
         {images.map((image) => (
           <ImageCard
             key={image.id}
@@ -732,14 +755,19 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
             onClick={() => {
               // Show image in fullscreen when clicked
               const img = document.createElement('div');
-              img.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/90';
+              img.className = 'fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/95';
               img.onclick = () => document.body.removeChild(img);
               
               const imgEl = document.createElement('img');
               imgEl.src = image.fullUrl;
-              imgEl.className = 'max-h-[90vh] max-w-[90vw] object-contain';
+              imgEl.className = 'max-h-[85vh] max-w-[90vw] object-contain';
+              
+              const caption = document.createElement('div');
+              caption.className = 'mt-3 text-white/90 text-sm max-w-[80%] text-center';
+              caption.textContent = image.prompt;
               
               img.appendChild(imgEl);
+              img.appendChild(caption);
               document.body.appendChild(img);
             }}
           />

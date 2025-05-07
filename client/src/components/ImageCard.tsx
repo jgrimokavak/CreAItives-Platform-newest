@@ -50,7 +50,7 @@ export default function ImageCard({
   return (
     <div 
       key={image.id}
-      className="bg-card rounded-lg overflow-hidden shadow-sm border border-border hover:shadow-md transition-shadow group cursor-pointer"
+      className="bg-card rounded-lg overflow-hidden shadow-sm border border-border hover:shadow-lg transition-all group cursor-pointer hover:border-primary/20"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={onClick}
@@ -61,21 +61,24 @@ export default function ImageCard({
           <img 
             src={image.thumbUrl || image.url} 
             alt={image.prompt}
-            className="w-full h-full object-contain"
-          loading="lazy"
-        />
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
         </div>
         
         {/* Selection overlay */}
         {onSelect && (
           <div 
-            className="absolute top-2 left-2 z-10 bg-white/80 backdrop-blur-sm rounded p-1 shadow-sm hover:bg-white/95 transition-colors cursor-pointer"
+            className={cn(
+              "absolute top-2 left-2 z-10 bg-white/80 backdrop-blur-sm rounded-full p-1 shadow-sm transition-colors cursor-pointer",
+              selected ? "bg-primary/20" : "hover:bg-white/95"
+            )}
             onClick={(e) => {
               e.stopPropagation();
               onSelect(image.id, !selected);
             }}
           >
-            <div className="relative w-5 h-5">
+            <div className="relative w-5 h-5 flex items-center justify-center">
               <input
                 type="checkbox"
                 checked={selected}
@@ -83,7 +86,10 @@ export default function ImageCard({
                   e.stopPropagation();
                   onSelect(image.id, e.target.checked);
                 }}
-                className="h-5 w-5 rounded border-gray-300 cursor-pointer"
+                className={cn(
+                  "h-4 w-4 rounded-sm border-2 cursor-pointer transition-colors",
+                  selected ? "border-primary bg-primary text-white" : "border-gray-400"
+                )}
                 onClick={(e) => e.stopPropagation()}
               />
             </div>
@@ -277,38 +283,38 @@ export default function ImageCard({
         
         {/* Starred indicator */}
         {image.starred && mode === 'gallery' && (
-          <div className="absolute top-2 right-2 text-yellow-300">
-            <StarIcon className="h-5 w-5 fill-current" />
+          <div className="absolute top-2 right-2 text-yellow-400 bg-white/80 backdrop-blur-sm p-1 rounded-full shadow-sm">
+            <StarIcon className="h-4 w-4 fill-current" />
           </div>
         )}
         
         {/* Source image thumbnail indicator (for edited images) */}
         {image.sourceThumb && (
           <div 
-            className="absolute bottom-2 right-2 z-10 h-12 w-12 rounded-md overflow-hidden border-2 border-white shadow-md cursor-pointer hover:scale-105 transition-transform"
+            className="absolute bottom-2 right-2 z-10 h-10 w-10 rounded-md overflow-hidden border-2 border-white shadow-lg cursor-pointer hover:scale-110 transition-transform bg-white"
             onClick={(e) => {
               e.stopPropagation();
               // Show source image in fullscreen when clicked
               const modal = document.createElement('div');
-              modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/90';
+              modal.className = 'fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/95';
               modal.onclick = () => document.body.removeChild(modal);
               
               const imgEl = document.createElement('img');
               // Use the full-resolution sourceImage if available, otherwise fall back to the thumbnail
               imgEl.src = image.sourceImage || image.sourceThumb || "";
-              imgEl.className = 'max-h-[90vh] max-w-[90vw] object-contain';
+              imgEl.className = 'max-h-[85vh] max-w-[90vw] object-contain';
               
               const caption = document.createElement('div');
-              caption.className = 'absolute bottom-4 left-0 right-0 text-center text-white text-sm bg-black/50 py-2';
-              caption.textContent = 'Source image';
+              caption.className = 'mt-4 text-white/90 text-sm bg-black/30 px-4 py-2 rounded-full backdrop-blur-sm';
+              caption.textContent = 'Source Image';
               
               modal.appendChild(imgEl);
               modal.appendChild(caption);
               document.body.appendChild(modal);
             }}
           >
-            <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-              <ImageIcon className="h-6 w-6 text-white" />
+            <div className="absolute inset-0 bg-black/30 flex items-center justify-center backdrop-blur-sm">
+              <ImageIcon className="h-5 w-5 text-white" />
             </div>
             <img 
               src={image.sourceThumb} 
@@ -319,18 +325,20 @@ export default function ImageCard({
         )}
       </div>
       
-      <CardContent className="p-3 space-y-2">
-        <p className="text-sm font-medium line-clamp-2">{image.prompt}</p>
-        <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-          <span className="bg-muted/50 rounded-full px-2 py-0.5">
+      <CardContent className="p-4 space-y-3">
+        <p className="text-sm font-medium line-clamp-2 text-foreground/90">{image.prompt}</p>
+        <div className="flex flex-wrap gap-2 text-xs">
+          <span className="bg-muted/50 rounded-full px-2.5 py-0.5 text-muted-foreground">
             {image.model}
           </span>
-          <span className="bg-muted/50 rounded-full px-2 py-0.5">
+          <span className="bg-muted/50 rounded-full px-2.5 py-0.5 text-muted-foreground">
             {image.size}
           </span>
-          <span className="bg-muted/50 rounded-full px-2 py-0.5">
-            {image.quality || 'standard'}
-          </span>
+          {image.quality && (
+            <span className="bg-muted/50 rounded-full px-2.5 py-0.5 text-muted-foreground">
+              {image.quality}
+            </span>
+          )}
         </div>
       </CardContent>
     </div>
