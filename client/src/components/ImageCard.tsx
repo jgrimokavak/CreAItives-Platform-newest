@@ -72,7 +72,7 @@ export default function ImageCard({
           <img 
             src={image.thumbUrl || image.url} 
             alt={image.prompt}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
             loading="lazy"
           />
           
@@ -354,102 +354,35 @@ export default function ImageCard({
         )}
       </div>
       
-      <CardContent className="p-4 space-y-4">
+      <CardContent className="p-4 space-y-3">
         {/* Prompt section with improved styling */}
         <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Prompt</h4>
-            <div className="h-px flex-1 bg-border/50 mx-2"></div>
-            <span className="text-[10px] text-muted-foreground/70 font-mono">
-              {new Date(image.createdAt).toLocaleDateString(undefined, {
-                month: 'short',
-                day: 'numeric',
-                year: '2-digit'
-              })}
-            </span>
-          </div>
-          
-          {/* Enhanced prompt display with better typography and visual design */}
-          <div className="relative group">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/10 to-primary/5 rounded-md blur opacity-25 group-hover:opacity-40 transition duration-200"></div>
-            <p className="relative text-sm font-medium leading-relaxed line-clamp-2 p-2 bg-card/90 dark:bg-card-foreground/10 rounded-md shadow-sm text-foreground/90 border-l-2 border-primary">
-              {image.prompt}
-            </p>
-          </div>
+          <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Prompt</h3>
+          <p className="text-sm leading-relaxed line-clamp-3 text-muted-foreground">
+            {image.prompt || "No prompt provided"}
+          </p>
         </div>
         
-        {/* Parameters section with standardized badges */}
-        <div className="space-y-1.5">
-          <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Parameters</h4>
+        {/* Image details with model and date */}
+        <div className="flex items-center justify-between">
+          {/* Model badge with color coding */}
+          <Badge 
+            variant="outline" 
+            className={cn(
+              "whitespace-nowrap text-xs font-medium border",
+              image.model === "gpt-image-1" && "bg-blue-50/80 text-blue-700 border-blue-200",
+              image.model === "imagen-3" && "bg-emerald-50/80 text-emerald-700 border-emerald-200",
+              image.model === "flux-pro" && "bg-violet-50/80 text-violet-700 border-violet-200",
+              image.model === "car-generator" && "bg-amber-50/80 text-amber-700 border-amber-200"
+            )}
+          >
+            {image.model}
+          </Badge>
           
-          <div className="flex flex-wrap gap-2 text-xs">
-            {/* AI Model badge */}
-            <Badge variant="outline" className="bg-blue-50/80 text-blue-700 border-blue-200 whitespace-nowrap">
-              {image.model}
-            </Badge>
-            
-            {/* Aspect Ratio badge - simplified, no dynamic aspect-* classes */}
-            <Badge variant="outline" className="bg-purple-50/80 text-purple-700 border-purple-200 whitespace-nowrap">
-              {(() => {
-                // Priority 1: Use explicitly stored aspect ratio (best option)
-                if (image.aspectRatio) {
-                  return image.aspectRatio;
-                }
-                
-                // Priority 2: Check if size field contains a ratio format (e.g., "1:1", "16:9")
-                if (image.size && image.size.includes(':')) {
-                  return image.size;
-                }
-                
-                // Priority 3: Map from common dimensions
-                if (image.size) {
-                  const ratioMap: Record<string, string> = {
-                    "1024x1024": "1:1",
-                    "1024x1792": "9:16",
-                    "1792x1024": "16:9",
-                    "1024x1536": "2:3",
-                    "1536x1024": "3:2"
-                  };
-                  
-                  const aspectRatio = ratioMap[image.size];
-                  if (aspectRatio) {
-                    return aspectRatio;
-                  }
-                }
-                
-                // Priority 4: Calculate from dimensions
-                if (image.width && image.height) {
-                  const w = parseInt(image.width as string);
-                  const h = parseInt(image.height as string);
-                  
-                  if (!isNaN(w) && !isNaN(h)) {
-                    if (w === h) return "1:1";
-                    if (Math.abs(w/h - 16/9) < 0.01) return "16:9";
-                    if (Math.abs(h/w - 16/9) < 0.01) return "9:16";
-                    if (Math.abs(w/h - 4/3) < 0.01) return "4:3";
-                    if (Math.abs(h/w - 4/3) < 0.01) return "3:4";
-                  }
-                }
-                
-                // Default fallback
-                return "1:1";
-              })()}
-            </Badge>
-            
-            {/* Resolution dimensions badge */}
-            {image.width && image.height && (
-              <Badge variant="outline" className="bg-amber-50/80 text-amber-700 border-amber-200 whitespace-nowrap">
-                {image.width}×{image.height}
-              </Badge>
-            )}
-            
-            {/* Quality badge */}
-            {image.quality && (
-              <Badge variant="outline" className="bg-green-50/80 text-green-700 border-green-200 whitespace-nowrap">
-                {image.quality.charAt(0).toUpperCase() + image.quality.slice(1)}
-              </Badge>
-            )}
-          </div>
+          {/* Date display */}
+          <span className="text-xs text-muted-foreground">
+            {image.createdAt && new Date(image.createdAt).toLocaleDateString()}
+          </span>
         </div>
       </CardContent>
     </div>
