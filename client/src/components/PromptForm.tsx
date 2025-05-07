@@ -326,38 +326,40 @@ export default function PromptForm({
                 <FormItem className="space-y-1.5">
                   <FormLabel className="text-sm font-medium">Image Description</FormLabel>
                   <FormControl>
-                    <div className="relative">
+                    <div>
                       <Textarea
                         placeholder="Describe what you want to see. Be specific about details, style, and composition."
-                        className="resize-none min-h-[120px] text-sm pr-28"
+                        className="resize-none min-h-[120px] text-sm"
                         {...field}
                       />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="absolute right-2 top-2 h-8 bg-gradient-to-r from-violet-50 to-indigo-50 border-purple-200 ring-1 ring-inset ring-purple-100/70 hover:ring-purple-300 shadow-sm hover:shadow text-sm px-2.5 text-purple-800"
-                        title="Enhance Prompt (Ctrl+Space)"
-                        onClick={enhancePrompt}
-                        disabled={isEnhancing || field.value?.length < 3}
-                      >
-                        <div className="flex items-center space-x-1">
-                          {isEnhancing ? (
-                            <svg className="animate-spin h-3.5 w-3.5 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                          ) : (
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-purple-600">
-                              <path d="M12 1V5M12 19V23M4.22 4.22L7.05 7.05M16.95 16.95L19.78 19.78M1 12H5M19 12H23M4.22 19.78L7.05 16.95M16.95 7.05L19.78 4.22" 
-                                stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                          )}
-                          <span className="font-medium">AI Enhance</span>
-                        </div>
-                      </Button>
+                      <div className="flex justify-end mt-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="h-8 bg-gradient-to-r from-violet-50 to-indigo-50 border-purple-200 ring-1 ring-inset ring-purple-100/70 hover:ring-purple-300 shadow-sm hover:shadow text-sm px-3 text-purple-800"
+                          title="Enhance Prompt (Ctrl+Space)"
+                          onClick={enhancePrompt}
+                          disabled={isEnhancing || field.value?.length < 3}
+                        >
+                          <div className="flex items-center space-x-1.5">
+                            {isEnhancing ? (
+                              <svg className="animate-spin h-3.5 w-3.5 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                            ) : (
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-purple-600">
+                                <path d="M12 1V5M12 19V23M4.22 4.22L7.05 7.05M16.95 16.95L19.78 19.78M1 12H5M19 12H23M4.22 19.78L7.05 16.95M16.95 7.05L19.78 4.22" 
+                                  stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            )}
+                            <span className="font-medium">AI Enhance</span>
+                          </div>
+                        </Button>
+                      </div>
                     </div>
                   </FormControl>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground mt-2">
                     For best results, include details about style, lighting, colors, and composition or use the AI Enhance button
                   </p>
                   
