@@ -1,0 +1,17 @@
+home_page_brief_prompt.txt
+================================
+
+Create a sleek, contemporary Home page for **“CreAItives Platform 2.0.”**  
+The page should:
+
+- Serve as the main landing screen, welcoming users with a clean hero section, a bold title, and a concise tagline.
+- Visually showcase every key feature of the platform (Create, Car Creation, Gallery, Upscale, Trash, AI Prompt Helper, etc.) so newcomers instantly understand what the product offers.
+- Include an auto‑scrolling carousel that pulls and cycles through recent images from the Gallery, adding life and credibility to the landing page.
+- Feel modern, attractive, and cohesive with the rest of the site’s design language.
+
+Navigation requirements:
+
+- Add the new Home page to the sidebar as the **first** item—above “Create.”  
+- Treat it as a brand‑new route/component; do not fold it into any existing page.
+
+Use your best judgment on additional visual or UX flourishes that elevate the first‑impression experience.
