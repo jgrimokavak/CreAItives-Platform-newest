@@ -64,15 +64,15 @@ export default function Home() {
                 onValueChange={(value) => setMode(value as "generate" | "edit")}
                 className="w-full h-full flex flex-col"
               >
-                <div className="mb-4">
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="generate" className="text-sm py-2">Create New</TabsTrigger>
-                    <TabsTrigger value="edit" className="text-sm py-2">Edit Image</TabsTrigger>
+                <div className="mb-6">
+                  <TabsList className="grid w-full grid-cols-2 relative z-10">
+                    <TabsTrigger value="generate" className="text-sm py-2.5 px-2">Create New</TabsTrigger>
+                    <TabsTrigger value="edit" className="text-sm py-2.5 px-2">Edit Image</TabsTrigger>
                   </TabsList>
                 </div>
                 
-                <div className="flex-1">
-                  <TabsContent value="generate" className="mt-0 focus-visible:outline-none focus-visible:ring-0 h-full">
+                <div className="flex-1 pt-2">
+                  <TabsContent value="generate" className="focus-visible:outline-none focus-visible:ring-0 h-full">
                     <PromptForm
                       onGenerateStart={handleGenerateStart}
                       onGenerateComplete={handleGenerateComplete}
@@ -80,7 +80,7 @@ export default function Home() {
                     />
                   </TabsContent>
                   
-                  <TabsContent value="edit" className="mt-0 focus-visible:outline-none focus-visible:ring-0 h-full">
+                  <TabsContent value="edit" className="focus-visible:outline-none focus-visible:ring-0 h-full">
                     <EditForm
                       onEditStart={handleGenerateStart}
                       onEditComplete={handleGenerateComplete}
