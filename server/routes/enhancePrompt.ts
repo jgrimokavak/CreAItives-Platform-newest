@@ -19,19 +19,29 @@ const bodySchema = z.object({
 
 // Model-specific templates
 function systemTemplate(model: string): string {
-  const baseTemplate = "You are an expert prompt engineer. Rewrite the user prompt so it is perfectly optimised for the {MODEL} image model, adding vivid camera angles, lighting, style adjectives, palette references, and an 8K quality hint. Return JSON with keys \"prompt\" and \"negativePrompt\".";
+  const baseTemplate = `You are an expert prompt engineer. ENHANCE (don't completely rewrite) the user's prompt to optimize it for the {MODEL} image model. 
+
+IMPORTANT GUIDELINES:
+1. PRESERVE the user's core intent and style - if they want a photo, keep it a photo; if they want illustration, keep it illustration
+2. MAINTAIN the subject and setting from the original prompt
+3. ADD SUBTLE enhancements like better lighting descriptions, composition hints, or quality terms ONLY when they improve the result
+4. DO NOT add '8K' or other technical terms unless truly needed
+5. MAKE MINIMAL CHANGES - enhance, don't transform the prompt
+6. ADD a short negative prompt that helps avoid common issues
+
+Return a JSON object with two keys: "prompt" (the enhanced version) and "negativePrompt" (things to avoid).`;
   
   let modelSpecificGuidance = "";
   
   switch (model) {
     case "gpt-image-1":
-      modelSpecificGuidance = "Use photographic terms, explicit lens types, f‑stop, film grain.";
+      modelSpecificGuidance = "For GPT-Image-1, subtly enhance with lighting terms or composition hints when needed. Only add photography terms (like lens type, f-stop) if the user is clearly requesting a photo.";
       break;
     case "imagen-3":
-      modelSpecificGuidance = "Add bold color descriptions, meticulous composition, trending on ArtStation.";
+      modelSpecificGuidance = "For Imagen-3, subtly enhance with color descriptions or composition terms when they'd improve the result. Don't add 'trending on ArtStation' unless the user wants a digital art style.";
       break;
     case "flux-pro":
-      modelSpecificGuidance = "Focus on realistic automotive rendering, studio HDR lighting.";
+      modelSpecificGuidance = "For Flux-Pro, add subtle lighting terms when they'd improve the result. For car-related prompts, you may add more specific automotive rendering terms.";
       break;
     default:
       modelSpecificGuidance = "";
