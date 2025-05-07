@@ -46,6 +46,16 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
   const [searchTerm, setSearchTerm] = useState(''); // This will be used for actual searching
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<{
+    models: string[];
+    sizes: string[];
+    qualities: string[];
+  }>({
+    models: [],
+    sizes: [],
+    qualities: []
+  });
   const { toast } = useToast();
   const [_, navigate] = useLocation();
   const { setMode, setSourceImages } = useEditor();
@@ -395,6 +405,75 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
     }
   };
   
+  // Extract unique metadata values from images
+  const getFilterOptions = (images: GalleryImage[]) => {
+    const models = new Set<string>();
+    const sizes = new Set<string>();
+    const qualities = new Set<string>();
+    
+    images.forEach(img => {
+      if (img.model) models.add(img.model);
+      if (img.size) sizes.add(img.size);
+      if (img.quality) qualities.add(img.quality || 'standard');
+    });
+    
+    return {
+      models: Array.from(models).sort(),
+      sizes: Array.from(sizes).sort(),
+      qualities: Array.from(qualities).sort()
+    };
+  };
+  
+  // Apply filters to images
+  const applyFilters = (images: GalleryImage[]) => {
+    if (!activeFilters.models.length && !activeFilters.sizes.length && !activeFilters.qualities.length) {
+      return images;
+    }
+    
+    return images.filter(img => {
+      const modelMatch = activeFilters.models.length === 0 || activeFilters.models.includes(img.model);
+      const sizeMatch = activeFilters.sizes.length === 0 || activeFilters.sizes.includes(img.size);
+      const qualityMatch = activeFilters.qualities.length === 0 || 
+                          activeFilters.qualities.includes(img.quality || 'standard');
+      
+      return modelMatch && sizeMatch && qualityMatch;
+    });
+  };
+  
+  // Toggle filter selection
+  const toggleFilter = (type: 'models' | 'sizes' | 'qualities', value: string) => {
+    setActiveFilters(prev => {
+      const current = [...prev[type]];
+      const index = current.indexOf(value);
+      
+      if (index >= 0) {
+        current.splice(index, 1);
+      } else {
+        current.push(value);
+      }
+      
+      return {
+        ...prev,
+        [type]: current
+      };
+    });
+  };
+  
+  // Clear all filters
+  const clearFilters = () => {
+    setActiveFilters({
+      models: [],
+      sizes: [],
+      qualities: []
+    });
+  };
+
+  // Final filtered images
+  const filteredImages = applyFilters(images);
+  
+  // Get available filter options
+  const filterOptions = getFilterOptions(images);
+  
   // Fetch images when component mounts, mode changes, or starred filter changes
   useEffect(() => {
     fetchImages();
@@ -510,231 +589,374 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
   return (
     <div className="pb-20">
       {/* Gallery toolbar */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border p-4 flex flex-wrap gap-3 items-center justify-between">
-        <div className="flex flex-wrap gap-3 items-center">
-          {/* Page title and count */}
-          <div className="flex items-center mr-2">
-            <h1 className="text-lg font-medium mr-2">
-              {mode === 'gallery' ? 'Gallery' : 'Trash'}
-            </h1>
-            <span className="text-sm text-muted-foreground bg-muted/50 px-2.5 py-0.5 rounded-full">
-              {selectedIds.length > 0
-                ? `${selectedIds.length} selected`
-                : `${images.length} ${mode === 'trash' ? 'items' : 'images'}`
-              }
-            </span>
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border p-4 flex flex-col gap-3">
+        <div className="flex flex-wrap gap-3 items-center justify-between">
+          <div className="flex flex-wrap gap-3 items-center">
+            {/* Page title and count */}
+            <div className="flex items-center mr-2">
+              <h1 className="text-lg font-medium mr-2">
+                {mode === 'gallery' ? 'Gallery' : 'Trash'}
+              </h1>
+              <span className="text-sm text-muted-foreground bg-muted/50 px-2.5 py-0.5 rounded-full">
+                {selectedIds.length > 0
+                  ? `${selectedIds.length} selected`
+                  : `${filteredImages.length} ${mode === 'trash' ? 'items' : 'images'}`
+                }
+              </span>
+            </div>
+            
+            {/* Filters for gallery mode */}
+            {mode === 'gallery' && (
+              <>
+                <Button
+                  variant={showStarredOnly ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setShowStarredOnly(!showStarredOnly)}
+                  className="gap-2"
+                >
+                  <Star className={cn(
+                    "h-4 w-4", 
+                    showStarredOnly ? "fill-current text-yellow-400" : ""
+                  )} />
+                  {showStarredOnly ? "Starred" : "All Images"}
+                </Button>
+                
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant={Object.values(activeFilters).some(arr => arr.length > 0) ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setFilterOpen(!filterOpen)}
+                        className="gap-2"
+                      >
+                        <svg 
+                          xmlns="http://www.w3.org/2000/svg" 
+                          width="15" 
+                          height="15" 
+                          viewBox="0 0 24 24" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          strokeWidth="2" 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round"
+                        >
+                          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                        </svg>
+                        Filters
+                        {Object.values(activeFilters).some(arr => arr.length > 0) && (
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
+                            {activeFilters.models.length + activeFilters.sizes.length + activeFilters.qualities.length}
+                          </span>
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">Filter by model, size, quality</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </>
+            )}
+            
+            {/* Search input */}
+            <form 
+              className="relative flex-1 max-w-md flex items-center gap-2"
+              onClick={(e) => e.stopPropagation()} 
+              onSubmit={(e) => {
+                e.preventDefault(); // Prevent default form submission
+                handleSearch(); // Use our custom handler instead
+                return false;
+              }}
+            >
+              <div className="relative flex-1">
+                <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  type="text" 
+                  placeholder="Search by prompt"
+                  value={searchInput}
+                  onChange={(e) => {
+                    setSearchInput(e.target.value);
+                  }}
+                  className="pl-8 pr-10 h-9 md:w-[200px] lg:w-[300px] border-muted focus:border-primary transition-colors"
+                  onKeyDown={(e) => {
+                    // Process Enter key to trigger search
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (searchInput.trim()) {
+                        handleSearch();
+                      }
+                      return false;
+                    }
+                  }}
+                />
+                {searchInput && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      clearSearch();
+                    }}
+                    className="absolute right-2 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted/80 inline-flex items-center justify-center"
+                    aria-label="Clear search"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
+              <Button 
+                type="submit" 
+                size="sm"
+                variant="secondary"
+                className="h-9"
+                disabled={!searchInput.trim()}
+              >
+                Search
+              </Button>
+            </form>
           </div>
           
-          {/* Filters for gallery mode */}
-          {mode === 'gallery' && (
-            <Button
-              variant={showStarredOnly ? "default" : "outline"}
-              size="sm"
-              onClick={() => setShowStarredOnly(!showStarredOnly)}
-              className="gap-2"
-            >
-              <Star className={cn(
-                "h-4 w-4", 
-                showStarredOnly ? "fill-current text-yellow-400" : ""
-              )} />
-              {showStarredOnly ? "Starred" : "All Images"}
-            </Button>
-          )}
-          
-          {/* Search input */}
-          <form 
-            className="relative flex-1 max-w-md flex items-center gap-2"
-            onClick={(e) => e.stopPropagation()} 
-            onSubmit={(e) => {
-              e.preventDefault(); // Prevent default form submission
-              handleSearch(); // Use our custom handler instead
-              return false;
-            }}
-          >
-            <div className="relative flex-1">
-              <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                type="text" 
-                placeholder="Search by prompt"
-                value={searchInput}
-                onChange={(e) => {
-                  setSearchInput(e.target.value);
-                }}
-                className="pl-8 pr-10 h-9 md:w-[200px] lg:w-[300px] border-muted focus:border-primary transition-colors"
-                onKeyDown={(e) => {
-                  // Process Enter key to trigger search
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (searchInput.trim()) {
-                      handleSearch();
-                    }
-                    return false;
-                  }
-                }}
-              />
-              {searchInput && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    clearSearch();
-                  }}
-                  className="absolute right-2 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted/80 inline-flex items-center justify-center"
-                  aria-label="Clear search"
+          <div className="flex flex-wrap gap-2 items-center">
+            {/* Selection actions */}
+            {selectedIds.length > 0 ? (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearSelection}
+                  className="text-muted-foreground hover:text-foreground"
                 >
-                  <X className="h-3 w-3" />
-                </button>
-              )}
-            </div>
-            <Button 
-              type="submit" 
-              size="sm"
-              variant="secondary"
-              className="h-9"
-              disabled={!searchInput.trim()}
-            >
-              Search
-            </Button>
-          </form>
+                  Cancel
+                </Button>
+                
+                {mode === 'gallery' && (
+                  <>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleBulkAction('star')}
+                            className="h-9 w-9 p-0"
+                          >
+                            <Star className="h-4 w-4" />
+                            <span className="sr-only">Star</span>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">Star selected</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleBulkAction('unstar')}
+                            className="h-9 w-9 p-0"
+                          >
+                            <Star className="h-4 w-4 fill-current text-yellow-400" />
+                            <span className="sr-only">Unstar</span>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">Unstar selected</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleBulkAction('trash')}
+                            className="h-9 w-9 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Delete</span>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">Move to trash</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </>
+                )}
+                
+                {mode === 'trash' && (
+                  <>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleBulkAction('restore')}
+                            className="h-9 w-9 p-0"
+                          >
+                            <RotateCcw className="h-4 w-4" />
+                            <span className="sr-only">Restore</span>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">Restore selected</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              if (window.confirm(`Are you sure you want to permanently delete ${selectedIds.length} images? This action cannot be undone.`)) {
+                                handleBulkAction('delete-permanent');
+                              }
+                            }}
+                            className="h-9 w-9 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          >
+                            <Trash className="h-4 w-4" />
+                            <span className="sr-only">Delete Permanently</span>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">Delete permanently</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </>
+                )}
+              </>
+            ) : (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={selectAll}
+                      disabled={images.length === 0}
+                      className="gap-2"
+                    >
+                      <span className="hidden sm:inline">Select All</span>
+                      <span className="sm:hidden">Select</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">Select all images</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
         </div>
         
-        <div className="flex flex-wrap gap-2 items-center">
-          {/* Selection actions */}
-          {selectedIds.length > 0 ? (
-            <>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearSelection}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                Cancel
-              </Button>
-              
-              {mode === 'gallery' && (
-                <>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleBulkAction('star')}
-                          className="h-9 w-9 p-0"
-                        >
-                          <Star className="h-4 w-4" />
-                          <span className="sr-only">Star</span>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom">Star selected</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleBulkAction('unstar')}
-                          className="h-9 w-9 p-0"
-                        >
-                          <Star className="h-4 w-4 fill-current text-yellow-400" />
-                          <span className="sr-only">Unstar</span>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom">Unstar selected</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleBulkAction('trash')}
-                          className="h-9 w-9 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          <span className="sr-only">Delete</span>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom">Move to trash</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </>
-              )}
-              
-              {mode === 'trash' && (
-                <>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleBulkAction('restore')}
-                          className="h-9 w-9 p-0"
-                        >
-                          <RotateCcw className="h-4 w-4" />
-                          <span className="sr-only">Restore</span>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom">Restore selected</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            if (window.confirm(`Are you sure you want to permanently delete ${selectedIds.length} images? This action cannot be undone.`)) {
-                              handleBulkAction('delete-permanent');
-                            }
-                          }}
-                          className="h-9 w-9 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                        >
-                          <Trash className="h-4 w-4" />
-                          <span className="sr-only">Delete Permanently</span>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom">Delete permanently</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </>
-              )}
-            </>
-          ) : (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
+        {/* Filter panel */}
+        {filterOpen && (
+          <div className="px-1 py-3 mt-1 border-t border-border animate-in fade-in-50">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-medium">Filter by</h3>
+              <div className="flex items-center gap-2">
+                {Object.values(activeFilters).some(arr => arr.length > 0) && (
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
-                    onClick={selectAll}
-                    disabled={images.length === 0}
-                    className="gap-2"
+                    onClick={clearFilters}
+                    className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
                   >
-                    <span className="hidden sm:inline">Select All</span>
-                    <span className="sm:hidden">Select</span>
+                    Clear filters
                   </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">Select all images</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-        </div>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setFilterOpen(false)}
+                  className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                  <span className="sr-only">Close filters</span>
+                </Button>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Models */}
+              <div className="space-y-2">
+                <h4 className="text-xs font-medium text-muted-foreground mb-1.5">Models</h4>
+                <div className="flex flex-wrap gap-1.5">
+                  {filterOptions.models.map(model => (
+                    <Button
+                      key={model}
+                      variant={activeFilters.models.includes(model) ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => toggleFilter('models', model)}
+                      className="h-7 px-2 text-xs rounded-full"
+                    >
+                      {model}
+                    </Button>
+                  ))}
+                  {filterOptions.models.length === 0 && (
+                    <p className="text-xs text-muted-foreground">No models found</p>
+                  )}
+                </div>
+              </div>
+              
+              {/* Sizes */}
+              <div className="space-y-2">
+                <h4 className="text-xs font-medium text-muted-foreground mb-1.5">Sizes</h4>
+                <div className="flex flex-wrap gap-1.5">
+                  {filterOptions.sizes.map(size => (
+                    <Button
+                      key={size}
+                      variant={activeFilters.sizes.includes(size) ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => toggleFilter('sizes', size)}
+                      className="h-7 px-2 text-xs rounded-full"
+                    >
+                      {size}
+                    </Button>
+                  ))}
+                  {filterOptions.sizes.length === 0 && (
+                    <p className="text-xs text-muted-foreground">No sizes found</p>
+                  )}
+                </div>
+              </div>
+              
+              {/* Qualities */}
+              <div className="space-y-2">
+                <h4 className="text-xs font-medium text-muted-foreground mb-1.5">Quality</h4>
+                <div className="flex flex-wrap gap-1.5">
+                  {filterOptions.qualities.map(quality => (
+                    <Button
+                      key={quality}
+                      variant={activeFilters.qualities.includes(quality) ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => toggleFilter('qualities', quality)}
+                      className="h-7 px-2 text-xs rounded-full"
+                    >
+                      {quality}
+                    </Button>
+                  ))}
+                  {filterOptions.qualities.length === 0 && (
+                    <p className="text-xs text-muted-foreground">No quality options found</p>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-3 text-xs text-muted-foreground flex items-center gap-1.5">
+              <span className="bg-muted/50 px-1.5 py-0.5 rounded font-mono">
+                {filteredImages.length}
+              </span> 
+              <span>
+                {filteredImages.length === 1 ? 'result' : 'results'} 
+                {Object.values(activeFilters).some(arr => arr.length > 0) ? ' with current filters' : ''}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
       
       {/* Gallery grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 p-6">
-        {images.map((image) => (
+        {filteredImages.map((image) => (
           <ImageCard
             key={image.id}
             image={{
