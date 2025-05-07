@@ -116,8 +116,8 @@ const BatchProgress: React.FC<BatchProgressProps> = ({ jobId, onComplete, onRese
       
       // Show success toast
       toast({
-        title: "Batch job stopping",
-        description: data.message || "The job will finish the current image and then create a ZIP with partial results.",
+        title: "Creating download file",
+        description: "Preparing a ZIP file with all generated images. The download button will appear when ready.",
         variant: "default"
       });
     } catch (error) {
@@ -155,8 +155,8 @@ const BatchProgress: React.FC<BatchProgressProps> = ({ jobId, onComplete, onRese
     
     if (status.status === "stopped") {
       return {
-        text: `Stopping... Creating ZIP with ${status.done} images`,
-        icon: <AlertCircle className="h-5 w-5 text-amber-500" />
+        text: `Preparing download... Creating ZIP with ${status.done} images`,
+        icon: <Clock className="h-5 w-5 text-amber-500" />
       };
     }
     
@@ -233,53 +233,58 @@ const BatchProgress: React.FC<BatchProgressProps> = ({ jobId, onComplete, onRese
       </CardContent>
       
       <CardFooter className="flex gap-3 flex-wrap pt-2">
-        {/* Primary action: Download when available */}
-        {status?.zipUrl && (
-          <Button 
-            className="flex-1 px-4 py-2 h-auto"
-            size="lg"
-            onClick={() => window.open(status.zipUrl || '', '_blank')}
-          >
-            <Download className="h-5 w-5 mr-2" />
-            Download Images (ZIP)
-          </Button>
-        )}
-        
-        {/* Show Stop Batch button when job is in progress */}
-        {status && !status.zipUrl && status.status === "processing" && (
-          <Button 
-            variant="destructive" 
-            className="flex-1 px-4 py-2 h-auto"
-            size="lg"
-            onClick={handleStopBatch}
-          >
-            <Square className="h-5 w-5 mr-2" />
-            Stop & Save Progress
-          </Button>
-        )}
-        
-        {/* View Errors button - show when there are errors and batch has finished */}
-        {status && status.failed > 0 && status.zipUrl && (
-          <Button
-            variant="outline"
-            className="flex-1 sm:flex-none"
-            onClick={() => window.open(`${status.zipUrl?.replace('.zip', '')}/failed_rows.json`, '_blank')}
-          >
-            <FileWarning className="h-4 w-4 mr-2" />
-            View Error Details
-          </Button>
-        )}
-        
-        {/* Start New Batch button */}
-        {(status?.zipUrl || error || status?.status === "stopped" || status?.status === "failed") && onReset && (
-          <Button 
-            variant={status?.zipUrl ? "outline" : "default"}
-            className="flex-1 sm:flex-none"
-            onClick={onReset}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            New Batch
-          </Button>
+        {/* Only show buttons when ZIP is ready or job is in progress */}
+        {status?.zipUrl ? (
+          <>
+            {/* Primary action: Download when available */}
+            <Button 
+              className="flex-1 px-4 py-2 h-auto"
+              size="lg"
+              onClick={() => window.open(status.zipUrl || '', '_blank')}
+            >
+              <Download className="h-5 w-5 mr-2" />
+              Download Images (ZIP)
+            </Button>
+            
+            {/* View Errors button - show when there are errors and batch has finished */}
+            {status.failed > 0 && (
+              <Button
+                variant="outline"
+                className="flex-1 sm:flex-none"
+                onClick={() => window.open(`${status.zipUrl?.replace('.zip', '')}/failed_rows.json`, '_blank')}
+              >
+                <FileWarning className="h-4 w-4 mr-2" />
+                View Error Details
+              </Button>
+            )}
+            
+            {/* Start New Batch button - only show when ZIP is ready */}
+            {onReset && (
+              <Button 
+                variant="outline"
+                className="flex-1 sm:flex-none"
+                onClick={onReset}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                New Batch
+              </Button>
+            )}
+          </>
+        ) : (
+          <>
+            {/* Show Stop Batch button only when job is in progress */}
+            {status && status.status === "processing" && (
+              <Button 
+                variant="destructive" 
+                className="flex-1 px-4 py-2 h-auto"
+                size="lg"
+                onClick={handleStopBatch}
+              >
+                <Square className="h-5 w-5 mr-2" />
+                Stop & Save Progress
+              </Button>
+            )}
+          </>
         )}
       </CardFooter>
     </Card>
