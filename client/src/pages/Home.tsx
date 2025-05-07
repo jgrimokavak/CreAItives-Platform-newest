@@ -8,9 +8,8 @@ import LoadingState from "@/components/LoadingState";
 import ErrorState from "@/components/ErrorState";
 import EmptyState from "@/components/EmptyState";
 import { GeneratedImage } from "@/types/image";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import NavTabs, { TabContent } from "@/components/NavTabs";
 import { useEditor } from "@/context/EditorContext";
-import "@/components/ui/custom-tabs.css";
 
 export default function Home() {
   const [images, setImages] = useState<GeneratedImage[]>([]);
@@ -60,36 +59,36 @@ export default function Home() {
             </div>
             
             <div className="h-[calc(100%-5rem)]">
-              <Tabs 
-                value={mode} 
-                onValueChange={(value) => setMode(value as "generate" | "edit")}
-                className="w-full h-full flex flex-col"
-              >
+              <div className="w-full h-full flex flex-col">
                 <div className="mb-6">
-                  <TabsList className="custom-tabs-list grid w-full grid-cols-2 relative z-10">
-                    <TabsTrigger value="generate" className="custom-tabs-trigger text-sm">Create New</TabsTrigger>
-                    <TabsTrigger value="edit" className="custom-tabs-trigger text-sm">Edit Image</TabsTrigger>
-                  </TabsList>
+                  <NavTabs 
+                    currentTab={mode}
+                    onChange={(value) => setMode(value as "generate" | "edit")}
+                    tabs={[
+                      { value: "generate", label: "Create New" },
+                      { value: "edit", label: "Edit Image" }
+                    ]}
+                  />
                 </div>
                 
-                <div className="flex-1 pt-2">
-                  <TabsContent value="generate" className="focus-visible:outline-none focus-visible:ring-0 h-full">
+                <div className="flex-1">
+                  <TabContent value="generate" currentTab={mode}>
                     <PromptForm
                       onGenerateStart={handleGenerateStart}
                       onGenerateComplete={handleGenerateComplete}
                       onError={handleError}
                     />
-                  </TabsContent>
+                  </TabContent>
                   
-                  <TabsContent value="edit" className="focus-visible:outline-none focus-visible:ring-0 h-full">
+                  <TabContent value="edit" currentTab={mode}>
                     <EditForm
                       onEditStart={handleGenerateStart}
                       onEditComplete={handleGenerateComplete}
                       onError={handleError}
                     />
-                  </TabsContent>
+                  </TabContent>
                 </div>
-              </Tabs>
+              </div>
             </div>
           </div>
 
