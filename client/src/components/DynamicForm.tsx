@@ -26,6 +26,9 @@ interface DynamicFormProps {
 
 const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form }) => {
   const fields = modelCatalog[modelKey].visible;
+  
+  // Type to allow any form field name as a valid input
+  type FormFieldName = keyof GenericFormValues;
 
   return (
     <div className="space-y-4">

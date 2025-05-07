@@ -6,6 +6,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { FaMagic, FaUpload, FaTrash } from "react-icons/fa";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -214,6 +215,7 @@ export default function EditForm({
       formData.append("size", values.size);
       formData.append("quality", values.quality);
       formData.append("n", values.n.toString());
+      formData.append("kavakStyle", values.kavakStyle.toString());
       
       // Append all selected images
       selectedFiles.forEach(file => {
@@ -511,6 +513,28 @@ export default function EditForm({
                 )}
               />
               </div>
+              
+              <FormField
+                control={form.control}
+                name="kavakStyle"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm space-y-0 mt-4 bg-gradient-to-r from-violet-50 to-indigo-50">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-sm font-medium">KAVAK Style</FormLabel>
+                      <p className="text-xs text-muted-foreground">
+                        Apply professional product photography style with dramatic lighting
+                      </p>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        className="data-[state=checked]:bg-violet-600"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
             </div>
 
             <div className="flex justify-center pt-2">

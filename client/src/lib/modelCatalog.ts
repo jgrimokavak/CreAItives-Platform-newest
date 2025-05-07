@@ -2,19 +2,19 @@ export const modelCatalog = {
   "gpt-image-1": {
     label: "GPT-Image-1 (OpenAI)",
     description: "Most accurate, but slow.",
-    visible: ["prompt", "size", "quality", "n", "kavakStyle"]
+    visible: ["prompt", "size", "quality", "n", "kavakStyle"] as string[]
   },
   "imagen-3": {
     label: "Imagen-3 (Google)",
     description: "Accurate, fast, consistent, but not very creative.",
-    visible: ["prompt", "aspect_ratio", "negative_prompt", "kavakStyle"]
+    visible: ["prompt", "aspect_ratio", "negative_prompt", "kavakStyle"] as string[]
   },
   "flux-pro": {
     label: "Flux-Pro (Black-forest-labs)",
     description: "Fast, creative, high-quality; less prompt-accurate.",
-    visible: ["prompt", "aspect_ratio", "seed", "kavakStyle"]
+    visible: ["prompt", "aspect_ratio", "seed", "kavakStyle"] as string[]
   }
-} as const;
+};
 
 export type ModelKey = keyof typeof modelCatalog;
 
