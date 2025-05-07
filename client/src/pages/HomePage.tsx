@@ -7,10 +7,10 @@ import {
   Sparkles, 
   Zap,
   Image as ImageIcon,
-  ScanSearch,
+  PenTool,
   ImageUpscale, 
   Images, 
-  MessageSquareText,
+  Wand2,
   CarFront,
   ArrowRight
 } from 'lucide-react';
@@ -30,7 +30,7 @@ export default function HomePage() {
     {
       title: 'Image Editing',
       description: 'Erase, replace, and remix existing images with precision',
-      icon: <ScanSearch className="h-5 w-5 text-white" />,
+      icon: <PenTool className="h-5 w-5 text-white" />,
       to: '/create',
       bgColor: 'bg-blue-400',
     },
@@ -58,7 +58,7 @@ export default function HomePage() {
     {
       title: 'AI Prompt Helper',
       description: 'Smart autocompletes and prompt polish to perfect your ideas',
-      icon: <MessageSquareText className="h-5 w-5 text-white" />,
+      icon: <Wand2 className="h-5 w-5 text-white" />,
       to: '/create',
       bgColor: 'bg-pink-400',
     },
@@ -104,7 +104,7 @@ export default function HomePage() {
                     <span className="text-sm font-medium text-slate-700">Fast Generation</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <ScanSearch className="h-5 w-5 text-blue-600" />
+                    <ImageUpscale className="h-5 w-5 text-blue-600" />
                     <span className="text-sm font-medium text-slate-700">High Resolution</span>
                   </div>
                   <div className="flex items-center gap-2">
