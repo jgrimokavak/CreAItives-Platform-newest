@@ -528,7 +528,10 @@ const CarCreationPage: React.FC = () => {
                 <div className="space-y-5">
                   {/* Car identification section */}
                   <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-2.5">Car Identification</h4>
+                    <h2 className="text-lg font-semibold text-foreground mb-1">Car Identification</h2>
+                    <p className="text-xs text-muted-foreground mb-4">
+                      Select the make, model and specifications of your vehicle
+                    </p>
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-2">
                         <Label htmlFor="make">Make</Label>
@@ -628,7 +631,10 @@ const CarCreationPage: React.FC = () => {
                   
                   {/* Appearance section */}
                   <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-2.5">Appearance</h4>
+                    <h2 className="text-lg font-semibold text-foreground mb-1">Appearance</h2>
+                    <p className="text-xs text-muted-foreground mb-4">
+                      Customize your vehicle's visual style
+                    </p>
                     <div className="grid grid-cols-1 gap-3">
                       {/* Color selector with visual swatches */}
                       <div className="space-y-2">
@@ -694,7 +700,10 @@ const CarCreationPage: React.FC = () => {
                   
                   {/* Image settings section */}
                   <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-2.5">Image Settings</h4>
+                    <h2 className="text-lg font-semibold text-foreground mb-1">Image Settings</h2>
+                    <p className="text-xs text-muted-foreground mb-4">
+                      Configure background and aspect ratio for your image
+                    </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {/* Background style with visual explanation */}
                       <div className="space-y-2">
