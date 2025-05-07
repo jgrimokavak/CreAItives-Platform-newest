@@ -99,7 +99,8 @@ export default function ImageCard({
                 checked={selected}
                 onChange={(e) => {
                   e.stopPropagation();
-                  onSelect(image.id, e.nativeEvent.shiftKey);
+                  // Cast to MouseEvent to access shiftKey
+                  onSelect(image.id, (e.nativeEvent as MouseEvent).shiftKey);
                 }}
                 className={cn(
                   "h-4 w-4 rounded-sm border-2 cursor-pointer transition-colors",

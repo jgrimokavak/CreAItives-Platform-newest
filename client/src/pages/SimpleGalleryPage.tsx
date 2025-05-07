@@ -376,42 +376,51 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
   const handleBulkAction = async (action: 'star' | 'unstar' | 'trash' | 'restore' | 'delete-permanent') => {
     if (selectedIds.length === 0) return;
     
+    // Store selected IDs locally to avoid referencing the state that might change
+    const idsToUpdate = [...selectedIds];
+    console.log(`Bulk action '${action}' on ${idsToUpdate.length} images:`, idsToUpdate);
+    
     try {
       // Optimistic UI updates
       if (action === 'star' || action === 'unstar') {
+        const newStarredValue = action === 'star';
         setImages(prev =>
-          prev.map(img => selectedIds.includes(img.id) 
-            ? { ...img, starred: action === 'star' } 
+          prev.map(img => idsToUpdate.includes(img.id) 
+            ? { ...img, starred: newStarredValue } 
             : img
           )
         );
       } else if (action === 'trash') {
-        setImages(prev => prev.filter(img => !selectedIds.includes(img.id)));
+        setImages(prev => prev.filter(img => !idsToUpdate.includes(img.id)));
       } else if (action === 'restore') {
         setImages(prev =>
-          prev.map(img => selectedIds.includes(img.id) 
+          prev.map(img => idsToUpdate.includes(img.id) 
             ? { ...img, deletedAt: null } 
             : img
           )
         );
       } else if (action === 'delete-permanent') {
         // Remove from UI immediately
-        setImages(prev => prev.filter(img => !selectedIds.includes(img.id)));
+        setImages(prev => prev.filter(img => !idsToUpdate.includes(img.id)));
       }
       
       // Make the actual API call
+      const payload = {
+        ids: idsToUpdate,
+        starred: action === 'star' ? true : action === 'unstar' ? false : undefined,
+        deleteToTrash: action === 'trash' ? true : undefined,
+        restoreFromTrash: action === 'restore' ? true : undefined,
+        permanentDelete: action === 'delete-permanent' ? true : undefined
+      };
+      
+      console.log('Sending bulk update payload:', payload);
+      
       const response = await fetch('/api/images/bulk', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          ids: selectedIds,
-          starred: action === 'star' ? true : action === 'unstar' ? false : undefined,
-          deleteToTrash: action === 'trash' ? true : undefined,
-          restoreFromTrash: action === 'restore' ? true : undefined,
-          permanentDelete: action === 'delete-permanent' ? true : undefined
-        })
+        body: JSON.stringify(payload)
       });
       
       if (!response.ok) {
@@ -422,7 +431,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       setSelectedIds([]);
       
       toast({
-        title: `${selectedIds.length} images updated`,
+        title: `${idsToUpdate.length} images updated`,
         description: action === 'star' 
           ? 'Images have been starred'
           : action === 'unstar'
