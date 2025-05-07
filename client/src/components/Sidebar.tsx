@@ -8,7 +8,8 @@ import {
   Menu,
   X,
   ImageUpscale,
-  CarFront
+  CarFront,
+  Home
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
