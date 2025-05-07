@@ -835,12 +835,11 @@ const CarCreationPage: React.FC = () => {
                       </div>
                       
                       <div className="bg-primary/5 rounded-md p-3 text-sm border border-primary/10">
-                        <h5 className="font-medium mb-1 text-primary-foreground/90">CSV Tips</h5>
+                        <h5 className="font-medium mb-1 text-foreground">CSV Tips</h5>
                         <ul className="text-xs space-y-1 list-disc list-inside text-muted-foreground">
                           <li>All columns are optional. Default values will be used for missing columns.</li>
                           <li>The first row must contain column headers (names) as shown above.</li>
                           <li>Maximum 50 cars per batch for optimal performance.</li>
-                          <li>Simple CSV editor: <a href="https://www.tablesgenerator.com/csv_tables" target="_blank" rel="noreferrer" className="text-primary underline hover:no-underline">Tables Generator</a></li>
                         </ul>
                       </div>
                     </div>

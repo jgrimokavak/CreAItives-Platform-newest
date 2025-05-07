@@ -290,11 +290,32 @@ const CSVUpload: React.FC<CSVUploadProps> = ({ onUpload, isLoading }) => {
               <div className="rounded-md bg-green-50 border border-green-100 p-3">
                 <div className="flex">
                   <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                  <div className="ml-3">
+                  <div className="ml-3 w-full">
                     <p className="text-sm font-medium text-green-800">Ready to generate {validationResult.rowCount} car images</p>
-                    {validationResult.warnings.length > 0 && (
-                      <p className="text-sm text-green-700 mt-1">Some non-critical warnings were found. See details below.</p>
-                    )}
+                    <div className="mt-2 flex flex-col gap-1.5">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-green-200 flex items-center justify-center">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                        </div>
+                        <p className="text-xs text-green-700">Estimated time: ~{Math.ceil(validationResult.rowCount * 0.5)} minutes</p>
+                      </div>
+                      {validationResult.rowCount > 10 && (
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-green-200 flex items-center justify-center">
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                          </div>
+                          <p className="text-xs text-green-700">Images will be packaged in a ZIP file</p>
+                        </div>
+                      )}
+                      {validationResult.warnings.length > 0 && (
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-yellow-200 flex items-center justify-center">
+                            <span className="w-1.5 h-1.5 rounded-full bg-yellow-500"></span>
+                          </div>
+                          <p className="text-xs text-yellow-700">Some non-critical warnings found (see below)</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
