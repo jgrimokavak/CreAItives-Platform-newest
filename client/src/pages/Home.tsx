@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PromptForm from "@/components/PromptForm";
 import EditForm from "@/components/EditForm";
@@ -42,7 +41,6 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <Header />
       <main className="container mx-auto px-4 py-6 sm:py-8 max-w-6xl flex-grow">
         {/* Main Content Area with Side-by-Side Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
