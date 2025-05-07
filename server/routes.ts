@@ -22,6 +22,7 @@ import { models } from "./config/models";
 import modelRoutes, { initializeModels } from "./routes/model-routes";
 import upscaleRoutes from "./routes/upscale-routes";
 import enhancePromptRouter from "./routes/enhancePrompt";
+import promptSuggestionsRouter from "./routes/promptSuggestions";
 import { listMakes, listModels, listBodyStyles, listTrims, flushCarCache, loadCarData, getLastFetchTime, setupCarDataAutoRefresh } from "./carData";
 import axios from "axios";
 import Papa from "papaparse";
@@ -665,6 +666,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Add prompt enhancement routes
   app.use('/api', enhancePromptRouter);
+  
+  // Add prompt suggestions routes
+  app.use('/api', promptSuggestionsRouter);
   
   // Car generation routes
   app.get("/api/cars/makes", async (_req, res) => res.json(await listMakes()));
