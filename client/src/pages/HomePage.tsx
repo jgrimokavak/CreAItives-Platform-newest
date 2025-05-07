@@ -97,19 +97,19 @@ export default function HomePage() {
       <main className="flex-grow">
         {/* Hero Section */}
         <section className="pt-10 pb-12 px-4 sm:px-6 lg:px-8 bg-white border-b">
-          <div className="container mx-auto max-w-7xl">
-            <div className="flex flex-col lg:flex-row items-center gap-10">
-              <div className="w-full lg:w-1/2 lg:pr-6">
+          <div className="container mx-auto max-w-7xl text-center lg:text-left">
+            <div className="flex flex-col">
+              <div className="w-full">
                 <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-600 mb-4">
                   <span className="mr-1">✨</span> New Platform Release
                 </div>
                 <h1 className="text-4xl md:text-5xl font-bold mb-4">
                   <span className="text-blue-600">CreAItives</span> Platform 2.0
                 </h1>
-                <p className="text-lg text-slate-600 mb-6">
+                <p className="text-lg text-slate-600 mb-6 max-w-3xl mx-auto lg:mx-0">
                   Transform your creative vision into stunning AI-generated imagery with our powerful suite of creation tools.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                   <Link to="/create">
                     <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white font-medium flex items-center gap-2">
                       Get Started <ArrowRight className="h-4 w-4" />
@@ -122,7 +122,7 @@ export default function HomePage() {
                   </Link>
                 </div>
                 
-                <div className="flex items-center gap-6 mt-8">
+                <div className="flex items-center gap-6 mt-8 justify-center lg:justify-start">
                   <div className="flex items-center gap-2">
                     <Zap className="h-5 w-5 text-blue-600" />
                     <span className="text-sm font-medium text-slate-700">Fast Generation</span>
@@ -136,40 +136,6 @@ export default function HomePage() {
                     <span className="text-sm font-medium text-slate-700">Smart Prompts</span>
                   </div>
                 </div>
-              </div>
-              
-              <div className="w-full lg:w-1/2 mt-8 lg:mt-0">
-                {!isLoading && recentImages.length > 0 ? (
-                  <div className="grid grid-cols-2 gap-3">
-                    {recentImages.slice(0, 4).map((image) => (
-                      <Link key={image.id} to="/gallery">
-                        <div className="overflow-hidden rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                          <img 
-                            src={image.thumbUrl || image.url} 
-                            alt={image.prompt} 
-                            className="w-full h-32 object-cover"
-                          />
-                        </div>
-                      </Link>
-                    ))}
-                    <div className="flex justify-center gap-1 mt-2 col-span-2">
-                      {[...Array(Math.min(recentImages.length, 8))].map((_, i) => (
-                        <span 
-                          key={i} 
-                          className={`block h-2 w-2 rounded-full ${i === 0 ? 'bg-blue-600' : 'bg-slate-200'}`}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                ) : isLoading ? (
-                  <div className="flex items-center justify-center h-64 bg-slate-100 rounded-lg">
-                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center h-64 bg-slate-100 rounded-lg">
-                    <p className="text-slate-500">No recent images available</p>
-                  </div>
-                )}
               </div>
             </div>
           </div>
