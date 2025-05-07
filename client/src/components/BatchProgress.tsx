@@ -65,6 +65,11 @@ const BatchProgress: React.FC<BatchProgressProps> = ({ jobId, onComplete, onRese
         console.log(`Batch job status:`, data);
         setStatus(data);
         
+        // Update error messages if available
+        if (data.errorMessages && Array.isArray(data.errorMessages)) {
+          setErrorMessages(data.errorMessages);
+        }
+        
         // If the job is complete (has a ZIP URL), stop polling
         if (data.zipUrl) {
           console.log(`Batch job ${jobId} completed with ZIP URL: ${data.zipUrl}`);

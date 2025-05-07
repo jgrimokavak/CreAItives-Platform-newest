@@ -827,13 +827,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(404).json({ error: "Job not found" });
     }
     
+    // Extract error messages for display in the UI
+    const errorMessages = job.errors.map(err => 
+      `Row ${err.row}: ${err.reason}`
+    );
+    
     const response = {
       total: job.total,
       done: job.done,
       failed: job.failed,
       percent: Math.round((job.done + job.failed) / job.total * 100),
       status: job.status,
-      zipUrl: job.zipUrl || null
+      zipUrl: job.zipUrl || null,
+      errorMessages: errorMessages.length > 0 ? errorMessages : undefined
     };
     
     console.log(`Batch job ${jobId} status:`, response);
