@@ -4,21 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Download, AlertCircle, CheckCircle, Clock, Square, Plus, FileWarning } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Spinner } from '@/components/ui/spinner';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogFooter,
-  DialogDescription
-} from '@/components/ui/dialog';
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from '@/components/ui/dropdown-menu';
 
 interface BatchProgressProps {
   jobId: string;
@@ -34,7 +19,6 @@ interface BatchStatus {
   status?: "pending" | "processing" | "completed" | "stopped" | "failed";
   zipUrl: string | null;
   message?: string;
-  errorMessages?: string[];
 }
 
 const BatchProgress: React.FC<BatchProgressProps> = ({ jobId, onComplete, onReset }) => {
@@ -42,9 +26,6 @@ const BatchProgress: React.FC<BatchProgressProps> = ({ jobId, onComplete, onRese
   const [status, setStatus] = useState<BatchStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [polling, setPolling] = useState<boolean>(true);
-  const [confirmStop, setConfirmStop] = useState<boolean>(false);
-  const [recentJobs, setRecentJobs] = useState<{id: string, status: string}[]>([]);
-  const [errorMessages, setErrorMessages] = useState<string[]>([]);
   
   // Poll for job status
   useEffect(() => {
@@ -64,11 +45,6 @@ const BatchProgress: React.FC<BatchProgressProps> = ({ jobId, onComplete, onRese
         const data = await response.json();
         console.log(`Batch job status:`, data);
         setStatus(data);
-        
-        // Update error messages if available
-        if (data.errorMessages && Array.isArray(data.errorMessages)) {
-          setErrorMessages(data.errorMessages);
-        }
         
         // If the job is complete (has a ZIP URL), stop polling
         if (data.zipUrl) {
@@ -187,48 +163,6 @@ const BatchProgress: React.FC<BatchProgressProps> = ({ jobId, onComplete, onRese
   
   const statusInfo = getStatusInfo();
   
-  const downloadZip = () => {
-    if (status?.zipUrl) {
-      window.open(status.zipUrl, '_blank');
-    }
-  };
-
-  const startNewBatch = () => {
-    if (onReset) {
-      onReset();
-    }
-  };
-
-  const stopBatch = async () => {
-    setConfirmStop(false);
-    await handleStopBatch();
-  };
-
-  // Mock function for loading a past job (for demo)
-  const loadJob = (id: string) => {
-    // In a real implementation, this would load a specific job's details
-    toast({
-      title: "Job selected",
-      description: `Loading job ${id}`,
-    });
-  };
-
-  useEffect(() => {
-    // This would normally fetch recent jobs from an API
-    if (jobId) {
-      setRecentJobs(prevJobs => {
-        // Add current job to recent jobs if not already present
-        if (!prevJobs.some(job => job.id === jobId)) {
-          return [
-            { id: jobId, status: status?.status || 'pending' },
-            ...prevJobs.slice(0, 4) // Keep only the 5 most recent jobs
-          ];
-        }
-        return prevJobs;
-      });
-    }
-  }, [jobId, status?.status]);
-
   return (
     <Card>
       <CardHeader>
@@ -242,26 +176,6 @@ const BatchProgress: React.FC<BatchProgressProps> = ({ jobId, onComplete, onRese
       </CardHeader>
       
       <CardContent className="space-y-4">
-        {/* Recent Jobs Dropdown */}
-        <div className="flex justify-end mb-4">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">Recent Jobs</Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {recentJobs.length > 0 ? (
-                recentJobs.map(job => (
-                  <DropdownMenuItem key={job.id} onClick={() => loadJob(job.id)}>
-                    {job.id.substring(0, 8)} — {job.status === 'completed' ? '✅' : job.status === 'stopped' ? '⏹️' : '⏳'}
-                  </DropdownMenuItem>
-                ))
-              ) : (
-                <DropdownMenuItem disabled>No recent jobs</DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
         {error ? (
           <div className="bg-red-50 p-4 rounded-md text-red-700 text-sm">
             <div className="flex items-start">
@@ -274,22 +188,12 @@ const BatchProgress: React.FC<BatchProgressProps> = ({ jobId, onComplete, onRese
           </div>
         ) : (
           <>
-            {/* Progress Status Label */}
-            <div className="flex items-center space-x-2" id="batch-progress" tabIndex={-1}>
-              {(status && status.percent < 100) && <Spinner size="sm" />}
-              <span aria-live="polite">
-                {!status && "Queueing jobs…"}
-                {(status && status.percent > 0 && status.percent < 100) && "Generating images…"}
-                {(status && status.percent === 100) && "Completed"}
-              </span>
-            </div>
-
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>{statusInfo.text}</span>
                 <span>{status ? `${status.percent}%` : '0%'}</span>
               </div>
-              <Progress value={status?.percent || 0} className="h-2 transition-all duration-500 ease-in-out" />
+              <Progress value={status?.percent || 0} className="h-2" />
             </div>
             
             {status && (
@@ -308,76 +212,56 @@ const BatchProgress: React.FC<BatchProgressProps> = ({ jobId, onComplete, onRese
                 </div>
               </div>
             )}
-
-            {/* Error Details and Failed CSV Download */}
-            {status && status.failed > 0 && (
-              <details className="mt-4">
-                <summary className="cursor-pointer font-medium">
-                  {status.failed} errors
-                </summary>
-                <ul className="list-disc list-inside ml-4 mt-2">
-                  {errorMessages.length > 0 ? (
-                    errorMessages.map((msg, i) => <li key={i}>{msg}</li>)
-                  ) : (
-                    <li>Error details are available in the downloaded ZIP file</li>
-                  )}
-                </ul>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-2"
-                  onClick={() => window.open(`/downloads/failed_rows_${jobId}.csv`, '_blank')}
-                >
-                  Download Failed CSV
-                </Button>
-              </details>
-            )}
           </>
         )}
       </CardContent>
       
-      <CardFooter>
-        <div className="flex gap-4 justify-end mt-6 w-full">
-          {status && status.percent < 100 && status.status === "processing" ? (
-            <Button variant="destructive" onClick={() => setConfirmStop(true)}>
-              Stop Batch
-            </Button>
-          ) : (
-            <>
-              {status?.zipUrl && (
-                <Button className="flex-1" onClick={downloadZip}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Download ZIP
-                </Button>
-              )}
-              {(status?.zipUrl || error || status?.status === "stopped" || status?.status === "failed") && onReset && (
-                <Button variant="outline" className="flex-1" onClick={startNewBatch}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Start New Batch
-                </Button>
-              )}
-            </>
-          )}
-        </div>
+      <CardFooter className="flex gap-2 flex-wrap">
+        {status?.zipUrl && (
+          <Button 
+            className="flex-1"
+            onClick={() => window.open(status.zipUrl || '', '_blank')}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Download ZIP
+          </Button>
+        )}
+        
+        {/* Show Stop Batch button when job is in progress */}
+        {status && !status.zipUrl && status.status === "processing" && (
+          <Button 
+            variant="destructive" 
+            className="flex-1"
+            onClick={handleStopBatch}
+          >
+            <Square className="h-4 w-4 mr-2" />
+            Stop Batch
+          </Button>
+        )}
+        
+        {/* Start New Batch button */}
+        {(status?.zipUrl || error || status?.status === "stopped" || status?.status === "failed") && onReset && (
+          <Button 
+            variant="outline" 
+            className="flex-1"
+            onClick={onReset}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Start New Batch
+          </Button>
+        )}
+        
+        {/* View Errors button */}
+        {status && status.failed > 0 && status.zipUrl && (
+          <Button
+            variant="outline"
+            onClick={() => window.open(`${status.zipUrl?.replace('.zip', '')}/failed_rows.json`, '_blank')}
+          >
+            <FileWarning className="h-4 w-4 mr-2" />
+            View Errors
+          </Button>
+        )}
       </CardFooter>
-
-      {/* Stop Confirmation Modal */}
-      <Dialog open={confirmStop} onOpenChange={setConfirmStop}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirm Stop</DialogTitle>
-            <DialogDescription>
-              Stopping now will include only completed images. Continue?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setConfirmStop(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={stopBatch}>
-              Stop & Finish Batch
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </Card>
   );
 };

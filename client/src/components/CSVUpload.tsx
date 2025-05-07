@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label';
 import { Upload, FileWarning, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Badge } from '@/components/ui/badge';
 import Papa from 'papaparse';
 
 interface CSVValidationResult {
@@ -304,7 +303,6 @@ const CSVUpload: React.FC<CSVUploadProps> = ({ onUpload, isLoading }) => {
                     <thead className="bg-muted">
                       <tr>
                         <th className="px-3 py-2 text-left font-medium text-muted-foreground">Row</th>
-                        <th className="px-3 py-2 text-left font-medium text-muted-foreground">Status</th>
                         {Object.keys(validationResult.data[0]).map((col) => (
                           <th 
                             key={col} 
@@ -321,42 +319,8 @@ const CSVUpload: React.FC<CSVUploadProps> = ({ onUpload, isLoading }) => {
                     </thead>
                     <tbody className="bg-card divide-y divide-border">
                       {validationResult.data.map((row, i) => (
-                        <tr key={`row-${i}`} className="hover:bg-muted/50">
-                          <td className="px-3 py-2 font-medium">{i + 1}</td>
-                          <td className="px-3 py-2">
-                            {i === 0 && (
-                              <Badge 
-                                variant="outline" 
-                                className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200"
-                              >
-                                Processing
-                              </Badge>
-                            )}
-                            {i === 1 && (
-                              <Badge 
-                                variant="outline" 
-                                className="bg-green-50 text-green-700 hover:bg-green-100 border-green-200"
-                              >
-                                Completed
-                              </Badge>
-                            )}
-                            {i === 2 && (
-                              <Badge 
-                                variant="outline" 
-                                className="bg-red-50 text-red-700 hover:bg-red-100 border-red-200"
-                              >
-                                Failed
-                              </Badge>
-                            )}
-                            {i > 2 && (
-                              <Badge 
-                                variant="outline" 
-                                className="bg-amber-50 text-amber-700 hover:bg-amber-100 border-amber-200"
-                              >
-                                Pending
-                              </Badge>
-                            )}
-                          </td>
+                        <tr key={`row-${i}`}>
+                          <td className="px-3 py-2">{i + 1}</td>
                           {Object.keys(validationResult.data[0]).map((col) => (
                             <td 
                               key={`${i}-${col}`} 

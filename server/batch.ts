@@ -16,22 +16,6 @@ if (!process.env.REPLICATE_API_TOKEN) {
 // Store batch jobs with progress information
 export type Row = Partial<Record<"make"|"model"|"body_style"|"trim"|"year"|"color"|"background"|"aspect_ratio", string>>;
 export type JobStatus = "pending" | "processing" | "completed" | "stopped" | "failed";
-// Type guard functions to avoid TypeScript literal type comparison errors
-export function isJobStopped(status: JobStatus): boolean {
-  return status === "stopped";
-}
-
-export function isJobCompleted(status: JobStatus): boolean {
-  return status === "completed";
-}
-
-export function isJobFailed(status: JobStatus): boolean {
-  return status === "failed";
-}
-
-export function isJobProcessing(status: JobStatus): boolean {
-  return status === "processing";
-}
 
 export type BatchJob = {
   id: string;
@@ -240,7 +224,7 @@ export async function processBatch(id: string, rows: Row[]) {
 
   for (let i = 0; i < rows.length; i++) {
     // Check if job was stopped - if so, create the ZIP with the images we have so far
-    if (isJobStopped(job.status)) {
+    if (job.status === "stopped") {
       console.log(`Job ${id} was stopped after processing ${i} of ${rows.length} rows. Creating ZIP with partial results.`);
       break;
     }
@@ -300,7 +284,7 @@ export async function processBatch(id: string, rows: Row[]) {
         console.log(`Prediction result status: ${result.status}`);
         
         // Check if job was stopped during prediction
-        if (isJobStopped(job.status)) {
+        if (job.status === "stopped") {
           console.log(`Job ${id} was stopped while waiting for prediction ${prediction.id}. Skipping download.`);
           break;
         }
@@ -343,7 +327,7 @@ export async function processBatch(id: string, rows: Row[]) {
   }
 
   // Set job to completed if not stopped or already failed
-  if (isJobProcessing(job.status)) {
+  if (job.status === "processing") {
     job.status = "completed";
   }
   
@@ -355,7 +339,7 @@ export async function processBatch(id: string, rows: Row[]) {
   if (!zipResult.success) {
     console.error(`Failed to create ZIP file for job ${id}`);
     // If the job wasn't already marked as failed, mark it now
-    if (!isJobFailed(job.status)) {
+    if (job.status !== "failed") {
       job.status = "failed";
     }
   }
