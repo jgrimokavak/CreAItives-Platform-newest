@@ -71,8 +71,8 @@ const Sidebar = ({ children }: SidebarProps) => {
           'flex flex-col'
         )}
       >
-        <div className="p-4 border-b border-slate-200 flex justify-center items-center">
-          <img src={kavakLogo} alt="Kavak Logo" className="h-8" />
+        <div className="p-4 border-b border-slate-200 flex items-center">
+          <img src={kavakLogo} alt="Kavak Logo" className="h-6" />
         </div>
         
         <nav className="flex-1 p-4 space-y-1">
