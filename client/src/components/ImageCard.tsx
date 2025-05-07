@@ -52,7 +52,14 @@ export default function ImageCard({
   return (
     <div 
       key={image.id}
-      className="bg-card rounded-lg overflow-hidden shadow-sm border border-border hover:shadow-lg transition-all group cursor-pointer hover:border-primary/20"
+      className={cn(
+        "bg-card rounded-lg overflow-hidden shadow-sm border transition-all group cursor-pointer",
+        selectionMode === 'selecting'
+          ? selected 
+            ? "border-primary shadow-md ring-2 ring-primary/20 ring-inset" 
+            : "border-border hover:border-primary/30"
+          : "border-border hover:shadow-lg hover:border-primary/20"
+      )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={onClick}
@@ -66,18 +73,24 @@ export default function ImageCard({
             className="w-full h-full object-cover"
             loading="lazy"
           />
+          
+          {/* Selection highlight overlay */}
+          {selectionMode === 'selecting' && selected && (
+            <div className="absolute inset-0 bg-primary/10 border-4 border-primary/30 z-10"></div>
+          )}
         </div>
         
         {/* Selection overlay */}
         {onSelect && (
           <div 
             className={cn(
-              "absolute top-2 left-2 z-10 bg-white/80 backdrop-blur-sm rounded-full p-1 shadow-sm transition-colors cursor-pointer",
-              selected ? "bg-primary/20" : "hover:bg-white/95"
+              "absolute top-2 left-2 z-10 bg-white/80 backdrop-blur-sm rounded-full p-1 shadow-sm transition-all cursor-pointer",
+              selected ? "bg-primary/20" : "hover:bg-white/95",
+              selectionMode === 'selecting' ? "opacity-100 scale-100" : "opacity-75 scale-90 hover:opacity-100 hover:scale-100"
             )}
             onClick={(e) => {
               e.stopPropagation();
-              onSelect(image.id, !selected);
+              onSelect(image.id);
             }}
           >
             <div className="relative w-5 h-5 flex items-center justify-center">
@@ -86,7 +99,7 @@ export default function ImageCard({
                 checked={selected}
                 onChange={(e) => {
                   e.stopPropagation();
-                  onSelect(image.id, e.target.checked);
+                  onSelect(image.id);
                 }}
                 className={cn(
                   "h-4 w-4 rounded-sm border-2 cursor-pointer transition-colors",
@@ -98,125 +111,85 @@ export default function ImageCard({
           </div>
         )}
         
-        {/* Actions overlay */}
-        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 p-2">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit?.(image);
-                  }}
-                >
-                  <PenToolIcon className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Edit</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDownload?.(image);
-                  }}
-                >
-                  <DownloadIcon className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Download</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          
-          {mode === 'gallery' && onStar && (
+        {/* Actions overlay - hide when in selection mode */}
+        {selectionMode !== 'selecting' && (
+          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 p-2">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     variant="outline"
                     size="icon"
-                    className={cn(
-                      "h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border",
-                      image.starred && "text-yellow-300 hover:text-yellow-300"
-                    )}
+                    className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border"
                     onClick={(e) => {
                       e.stopPropagation();
-                      e.preventDefault();
-                      if (onStar) {
-                        try {
-                          // Use the current state for consistency
-                          const isCurrentlyStarred = image.starred || false;
-                          console.log(`Card star button clicked - id:${image.id}, currently starred:${isCurrentlyStarred}`);
-                          onStar(image.id, isCurrentlyStarred);
-                        } catch (error) {
-                          console.error('Error in star button handler:', error);
-                        }
-                      }
+                      onEdit?.(image);
                     }}
                   >
-                    <StarIcon className={cn(
-                      "h-4 w-4",
-                      image.starred && "fill-current"
-                    )} />
+                    <PenToolIcon className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>{image.starred ? "Unstar" : "Star"}</TooltipContent>
+                <TooltipContent>Edit</TooltipContent>
               </Tooltip>
             </TooltipProvider>
-          )}
-          
-          {mode === 'gallery' && onDelete && (
+            
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border hover:text-red-500"
+                    className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border"
                     onClick={(e) => {
                       e.stopPropagation();
-                      onDelete(image.id, false);
+                      onDownload?.(image);
                     }}
                   >
-                    <Trash2Icon className="h-4 w-4" />
+                    <DownloadIcon className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>Delete</TooltipContent>
+                <TooltipContent>Download</TooltipContent>
               </Tooltip>
             </TooltipProvider>
-          )}
-          
-          {mode === 'trash' && onRestore && (
-            <>
+            
+            {mode === 'gallery' && onStar && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="outline"
                       size="icon"
-                      className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border"
+                      className={cn(
+                        "h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border",
+                        image.starred && "text-yellow-300 hover:text-yellow-300"
+                      )}
                       onClick={(e) => {
                         e.stopPropagation();
-                        onRestore(image.id);
+                        e.preventDefault();
+                        if (onStar) {
+                          try {
+                            // Use the current state for consistency
+                            const isCurrentlyStarred = image.starred || false;
+                            console.log(`Card star button clicked - id:${image.id}, currently starred:${isCurrentlyStarred}`);
+                            onStar(image.id, isCurrentlyStarred);
+                          } catch (error) {
+                            console.error('Error in star button handler:', error);
+                          }
+                        }
                       }}
                     >
-                      <RotateCcwIcon className="h-4 w-4" />
+                      <StarIcon className={cn(
+                        "h-4 w-4",
+                        image.starred && "fill-current"
+                      )} />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Restore</TooltipContent>
+                  <TooltipContent>{image.starred ? "Unstar" : "Star"}</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              
+            )}
+            
+            {mode === 'gallery' && onDelete && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -226,62 +199,104 @@ export default function ImageCard({
                       className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border hover:text-red-500"
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (window.confirm('Are you sure you want to permanently delete this image? This action cannot be undone.') && onDelete) {
-                          onDelete(image.id, true);
-                        }
+                        onDelete(image.id, false);
                       }}
                     >
-                      <TrashIcon className="h-4 w-4" />
+                      <Trash2Icon className="h-4 w-4" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Delete Permanently</TooltipContent>
+                  <TooltipContent>Delete</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-            </>
-          )}
-          
-          {onCopyPrompt && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onCopyPrompt(image.prompt);
-                    }}
-                  >
-                    <CopyIcon className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Copy Prompt</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
+            )}
+            
+            {mode === 'trash' && onRestore && (
+              <>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRestore(image.id);
+                        }}
+                      >
+                        <RotateCcwIcon className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Restore</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border hover:text-red-500"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (window.confirm('Are you sure you want to permanently delete this image? This action cannot be undone.') && onDelete) {
+                            onDelete(image.id, true);
+                          }
+                        }}
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Delete Permanently</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </>
+            )}
+            
+            {onCopyPrompt && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onCopyPrompt(image.prompt);
+                      }}
+                    >
+                      <CopyIcon className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Copy Prompt</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
 
-          {(mode === 'gallery' || mode === 'preview') && onUpscale && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onUpscale(image);
-                    }}
-                  >
-                    <ImageUpscale className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Upscale</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-        </div>
+            {(mode === 'gallery' || mode === 'preview') && onUpscale && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onUpscale(image);
+                      }}
+                    >
+                      <ImageUpscale className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Upscale</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
+        )}
         
         {/* Starred indicator */}
         {image.starred && mode === 'gallery' && (
