@@ -788,6 +788,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       total: rows.length,
       done: 0,
       failed: 0,
+      status: "pending",
+      createdAt: new Date(),
       errors: []
     });
     
@@ -830,11 +832,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
       done: job.done,
       failed: job.failed,
       percent: Math.round((job.done + job.failed) / job.total * 100),
+      status: job.status,
       zipUrl: job.zipUrl || null
     };
     
     console.log(`Batch job ${jobId} status:`, response);
     res.json(response);
+  });
+  
+  // Endpoint to stop a batch job
+  app.post("/api/batch/:id/stop", async (req, res) => {
+    const jobId = req.params.id;
+    console.log(`Received request to stop batch job ID: ${jobId}`);
+    
+    const job = batchJobs.get(jobId);
+    if (!job) {
+      console.error(`Batch job with ID ${jobId} not found`);
+      return res.status(404).json({ error: "Job not found" });
+    }
+    
+    // Only allow stopping jobs that are currently processing
+    if (job.status !== "processing") {
+      const message = `Cannot stop job with status ${job.status}. Job must be in 'processing' status to be stopped.`;
+      console.warn(message);
+      return res.status(400).json({ error: message });
+    }
+    
+    // Mark the job as stopped
+    console.log(`Marking batch job ${jobId} as stopped`);
+    job.status = "stopped";
+    job.completedAt = new Date();
+    
+    // Return the current status
+    res.json({
+      total: job.total,
+      done: job.done,
+      failed: job.failed,
+      percent: Math.round((job.done + job.failed) / job.total * 100),
+      status: job.status,
+      message: "Job has been marked for stopping. It will finish current image and then create a ZIP with partial results."
+    });
   });
   
   // Car generation endpoint

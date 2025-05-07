@@ -16,7 +16,9 @@ interface BatchStatus {
   done: number;
   failed: number;
   percent: number;
+  status?: "pending" | "processing" | "completed" | "stopped" | "failed";
   zipUrl: string | null;
+  message?: string;
 }
 
 const BatchProgress: React.FC<BatchProgressProps> = ({ jobId, onComplete, onReset }) => {
@@ -82,6 +84,52 @@ const BatchProgress: React.FC<BatchProgressProps> = ({ jobId, onComplete, onRese
     return () => clearInterval(intervalId);
   }, [jobId, polling, onComplete, toast]);
   
+  // Function to stop the batch job
+  const handleStopBatch = async () => {
+    if (!jobId) return;
+    
+    try {
+      console.log(`Stopping batch job ${jobId}`);
+      const response = await fetch(`/api/batch/${jobId}/stop`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error(`Error stopping batch job:`, errorData);
+        toast({
+          title: "Error",
+          description: errorData.error || "Failed to stop batch job",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      const data = await response.json();
+      console.log(`Batch job stop response:`, data);
+      
+      // Update status
+      setStatus(prev => ({ ...prev, ...data }));
+      
+      // Show success toast
+      toast({
+        title: "Batch job stopping",
+        description: data.message || "The job will finish the current image and then create a ZIP with partial results.",
+        variant: "default"
+      });
+    } catch (error) {
+      console.error('Error stopping batch job:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to stop batch job",
+        variant: "destructive"
+      });
+    }
+  };
+  
   // Determine the status text and icon
   const getStatusInfo = () => {
     if (!status) return { text: 'Initializing...', icon: <Clock className="h-5 w-5 text-muted-foreground" /> };
@@ -90,6 +138,13 @@ const BatchProgress: React.FC<BatchProgressProps> = ({ jobId, onComplete, onRese
       return { 
         text: `Complete! ${status.done} images generated, ${status.failed} failed`, 
         icon: <CheckCircle className="h-5 w-5 text-green-500" /> 
+      };
+    }
+    
+    if (status.status === "stopped") {
+      return {
+        text: `Stopping... ${status.done} of ${status.total} images generated`,
+        icon: <AlertCircle className="h-5 w-5 text-yellow-500" />
       };
     }
     
@@ -161,7 +216,7 @@ const BatchProgress: React.FC<BatchProgressProps> = ({ jobId, onComplete, onRese
         )}
       </CardContent>
       
-      <CardFooter className="flex gap-2">
+      <CardFooter className="flex gap-2 flex-wrap">
         {status?.zipUrl && (
           <Button 
             className="flex-1"
@@ -172,21 +227,37 @@ const BatchProgress: React.FC<BatchProgressProps> = ({ jobId, onComplete, onRese
           </Button>
         )}
         
-        {(status?.zipUrl || error) && onReset && (
+        {/* Show Stop Batch button when job is in progress */}
+        {status && !status.zipUrl && status.status === "processing" && (
+          <Button 
+            variant="destructive" 
+            className="flex-1"
+            onClick={handleStopBatch}
+          >
+            <Square className="h-4 w-4 mr-2" />
+            Stop Batch
+          </Button>
+        )}
+        
+        {/* Start New Batch button */}
+        {(status?.zipUrl || error || status?.status === "stopped" || status?.status === "failed") && onReset && (
           <Button 
             variant="outline" 
             className="flex-1"
             onClick={onReset}
           >
+            <Plus className="h-4 w-4 mr-2" />
             Start New Batch
           </Button>
         )}
         
+        {/* View Errors button */}
         {status && status.failed > 0 && status.zipUrl && (
           <Button
             variant="outline"
             onClick={() => window.open(`${status.zipUrl?.replace('.zip', '')}/failed_rows.json`, '_blank')}
           >
+            <FileWarning className="h-4 w-4 mr-2" />
             View Errors
           </Button>
         )}

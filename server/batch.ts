@@ -22,7 +22,10 @@ export type BatchJob = {
   failed: number;
   zipPath?: string;
   zipUrl?: string;
+  status: "pending" | "processing" | "completed" | "stopped" | "failed";
   errors: {row: number; reason: string; details?: string}[];
+  createdAt: Date;
+  completedAt?: Date;
 };
 
 export const jobs = new Map<string, BatchJob>();
@@ -48,6 +51,111 @@ export function buildPrompt(r: Row): string {
   return tpl.replace(/{{(\w+)}}/g, (_, key) => (r as any)[key] || "").replace(/\s+/g, " ").trim();
 }
 
+// Helper function to create the ZIP file
+export async function createZipForBatchJob(id: string, job: BatchJob, tmpDir: string): Promise<{success: boolean, zipUrl?: string}> {
+  console.log(`Creating ZIP file for job ${id} with ${job.done} successful images and ${job.failed} failed items`);
+  
+  // Don't create ZIP if no images were generated
+  if (job.done === 0 && !fs.existsSync(tmpDir)) {
+    console.error(`No images were generated for job ${id}, cannot create ZIP`);
+    return { success: false };
+  }
+  
+  // Create paths for both temp and downloads directory
+  const tmpZipPath = path.join("/tmp", `${id}.zip`);
+  const downloadDir = path.join(process.cwd(), "downloads");
+  const downloadZipPath = path.join(downloadDir, `${id}.zip`);
+  
+  // Make sure downloads directory exists
+  if (!fs.existsSync(downloadDir)) {
+    console.log(`Creating downloads directory: ${downloadDir}`);
+    fs.mkdirSync(downloadDir, { recursive: true });
+  }
+  
+  try {
+    console.log(`Preparing to create ZIP for job ${id}`);
+    await new Promise<void>((resolve, reject) => {
+      const output = createWriteStream(tmpZipPath);
+      const archive = archiver("zip", { zlib: { level: 9 } });
+      
+      output.on("close", () => {
+        console.log(`ZIP file created: ${tmpZipPath}, size: ${archive.pointer()} bytes`);
+        resolve();
+      });
+      
+      archive.on("error", (err) => {
+        console.error(`Error creating ZIP file:`, err);
+        reject(err);
+      });
+      
+      archive.on("warning", (err) => {
+        if (err.code === "ENOENT") {
+          console.warn(`ZIP warning:`, err);
+        } else {
+          console.error(`ZIP warning:`, err);
+          reject(err);
+        }
+      });
+      
+      archive.pipe(output);
+      
+      // Add all files from the temp directory if it exists
+      if (fs.existsSync(tmpDir)) {
+        console.log(`Adding files from ${tmpDir} to the ZIP archive`);
+        archive.directory(tmpDir, false);
+      } else {
+        console.warn(`Temp directory ${tmpDir} does not exist, creating empty ZIP`);
+      }
+      
+      // Add the errors file if there are any errors
+      if (job.errors.length) {
+        console.log(`Adding failed_rows.json with ${job.errors.length} error entries`);
+        archive.append(JSON.stringify(job.errors, null, 2), { name: "failed_rows.json" });
+      }
+      
+      // Add a summary.json file with job details
+      const summary = {
+        jobId: id,
+        total: job.total,
+        completed: job.done,
+        failed: job.failed,
+        status: job.status,
+        createdAt: job.createdAt,
+        completedAt: job.completedAt || new Date(),
+        errors: job.errors.length
+      };
+      archive.append(JSON.stringify(summary, null, 2), { name: "summary.json" });
+      
+      console.log(`Finalizing ZIP archive...`);
+      archive.finalize();
+    });
+    
+    // Copy the ZIP file to the downloads directory
+    console.log(`Copying ZIP file from ${tmpZipPath} to ${downloadZipPath}`);
+    fs.copyFileSync(tmpZipPath, downloadZipPath);
+    
+    // Get the public URL
+    const filename = path.basename(downloadZipPath);
+    const zipUrl = `/downloads/${filename}`;
+    
+    // Update the job with the ZIP path and URL
+    job.zipPath = downloadZipPath;
+    job.zipUrl = zipUrl;
+    
+    console.log(`Job ${id} updated with zipPath: ${downloadZipPath} and zipUrl: ${job.zipUrl}`);
+    return { success: true, zipUrl };
+    
+  } catch (zipError) {
+    console.error(`Failed to create ZIP file for job ${id}:`, zipError);
+    job.errors.push({ 
+      row: 0, 
+      reason: `Failed to create ZIP file: ${zipError instanceof Error ? zipError.message : String(zipError)}`,
+      details: JSON.stringify(zipError)?.slice(0, 500) 
+    });
+    return { success: false };
+  }
+}
+
 // Main batch processing function
 export async function processBatch(id: string, rows: Row[]) {
   console.log(`Starting batch job ${id} with ${rows.length} rows`);
@@ -57,6 +165,9 @@ export async function processBatch(id: string, rows: Row[]) {
   console.log(`Created temp directory: ${tmpDir}`);
   
   const job = jobs.get(id)!;
+  
+  // Update job status
+  job.status = "processing";
 
   // Get Imagen-3 model config
   const imagenModel = models.find(m => m.key === 'imagen-3');
@@ -64,6 +175,11 @@ export async function processBatch(id: string, rows: Row[]) {
     console.error(`Imagen-3 model not properly configured. Model config:`, imagenModel);
     job.failed = job.total;
     job.errors.push({ row: 0, reason: "Imagen-3 model not properly configured" });
+    job.status = "failed";
+    job.completedAt = new Date();
+    
+    // Try to create a ZIP file even for failed jobs
+    await createZipForBatchJob(id, job, tmpDir);
     return;
   }
   
@@ -71,6 +187,12 @@ export async function processBatch(id: string, rows: Row[]) {
   console.log(`Starting to process ${rows.length} rows for batch job ${id}`);
 
   for (let i = 0; i < rows.length; i++) {
+    // Check if job was stopped - if so, create the ZIP with the images we have so far
+    if (job.status === "stopped") {
+      console.log(`Job ${id} was stopped after processing ${i} of ${rows.length} rows. Creating ZIP with partial results.`);
+      break;
+    }
+    
     const r = rows[i];
     console.log(`Batch ${id}: Processing row ${i+1}/${rows.length}`);
     
@@ -125,6 +247,12 @@ export async function processBatch(id: string, rows: Row[]) {
         const result = await waitForPrediction(prediction.id);
         console.log(`Prediction result status: ${result.status}`);
         
+        // Check if job was stopped during prediction
+        if (job.status === "stopped") {
+          console.log(`Job ${id} was stopped while waiting for prediction ${prediction.id}. Skipping download.`);
+          break;
+        }
+        
         if (result.status !== 'succeeded') {
           console.error(`Prediction failed with status: ${result.status}`);
           console.error(`Error details:`, result.error);
@@ -162,78 +290,22 @@ export async function processBatch(id: string, rows: Row[]) {
     }
   }
 
-  // Create ZIP file with all generated images
-  console.log(`Creating ZIP file for job ${id} with ${job.done} successful images and ${job.failed} failed items`);
-  
-  // Create paths for both temp and downloads directory
-  const tmpZipPath = path.join("/tmp", `${id}.zip`);
-  const downloadDir = path.join(process.cwd(), "downloads");
-  const downloadZipPath = path.join(downloadDir, `${id}.zip`);
-  
-  // Make sure downloads directory exists
-  if (!fs.existsSync(downloadDir)) {
-    console.log(`Creating downloads directory: ${downloadDir}`);
-    fs.mkdirSync(downloadDir, { recursive: true });
+  // Set job to completed if not stopped or already failed
+  if (job.status === "processing") {
+    job.status = "completed";
   }
   
-  try {
-    await new Promise<void>((resolve, reject) => {
-      const output = createWriteStream(tmpZipPath);
-      const archive = archiver("zip", { zlib: { level: 9 } });
-      
-      output.on("close", () => {
-        console.log(`ZIP file created: ${tmpZipPath}, size: ${archive.pointer()} bytes`);
-        resolve();
-      });
-      
-      archive.on("error", (err) => {
-        console.error(`Error creating ZIP file:`, err);
-        reject(err);
-      });
-      
-      archive.on("warning", (err) => {
-        if (err.code === "ENOENT") {
-          console.warn(`ZIP warning:`, err);
-        } else {
-          console.error(`ZIP warning:`, err);
-          reject(err);
-        }
-      });
-      
-      archive.pipe(output);
-      
-      // Add all files from the temp directory
-      console.log(`Adding files from ${tmpDir} to the ZIP archive`);
-      archive.directory(tmpDir, false);
-      
-      // Add the errors file if there are any errors
-      if (job.errors.length) {
-        console.log(`Adding failed_rows.json with ${job.errors.length} error entries`);
-        archive.append(JSON.stringify(job.errors, null, 2), { name: "failed_rows.json" });
-      }
-      
-      console.log(`Finalizing ZIP archive...`);
-      archive.finalize();
-    });
-    
-    // Copy the ZIP file to the downloads directory
-    console.log(`Copying ZIP file from ${tmpZipPath} to ${downloadZipPath}`);
-    fs.copyFileSync(tmpZipPath, downloadZipPath);
-    
-    // Update the job with the ZIP path and URL
-    job.zipPath = downloadZipPath;
-    // Set the publicly accessible URL for the ZIP file
-    const filename = path.basename(downloadZipPath);
-    job.zipUrl = `/downloads/${filename}`;
-    console.log(`Job ${id} updated with zipPath: ${downloadZipPath} and zipUrl: ${job.zipUrl}`);
-    
-  } catch (zipError) {
-    console.error(`Failed to create ZIP file for job ${id}:`, zipError);
-    job.errors.push({ 
-      row: 0, 
-      reason: `Failed to create ZIP file: ${zipError instanceof Error ? zipError.message : String(zipError)}`,
-      details: JSON.stringify(zipError)?.slice(0, 500) 
-    });
+  // Record completion time
+  job.completedAt = new Date();
+  
+  // Create the ZIP file with the generated images
+  const zipResult = await createZipForBatchJob(id, job, tmpDir);
+  if (!zipResult.success) {
+    console.error(`Failed to create ZIP file for job ${id}`);
+    // If the job wasn't already marked as failed, mark it now
+    if (job.status !== "failed") {
+      job.status = "failed";
+    }
   }
   
   // Clean up temp directory
@@ -244,7 +316,7 @@ export async function processBatch(id: string, rows: Row[]) {
     console.error(`Error cleaning up temp directory ${tmpDir}:`, cleanupError);
   }
   
-  console.log(`Batch job ${id} completed: ${job.done} successful, ${job.failed} failed`);
+  console.log(`Batch job ${id} completed with status ${job.status}: ${job.done} successful, ${job.failed} failed`);
 }
 
 // Cleanup function for old ZIP files (called periodically)
