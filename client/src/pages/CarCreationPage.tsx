@@ -505,8 +505,8 @@ const CarCreationPage: React.FC = () => {
           className="mb-6"
         >
           <TabsList className="grid w-full md:w-80 grid-cols-2">
-            <TabsTrigger value="single">Single</TabsTrigger>
-            <TabsTrigger value="batch">Batch</TabsTrigger>
+            <TabsTrigger value="single">Single Car</TabsTrigger>
+            <TabsTrigger value="batch">Batch Cars</TabsTrigger>
           </TabsList>
           
           <TabsContent value="single">
