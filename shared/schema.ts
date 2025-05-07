@@ -107,8 +107,8 @@ export interface GeneratedImage {
   fullUrl?: string | null;
   starred?: boolean;
   deletedAt?: string | null;
-  aspectRatio?: string; // The aspect ratio selected by the user (e.g., "1:1", "16:9", "9:16")
-  quality?: string; // Image quality setting
+  aspectRatio?: string | null; // The aspect ratio selected by the user (e.g., "1:1", "16:9", "9:16")
+  quality?: string | null; // Image quality setting
 }
 
 // Image edit schema

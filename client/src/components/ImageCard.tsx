@@ -383,70 +383,98 @@ export default function ImageCard({
           
           <div className="flex flex-wrap gap-2 text-xs">
             {/* AI Model tag - blue color scheme */}
-            <span className="bg-blue-50 text-blue-700 border border-blue-200 rounded-full px-2.5 py-0.5 flex items-center">
+            <span className="bg-blue-50 text-blue-700 border border-blue-200 rounded-full px-2.5 py-0.5 flex items-center shadow-sm">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5"></span>
               {image.model}
             </span>
             
-            {/* Aspect Ratio tag - directly using user-selected aspect ratio or size format */}
+            {/* Aspect Ratio tag - purple color scheme */}
             {(() => {
-              // 1. First check if aspectRatio property is available - direct user selection
+              // Priority 1: Use explicitly stored aspect ratio (new format)
               if (image.aspectRatio) {
                 return (
-                  <span className="bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-2.5 py-0.5 flex items-center">
+                  <span className="bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-2.5 py-0.5 flex items-center shadow-sm">
                     <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mr-1.5"></span>
                     {image.aspectRatio}
                   </span>
                 );
               }
               
-              // 2. Some aspect ratios are stored directly in the size field (for backward compatibility)
-              // Check if size contains a ratio format (e.g., "1:1", "16:9")
+              // Priority 2: Check if size field contains a ratio format (e.g., "1:1", "16:9")
               if (image.size && image.size.includes(':')) {
                 return (
-                  <span className="bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-2.5 py-0.5 flex items-center">
+                  <span className="bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-2.5 py-0.5 flex items-center shadow-sm">
                     <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mr-1.5"></span>
                     {image.size}
                   </span>
                 );
               }
               
-              // 3. Simple size display as fallback - don't try to calculate the ratio
-              return (
-                <span className="bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-2.5 py-0.5 flex items-center">
-                  <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mr-1.5"></span>
-                  {image.size || "Unknown size"}
-                </span>
-              );
-            })()}
-            
-            {/* Resolution dimensions tag - amber color scheme - only show if different from size */}
-            {(() => {
-              const sizeMatch = image.size?.match(/(\d+)x(\d+)/i); 
-              const widthFromSize = sizeMatch ? parseInt(sizeMatch[1]) : null;
-              const heightFromSize = sizeMatch ? parseInt(sizeMatch[2]) : null;
+              // Priority 3: Try to calculate a ratio from width/height if available
+              if (image.width && image.height) {
+                const w = parseInt(image.width);
+                const h = parseInt(image.height);
+                if (w && h) {
+                  // For common ratios, use standard notation
+                  if (w === h) return (
+                    <span className="bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-2.5 py-0.5 flex items-center shadow-sm">
+                      <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mr-1.5"></span>
+                      1:1
+                    </span>
+                  );
+                  if (w/h === 16/9 || Math.abs(w/h - 16/9) < 0.01) return (
+                    <span className="bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-2.5 py-0.5 flex items-center shadow-sm">
+                      <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mr-1.5"></span>
+                      16:9
+                    </span>
+                  );
+                  if (h/w === 16/9 || Math.abs(h/w - 16/9) < 0.01) return (
+                    <span className="bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-2.5 py-0.5 flex items-center shadow-sm">
+                      <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mr-1.5"></span>
+                      9:16
+                    </span>
+                  );
+                  if (w/h === 4/3 || Math.abs(w/h - 4/3) < 0.01) return (
+                    <span className="bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-2.5 py-0.5 flex items-center shadow-sm">
+                      <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mr-1.5"></span>
+                      4:3
+                    </span>
+                  );
+                  if (h/w === 4/3 || Math.abs(h/w - 4/3) < 0.01) return (
+                    <span className="bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-2.5 py-0.5 flex items-center shadow-sm">
+                      <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mr-1.5"></span>
+                      3:4
+                    </span>
+                  );
+                }
+              }
               
-              // Only show dimensions if they're different from what's in the size property
-              // or if size doesn't contain dimensions
-              if (image.width && image.height && 
-                  (!sizeMatch || 
-                   String(image.width) !== String(widthFromSize) || 
-                   String(image.height) !== String(heightFromSize))) {
+              // Priority 4: Size display as fallback if it's a dimension (e.g., "1024x1024")
+              if (image.size && image.size.match(/\d+x\d+/i)) {
                 return (
-                  <span className="bg-amber-50 text-amber-700 border border-amber-200 rounded-full px-2.5 py-0.5 flex items-center">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5"></span>
-                    {image.width}×{image.height}
+                  <span className="bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-2.5 py-0.5 flex items-center shadow-sm">
+                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mr-1.5"></span>
+                    {image.size}
                   </span>
                 );
               }
-              return null;
+              
+              return null; // Don't show anything if we can't determine a useful ratio
             })()}
+            
+            {/* Resolution dimensions tag - amber color scheme */}
+            {image.width && image.height && (
+              <span className="bg-amber-50 text-amber-700 border border-amber-200 rounded-full px-2.5 py-0.5 flex items-center shadow-sm">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5"></span>
+                {image.width}×{image.height}
+              </span>
+            )}
             
             {/* Quality tag - green color scheme */}
             {image.quality && (
-              <span className="bg-green-50 text-green-700 border border-green-200 rounded-full px-2.5 py-0.5 flex items-center">
+              <span className="bg-green-50 text-green-700 border border-green-200 rounded-full px-2.5 py-0.5 flex items-center shadow-sm">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>
-                {image.quality}
+                {image.quality.charAt(0).toUpperCase() + image.quality.slice(1)}
               </span>
             )}
           </div>
