@@ -36,7 +36,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form }) => {
       {fields.includes("size") && (
         <FormField
           control={form.control}
-          name="size"
+          name={"size" as FormFieldName}
           render={({ field }) => (
             <FormItem className="space-y-1.5">
               <FormLabel className="text-sm font-medium">Aspect Ratio</FormLabel>
@@ -91,7 +91,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form }) => {
           {fields.includes("n") && (
             <FormField
               control={form.control}
-              name="count"
+              name={"count" as FormFieldName}
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
                   <FormLabel className="text-sm font-medium">Number of Images</FormLabel>
@@ -122,7 +122,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form }) => {
           {fields.includes("quality") && (
             <FormField
               control={form.control}
-              name="quality"
+              name={"quality" as FormFieldName}
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
                   <FormLabel className="text-sm font-medium">Quality Level</FormLabel>
@@ -153,7 +153,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form }) => {
       {fields.includes("aspect_ratio") && (
         <FormField
           control={form.control}
-          name="aspect_ratio"
+          name={"aspect_ratio" as FormFieldName}
           render={({ field }) => (
             <FormItem className="space-y-1.5">
               <FormLabel className="text-sm font-medium">Aspect Ratio</FormLabel>
@@ -233,7 +233,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form }) => {
       {fields.includes("negative_prompt") && (
         <FormField
           control={form.control}
-          name="negative_prompt"
+          name={"negative_prompt" as FormFieldName}
           render={({ field }) => (
             <FormItem className="space-y-1.5">
               <FormLabel className="text-sm font-medium">Negative Prompt</FormLabel>
@@ -256,7 +256,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form }) => {
       {fields.includes("seed") && (
         <FormField
           control={form.control}
-          name="seed"
+          name={"seed" as FormFieldName}
           render={({ field }) => (
             <FormItem className="space-y-1.5">
               <FormLabel className="text-sm font-medium">
@@ -288,7 +288,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form }) => {
       {fields.includes("kavakStyle") && (
         <FormField
           control={form.control}
-          name="kavakStyle"
+          name={"kavakStyle" as FormFieldName}
           render={({ field }) => (
             <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm space-y-0 mt-3 bg-gradient-to-r from-violet-50 to-indigo-50">
               <div className="space-y-0.5">
