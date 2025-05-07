@@ -12,11 +12,12 @@ import CSVUpload from '@/components/CSVUpload';
 import BatchProgress from '@/components/BatchProgress';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { CarFront, RefreshCw } from 'lucide-react';
+import { CarFront, RefreshCw, CheckCircle, AlertCircle, Download, Pencil, Maximize2, ImageIcon } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 // Import the local GeneratedImage type used by ImageCard
 import type { GeneratedImage } from '@/types/image';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import CarImageCard from '@/components/CarImageCard';
 import ImageModal from '@/components/ImageModal';
 import { useToast } from '@/hooks/use-toast';
@@ -512,184 +513,288 @@ const CarCreationPage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Form Section */}
               <div className="space-y-6 bg-card p-6 rounded-lg shadow-sm border">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="make">Make</Label>
-                    <Select
-                      value={watchMake || 'None'}
-                      onValueChange={(value) => setValue('make', value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select make" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="None">None</SelectItem>
-                        {makes.map(make => (
-                          <SelectItem key={make} value={make}>{make}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                {/* Header with icon */}
+                <div className="flex items-center space-x-3 border-b pb-4 mb-4">
+                  <div className="bg-primary/10 p-2 rounded-full">
+                    <CarFront className="h-5 w-5 text-primary" />
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="model">Model</Label>
-                    <Select
-                      value={watchModel || 'None'}
-                      onValueChange={(value) => setValue('model', value)}
-                      disabled={!models.length}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select model" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="None">None</SelectItem>
-                        {models.map(model => (
-                          <SelectItem key={model} value={model}>{model}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="body_style">Body Style</Label>
-                    <Select
-                      value={watchBodyStyle || 'None'}
-                      onValueChange={(value) => setValue('body_style', value)}
-                      disabled={!bodyStyles.length}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select body style" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="None">None</SelectItem>
-                        {bodyStyles.map(style => (
-                          <SelectItem key={style} value={style}>{style}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="trim">Trim</Label>
-                    <Select
-                      value={form.watch('trim') || 'None'}
-                      onValueChange={(value) => setValue('trim', value)}
-                      disabled={!trims.length}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select trim" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="None">None</SelectItem>
-                        {trims.map(trim => (
-                          <SelectItem key={trim} value={trim}>{trim}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="year">Year</Label>
-                    <Select
-                      value={form.watch('year')}
-                      onValueChange={(value) => setValue('year', value)}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select year" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {years.map((year) => (
-                          <SelectItem key={year} value={year}>
-                            {year}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="color">Color</Label>
-                    <Select
-                      value={form.watch('color')}
-                      onValueChange={(value) => setValue('color', value)}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select color" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="silver">Silver</SelectItem>
-                        <SelectItem value="black">Black</SelectItem>
-                        <SelectItem value="white">White</SelectItem>
-                        <SelectItem value="red">Red</SelectItem>
-                        <SelectItem value="blue">Blue</SelectItem>
-                        <SelectItem value="green">Green</SelectItem>
-                        <SelectItem value="yellow">Yellow</SelectItem>
-                        <SelectItem value="orange">Orange</SelectItem>
-                        <SelectItem value="gray">Gray</SelectItem>
-                        <SelectItem value="brown">Brown</SelectItem>
-                        <SelectItem value="burgundy">Burgundy</SelectItem>
-                        <SelectItem value="navy blue">Navy Blue</SelectItem>
-                        <SelectItem value="gold">Gold</SelectItem>
-                        <SelectItem value="bronze">Bronze</SelectItem>
-                        <SelectItem value="pearl white">Pearl White</SelectItem>
-                        <SelectItem value="metallic blue">Metallic Blue</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label>Background Style</Label>
-                    <Tabs value={bg} onValueChange={handleBgChange} className="w-full">
-                      <TabsList className="grid grid-cols-2 w-full">
-                        <TabsTrigger value="white">White Studio</TabsTrigger>
-                        <TabsTrigger value="hub">HUB</TabsTrigger>
-                      </TabsList>
-                    </Tabs>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="aspect_ratio">Aspect Ratio</Label>
-                    <Select
-                      value={form.watch('aspect_ratio')}
-                      onValueChange={(value) => setValue('aspect_ratio', value as any)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select aspect ratio" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1:1">1:1 (Square)</SelectItem>
-                        <SelectItem value="16:9">16:9 (Landscape)</SelectItem>
-                        <SelectItem value="9:16">9:16 (Portrait)</SelectItem>
-                        <SelectItem value="4:3">4:3 (Classic)</SelectItem>
-                        <SelectItem value="3:4">3:4 (Portrait)</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <div>
+                    <h3 className="text-lg font-medium">Car Details</h3>
+                    <p className="text-sm text-muted-foreground">Customize your car specification</p>
                   </div>
                 </div>
                 
-                <div className="flex gap-4 pt-4">
+                {/* Form fields in logical groups */}
+                <div className="space-y-6">
+                  {/* Car identification section */}
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-3">Car Identification</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="make">Make</Label>
+                        <Select
+                          value={watchMake || 'None'}
+                          onValueChange={(value) => setValue('make', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select make" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="None">None</SelectItem>
+                            {makes.map(make => (
+                              <SelectItem key={make} value={make}>{make}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="model">Model</Label>
+                        <Select
+                          value={watchModel || 'None'}
+                          onValueChange={(value) => setValue('model', value)}
+                          disabled={!models.length}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select model" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="None">None</SelectItem>
+                            {models.map(model => (
+                              <SelectItem key={model} value={model}>{model}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="body_style">Body Style</Label>
+                        <Select
+                          value={watchBodyStyle || 'None'}
+                          onValueChange={(value) => setValue('body_style', value)}
+                          disabled={!bodyStyles.length}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select body style" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="None">None</SelectItem>
+                            {bodyStyles.map(style => (
+                              <SelectItem key={style} value={style}>{style}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="trim">Trim</Label>
+                        <Select
+                          value={form.watch('trim') || 'None'}
+                          onValueChange={(value) => setValue('trim', value)}
+                          disabled={!trims.length}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select trim" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="None">None</SelectItem>
+                            {trims.map(trim => (
+                              <SelectItem key={trim} value={trim}>{trim}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="year">Year</Label>
+                        <Select
+                          value={form.watch('year')}
+                          onValueChange={(value) => setValue('year', value)}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select year" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {years.map((year) => (
+                              <SelectItem key={year} value={year}>
+                                {year}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Appearance section */}
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-3">Appearance</h4>
+                    <div className="grid grid-cols-1 gap-4">
+                      {/* Color selector with visual swatches */}
+                      <div className="space-y-2">
+                        <Label htmlFor="color">Color</Label>
+                        <div className="grid grid-cols-8 gap-2 mb-2">
+                          {['silver', 'black', 'white', 'red', 'blue', 'green', 'yellow', 'orange'].map(color => (
+                            <div 
+                              key={color}
+                              className={`h-8 w-8 rounded-full cursor-pointer transition-all border-2 ${
+                                form.watch('color') === color 
+                                  ? 'border-primary scale-110' 
+                                  : 'border-transparent hover:border-primary/50'
+                              }`}
+                              style={{ 
+                                backgroundColor: color === 'silver' ? '#C0C0C0' : color,
+                                boxShadow: form.watch('color') === color ? '0 0 0 2px rgba(0,0,0,0.1)' : 'none'
+                              }}
+                              onClick={() => setValue('color', color)}
+                              title={color.charAt(0).toUpperCase() + color.slice(1)}
+                            />
+                          ))}
+                        </div>
+                        <Select
+                          value={form.watch('color')}
+                          onValueChange={(value) => setValue('color', value)}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select color" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="silver">Silver</SelectItem>
+                            <SelectItem value="black">Black</SelectItem>
+                            <SelectItem value="white">White</SelectItem>
+                            <SelectItem value="red">Red</SelectItem>
+                            <SelectItem value="blue">Blue</SelectItem>
+                            <SelectItem value="green">Green</SelectItem>
+                            <SelectItem value="yellow">Yellow</SelectItem>
+                            <SelectItem value="orange">Orange</SelectItem>
+                            <SelectItem value="gray">Gray</SelectItem>
+                            <SelectItem value="brown">Brown</SelectItem>
+                            <SelectItem value="burgundy">Burgundy</SelectItem>
+                            <SelectItem value="navy blue">Navy Blue</SelectItem>
+                            <SelectItem value="gold">Gold</SelectItem>
+                            <SelectItem value="bronze">Bronze</SelectItem>
+                            <SelectItem value="pearl white">Pearl White</SelectItem>
+                            <SelectItem value="metallic blue">Metallic Blue</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Image settings section */}
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-3">Image Settings</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Background style with visual explanation */}
+                      <div className="space-y-2">
+                        <Label>Background Style</Label>
+                        <Tabs value={bg} onValueChange={handleBgChange} className="w-full">
+                          <TabsList className="grid grid-cols-2 w-full">
+                            <TabsTrigger value="white" className="flex items-center gap-1">
+                              <span className="h-3 w-3 bg-white border rounded-full"></span>
+                              <span>Studio</span>
+                            </TabsTrigger>
+                            <TabsTrigger value="hub" className="flex items-center gap-1">
+                              <span className="h-3 w-3 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full"></span>
+                              <span>Showroom</span>
+                            </TabsTrigger>
+                          </TabsList>
+                        </Tabs>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {bg === 'white' 
+                            ? 'Clean white studio background with professional lighting' 
+                            : 'Dynamic dealership showroom environment with ambient lighting'}
+                        </p>
+                      </div>
+                      
+                      {/* Aspect ratio with visual representations */}
+                      <div className="space-y-2">
+                        <Label htmlFor="aspect_ratio">Aspect Ratio</Label>
+                        <Select
+                          value={form.watch('aspect_ratio')}
+                          onValueChange={(value) => setValue('aspect_ratio', value as any)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select aspect ratio" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="4:3" className="flex items-center">
+                              <div className="w-8 h-6 bg-primary/20 rounded mr-2"></div>
+                              <span>4:3 (Classic)</span>
+                            </SelectItem>
+                            <SelectItem value="16:9" className="flex items-center">
+                              <div className="w-8 h-4.5 bg-primary/20 rounded mr-2"></div>
+                              <span>16:9 (Landscape)</span>
+                            </SelectItem>
+                            <SelectItem value="1:1" className="flex items-center">
+                              <div className="w-6 h-6 bg-primary/20 rounded mr-2"></div>
+                              <span>1:1 (Square)</span>
+                            </SelectItem>
+                            <SelectItem value="9:16" className="flex items-center">
+                              <div className="w-4.5 h-8 bg-primary/20 rounded mr-2"></div>
+                              <span>9:16 (Portrait)</span>
+                            </SelectItem>
+                            <SelectItem value="3:4" className="flex items-center">
+                              <div className="w-4.5 h-6 bg-primary/20 rounded mr-2"></div>
+                              <span>3:4 (Portrait)</span>
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Choose the dimensions that best suit your needs
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Generate button and progress status */}
+                <div className="pt-4 border-t mt-4">
                   <Button 
                     onClick={handleGenerate} 
                     disabled={generateMutation.isPending || progress !== null}
-                    className="flex-1"
+                    className="w-full h-10 text-base"
+                    size="lg"
                   >
-                    <CarFront className="mr-2 h-5 w-5" />
-                    Generate Car Image
+                    {generateMutation.isPending ? (
+                      <div className="flex items-center gap-2">
+                        <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Generating...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <CarFront className="mr-2 h-5 w-5" />
+                        Create Car Image
+                      </>
+                    )}
                   </Button>
                 </div>
                 
                 {progress !== null && (
-                  <div className="space-y-2">
+                  <div className="bg-primary/5 rounded-md p-3 mt-4 border border-primary/10">
+                    <div className="flex items-center mb-2">
+                      <span className="text-sm font-medium flex-1">Generation progress</span>
+                      <span className="text-sm font-medium">{progress}%</span>
+                    </div>
                     <Progress value={progress} className="h-2" />
-                    <p className="text-sm text-gray-500 text-center">
-                      {progress < 100 ? 'Generating car image...' : 'Generation complete!'}
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {progress < 100 
+                        ? 'Our AI is creating your custom car image...' 
+                        : 'Your car image is ready!'}
                     </p>
                   </div>
                 )}
                 
                 {generateMutation.isError && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded">
-                    {(generateMutation.error as Error).message || 'An error occurred while generating the image.'}
+                  <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded mt-4 flex items-start gap-2">
+                    <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium">Generation failed</p>
+                      <p className="text-sm mt-1">{(generateMutation.error as Error).message || 'An error occurred while generating the image.'}</p>
+                    </div>
                   </div>
                 )}
               </div>
@@ -698,11 +803,55 @@ const CarCreationPage: React.FC = () => {
               <div>
                 {image ? (
                   <div className="space-y-4">
-                    <div className="flex justify-between items-center mb-6">
-                      <h2 className="text-xl font-bold">Generated Image</h2>
+                    {/* Preview header with title and car specification */}
+                    <div className="flex flex-col p-4 pb-2 bg-card rounded-t-lg shadow-sm border border-b-0">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <ImageIcon className="h-5 w-5 text-primary" />
+                          <h2 className="font-semibold">Preview</h2>
+                        </div>
+                        <Badge variant="outline" className="h-6">
+                          {form.watch('aspect_ratio')}
+                        </Badge>
+                      </div>
+                      
+                      {/* Car specification summary */}
+                      <div className="flex flex-wrap gap-1.5 mt-3">
+                        {watchMake !== 'None' && (
+                          <Badge variant="secondary" className="rounded-sm text-xs font-normal bg-secondary/40 hover:bg-secondary/40">
+                            {watchMake}
+                          </Badge>
+                        )}
+                        {watchModel !== 'None' && (
+                          <Badge variant="secondary" className="rounded-sm text-xs font-normal bg-secondary/40 hover:bg-secondary/40">
+                            {watchModel}
+                          </Badge>
+                        )}
+                        {watchBodyStyle !== 'None' && (
+                          <Badge variant="secondary" className="rounded-sm text-xs font-normal bg-secondary/40 hover:bg-secondary/40">
+                            {watchBodyStyle}
+                          </Badge>
+                        )}
+                        {form.watch('year') && (
+                          <Badge variant="secondary" className="rounded-sm text-xs font-normal bg-secondary/40 hover:bg-secondary/40">
+                            {form.watch('year')}
+                          </Badge>
+                        )}
+                        {form.watch('color') && (
+                          <Badge variant="secondary" className="rounded-sm text-xs font-normal bg-secondary/40 hover:bg-secondary/40 flex items-center gap-1">
+                            <div 
+                              className="h-2 w-2 rounded-full" 
+                              style={{ 
+                                backgroundColor: form.watch('color') === 'silver' ? '#C0C0C0' : form.watch('color')
+                              }}
+                            />
+                            {form.watch('color')}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                     
-                    <div className="relative">
+                    <div className="relative border-x shadow-sm">
                       {/* Image card with actions */}
                       <CarImageCard
                         image={image}
@@ -714,18 +863,14 @@ const CarCreationPage: React.FC = () => {
                         color={form.watch('color')}
                         background={form.watch('background')}
                         onEdit={(img) => {
-                          console.log("Edit button clicked with image:", img);
-                          
                           // Use the same edit handler approach as the gallery page
                           const sourceUrl = img.fullUrl || img.url;
-                          console.log("Setting up edit mode with image URL:", sourceUrl);
                           
                           // Set editor context for edit mode
                           setMode('edit');
                           setSourceImages([sourceUrl]);
                           
                           // Navigate to the home page
-                          console.log("Navigating to home for editing...");
                           setLocation('/');
                         }}
                         onUpscale={(img) => {
@@ -735,29 +880,99 @@ const CarCreationPage: React.FC = () => {
                         }}
                         onDownload={handleDownload}
                         onClick={() => {
-                          console.log("Image clicked, setting fullscreen image:", image.fullUrl || image.url);
                           setSelectedImage(image.fullUrl || image.url);
                         }}
                       />
                     </div>
                     
-                    <div className="bg-blue-50 text-blue-800 p-3 rounded-lg text-sm flex items-center border border-blue-100">
-                      <div className="mr-2 bg-blue-100 rounded-full p-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-info"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                    {/* Image info footer */}
+                    <div className="bg-muted/50 border rounded-b-lg p-3 text-sm space-y-3">
+                      <div className="flex items-start gap-2">
+                        <div className="bg-blue-100 text-blue-500 rounded-full p-1 mt-0.5">
+                          <CheckCircle className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm">Saved to Gallery</p>
+                          <p className="text-xs text-muted-foreground">
+                            Your image has been automatically saved to your gallery for later use
+                          </p>
+                        </div>
                       </div>
-                      Image has been saved to your gallery automatically.
+                      
+                      <div className="flex justify-between gap-2 pt-1">
+                        {/* Actions */}
+                        <div className="flex gap-1.5">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="h-8 text-xs flex gap-1.5 bg-card"
+                            onClick={() => handleDownload(image)}
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                            Download
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="h-8 text-xs flex gap-1.5 bg-card"
+                            onClick={() => {
+                              const sourceUrl = image.fullUrl || image.url;
+                              setMode('edit');
+                              setSourceImages([sourceUrl]);
+                              setLocation('/');
+                            }}
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                            Edit
+                          </Button>
+                        </div>
+                        
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="h-8 text-xs flex gap-1.5 bg-card"
+                          onClick={() => setSelectedImage(image.fullUrl || image.url)}
+                        >
+                          <Maximize2 className="h-3.5 w-3.5" />
+                          Fullscreen
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-center h-full min-h-[400px] bg-card/50 border rounded-lg shadow-sm">
-                    <div className="text-center p-8">
-                      <div className="bg-primary/10 rounded-full p-4 inline-block mb-2">
-                        <CarFront className="mx-auto h-10 w-10 text-primary/80" />
+                  <div className="flex flex-col h-full bg-card border rounded-lg shadow-sm overflow-hidden">
+                    {/* Empty state header */}
+                    <div className="p-4 border-b bg-muted/30">
+                      <div className="flex items-center gap-2">
+                        <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                        <h2 className="font-semibold text-muted-foreground">Preview</h2>
                       </div>
-                      <h3 className="mt-4 text-xl font-medium">No Car Image Generated Yet</h3>
-                      <p className="mt-2 text-muted-foreground max-w-md">
-                        Fill out the form and click Generate to see your car image here.
-                      </p>
+                    </div>
+                    
+                    {/* Empty state content */}
+                    <div className="flex-1 flex items-center justify-center py-16 px-6">
+                      <div className="text-center max-w-xs">
+                        <div className="relative mx-auto mb-4 w-20 h-20">
+                          <div className="absolute inset-0 bg-primary/5 rounded-full animate-ping opacity-50"></div>
+                          <div className="relative bg-primary/10 rounded-full p-5">
+                            <CarFront className="h-10 w-10 text-primary/60" />
+                          </div>
+                        </div>
+                        <h3 className="text-lg font-medium mb-2">Ready to create your car</h3>
+                        <p className="text-muted-foreground text-sm mb-6">
+                          Select your car specifications on the left and click Create to generate a high-quality image
+                        </p>
+                        <div className="text-xs text-muted-foreground flex items-center justify-center gap-4">
+                          <div className="flex items-center gap-1.5">
+                            <CheckCircle className="h-3.5 w-3.5 text-primary/60" />
+                            <span>High-quality rendering</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <CheckCircle className="h-3.5 w-3.5 text-primary/60" />
+                            <span>Studio quality</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
