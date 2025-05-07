@@ -7,7 +7,7 @@ export interface PromptSuggestions {
   imageTypes: string[];
   cameraPositions: string[];
   lightingStyles: string[];
-  colorPalettes: string[];
+  colorPalettes: string[]; // Keeping in type but not displaying
 }
 
 // Default empty suggestions
@@ -25,6 +25,13 @@ const categoryLabels: Record<keyof PromptSuggestions, string> = {
   lightingStyles: "Lighting Style",
   colorPalettes: "Color Palette"
 };
+
+// Define which categories to actually display (excluding colorPalettes)
+const visibleCategories: (keyof PromptSuggestions)[] = [
+  "imageTypes",
+  "cameraPositions",
+  "lightingStyles"
+];
 
 interface AISuggestionBadgesProps {
   suggestions: PromptSuggestions;
@@ -58,11 +65,6 @@ export function AISuggestionBadges({
       {/* Animated background pattern */}
       <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,rgba(255,255,255,0.6),rgba(255,255,255,0.9))] opacity-50"></div>
       
-      {/* Subtle "AI" text in background */}
-      <div className="absolute right-3 bottom-1 opacity-5">
-        <div className="text-8xl font-black text-purple-800">AI</div>
-      </div>
-      
       {/* Soft glow effect */}
       <div className="absolute -inset-1 bg-gradient-to-r from-violet-500/5 via-purple-500/5 to-indigo-500/5 blur-xl"></div>
       
@@ -87,9 +89,9 @@ export function AISuggestionBadges({
         </p>
       </div>
       
-      {/* Render each category */}
-      {Object.entries(suggestions).map(([category, values]) => {
-        const key = category as keyof PromptSuggestions;
+      {/* Render only visible categories */}
+      {visibleCategories.map(category => {
+        const values = suggestions[category];
         // Filter out suggestions that have already been selected
         const availableSuggestions = values.filter((v: string) => !selectedSuggestions.has(v));
         
@@ -99,7 +101,7 @@ export function AISuggestionBadges({
         return (
           <div key={category} className="relative z-10">
             <div className="flex items-center mb-2">
-              <h4 className="text-sm font-medium text-purple-700">{categoryLabels[key]}</h4>
+              <h4 className="text-sm font-medium text-purple-700">{categoryLabels[category]}</h4>
               {isLoading && (
                 <Loader2 className="ml-2 h-3 w-3 animate-spin text-purple-600" />
               )}
@@ -115,19 +117,18 @@ export function AISuggestionBadges({
                   />
                 ))
               ) : (
-                // Actual suggestion badges
+                // Actual suggestion badges (without sparkle icon)
                 availableSuggestions.map((suggestion: string) => (
                   <button
                     key={suggestion}
                     onClick={() => handleSelect(suggestion)}
                     className={cn(
-                      "inline-flex items-center px-3 py-1 rounded-full text-sm font-medium transition-all",
+                      "px-3 py-1 rounded-full text-sm font-medium transition-all",
                       "bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-800 border border-purple-200",
-                      "hover:from-purple-200 hover:to-indigo-200 hover:border-purple-300 hover:ai-glow",
+                      "hover:from-purple-200 hover:to-indigo-200 hover:border-purple-300 hover:shadow-sm",
                       "active:scale-95 focus:outline-none focus:ring-2 focus:ring-purple-300"
                     )}
                   >
-                    <Sparkles className="w-3 h-3 mr-1 text-purple-500" />
                     {suggestion}
                   </button>
                 ))

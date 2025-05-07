@@ -31,7 +31,10 @@ router.post("/prompt-suggestions", async (req, res) => {
 Return JSON with four arrays: "imageTypes", "cameraPositions", "lightingStyles", "colorPalettes". 
 Pick up to 6 concise suggestions for each, tailored to the user's text and the ${model} model.
 Focus on options that would improve the visual quality of the generated image.
-Keep suggestions concise and directly applicable - no need for explanations.`;
+
+For cameraPositions, always include at least 2 experimental or unconventional options like "extreme fish-eye lens", "360-degree view", "microscopic perspective", "drone shot", "split-frame view", "tilt-shift miniature effect", or similarly creative viewpoints.
+
+Keep all suggestions concise and directly applicable - no need for explanations.`;
     
     // Call OpenAI API
     const completion = await openai.chat.completions.create({
