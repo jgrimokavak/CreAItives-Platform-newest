@@ -121,7 +121,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       job.status = "processing";
       
-      const { prompt, modelKey, size, quality, n, style, background, output_format, aspect_ratio, seed } = data;
+      const { prompt, modelKey, size, quality, n, style, background, output_format, aspect_ratio, seed, kavakStyle } = data;
+      
+      // Import the KAVAK style prompt if needed
+      let finalPrompt = prompt;
+      if (kavakStyle) {
+        const { KAVAK_STYLE_PROMPT } = await import('../shared/constants/stylePrompts');
+        finalPrompt = prompt + " " + KAVAK_STYLE_PROMPT;
+        console.log(`Job ${jobId}: Using KAVAK style - original prompt length: ${prompt.length}, final prompt length: ${finalPrompt.length}`);
+      }
       
       console.log(`Job ${jobId}: Processing image generation with model: ${modelKey}`);
       
@@ -145,7 +153,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Create the base request object
         const requestParams: any = {
           model: modelKey,
-          prompt: prompt,
+          prompt: finalPrompt,
           n: numImages,
           size: size || '1024x1024',
         };
@@ -240,7 +248,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Handle Replicate models
       else if (modelInfo.provider === 'replicate') {
         const inputs = {
-          prompt,
+          prompt: finalPrompt,
           aspect_ratio,
           seed
         };
@@ -326,6 +334,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const size = req.body.size || "1024x1024";
       const quality = req.body.quality || "high";
       const n = parseInt(req.body.n || "1");
+      const kavakStyle = req.body.kavakStyle === "true" || req.body.kavakStyle === true;
+      
+      // Apply KAVAK style if enabled
+      let finalPrompt = prompt;
+      if (kavakStyle) {
+        const { KAVAK_STYLE_PROMPT } = await import('../shared/constants/stylePrompts');
+        finalPrompt = prompt + " " + KAVAK_STYLE_PROMPT;
+        console.log(`Job ${jobId}: Using KAVAK style for edit - original prompt length: ${prompt.length}, final prompt length: ${finalPrompt.length}`);
+      }
       
       // Get uploaded files
       const imgFiles = (req.files as any)?.image as Express.Multer.File[] || [];
@@ -445,7 +462,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const editParams: any = {
           model: "gpt-image-1",
           image: uploadables,
-          prompt,
+          prompt: finalPrompt,
           n,
           // Convert size to a compatible format for the API
           size: size === "auto" ? "1024x1024" : size,
