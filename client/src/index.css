@@ -101,63 +101,33 @@
     }
   }
   
-  /* 
-  * Mobile-first Carousel Styling
-  * Built to be extremely robust on all screen sizes
-  */
-
-  /* Base carousel container */
-  .image-carousel {
-    width: 100%;
+  /* Modern Splide carousel styling */
+  
+  /* Core carousel container */
+  .home-carousel {
     margin: 0 auto;
-    position: relative;
-  }
-
-  /* Override default slick styles for better consistency */
-  .image-carousel .slick-list {
-    margin: 0 -8px;
-    overflow: hidden;
-  }
-
-  .image-carousel .slick-track {
-    display: flex;
-    align-items: center;
-  }
-
-  /* Fix slide sizing in all browsers */
-  .image-carousel .slick-slide {
-    box-sizing: border-box;
-    padding: 0 8px;
-    height: auto !important;
-  }
-
-  .image-carousel .slick-slide > div {
     width: 100%;
-    height: 100%;
   }
-
-  /* Ensure slide content maintains correct proportions */
-  .carousel-image-wrapper {
-    padding-bottom: 100%; /* 1:1 aspect ratio */
+  
+  /* Square aspect ratio container for images */
+  .carousel-item {
     position: relative;
     width: 100%;
-    height: 0;
+    padding: 8px;
   }
-
-  /* Image container with shadow and rounded corners */
-  .carousel-image-container {
-    position: absolute;
-    top: 0;
-    left: 0;
+  
+  /* Inner container for image */
+  .carousel-item-inner {
+    position: relative;
     width: 100%;
-    height: 100%;
-    border-radius: 0.5rem;
+    padding-top: 100%; /* 1:1 aspect ratio */
+    border-radius: 8px;
+    overflow: hidden; 
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     background-color: white;
-    overflow: hidden;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
-
-  /* Image size and positioning */
+  
+  /* Image positioning */
   .carousel-image {
     position: absolute;
     top: 0;
@@ -165,75 +135,51 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center;
+    transition: transform 0.3s ease;
   }
-
-  /* Mobile screens optimization (default) */
-  .carousel-slide {
-    width: 100%;
-    max-width: 100%;
-    padding: 0 8px;
+  
+  /* Ensure splide has proper spacing */
+  .splide {
+    padding: 1rem 0;
   }
-
-  /* Small devices (640px and up) */
-  @media (min-width: 640px) {
-    .carousel-slide {
-      max-width: 300px;
+  
+  /* Set correct track height */
+  .splide__track {
+    overflow: visible;
+  }
+  
+  /* Fix for mobile browsers */
+  @media (max-width: 640px) {
+    .carousel-item {
+      padding: 4px;
     }
-    .image-carousel .slick-list {
-      margin: 0 -8px;
-    }
-  }
-
-  /* Medium devices (768px and up) */
-  @media (min-width: 768px) {
-    .carousel-slide {
-      max-width: 320px;
-    }
-  }
-
-  /* Large devices (1024px and up) */
-  @media (min-width: 1024px) {
-    .carousel-slide {
-      max-width: 340px;
-    }
-  }
-
-  /* XL devices (1280px and up) */
-  @media (min-width: 1280px) {
-    .carousel-slide {
-      max-width: 360px;
-    }
-  }
-
-  /* Extra Large devices (1280px and up) */
-  @media (min-width: 1280px) {
-    .carousel-slide {
-      max-width: 220px;
+    
+    .carousel-item-inner {
+      border-radius: 6px;
     }
   }
   
-  /* Special fixes for mobile browsers */
+  /* Create smoother animations on all devices */
+  .splide__track {
+    will-change: transform;
+    transform: translateZ(0);
+  }
+  
+  /* Remove pagination for cleaner look */
+  .splide__pagination {
+    display: none;
+  }
+  
+  /* Auto-animation control for infinite scrolling */
+  .auto-scroll .splide__slide {
+    transition: opacity 0.3s;
+  }
+  
+  /* Special optimizations for touch devices */
   @supports (-webkit-touch-callout: none) {
-    /* Fixes for iOS Safari */
-    .image-carousel .slick-track {
-      display: flex !important;
-    }
-    
-    .image-carousel .slick-slide {
-      height: inherit !important;
-    }
-    
-    .carousel-image-container {
-      transform: translateZ(0); /* Force hardware acceleration */
-    }
-  }
-  
-  /* Android Chrome sometimes needs this fix */
-  @media screen and (-webkit-min-device-pixel-ratio: 0) {
-    .image-carousel {
-      -webkit-transform: translateZ(0);
-      backface-visibility: hidden;
-      perspective: 1000;
+    .splide__track {
+      -webkit-overflow-scrolling: touch;
     }
   }
 }

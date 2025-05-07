@@ -1,11 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import Slider from 'react-slick';
-import { motion, AnimatePresence } from 'framer-motion';
-import 'slick-carousel/slick/slick.css';
-import 'slick-carousel/slick/slick-theme.css';
+import { Splide, SplideSlide, SplideTrack } from '@splidejs/react-splide';
+import { motion } from 'framer-motion';
 import { 
   Sparkles, 
   Zap,
@@ -16,16 +14,17 @@ import {
   MessageSquareText,
   CarFront,
   ChevronRight,
-  ArrowRight,
-  ChevronLeft
+  ArrowRight
 } from 'lucide-react';
 import { GeneratedImage } from '@/types/image';
+
+// Import Splide base CSS
+import '@splidejs/splide/dist/css/splide.min.css';
 
 export default function HomePage() {
   const [recentImages, setRecentImages] = useState<GeneratedImage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const sliderRef = useRef<any>(null);
 
   // Fetch the recent images from the gallery
   useEffect(() => {
@@ -53,9 +52,34 @@ export default function HomePage() {
 
     fetchRecentImages();
   }, []);
+  
+  // Splide carousel options
+  const splideOptions = {
+    type: 'loop',
+    gap: '0rem',
+    perPage: 5,
+    arrows: false,
+    pagination: false,
+    autoplay: true,
+    interval: 0, // Continuous movement
+    speed: 7000, // Slow speed for smooth scrolling
+    pauseOnHover: false,
+    pauseOnFocus: false,
+    resetProgress: false,
+    easing: 'linear',
+    drag: true,
+    snap: false,
+    perMove: 1,
+    breakpoints: {
+      1536: { perPage: 4 },
+      1280: { perPage: 3 },
+      1024: { perPage: 3 },
+      768: { perPage: 2 },
+      640: { perPage: 1, gap: '1rem' }
+    }
+  };
 
-  // No need for inline styles as we use CSS file now
-
+  // Platform capabilities
   const capabilities = [
     {
       title: 'Text-to-Image',
@@ -182,7 +206,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Recent Gallery Section */}
+        {/* Recent Gallery Section - Using Splide for robustness */}
         {recentImages.length > 0 && (
           <section className="py-14 px-4 sm:px-6 lg:px-8 bg-white border-t">
             <div className="container mx-auto max-w-7xl">
@@ -196,96 +220,30 @@ export default function HomePage() {
               </div>
 
               {!isLoading ? (
-                <div className="relative overflow-hidden p-1">
-                  {/* Mobile-friendly carousel wrapper */}
-                  <div className="relative w-full max-w-full">
-                    <Slider
-                      ref={sliderRef}
-                      dots={false}
-                      infinite={true}
-                      speed={6000} // Moderately slow transition
-                      slidesToShow={5}
-                      slidesToScroll={1}
-                      autoplay={true}
-                      autoplaySpeed={0} // Continuous scrolling
-                      cssEase="linear" // Smooth linear motion
-                      pauseOnHover={false}
-                      swipe={true} // Enable swipe for better mobile experience
-                      touchMove={true} // Enable touch for better mobile experience
-                      arrows={false}
-                      variableWidth={false} // Fixed width for consistency
-                      adaptiveHeight={false} // No adaptive height to prevent jumps
-                      draggable={true} // Can be dragged on desktop
-                      responsive={[
-                        {
-                          breakpoint: 3000, // Above 1536px
-                          settings: {
-                            slidesToShow: 5,
-                            slidesToScroll: 1,
-                            infinite: true,
-                          }
-                        },
-                        {
-                          breakpoint: 1536, // 2xl screens
-                          settings: {
-                            slidesToShow: 4,
-                            slidesToScroll: 1,
-                            infinite: true,
-                          }
-                        },
-                        {
-                          breakpoint: 1280, // xl screens
-                          settings: {
-                            slidesToShow: 3,
-                            slidesToScroll: 1,
-                            infinite: true,
-                          }
-                        },
-                        {
-                          breakpoint: 1024, // lg screens
-                          settings: {
-                            slidesToShow: 2,
-                            slidesToScroll: 1,
-                            infinite: true,
-                          }
-                        },
-                        {
-                          breakpoint: 768, // md screens
-                          settings: {
-                            slidesToShow: 2,
-                            slidesToScroll: 1,
-                            infinite: true,
-                          }
-                        },
-                        {
-                          breakpoint: 640, // sm screens and below (mobile)
-                          settings: {
-                            slidesToShow: 1,
-                            slidesToScroll: 1,
-                            centerMode: true,
-                            centerPadding: '20px',
-                            infinite: true,
-                            speed: 4000,
-                          }
-                        }
-                      ]}
-                      className="image-carousel mx-auto"
-                    >
-                      {recentImages.map((image) => (
-                        <div key={image.id} className="carousel-slide">
-                          <div className="carousel-image-wrapper">
-                            <div className="carousel-image-container">
+                <div className="home-carousel relative w-full">
+                  <Splide
+                    options={splideOptions}
+                    className="auto-scroll"
+                    hasTrack={false}
+                    aria-label="Recent creations"
+                  >
+                    <div className="splide__track">
+                      <SplideTrack>
+                        {recentImages.map((image) => (
+                          <SplideSlide key={image.id} className="carousel-item">
+                            <div className="carousel-item-inner">
                               <img 
                                 src={image.thumbUrl || image.url} 
                                 alt={image.prompt}
                                 className="carousel-image"
+                                loading="lazy"
                               />
                             </div>
-                          </div>
-                        </div>
-                      ))}
-                    </Slider>
-                  </div>
+                          </SplideSlide>
+                        ))}
+                      </SplideTrack>
+                    </div>
+                  </Splide>
                 </div>
               ) : (
                 <div className="flex items-center justify-center h-64 bg-slate-50 rounded-lg">
