@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Download, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import { Download, AlertCircle, CheckCircle, Clock, Square, Plus, FileWarning } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface BatchProgressProps {

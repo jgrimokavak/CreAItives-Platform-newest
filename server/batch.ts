@@ -15,6 +15,8 @@ if (!process.env.REPLICATE_API_TOKEN) {
 
 // Store batch jobs with progress information
 export type Row = Partial<Record<"make"|"model"|"body_style"|"trim"|"year"|"color"|"background"|"aspect_ratio", string>>;
+export type JobStatus = "pending" | "processing" | "completed" | "stopped" | "failed";
+
 export type BatchJob = {
   id: string;
   total: number;
@@ -22,7 +24,7 @@ export type BatchJob = {
   failed: number;
   zipPath?: string;
   zipUrl?: string;
-  status: "pending" | "processing" | "completed" | "stopped" | "failed";
+  status: JobStatus;
   errors: {row: number; reason: string; details?: string}[];
   createdAt: Date;
   completedAt?: Date;
@@ -303,8 +305,8 @@ export async function processBatch(id: string, rows: Row[]) {
   if (!zipResult.success) {
     console.error(`Failed to create ZIP file for job ${id}`);
     // If the job wasn't already marked as failed, mark it now
-    if (job.status !== "failed") {
-      job.status = "failed";
+    if (job.status !== "failed" as const) {
+      job.status = "failed" as const;
     }
   }
   
