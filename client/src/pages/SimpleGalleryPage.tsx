@@ -125,16 +125,45 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
   };
   
   // Toggle selection
-  const toggleSelection = (id: string) => {
+  // Track last selected image for shift-click range selection
+  const [lastSelectedId, setLastSelectedId] = useState<string | null>(null);
+
+  // Toggle selection of an image
+  const toggleSelection = (id: string, shiftKey = false) => {
     if (selectionMode === 'none') {
       // If not in selection mode, entering it automatically selects the image
       setSelectionMode('selecting');
       setSelectedIds([id]);
+      setLastSelectedId(id);
+    } else if (shiftKey && lastSelectedId) {
+      // Handle shift-click range selection
+      const allImageIds = filteredImages.map(img => img.id);
+      const currentIndex = allImageIds.indexOf(id);
+      const lastIndex = allImageIds.indexOf(lastSelectedId);
+      
+      if (currentIndex !== -1 && lastIndex !== -1) {
+        // Get the range of ids between last selected and current
+        const start = Math.min(currentIndex, lastIndex);
+        const end = Math.max(currentIndex, lastIndex);
+        const rangeIds = allImageIds.slice(start, end + 1);
+        
+        // Add the range to the selection
+        setSelectedIds(prev => {
+          const newSelection = [...new Set([...prev, ...rangeIds])];
+          return newSelection;
+        });
+        setLastSelectedId(id);
+      }
     } else {
       // In selection mode, toggle the selection status
-      setSelectedIds(prev =>
-        prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-      );
+      setSelectedIds(prev => {
+        const newSelection = prev.includes(id) 
+          ? prev.filter(i => i !== id) 
+          : [...prev, id];
+        
+        return newSelection;
+      });
+      setLastSelectedId(id);
     }
   };
   
