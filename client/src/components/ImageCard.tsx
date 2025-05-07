@@ -388,41 +388,89 @@ export default function ImageCard({
               {image.model}
             </span>
             
-            {/* Aspect Ratio tag - primary color based on calculated ratio */}
+            {/* Aspect Ratio tag - primary color based on model-specific ratio detection */}
             {(() => {
-              // Parse the size string to extract ratio information
-              const sizeMatch = image.size?.match(/(\d+)x(\d+)/i); 
-              
-              // If we have a valid size format with dimensions
-              if (sizeMatch && sizeMatch.length === 3) {
-                const width = parseInt(sizeMatch[1]);
-                const height = parseInt(sizeMatch[2]);
-                
+              // Get clean aspect ratio from given dimensions
+              const getCleanAspectRatio = (width: number, height: number): string => {
                 if (!isNaN(width) && !isNaN(height) && height !== 0) {
                   const ratio = width / height;
-                  let ratioText;
                   
-                  // Convert to standard ratio notation
-                  if (Math.abs(ratio - 1) < 0.01) ratioText = "1:1";
-                  else if (Math.abs(ratio - 4/3) < 0.01) ratioText = "4:3";
-                  else if (Math.abs(ratio - 16/9) < 0.01) ratioText = "16:9";
-                  else if (Math.abs(ratio - 3/2) < 0.01) ratioText = "3:2";
-                  else ratioText = width + ":" + height;
+                  // Standard aspect ratio patterns
+                  if (Math.abs(ratio - 1) < 0.01) return "1:1";
+                  if (Math.abs(ratio - 4/3) < 0.01) return "4:3";
+                  if (Math.abs(ratio - 16/9) < 0.01) return "16:9";
+                  if (Math.abs(ratio - 3/2) < 0.01) return "3:2";
+                  
+                  // Find GCD for the most reduced fraction
+                  const gcd = (a: number, b: number): number => {
+                    return b === 0 ? a : gcd(b, a % b);
+                  };
+                  
+                  // For other ratios, simplify the fraction
+                  const divisor = gcd(width, height);
+                  return `${width/divisor}:${height/divisor}`;
+                }
+                return "Unknown";
+              };
+
+              // Check model and format to determine what to display
+              if (image.model === "imagen-3" || image.model === "gpt-image-1") {
+                // For OpenAI/Google model cases, typically using 1:1, 16:9, etc.
+                
+                // First try to parse from the size attribute (e.g. "1024x1024")
+                const sizeMatch = image.size?.match(/(\d+)x(\d+)/i);
+                if (sizeMatch && sizeMatch.length === 3) {
+                  const width = parseInt(sizeMatch[1]);
+                  const height = parseInt(sizeMatch[2]);
                   
                   return (
                     <span className="bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-2.5 py-0.5 flex items-center">
                       <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mr-1.5"></span>
-                      {ratioText}
+                      {getCleanAspectRatio(width, height)}
                     </span>
                   );
                 }
               }
               
-              // Fallback to just showing the original size string
+              // Check if we have the simpler "1:1" format already
+              if (image.size && image.size.includes(':')) {
+                return (
+                  <span className="bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-2.5 py-0.5 flex items-center">
+                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mr-1.5"></span>
+                    {image.size}
+                  </span>
+                );
+              }
+              
+              // If we have width/height as separate properties
+              if (image.width && image.height) {
+                const width = Number(image.width);
+                const height = Number(image.height);
+                
+                return (
+                  <span className="bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-2.5 py-0.5 flex items-center">
+                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mr-1.5"></span>
+                    {getCleanAspectRatio(width, height)}
+                  </span>
+                );
+              }
+
+              // Fallback to simplest representation
+              if (image.size && /^\d+x\d+$/i.test(image.size)) {
+                const [width, height] = image.size.toLowerCase().split('x').map(Number);
+                return (
+                  <span className="bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-2.5 py-0.5 flex items-center">
+                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mr-1.5"></span>
+                    {getCleanAspectRatio(width, height)}
+                  </span>
+                );
+              }
+              
+              // Ultimate fallback to original size format (when we can't parse)
               return (
                 <span className="bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-2.5 py-0.5 flex items-center">
                   <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mr-1.5"></span>
-                  {image.size}
+                  {image.size || "Unknown size"}
                 </span>
               );
             })()}
