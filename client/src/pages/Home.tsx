@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import PromptForm from "@/components/PromptForm";
 import EditForm from "@/components/EditForm";
 import ImageGallery from "@/components/ImageGallery";
@@ -8,6 +8,9 @@ import EmptyState from "@/components/EmptyState";
 import { GeneratedImage } from "@/types/image";
 import NavTabs, { TabContent } from "@/components/NavTabs";
 import { useEditor } from "@/context/EditorContext";
+import { HeroSection } from "@/components/HeroSection";
+import { Capabilities } from "@/components/Capabilities";
+import { AutoScrollGallery } from "@/components/AutoScrollGallery";
 
 export default function Home() {
   const [images, setImages] = useState<GeneratedImage[]>([]);
@@ -40,6 +43,15 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
+      {/* Hero Section */}
+      <HeroSection />
+      
+      {/* Capabilities Grid */}
+      <Capabilities />
+      
+      {/* Auto-Scrolling Gallery */}
+      <AutoScrollGallery />
+      
       <main className="container mx-auto px-4 py-6 sm:py-8 max-w-6xl flex-grow">
         {/* Main Content Area with Side-by-Side Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -47,9 +59,9 @@ export default function Home() {
           <div className="lg:col-span-5">
             {/* Page Header - Left Aligned */}
             <div className="mb-6">
-              <h1 className="text-2xl sm:text-3xl font-bold mb-3 text-foreground">
-                AI Image Studio
-              </h1>
+              <h2 className="text-2xl sm:text-3xl font-bold mb-3 text-foreground">
+                Create Your Images
+              </h2>
               <p className="text-muted-foreground text-sm">
                 Generate custom images or enhance existing ones with our AI-powered tools
               </p>
