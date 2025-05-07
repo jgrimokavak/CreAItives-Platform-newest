@@ -203,9 +203,9 @@ const CSVUpload: React.FC<CSVUploadProps> = ({ onUpload, isLoading }) => {
   return (
     <div className="space-y-4">
       <div 
-        className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors relative overflow-hidden
-          ${dragActive ? 'border-primary bg-primary/10' : 'border-border'}
-          ${isLoading ? 'pointer-events-none opacity-60' : ''}`}
+        className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors relative overflow-hidden
+          ${dragActive ? 'border-primary bg-primary/10' : 'border-muted'}
+          ${isLoading ? 'pointer-events-none opacity-60' : 'hover:bg-muted/50 hover:border-primary/50'}`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
@@ -221,52 +221,112 @@ const CSVUpload: React.FC<CSVUploadProps> = ({ onUpload, isLoading }) => {
           disabled={isLoading}
         />
         
-        <div className="flex flex-col items-center justify-center py-4">
-          <Upload className="h-10 w-10 text-muted-foreground mb-2" />
-          <p className="text-lg font-medium">
-            Drag and drop your CSV file here, or click to browse
+        <div className="flex flex-col items-center justify-center py-6">
+          <div className="bg-primary/10 rounded-full p-4 mb-4">
+            <Upload className="h-8 w-8 text-primary" />
+          </div>
+          <h3 className="text-xl font-medium mb-2">
+            Upload your CSV file
+          </h3>
+          <p className="text-muted-foreground mb-4 max-w-lg mx-auto">
+            Drag and drop your file here or click to browse. Your CSV must include car details like make, model, color, etc.
           </p>
-          <p className="text-sm text-muted-foreground mt-1">
-            CSV must contain columns such as make, model, body_style, trim, year, color, background (white/hub), 
-            aspect_ratio (1:1,16:9,9:16,4:3,3:4)
-          </p>
-          <p className="text-sm text-muted-foreground mt-1">
-            Maximum file size: 5MB • Maximum 50 rows
-          </p>
+          <div className="flex flex-wrap gap-2 justify-center mb-2">
+            {validColumns.map(col => (
+              <span key={col} className="bg-muted px-2 py-1 rounded-md text-xs font-medium">{col}</span>
+            ))}
+          </div>
+          <div className="text-xs text-muted-foreground flex items-center gap-3 mt-2">
+            <span className="flex items-center gap-1">
+              <span className="h-2 w-2 rounded-full bg-primary inline-block"></span>
+              Max 5MB
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="h-2 w-2 rounded-full bg-primary inline-block"></span>
+              Up to 50 cars
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="h-2 w-2 rounded-full bg-primary inline-block"></span>
+              .csv format
+            </span>
+          </div>
         </div>
       </div>
       
       {validationResult && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
+        <Card className={validationResult.isValid ? "border-green-200" : validationResult.errors.length > 0 ? "border-red-200" : "border-yellow-200"}>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2">
               {validationResult.isValid ? (
                 <>
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                  CSV File Validated
+                  <div className="p-1.5 bg-green-100 rounded-full">
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                  </div>
+                  <span>CSV Ready for Processing</span>
                 </>
               ) : (
                 <>
-                  <FileWarning className="h-5 w-5 text-red-500 mr-2" />
-                  CSV Validation Failed
+                  <div className="p-1.5 bg-red-100 rounded-full">
+                    <FileWarning className="h-5 w-5 text-red-600" />
+                  </div>
+                  <span>CSV Validation Issues</span>
                 </>
               )}
             </CardTitle>
             {selectedFile && (
-              <CardDescription>
-                {selectedFile.name} • {Math.round(selectedFile.size / 1024)} KB • {validationResult.rowCount} rows
+              <CardDescription className="flex flex-wrap gap-2 mt-1 items-center">
+                <span className="font-medium">{selectedFile.name}</span>
+                <div className="flex gap-2 text-xs">
+                  <span className="bg-muted px-2 py-0.5 rounded">{Math.round(selectedFile.size / 1024)} KB</span>
+                  <span className="bg-muted px-2 py-0.5 rounded">{validationResult.rowCount} cars</span>
+                </div>
               </CardDescription>
             )}
           </CardHeader>
           
           <CardContent className="space-y-4">
+            {/* Status summary */}
+            {validationResult.isValid ? (
+              <div className="rounded-md bg-green-50 border border-green-100 p-3">
+                <div className="flex">
+                  <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-green-800">Ready to generate {validationResult.rowCount} car images</p>
+                    {validationResult.warnings.length > 0 && (
+                      <p className="text-sm text-green-700 mt-1">Some non-critical warnings were found. See details below.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : validationResult.errors.length > 0 ? (
+              <div className="rounded-md bg-red-50 border border-red-100 p-3">
+                <div className="flex">
+                  <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-red-800">Cannot process CSV due to critical errors</p>
+                    <p className="text-sm text-red-700 mt-1">Please fix the errors below and try again.</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-md bg-yellow-50 border border-yellow-100 p-3">
+                <div className="flex">
+                  <AlertTriangle className="h-5 w-5 text-yellow-500 mt-0.5 flex-shrink-0" />
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-yellow-800">CSV has some non-critical warnings</p>
+                    <p className="text-sm text-yellow-700 mt-1">You can continue, but be aware of the issues below.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             {/* Error messages */}
             {validationResult.errors.length > 0 && (
-              <div className="rounded-md bg-red-50 p-4">
+              <div className="rounded-md bg-red-50 border border-red-100 p-3">
                 <div className="flex">
-                  <AlertTriangle className="h-5 w-5 text-red-400" />
-                  <div className="ml-3 text-sm text-red-700">
-                    <h3 className="font-medium">Errors:</h3>
+                  <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
+                  <div className="ml-3 text-sm text-red-700 w-full">
+                    <h3 className="font-medium">Critical Errors:</h3>
                     <ul className="mt-1 list-disc list-inside space-y-1">
                       {validationResult.errors.map((error, i) => (
                         <li key={`error-${i}`}>{error}</li>
@@ -279,10 +339,10 @@ const CSVUpload: React.FC<CSVUploadProps> = ({ onUpload, isLoading }) => {
             
             {/* Warning messages */}
             {validationResult.warnings.length > 0 && (
-              <div className="rounded-md bg-yellow-50 p-4">
+              <div className="rounded-md bg-yellow-50 border border-yellow-100 p-3">
                 <div className="flex">
-                  <AlertTriangle className="h-5 w-5 text-yellow-400" />
-                  <div className="ml-3 text-sm text-yellow-700">
+                  <AlertTriangle className="h-5 w-5 text-yellow-500 mt-0.5 flex-shrink-0" />
+                  <div className="ml-3 text-sm text-yellow-700 w-full">
                     <h3 className="font-medium">Warnings:</h3>
                     <ul className="mt-1 list-disc list-inside space-y-1">
                       {validationResult.warnings.map((warning, i) => (
@@ -343,14 +403,34 @@ const CSVUpload: React.FC<CSVUploadProps> = ({ onUpload, isLoading }) => {
             
             {/* Upload button */}
             {validationResult.isValid && selectedFile && (
-              <div className="pt-2">
+              <div className="pt-4">
                 <Button 
-                  className="w-full" 
+                  className="w-full h-auto py-3 text-base"
                   onClick={handleUpload}
                   disabled={isLoading}
+                  size="lg"
                 >
-                  {isLoading ? "Processing..." : `Start Batch Generation (${validationResult.rowCount} car images)`}
+                  {isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span>Processing your request...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center gap-2">
+                      <Upload className="h-5 w-5" />
+                      <span>Generate {validationResult.rowCount} Car {validationResult.rowCount === 1 ? 'Image' : 'Images'}</span>
+                    </div>
+                  )}
                 </Button>
+                
+                {!isLoading && (
+                  <div className="text-center text-xs text-muted-foreground mt-2">
+                    Generation will take approximately {Math.ceil(validationResult.rowCount * 0.5)} minutes to complete
+                  </div>
+                )}
               </div>
             )}
           </CardContent>

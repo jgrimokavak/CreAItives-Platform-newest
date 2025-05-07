@@ -135,28 +135,40 @@ const BatchProgress: React.FC<BatchProgressProps> = ({ jobId, onComplete, onRese
     if (!status) return { text: 'Initializing...', icon: <Clock className="h-5 w-5 text-muted-foreground" /> };
     
     if (status.zipUrl) {
-      return { 
-        text: `Complete! ${status.done} images generated, ${status.failed} failed`, 
-        icon: <CheckCircle className="h-5 w-5 text-green-500" /> 
-      };
+      if (status.status === "completed") {
+        return { 
+          text: `Complete - ${status.done} images ready to download`, 
+          icon: <CheckCircle className="h-5 w-5 text-green-500" /> 
+        };
+      } else if (status.status === "stopped") {
+        return { 
+          text: `Partial result - ${status.done} of ${status.total} images ready`, 
+          icon: <AlertCircle className="h-5 w-5 text-amber-500" /> 
+        };
+      } else if (status.status === "failed") {
+        return { 
+          text: `Completed with issues - ${status.done} images ready`, 
+          icon: <AlertCircle className="h-5 w-5 text-red-500" /> 
+        };
+      }
     }
     
     if (status.status === "stopped") {
       return {
-        text: `Stopping... ${status.done} of ${status.total} images generated`,
-        icon: <AlertCircle className="h-5 w-5 text-yellow-500" />
+        text: `Stopping... Creating ZIP with ${status.done} images`,
+        icon: <AlertCircle className="h-5 w-5 text-amber-500" />
       };
     }
     
     if (status.failed > 0) {
       return {
-        text: `In progress with errors: ${status.done} done, ${status.failed} failed`,
-        icon: <AlertCircle className="h-5 w-5 text-yellow-500" />
+        text: `Processing: ${status.done} complete, ${status.failed} failed`,
+        icon: <AlertCircle className="h-5 w-5 text-amber-500" />
       };
     }
     
     return {
-      text: `Processing: ${status.done} of ${status.total} images generated`,
+      text: `Processing: ${status.done} of ${status.total} images complete`,
       icon: <Clock className="h-5 w-5 text-blue-500" />
     };
   };
@@ -165,13 +177,18 @@ const BatchProgress: React.FC<BatchProgressProps> = ({ jobId, onComplete, onRese
   
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2">
           {statusInfo.icon}
-          Batch Processing
+          Batch Car Generation
         </CardTitle>
-        <CardDescription>
-          Job ID: {jobId}
+        <CardDescription className="flex items-center justify-between">
+          <span>Status: <span className="font-medium">{status?.status || "Initializing"}</span></span>
+          {status?.percent !== undefined && (
+            <span className="text-sm font-medium bg-primary/10 px-2 py-0.5 rounded-full">
+              {status.percent}% Complete
+            </span>
+          )}
         </CardDescription>
       </CardHeader>
       
@@ -188,27 +205,26 @@ const BatchProgress: React.FC<BatchProgressProps> = ({ jobId, onComplete, onRese
           </div>
         ) : (
           <>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>{statusInfo.text}</span>
-                <span>{status ? `${status.percent}%` : '0%'}</span>
+            <div className="space-y-3">
+              <div className="text-sm font-medium">
+                {statusInfo.text}
               </div>
-              <Progress value={status?.percent || 0} className="h-2" />
+              <Progress value={status?.percent || 0} className="h-3" />
             </div>
             
             {status && (
-              <div className="grid grid-cols-3 gap-2 text-center">
-                <div className="bg-muted rounded-md p-2">
-                  <div className="text-lg font-medium">{status.total}</div>
-                  <div className="text-xs text-muted-foreground">Total</div>
+              <div className="grid grid-cols-3 gap-3 text-center mt-4">
+                <div className="bg-muted rounded-md p-3">
+                  <div className="text-2xl font-medium">{status.total}</div>
+                  <div className="text-xs text-muted-foreground mt-1">Total</div>
                 </div>
-                <div className="bg-green-50 rounded-md p-2">
-                  <div className="text-lg font-medium text-green-700">{status.done}</div>
-                  <div className="text-xs text-green-600">Completed</div>
+                <div className="bg-green-50 rounded-md p-3 border border-green-100">
+                  <div className="text-2xl font-medium text-green-700">{status.done}</div>
+                  <div className="text-xs text-green-600 mt-1">Completed</div>
                 </div>
-                <div className="bg-red-50 rounded-md p-2">
-                  <div className="text-lg font-medium text-red-700">{status.failed}</div>
-                  <div className="text-xs text-red-600">Failed</div>
+                <div className="bg-red-50 rounded-md p-3 border border-red-100">
+                  <div className="text-2xl font-medium text-red-700">{status.failed}</div>
+                  <div className="text-xs text-red-600 mt-1">Failed</div>
                 </div>
               </div>
             )}
@@ -216,14 +232,16 @@ const BatchProgress: React.FC<BatchProgressProps> = ({ jobId, onComplete, onRese
         )}
       </CardContent>
       
-      <CardFooter className="flex gap-2 flex-wrap">
+      <CardFooter className="flex gap-3 flex-wrap pt-2">
+        {/* Primary action: Download when available */}
         {status?.zipUrl && (
           <Button 
-            className="flex-1"
+            className="flex-1 px-4 py-2 h-auto"
+            size="lg"
             onClick={() => window.open(status.zipUrl || '', '_blank')}
           >
-            <Download className="h-4 w-4 mr-2" />
-            Download ZIP
+            <Download className="h-5 w-5 mr-2" />
+            Download Images (ZIP)
           </Button>
         )}
         
@@ -231,34 +249,36 @@ const BatchProgress: React.FC<BatchProgressProps> = ({ jobId, onComplete, onRese
         {status && !status.zipUrl && status.status === "processing" && (
           <Button 
             variant="destructive" 
-            className="flex-1"
+            className="flex-1 px-4 py-2 h-auto"
+            size="lg"
             onClick={handleStopBatch}
           >
-            <Square className="h-4 w-4 mr-2" />
-            Stop Batch
+            <Square className="h-5 w-5 mr-2" />
+            Stop & Save Progress
+          </Button>
+        )}
+        
+        {/* View Errors button - show when there are errors and batch has finished */}
+        {status && status.failed > 0 && status.zipUrl && (
+          <Button
+            variant="outline"
+            className="flex-1 sm:flex-none"
+            onClick={() => window.open(`${status.zipUrl?.replace('.zip', '')}/failed_rows.json`, '_blank')}
+          >
+            <FileWarning className="h-4 w-4 mr-2" />
+            View Error Details
           </Button>
         )}
         
         {/* Start New Batch button */}
         {(status?.zipUrl || error || status?.status === "stopped" || status?.status === "failed") && onReset && (
           <Button 
-            variant="outline" 
-            className="flex-1"
+            variant={status?.zipUrl ? "outline" : "default"}
+            className="flex-1 sm:flex-none"
             onClick={onReset}
           >
             <Plus className="h-4 w-4 mr-2" />
-            Start New Batch
-          </Button>
-        )}
-        
-        {/* View Errors button */}
-        {status && status.failed > 0 && status.zipUrl && (
-          <Button
-            variant="outline"
-            onClick={() => window.open(`${status.zipUrl?.replace('.zip', '')}/failed_rows.json`, '_blank')}
-          >
-            <FileWarning className="h-4 w-4 mr-2" />
-            View Errors
+            New Batch
           </Button>
         )}
       </CardFooter>
