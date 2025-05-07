@@ -1,9 +1,10 @@
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
-import Home from "@/pages/Home";
+import Create from "@/pages/Home";
+import HomePage from "@/pages/HomePage";
 import SimpleGalleryPage from "@/pages/SimpleGalleryPage";
 import UpscalePage from "./pages/UpscalePageNew";
 import CarCreationPage from "./pages/CarCreationPage";
@@ -18,7 +19,9 @@ function Router() {
   return (
     <Sidebar>
       <Switch>
-        <Route path="/" component={Home} />
+        <Route path="/" component={() => <Redirect to="/home" />} />
+        <Route path="/home" component={HomePage} />
+        <Route path="/create" component={Create} />
         <Route path="/gallery" component={() => <SimpleGalleryPage mode="gallery" />} />
         <Route path="/trash" component={() => <SimpleGalleryPage mode="trash" />} />
         <Route path="/upscale" component={UpscalePage} />

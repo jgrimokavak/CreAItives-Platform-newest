@@ -57,7 +57,7 @@ export default function HomePage() {
       title: 'Image Creation',
       description: 'Generate stunning AI images with simple text prompts',
       icon: <Sparkles className="h-6 w-6 text-indigo-500" />,
-      to: '/',
+      to: '/create',
       color: 'bg-indigo-50',
       borderColor: 'border-indigo-200',
       iconColor: 'text-indigo-500',
@@ -93,7 +93,7 @@ export default function HomePage() {
       title: 'AI Prompt Helper',
       description: 'Get intelligent suggestions to improve your image prompts',
       icon: <MessageSquareText className="h-6 w-6 text-amber-500" />,
-      to: '/',
+      to: '/create',
       color: 'bg-amber-50', 
       borderColor: 'border-amber-200',
       iconColor: 'text-amber-500',
@@ -122,7 +122,7 @@ export default function HomePage() {
               Transform your ideas into stunning visual creations with our advanced AI image generation tools
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Link to="/">
+              <Link to="/create">
                 <Button size="lg" className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700">
                   Start Creating <Sparkles className="ml-2 h-4 w-4" />
                 </Button>
@@ -198,7 +198,7 @@ export default function HomePage() {
             <div className="h-64 flex items-center justify-center border border-dashed rounded-lg bg-slate-50">
               <div className="text-center p-6">
                 <p className="text-muted-foreground">No images found in your gallery</p>
-                <Link to="/">
+                <Link to="/create">
                   <Button className="mt-4">Create Your First Image</Button>
                 </Link>
               </div>
@@ -240,7 +240,7 @@ export default function HomePage() {
               Start generating stunning AI images with our powerful tools. Whether you're designing cars, 
               creating art, or visualizing ideas, CreAItives Platform 2.0 has everything you need.
             </p>
-            <Link to="/">
+            <Link to="/create">
               <Button size="lg" className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700">
                 Start Creating Now <Sparkles className="ml-2 h-4 w-4" />
               </Button>
