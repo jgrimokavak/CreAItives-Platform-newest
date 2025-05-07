@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import Footer from "@/components/Footer";
 import PromptForm from "@/components/PromptForm";
 import EditForm from "@/components/EditForm";
 import ImageGallery from "@/components/ImageGallery";
@@ -127,7 +126,6 @@ export default function Home() {
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   );
 }
