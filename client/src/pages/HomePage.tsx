@@ -222,12 +222,12 @@ export default function HomePage() {
               {!isLoading ? (
                 <div className="relative overflow-hidden">
                   {/* Minimalistic, smooth slider */}
-                  <div className="relative">
+                  <div className="relative w-full">
                     <Slider
                       ref={sliderRef}
                       dots={false}
                       infinite={true}
-                      speed={10000} // Extremely slow transition
+                      speed={6000} // Moderately slow transition
                       slidesToShow={5}
                       slidesToScroll={1}
                       autoplay={true}
@@ -239,21 +239,34 @@ export default function HomePage() {
                       arrows={false}
                       responsive={[
                         {
-                          breakpoint: 1280,
+                          breakpoint: 1536, // 2xl
+                          settings: {
+                            slidesToShow: 4,
+                          }
+                        },
+                        {
+                          breakpoint: 1280, // xl
                           settings: {
                             slidesToShow: 3,
                           }
                         },
                         {
-                          breakpoint: 768,
+                          breakpoint: 1024, // lg
+                          settings: {
+                            slidesToShow: 3,
+                          }
+                        },
+                        {
+                          breakpoint: 768, // md
                           settings: {
                             slidesToShow: 2,
                           }
                         },
                         {
-                          breakpoint: 640,
+                          breakpoint: 640, // sm
                           settings: {
                             slidesToShow: 1,
+                            speed: 4000, // Slightly faster on mobile
                           }
                         }
                       ]}

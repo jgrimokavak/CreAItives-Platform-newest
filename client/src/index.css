@@ -100,4 +100,43 @@
       opacity: 0.5;
     }
   }
+  
+  /* Carousel responsive styling */
+  .image-carousel {
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 15px;
+  }
+  
+  /* Ensure images maintain aspect ratio across all devices */
+  .image-carousel .slick-slide {
+    height: auto;
+    opacity: 0.85;
+    transition: opacity 0.3s ease;
+  }
+  
+  /* Maintain consistent height across all screen sizes */
+  .image-carousel .slick-track {
+    display: flex;
+    align-items: center;
+  }
+  
+  /* Ensure images don't get too small on mobile */
+  @media (max-width: 640px) {
+    .image-carousel .slick-slide > div {
+      max-width: 90vw;
+      margin: 0 auto;
+    }
+  }
+  
+  .image-carousel .slick-slide.slick-active {
+    opacity: 1;
+  }
+  
+  /* CSS for making sure the carousel is responsive */
+  @media (max-width: 768px) {
+    .image-carousel {
+      padding: 0 10px;
+    }
+  }
 }
