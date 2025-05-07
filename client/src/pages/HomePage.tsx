@@ -68,45 +68,44 @@ export default function HomePage() {
     <div className="flex flex-col min-h-screen bg-slate-50">
       <main className="flex-grow">
         {/* Hero Section */}
-        <section className="pt-10 pb-12 px-[60px] bg-gradient-to-b from-[#F9FBFF] to-[#F3F7FE]">
-          <div className="container mx-auto max-w-[1100px] flex items-center min-h-[400px]">
-            <div className="flex flex-col w-full text-left">
+        <section className="pt-10 pb-12 px-4 sm:px-6 lg:px-8 bg-white border-b">
+          <div className="container mx-auto max-w-7xl text-center lg:text-left">
+            <div className="flex flex-col">
               <div className="w-full">
                 <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-600 mb-4">
                   <span className="mr-1">✨</span> New Platform Release
                 </div>
-                <h1 className="text-2xl md:text-[2rem] mb-8">
-                  <span className="text-blue-600 font-bold">CreAItives</span> <span className="text-black font-extrabold">Platform 2.0</span>
+                <h1 className="text-4xl md:text-5xl font-bold mb-4">
+                  <span className="text-blue-600">CreAItives</span> Platform 2.0
                 </h1>
-                <p className="text-base text-gray-700 leading-relaxed font-normal mb-6 max-w-[700px]">
-                  Transform your creative vision into stunning AI-generated<br />
-                  imagery with our powerful suite of creation tools.
+                <p className="text-lg text-slate-600 mb-6 max-w-3xl mx-auto lg:mx-0">
+                  Transform your creative vision into stunning AI-generated imagery with our powerful suite of creation tools.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-start">
+                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                   <Link to="/create">
-                    <button className="px-6 py-3 bg-blue-900 hover:bg-blue-900/90 text-white text-base font-semibold rounded-xl flex items-center transition-all hover:shadow-md">
-                      Get Started <ArrowRight className="h-5 w-5 ml-2" />
-                    </button>
+                    <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white font-medium flex items-center gap-2">
+                      Get Started <ArrowRight className="h-4 w-4" />
+                    </Button>
                   </Link>
                   <Link to="/gallery">
-                    <button className="px-6 py-3 bg-white hover:bg-gray-100 text-blue-600 text-base font-medium border border-gray-300 rounded-xl transition-all">
+                    <Button size="lg" variant="outline" className="bg-white border-slate-200 text-slate-700 font-medium">
                       Browse Gallery
-                    </button>
+                    </Button>
                   </Link>
                 </div>
                 
-                <div className="flex justify-between mt-6 gap-16 max-w-[500px] items-center">
+                <div className="flex items-center gap-6 mt-8 justify-center lg:justify-start">
                   <div className="flex items-center gap-2">
-                    <Zap className="h-[20px] w-[20px] mr-2 text-blue-600" />
-                    <span className="text-[14px] font-medium leading-normal text-gray-600">Fast Generation</span>
+                    <Zap className="h-5 w-5 text-blue-600" />
+                    <span className="text-sm font-medium text-slate-700">Fast Generation</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <ScanSearch className="h-[20px] w-[20px] mr-2 text-blue-600" />
-                    <span className="text-[14px] font-medium leading-normal text-gray-600">High Resolution</span>
+                    <ScanSearch className="h-5 w-5 text-blue-600" />
+                    <span className="text-sm font-medium text-slate-700">High Resolution</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Sparkles className="h-[20px] w-[20px] mr-2 text-blue-600" />
-                    <span className="text-[14px] font-medium leading-normal text-gray-600">Smart Prompts</span>
+                    <Sparkles className="h-5 w-5 text-blue-600" />
+                    <span className="text-sm font-medium text-slate-700">Smart Prompts</span>
                   </div>
                 </div>
               </div>
