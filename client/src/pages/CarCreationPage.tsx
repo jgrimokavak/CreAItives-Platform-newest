@@ -1031,18 +1031,18 @@ const CarCreationPage: React.FC = () => {
                   onReset={resetBatch}
                 />
               ) : (
-                <div className="bg-card border rounded-lg shadow-sm p-6">
-                  <div className="mb-6">
-                    <div className="flex items-center gap-3 mb-2">
+                <div className="space-y-6">
+                  <div className="bg-card border rounded-lg shadow-sm p-6">
+                    {/* Header with icon */}
+                    <div className="flex items-center space-x-3 border-b pb-4 mb-4">
                       <div className="bg-primary/10 p-2 rounded-full">
-                        <CarFront className="h-6 w-6 text-primary" />
+                        <CarFront className="h-5 w-5 text-primary" />
                       </div>
-                      <h3 className="text-lg font-medium text-[#0C0A09]">Batch Car Generation</h3>
+                      <div>
+                        <h3 className="text-lg font-medium">Batch Car Generation</h3>
+                        <p className="text-sm text-muted-foreground">Upload a CSV file to create multiple car images at once</p>
+                      </div>
                     </div>
-                    
-                    <p className="text-sm text-muted-foreground mb-4 ml-1">
-                      Upload a CSV file to create multiple car images at once. Ideal for inventory displays and marketing.
-                    </p>
                     
                     <div className="bg-blue-50 border border-blue-100 rounded-md p-4 mb-4 flex gap-3 items-center">
                       <div className="bg-blue-100 p-2 rounded-full flex-shrink-0">
@@ -1093,9 +1093,9 @@ const CarCreationPage: React.FC = () => {
                         </div>
                       </div>
                     </div>
+                    
+                    <CSVUpload onUpload={handleBatchUpload} isLoading={isUploadingBatch} />
                   </div>
-                  
-                  <CSVUpload onUpload={handleBatchUpload} isLoading={isUploadingBatch} />
                   
                   <div className="mt-6 bg-card border rounded-md overflow-hidden">
                     <div className="bg-muted px-4 py-3 border-b">
