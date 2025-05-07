@@ -643,8 +643,19 @@ const CarCreationPage: React.FC = () => {
                                   : 'border-transparent hover:border-primary/50'
                               }`}
                               style={{ 
-                                backgroundColor: color === 'silver' ? '#C0C0C0' : color === 'white' ? '#F5F5F5' : color,
-                                boxShadow: form.watch('color') === color ? '0 0 0 2px rgba(0,0,0,0.1)' : 'none'
+                                background: 
+                                  color === 'silver' ? 'linear-gradient(135deg, #D8D8D8, #A8A8A8)' : 
+                                  color === 'white' ? 'linear-gradient(135deg, #FFFFFF, #F0F0F0)' :
+                                  color === 'black' ? 'linear-gradient(135deg, #333333, #111111)' :
+                                  color === 'red' ? 'linear-gradient(135deg, #AF2A2A, #8B0000)' :
+                                  color === 'blue' ? 'linear-gradient(135deg, #1E5AA8, #0A3B75)' :
+                                  color === 'green' ? 'linear-gradient(135deg, #2E7D32, #1B5E20)' :
+                                  color === 'yellow' ? 'linear-gradient(135deg, #E4C157, #C6A03E)' :
+                                  color === 'orange' ? 'linear-gradient(135deg, #DC7633, #BA6125)' :
+                                  color,
+                                boxShadow: form.watch('color') === color 
+                                  ? '0 0 0 2px rgba(0,0,0,0.1), inset 0 0 10px rgba(255,255,255,0.2)' 
+                                  : 'inset 0 0 5px rgba(0,0,0,0.1)'
                               }}
                               onClick={() => setValue('color', color)}
                               title={color.charAt(0).toUpperCase() + color.slice(1)}
@@ -850,7 +861,25 @@ const CarCreationPage: React.FC = () => {
                             <div 
                               className="h-2 w-2 rounded-full" 
                               style={{ 
-                                backgroundColor: form.watch('color') === 'silver' ? '#C0C0C0' : form.watch('color') === 'white' ? '#F5F5F5' : form.watch('color')
+                                background: 
+                                  form.watch('color') === 'silver' ? 'linear-gradient(135deg, #D8D8D8, #A8A8A8)' : 
+                                  form.watch('color') === 'white' ? 'linear-gradient(135deg, #FFFFFF, #F0F0F0)' :
+                                  form.watch('color') === 'black' ? 'linear-gradient(135deg, #333333, #111111)' :
+                                  form.watch('color') === 'red' ? 'linear-gradient(135deg, #AF2A2A, #8B0000)' :
+                                  form.watch('color') === 'blue' ? 'linear-gradient(135deg, #1E5AA8, #0A3B75)' :
+                                  form.watch('color') === 'green' ? 'linear-gradient(135deg, #2E7D32, #1B5E20)' :
+                                  form.watch('color') === 'yellow' ? 'linear-gradient(135deg, #E4C157, #C6A03E)' :
+                                  form.watch('color') === 'orange' ? 'linear-gradient(135deg, #DC7633, #BA6125)' :
+                                  form.watch('color') === 'gray' ? 'linear-gradient(135deg, #808080, #606060)' :
+                                  form.watch('color') === 'brown' ? 'linear-gradient(135deg, #8B4513, #6B3304)' :
+                                  form.watch('color') === 'burgundy' ? 'linear-gradient(135deg, #800020, #5C0015)' :
+                                  form.watch('color') === 'navy blue' ? 'linear-gradient(135deg, #000080, #000045)' :
+                                  form.watch('color') === 'gold' ? 'linear-gradient(135deg, #CFB53B, #A6881D)' :
+                                  form.watch('color') === 'bronze' ? 'linear-gradient(135deg, #CD7F32, #A5652A)' :
+                                  form.watch('color') === 'pearl white' ? 'linear-gradient(135deg, #FAFAFA, #F0F0F0)' :
+                                  form.watch('color') === 'metallic blue' ? 'linear-gradient(135deg, #2A6496, #0C476E)' :
+                                  form.watch('color'),
+                                boxShadow: 'inset 0 0 2px rgba(0,0,0,0.1)'
                               }}
                             />
                             {form.watch('color')}
