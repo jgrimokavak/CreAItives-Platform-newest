@@ -34,128 +34,172 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form }) => {
           control={form.control}
           name="size"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Size</FormLabel>
+            <FormItem className="space-y-1.5">
+              <FormLabel className="text-sm font-medium">Image Size</FormLabel>
               <Select
                 onValueChange={field.onChange}
                 defaultValue={field.value}
               >
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-9 text-sm">
                     <SelectValue placeholder="Select size" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="auto">Auto</SelectItem>
-                  <SelectItem value="1024x1024">1024 × 1024</SelectItem>
-                  <SelectItem value="1536x1024">1536 × 1024 (Landscape)</SelectItem>
-                  <SelectItem value="1024x1536">1024 × 1536 (Portrait)</SelectItem>
+                  <SelectItem value="auto">Auto (Recommended)</SelectItem>
+                  <SelectItem value="1024x1024">Square (1024×1024)</SelectItem>
+                  <SelectItem value="1536x1024">Landscape (1536×1024)</SelectItem>
+                  <SelectItem value="1024x1536">Portrait (1024×1536)</SelectItem>
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground">
+                Larger sizes may take longer to generate
+              </p>
             </FormItem>
           )}
         />
       )}
 
-      {/* Quality field for GPT-Image-1 */}
-      {fields.includes("quality") && (
-        <FormField
-          control={form.control}
-          name="quality"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Quality</FormLabel>
-              <Select
-                onValueChange={field.onChange}
-                defaultValue={field.value}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select quality" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="auto">Auto</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="low">Low</SelectItem>
-                </SelectContent>
-              </Select>
-            </FormItem>
+      {/* Number of Images and Quality in a grid for GPT-Image-1 */}
+      {(fields.includes("n") || fields.includes("quality")) && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Number of Images field */}
+          {fields.includes("n") && (
+            <FormField
+              control={form.control}
+              name="count"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-sm font-medium">Number of Images</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="h-9 text-sm">
+                        <SelectValue placeholder="How many?" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="1">1 Image</SelectItem>
+                      <SelectItem value="2">2 Images</SelectItem>
+                      <SelectItem value="4">4 Images</SelectItem>
+                      <SelectItem value="6">6 Images</SelectItem>
+                      <SelectItem value="8">8 Images</SelectItem>
+                      <SelectItem value="10">10 Images</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+              )}
+            />
           )}
-        />
+
+          {/* Quality field */}
+          {fields.includes("quality") && (
+            <FormField
+              control={form.control}
+              name="quality"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-sm font-medium">Quality Level</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="h-9 text-sm">
+                        <SelectValue placeholder="Select quality" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="auto">Auto (Recommended)</SelectItem>
+                      <SelectItem value="high">High (More details)</SelectItem>
+                      <SelectItem value="medium">Medium (Balanced)</SelectItem>
+                      <SelectItem value="low">Low (Faster)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+              )}
+            />
+          )}
+        </div>
       )}
 
-      {/* Number of Images field for GPT-Image-1 */}
-      {fields.includes("n") && (
-        <FormField
-          control={form.control}
-          name="count"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Number of Images</FormLabel>
-              <Select
-                onValueChange={field.onChange}
-                defaultValue={field.value}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select count" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="1">1 Image</SelectItem>
-                  <SelectItem value="2">2 Images</SelectItem>
-                  <SelectItem value="3">3 Images</SelectItem>
-                  <SelectItem value="4">4 Images</SelectItem>
-                  <SelectItem value="5">5 Images</SelectItem>
-                  <SelectItem value="6">6 Images</SelectItem>
-                  <SelectItem value="7">7 Images</SelectItem>
-                  <SelectItem value="8">8 Images</SelectItem>
-                  <SelectItem value="9">9 Images</SelectItem>
-                  <SelectItem value="10">10 Images</SelectItem>
-                </SelectContent>
-              </Select>
-            </FormItem>
-          )}
-        />
-      )}
-
-      {/* Aspect Ratio field for Replicate models */}
+      {/* Aspect Ratio field with visual indicator */}
       {fields.includes("aspect_ratio") && (
         <FormField
           control={form.control}
           name="aspect_ratio"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Aspect Ratio</FormLabel>
-              <Select
-                onValueChange={field.onChange}
-                defaultValue={field.value || "1:1"}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select aspect ratio" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {/* Different aspect ratio options depending on model */}
-                  {modelKey === "flux-pro" ? (
-                    fluxAspectRatios.map(ratio => (
-                      <SelectItem key={ratio} value={ratio}>
-                        {ratio}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    imagenAspectRatios.map(ratio => (
-                      <SelectItem key={ratio} value={ratio}>
-                        {ratio}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-slate-500 mt-1">Choose the output image dimensions ratio.</p>
+            <FormItem className="space-y-1.5">
+              <FormLabel className="text-sm font-medium">Aspect Ratio</FormLabel>
+              <div className="flex items-center gap-3">
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value || "1:1"}
+                >
+                  <FormControl>
+                    <SelectTrigger className="h-9 text-sm flex-grow">
+                      <SelectValue placeholder="Select aspect ratio" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {/* Different aspect ratio options depending on model */}
+                    {modelKey === "flux-pro" ? (
+                      fluxAspectRatios.map(ratio => (
+                        <SelectItem key={ratio} value={ratio}>
+                          {ratio} {ratio === "1:1" ? "(Square)" : 
+                                  ratio === "16:9" ? "(Landscape)" : 
+                                  ratio === "9:16" ? "(Portrait)" : ""}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      imagenAspectRatios.map(ratio => (
+                        <SelectItem key={ratio} value={ratio}>
+                          {ratio} {ratio === "1:1" ? "(Square)" : 
+                                  ratio === "16:9" ? "(Landscape)" : 
+                                  ratio === "9:16" ? "(Portrait)" : 
+                                  ratio === "4:3" ? "(Classic)" : 
+                                  ratio === "3:4" ? "(Portrait)" : ""}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+                
+                {/* Visual aspect ratio indicator */}
+                {field.value && (
+                  <div className="bg-primary/5 rounded p-1.5 border border-primary/10 flex items-center justify-center">
+                    {field.value === "1:1" && (
+                      <div className="w-8 h-8 bg-primary/20 rounded"></div>
+                    )}
+                    {field.value === "16:9" && (
+                      <div className="w-10 h-6 bg-primary/20 rounded"></div>
+                    )}
+                    {field.value === "9:16" && (
+                      <div className="w-6 h-10 bg-primary/20 rounded"></div>
+                    )}
+                    {field.value === "4:3" && (
+                      <div className="w-8 h-6 bg-primary/20 rounded"></div>
+                    )}
+                    {field.value === "3:4" && (
+                      <div className="w-6 h-8 bg-primary/20 rounded"></div>
+                    )}
+                    {field.value === "3:2" && (
+                      <div className="w-9 h-6 bg-primary/20 rounded"></div>
+                    )}
+                    {field.value === "2:3" && (
+                      <div className="w-6 h-9 bg-primary/20 rounded"></div>
+                    )}
+                    {field.value === "5:4" && (
+                      <div className="w-8 h-7 bg-primary/20 rounded"></div>
+                    )}
+                    {field.value === "4:5" && (
+                      <div className="w-6 h-8 bg-primary/20 rounded"></div>
+                    )}
+                  </div>
+                )}
+              </div>
             </FormItem>
           )}
         />
@@ -167,16 +211,18 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form }) => {
           control={form.control}
           name="negative_prompt"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Negative Prompt</FormLabel>
+            <FormItem className="space-y-1.5">
+              <FormLabel className="text-sm font-medium">Negative Prompt</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Elements to avoid in the generated image"
-                  className="resize-none min-h-[80px]"
+                  placeholder="Specify what you don't want in the image (e.g., blurry, low quality, distorted faces)"
+                  className="resize-none min-h-[80px] text-sm"
                   {...field}
                 />
               </FormControl>
-              <p className="text-xs text-slate-500 mt-1">Specify elements you want to exclude from the image.</p>
+              <p className="text-xs text-muted-foreground">
+                This helps avoid unwanted elements and improve image quality
+              </p>
             </FormItem>
           )}
         />
@@ -188,15 +234,17 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form }) => {
           control={form.control}
           name="seed"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Seed</FormLabel>
+            <FormItem className="space-y-1.5">
+              <FormLabel className="text-sm font-medium">
+                Seed Number <span className="text-xs text-muted-foreground">(Optional)</span>
+              </FormLabel>
               <FormControl>
                 <Input
                   type="number"
                   min="0"
                   max="2147483647"
-                  placeholder="Random seed (optional)"
-                  className="w-full"
+                  placeholder="Leave empty for random results"
+                  className="h-9 text-sm"
                   value={field.value !== undefined ? field.value : ''}
                   onChange={(e) => {
                     const value = e.target.value ? parseInt(e.target.value) : undefined;
@@ -204,7 +252,9 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form }) => {
                   }}
                 />
               </FormControl>
-              <p className="text-xs text-slate-500 mt-1">Set for reproducible generation. Leave empty for random results.</p>
+              <p className="text-xs text-muted-foreground">
+                Use the same seed to create variations of similar images
+              </p>
             </FormItem>
           )}
         />
