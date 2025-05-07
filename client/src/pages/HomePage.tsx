@@ -3,13 +3,6 @@ import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselPrevious,
-  CarouselNext,
-} from '@/components/ui/carousel';
-import { 
   Sparkles, 
   Zap,
   Image as ImageIcon,
@@ -22,7 +15,6 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { GeneratedImage } from '@/types/image';
-import ImageCard from '@/components/ImageCard';
 
 export default function HomePage() {
   const [recentImages, setRecentImages] = useState<GeneratedImage[]>([]);
@@ -148,36 +140,27 @@ export default function HomePage() {
               
               <div className="w-full lg:w-1/2 mt-8 lg:mt-0">
                 {!isLoading && recentImages.length > 0 ? (
-                  <Carousel
-                    opts={{
-                      align: "start",
-                      loop: true,
-                    }}
-                    className="w-full"
-                  >
-                    <CarouselContent className="-ml-2 md:-ml-4">
-                      {recentImages.slice(0, 4).map((image) => (
-                        <CarouselItem key={image.id} className="pl-2 md:pl-4 basis-full">
-                          <div className="p-1">
-                            <img 
-                              src={image.thumbUrl || image.url} 
-                              alt={image.prompt} 
-                              className="w-full h-64 object-cover rounded-lg shadow-md"
-                              onClick={() => window.location.href = '/gallery'}
-                            />
-                          </div>
-                        </CarouselItem>
-                      ))}
-                    </CarouselContent>
-                    <div className="flex justify-center gap-1 mt-4">
-                      {[...Array(Math.min(recentImages.length, 10))].map((_, i) => (
+                  <div className="grid grid-cols-2 gap-3">
+                    {recentImages.slice(0, 4).map((image) => (
+                      <Link key={image.id} to="/gallery">
+                        <div className="overflow-hidden rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                          <img 
+                            src={image.thumbUrl || image.url} 
+                            alt={image.prompt} 
+                            className="w-full h-32 object-cover"
+                          />
+                        </div>
+                      </Link>
+                    ))}
+                    <div className="flex justify-center gap-1 mt-2 col-span-2">
+                      {[...Array(Math.min(recentImages.length, 8))].map((_, i) => (
                         <span 
                           key={i} 
                           className={`block h-2 w-2 rounded-full ${i === 0 ? 'bg-blue-600' : 'bg-slate-200'}`}
                         />
                       ))}
                     </div>
-                  </Carousel>
+                  </div>
                 ) : isLoading ? (
                   <div className="flex items-center justify-center h-64 bg-slate-100 rounded-lg">
                     <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
