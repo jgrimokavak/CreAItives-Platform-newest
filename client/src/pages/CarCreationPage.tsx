@@ -782,6 +782,40 @@ const CarCreationPage: React.FC = () => {
                       </div>
                       <h3 className="text-xl font-bold">Batch Car Generation</h3>
                     </div>
+                    
+                    <div className="bg-blue-50 border border-blue-100 rounded-md p-4 mb-4 flex gap-3 items-center">
+                      <div className="bg-blue-100 p-2 rounded-full flex-shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600">
+                          <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+                          <path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z" />
+                          <path d="M9 9h1" />
+                          <path d="M9 13h6" />
+                          <path d="M9 17h6" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-blue-800 mb-1">Use our pre-formatted template</h4>
+                        <p className="text-sm text-blue-700 mb-2">
+                          Start with our ready-to-use spreadsheet template that's already formatted for batch car generation.
+                        </p>
+                        <a 
+                          href="https://docs.google.com/spreadsheets/d/1-YxShxye41KXVQtSr97crhM_mFH0H4qwOAidgdZ42Cc/copy" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 px-3 py-1.5 rounded-md transition-colors"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            window.open("https://docs.google.com/spreadsheets/d/1-YxShxye41KXVQtSr97crhM_mFH0H4qwOAidgdZ42Cc/copy", "_blank", "noopener,noreferrer");
+                          }}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M3 15v4c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2v-4M17 9l-5 5-5-5M12 12.8V2.5" />
+                          </svg>
+                          Get Template
+                        </a>
+                      </div>
+                    </div>
+                    
                     <div className="flex flex-col gap-3">
                       <p className="text-muted-foreground">
                         Generate multiple car images in one batch by uploading a CSV file with your specifications.
@@ -855,12 +889,14 @@ const CarCreationPage: React.FC = () => {
                           <div>
                             <span className="text-xs font-medium text-blue-800 block">Example Template Available</span>
                             <p className="text-xs text-blue-700 mt-1">
-                              Get a <a 
-                                href="https://docs.google.com/spreadsheets/d/1-YxShxye41KXVQtSr97crhM_mFH0H4qwOAidgdZ42Cc/copy" 
-                                target="_blank" 
-                                rel="noopener noreferrer"
+                              Get our <a 
+                                href="#" 
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  window.open("https://docs.google.com/spreadsheets/d/1-YxShxye41KXVQtSr97crhM_mFH0H4qwOAidgdZ42Cc/copy", "_blank", "noopener,noreferrer");
+                                }}
                                 className="text-blue-600 underline hover:no-underline font-medium"
-                              >pre-formatted Google Sheet template</a>. Just make a copy, fill in your car details, then download as CSV and upload here.
+                              >pre-formatted Google Sheet template</a>. Make a copy, fill in your car details, then download as CSV and upload here.
                             </p>
                           </div>
                         </div>
