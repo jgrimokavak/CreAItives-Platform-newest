@@ -224,6 +224,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             size: size || '1024x1024',
             model: modelKey,
             createdAt: new Date().toISOString(),
+            // Include aspect ratio exactly as selected by the user (for improved display in cards)
+            aspectRatio: aspect_ratio || undefined,
+            quality: quality || undefined,
           };
           
           // Store the image in our storage

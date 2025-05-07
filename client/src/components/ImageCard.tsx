@@ -388,51 +388,20 @@ export default function ImageCard({
               {image.model}
             </span>
             
-            {/* Aspect Ratio tag - primary color based on model-specific ratio detection */}
+            {/* Aspect Ratio tag - directly using user-selected aspect ratio or size format */}
             {(() => {
-              // Get clean aspect ratio from given dimensions
-              const getCleanAspectRatio = (width: number, height: number): string => {
-                if (!isNaN(width) && !isNaN(height) && height !== 0) {
-                  const ratio = width / height;
-                  
-                  // Standard aspect ratio patterns
-                  if (Math.abs(ratio - 1) < 0.01) return "1:1";
-                  if (Math.abs(ratio - 4/3) < 0.01) return "4:3";
-                  if (Math.abs(ratio - 16/9) < 0.01) return "16:9";
-                  if (Math.abs(ratio - 3/2) < 0.01) return "3:2";
-                  
-                  // Find GCD for the most reduced fraction
-                  const gcd = (a: number, b: number): number => {
-                    return b === 0 ? a : gcd(b, a % b);
-                  };
-                  
-                  // For other ratios, simplify the fraction
-                  const divisor = gcd(width, height);
-                  return `${width/divisor}:${height/divisor}`;
-                }
-                return "Unknown";
-              };
-
-              // Check model and format to determine what to display
-              if (image.model === "imagen-3" || image.model === "gpt-image-1") {
-                // For OpenAI/Google model cases, typically using 1:1, 16:9, etc.
-                
-                // First try to parse from the size attribute (e.g. "1024x1024")
-                const sizeMatch = image.size?.match(/(\d+)x(\d+)/i);
-                if (sizeMatch && sizeMatch.length === 3) {
-                  const width = parseInt(sizeMatch[1]);
-                  const height = parseInt(sizeMatch[2]);
-                  
-                  return (
-                    <span className="bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-2.5 py-0.5 flex items-center">
-                      <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mr-1.5"></span>
-                      {getCleanAspectRatio(width, height)}
-                    </span>
-                  );
-                }
+              // 1. First check if aspectRatio property is available - direct user selection
+              if (image.aspectRatio) {
+                return (
+                  <span className="bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-2.5 py-0.5 flex items-center">
+                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mr-1.5"></span>
+                    {image.aspectRatio}
+                  </span>
+                );
               }
               
-              // Check if we have the simpler "1:1" format already
+              // 2. Some aspect ratios are stored directly in the size field (for backward compatibility)
+              // Check if size contains a ratio format (e.g., "1:1", "16:9")
               if (image.size && image.size.includes(':')) {
                 return (
                   <span className="bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-2.5 py-0.5 flex items-center">
@@ -442,31 +411,7 @@ export default function ImageCard({
                 );
               }
               
-              // If we have width/height as separate properties
-              if (image.width && image.height) {
-                const width = Number(image.width);
-                const height = Number(image.height);
-                
-                return (
-                  <span className="bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-2.5 py-0.5 flex items-center">
-                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mr-1.5"></span>
-                    {getCleanAspectRatio(width, height)}
-                  </span>
-                );
-              }
-
-              // Fallback to simplest representation
-              if (image.size && /^\d+x\d+$/i.test(image.size)) {
-                const [width, height] = image.size.toLowerCase().split('x').map(Number);
-                return (
-                  <span className="bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-2.5 py-0.5 flex items-center">
-                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mr-1.5"></span>
-                    {getCleanAspectRatio(width, height)}
-                  </span>
-                );
-              }
-              
-              // Ultimate fallback to original size format (when we can't parse)
+              // 3. Simple size display as fallback - don't try to calculate the ratio
               return (
                 <span className="bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-2.5 py-0.5 flex items-center">
                   <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mr-1.5"></span>
