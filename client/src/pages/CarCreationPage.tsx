@@ -510,7 +510,7 @@ const CarCreationPage: React.FC = () => {
           </TabsList>
           
           <TabsContent value="single">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
               {/* Form Section */}
               <div className="space-y-6 bg-card p-6 rounded-lg shadow-sm border">
                 {/* Header with icon */}
@@ -525,11 +525,11 @@ const CarCreationPage: React.FC = () => {
                 </div>
                 
                 {/* Form fields in logical groups */}
-                <div className="space-y-6">
+                <div className="space-y-5">
                   {/* Car identification section */}
                   <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-3">Car Identification</h4>
-                    <div className="grid grid-cols-2 gap-4">
+                    <h4 className="text-sm font-medium text-muted-foreground mb-2.5">Car Identification</h4>
+                    <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-2">
                         <Label htmlFor="make">Make</Label>
                         <Select
@@ -628,12 +628,12 @@ const CarCreationPage: React.FC = () => {
                   
                   {/* Appearance section */}
                   <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-3">Appearance</h4>
-                    <div className="grid grid-cols-1 gap-4">
+                    <h4 className="text-sm font-medium text-muted-foreground mb-2.5">Appearance</h4>
+                    <div className="grid grid-cols-1 gap-3">
                       {/* Color selector with visual swatches */}
                       <div className="space-y-2">
                         <Label htmlFor="color">Color</Label>
-                        <div className="grid grid-cols-8 gap-2 mb-2">
+                        <div className="grid grid-cols-8 gap-2 mb-1.5">
                           {['silver', 'black', 'white', 'red', 'blue', 'green', 'yellow', 'orange'].map(color => (
                             <div 
                               key={color}
@@ -643,7 +643,7 @@ const CarCreationPage: React.FC = () => {
                                   : 'border-transparent hover:border-primary/50'
                               }`}
                               style={{ 
-                                backgroundColor: color === 'silver' ? '#C0C0C0' : color,
+                                backgroundColor: color === 'silver' ? '#C0C0C0' : color === 'white' ? '#F5F5F5' : color,
                                 boxShadow: form.watch('color') === color ? '0 0 0 2px rgba(0,0,0,0.1)' : 'none'
                               }}
                               onClick={() => setValue('color', color)}
@@ -683,15 +683,15 @@ const CarCreationPage: React.FC = () => {
                   
                   {/* Image settings section */}
                   <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-3">Image Settings</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <h4 className="text-sm font-medium text-muted-foreground mb-2.5">Image Settings</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {/* Background style with visual explanation */}
                       <div className="space-y-2">
                         <Label>Background Style</Label>
                         <Tabs value={bg} onValueChange={handleBgChange} className="w-full">
                           <TabsList className="grid grid-cols-2 w-full">
                             <TabsTrigger value="white" className="flex items-center gap-1">
-                              <span className="h-3 w-3 bg-white border rounded-full"></span>
+                              <span className="h-3 w-3 bg-[#F5F5F5] border rounded-full"></span>
                               <span>Studio</span>
                             </TabsTrigger>
                             <TabsTrigger value="hub" className="flex items-center gap-1">
@@ -804,7 +804,7 @@ const CarCreationPage: React.FC = () => {
                 {image ? (
                   <div className="space-y-4">
                     {/* Preview header with title and car specification */}
-                    <div className="flex flex-col p-4 pb-2 bg-card rounded-t-lg shadow-sm border border-b-0">
+                    <div className="flex flex-col p-4 pb-2.5 bg-card rounded-t-lg shadow-sm border border-b-0">
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-2">
                           <ImageIcon className="h-5 w-5 text-primary" />
@@ -816,7 +816,7 @@ const CarCreationPage: React.FC = () => {
                       </div>
                       
                       {/* Car specification summary */}
-                      <div className="flex flex-wrap gap-1.5 mt-3">
+                      <div className="flex flex-wrap gap-1.5 mt-2.5">
                         {watchMake !== 'None' && (
                           <Badge variant="secondary" className="rounded-sm text-xs font-normal bg-secondary/40 hover:bg-secondary/40">
                             {watchMake}
@@ -842,7 +842,7 @@ const CarCreationPage: React.FC = () => {
                             <div 
                               className="h-2 w-2 rounded-full" 
                               style={{ 
-                                backgroundColor: form.watch('color') === 'silver' ? '#C0C0C0' : form.watch('color')
+                                backgroundColor: form.watch('color') === 'silver' ? '#C0C0C0' : form.watch('color') === 'white' ? '#F5F5F5' : form.watch('color')
                               }}
                             />
                             {form.watch('color')}
