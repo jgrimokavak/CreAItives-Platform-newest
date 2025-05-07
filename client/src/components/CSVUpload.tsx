@@ -297,7 +297,7 @@ const CSVUpload: React.FC<CSVUploadProps> = ({ onUpload, isLoading }) => {
                         <div className="w-3 h-3 rounded-full bg-green-200 flex items-center justify-center">
                           <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
                         </div>
-                        <p className="text-xs text-green-700">Estimated time: ~{Math.ceil(validationResult.rowCount * 0.5)} minutes</p>
+                        <p className="text-xs text-green-700">Estimated time: ~{Math.ceil(validationResult.rowCount * 7 / 60)} minutes</p>
                       </div>
                       {validationResult.rowCount > 10 && (
                         <div className="flex items-center gap-2">
@@ -449,7 +449,7 @@ const CSVUpload: React.FC<CSVUploadProps> = ({ onUpload, isLoading }) => {
                 
                 {!isLoading && (
                   <div className="text-center text-xs text-muted-foreground mt-2">
-                    Generation will take approximately {Math.ceil(validationResult.rowCount * 0.5)} minutes to complete
+                    Generation will take approximately {Math.ceil(validationResult.rowCount * 7 / 60)} minutes to complete
                   </div>
                 )}
               </div>
