@@ -31,7 +31,7 @@ export default function HomePage() {
       title: 'Image Editing',
       description: 'Erase, replace, and remix existing images with precision',
       icon: <PenTool className="h-5 w-5 text-white" />,
-      to: '/gallery',  // Navigate to gallery first to select an image to edit
+      to: '/create?mode=edit',  // Direct link to edit mode
       bgColor: 'bg-blue-400',
     },
     {
