@@ -15,6 +15,7 @@ import { Progress } from "@/components/ui/progress";
 import { ModelKey, modelCatalog } from "@/lib/modelCatalog";
 import { modelSchemas, modelDefaults, GenericFormValues } from "@/lib/formSchemas";
 import ModelSelect from "@/components/ModelSelect";
+import ModelInfoCard from "@/components/ModelInfoCard";
 import DynamicForm from "@/components/DynamicForm";
 import { Label } from "@/components/ui/label";
 
@@ -222,9 +223,9 @@ export default function PromptForm({
             <div className="space-y-1.5">
               <Label className="text-sm font-medium">AI Model</Label>
               <ModelSelect value={modelKey} onChange={setModelKey} />
-              <p className="text-muted-foreground text-xs mt-1.5">
-                {modelCatalog[modelKey].description}
-              </p>
+              
+              {/* Model info card with color coding based on provider */}
+              <ModelInfoCard modelKey={modelKey} className="mt-3" />
             </div>
 
             {/* Prompt field */}

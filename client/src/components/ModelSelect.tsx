@@ -46,12 +46,7 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ value, onChange }) => {
             <SelectItem 
               key={modelKey} 
               value={modelKey}
-              className="flex items-center py-2 cursor-pointer transition-colors hover:bg-transparent"
-              style={{
-                ":hover": {
-                  backgroundColor: colors.item.hoverBg
-                }
-              }}
+              className="flex items-center py-2 cursor-pointer transition-colors hover:bg-muted"
             >
               <div className="flex items-center">
                 <ModelBadge modelKey={modelKey} className="mr-2" size="sm" />

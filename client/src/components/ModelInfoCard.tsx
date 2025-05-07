@@ -3,20 +3,20 @@ import { modelCatalog, type ModelKey } from "@/lib/modelCatalog";
 import { getModelColors } from "@/lib/modelColors";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
-import { IconBrain, IconBolt, IconCpu } from "lucide-react";
+import { Brain, Zap, Cpu } from "lucide-react";
 
 // Icons for different AI model providers
 const ProviderIcon = ({ provider }: { provider: string }) => {
   switch(provider.toLowerCase()) {
     case 'openai':
-      return <IconBrain className="h-5 w-5" />;
+      return <Brain className="h-5 w-5" />;
     case 'google':
-      return <IconBolt className="h-5 w-5" />;
+      return <Zap className="h-5 w-5" />;
     case 'black forest labs':
     case 'black-forest-labs':
-      return <IconCpu className="h-5 w-5" />;
+      return <Cpu className="h-5 w-5" />;
     default:
-      return <IconBrain className="h-5 w-5" />;
+      return <Brain className="h-5 w-5" />;
   }
 };
 
