@@ -774,7 +774,7 @@ const CarCreationPage: React.FC = () => {
                   onReset={resetBatch}
                 />
               ) : (
-                <div className="bg-card border rounded-lg shadow-sm p-6 max-w-4xl mx-auto">
+                <div className="bg-card border rounded-lg shadow-sm p-6">
                   <div className="mb-6">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="bg-primary/10 p-2 rounded-full">
