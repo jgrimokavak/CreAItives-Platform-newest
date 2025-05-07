@@ -1,0 +1,130 @@
+=====================
+
+Objective:
+Enhance the Batch Car Generation UI for clearer feedback, detailed status indicators, alignment improvements, and accessibility without altering existing styling.
+
+1. Update progress status label
+   - Open `BatchProgress.tsx`.
+   - Above the progress bar, replace the static title with:
+     ```tsx
+     <div className="flex items-center space-x-2" id="batch-progress" tabIndex={-1}>
+       {status.percent < 100 && <Spinner />}
+       <span aria-live="polite">
+         {status.total === 0 && "Queueing jobs…"}
+         {status.percent > 0 && status.percent < 100 && "Generating images…"}
+         {status.percent === 100 && "Completed"}
+       </span>
+     </div>
+     ```
+   - Ensure the `Spinner` animates while `percent < 100`.
+
+2. Add per-row status badges and align columns
+   - Open `CSVUpload.tsx` where the CSV preview table is rendered.
+   - Add a centered “Status” column:
+     ```tsx
+     <th className="text-center">Status</th>
+     ```
+   - In each row, insert a centered badge:
+     ```tsx
+     <td className="text-center">
+       <Badge variant={rowStatus[rowIndex]} />
+     </td>
+     ```
+   - Apply `space-x-4` on the table container to space columns evenly.
+
+3. Display error details and failed CSV download with consistent spacing
+   - In `BatchProgress.tsx`, below the Failed count:
+     ```tsx
+     {status.failed > 0 && (
+       <details className="mt-4">
+         <summary className="cursor-pointer font-medium">
+           {status.failed} errors
+         </summary>
+         <ul className="list-disc list-inside ml-4">
+           {status.errorMessages.map((msg, i) => <li key={i}>{msg}</li>)}
+         </ul>
+         <Button
+           as="a"
+           href={`/downloads/failed_rows_${jobId}.csv`}
+           download
+           className="mt-2"
+         >
+           Download Failed CSV
+         </Button>
+       </details>
+     )}
+     ```
+
+4. Show contextual action buttons with equal widths
+   - In `BatchProgress.tsx` footer, use a flex container:
+     ```tsx
+     <div className="flex gap-4 justify-end mt-6">
+       {status.percent < 100 ? (
+         <Button variant="destructive" onClick={() => setConfirmStop(true)}>
+           Stop Batch
+         </Button>
+       ) : (
+         <>
+           <Button className="flex-1" onClick={downloadZip}>
+             Download ZIP
+           </Button>
+           <Button variant="outline" className="flex-1" onClick={startNewBatch}>
+             Start New Batch
+           </Button>
+         </>
+       )}
+     </div>
+     ```
+
+5. Implement stop confirmation modal centered
+   - Wrap the Stop Batch handler:
+     ```tsx
+     <Modal isOpen={confirmStop} onClose={() => setConfirmStop(false)}>
+       <ModalHeader>Confirm Stop</ModalHeader>
+       <ModalBody>
+         <p>Stopping now will include only completed images. Continue?</p>
+       </ModalBody>
+       <ModalFooter className="flex justify-end gap-2">
+         <Button onClick={() => setConfirmStop(false)}>Cancel</Button>
+         <Button variant="destructive" onClick={stopBatch}>
+           Stop & Finish Batch
+         </Button>
+       </ModalFooter>
+     </Modal>
+     ```
+
+6. Improve accessibility, focus, and alignment
+   - After starting the batch in `CarCreationPage.tsx`, focus the progress section:
+     ```ts
+     document.getElementById("batch-progress")?.focus();
+     ```
+   - Ensure section headings use consistent margins (`mt-6 mb-4`).
+   - Keep `aria-live="polite"` on dynamic text spans.
+
+7. Add Recent Jobs dropdown aligned right
+   - Above the progress bar in `BatchProgress.tsx`:
+     ```tsx
+     <div className="flex justify-end mb-4">
+       <DropdownMenu>
+         <DropdownTrigger>Recent Jobs</DropdownTrigger>
+         <DropdownContent align="end">
+           {recentJobs.map(job => (
+             <DropdownItem key={job.id} onSelect={() => loadJob(job.id)}>
+               {job.id} — {job.status === 'finished' ? '✅' : '⏳'}
+             </DropdownItem>
+           ))}
+         </DropdownContent>
+       </DropdownMenu>
+     </div>
+     ```
+
+8. Smooth progress animation
+   - In your global CSS or styled component for `.progress-bar`, add:
+     ```css
+     transition: width 0.5s ease-in-out;
+     ```
+
+Reminders & Constraints:
+- Do not modify existing Tailwind/shadcn UI theme or styling classes.
+- Use existing `Spinner`, `Badge`, `Button`, `Modal`, `DropdownMenu` components.
+- Ensure `downloads` and `failed_rows` endpoints are already serving static files.
