@@ -14,4 +14,5 @@ export interface GeneratedImage {
   fullUrl?: string;
   starred?: boolean;
   deletedAt?: string | null;
+  aspectRatio?: string; // Added for displaying aspect ratio in card
 }
