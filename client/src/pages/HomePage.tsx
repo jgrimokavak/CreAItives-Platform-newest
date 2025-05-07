@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React from 'react';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,84 +12,11 @@ import {
   Images, 
   MessageSquareText,
   CarFront,
-  ChevronRight,
   ArrowRight
 } from 'lucide-react';
-import { GeneratedImage } from '@/types/image';
 
 export default function HomePage() {
-  const [recentImages, setRecentImages] = useState<GeneratedImage[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Fetch the recent images from the gallery
-  useEffect(() => {
-    const fetchRecentImages = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        
-        // Fetch recent images from the gallery API (limit to 10)
-        const response = await fetch('/api/gallery?limit=10');
-        
-        if (!response.ok) {
-          throw new Error(`Error fetching recent images: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        setRecentImages(data.items || []);
-      } catch (err) {
-        console.error('Error fetching recent images:', err);
-        setError('Failed to load recent images');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchRecentImages();
-  }, []);
-  
-  // Track scroll position for auto-scrolling effect
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  
-  useEffect(() => {
-    // Create simple auto-scrolling effect with requestAnimationFrame
-    if (!scrollContainerRef.current) return;
-    
-    let animationId: number;
-    let startTime: number;
-    
-    const scrollSpeed = 0.3; // pixels per frame - extremely slow and smooth
-    let currentPosition = 0;
-    
-    const animate = (timestamp: number) => {
-      if (!startTime) startTime = timestamp;
-      if (!scrollContainerRef.current) return;
-      
-      // Increment position
-      currentPosition += scrollSpeed;
-      
-      // Reset when we've scrolled past half the width to create seamless loop
-      const containerWidth = scrollContainerRef.current.scrollWidth;
-      if (currentPosition >= containerWidth / 2) {
-        currentPosition = 0;
-      }
-      
-      // Apply scroll position
-      scrollContainerRef.current.scrollLeft = currentPosition;
-      
-      // Continue animation
-      animationId = requestAnimationFrame(animate);
-    };
-    
-    // Start animation
-    animationId = requestAnimationFrame(animate);
-    
-    // Cleanup function
-    return () => {
-      cancelAnimationFrame(animationId);
-    };
-  }, [recentImages]);
+  // Simplified homepage without carousel
 
   // Platform capabilities
   const capabilities = [
@@ -218,63 +145,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Recent Gallery Section - Simple CSS Grid Approach */}
-        {recentImages.length > 0 && (
-          <section className="py-14 px-4 sm:px-6 lg:px-8 bg-white border-t">
-            <div className="container mx-auto max-w-7xl">
-              <div className="flex justify-between items-center mb-8">
-                <h2 className="text-2xl font-bold">Recent Creations</h2>
-                <Link to="/gallery">
-                  <Button variant="ghost" className="font-medium text-blue-600 flex items-center gap-1">
-                    View All <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </Link>
-              </div>
-
-              {!isLoading ? (
-                <div className="relative overflow-hidden">
-                  {/* Doubled images for seamless scrolling */}
-                  <div 
-                    ref={scrollContainerRef} 
-                    className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide smooth-scroll hardware-accelerated"
-                  >
-                    {/* First set of images */}
-                    {recentImages.map((image) => (
-                      <div key={image.id} className="flex-none w-64 sm:w-56 md:w-60 lg:w-64">
-                        <div className="relative pb-[100%] overflow-hidden rounded-lg shadow-sm bg-white">
-                          <img 
-                            src={image.thumbUrl || image.url} 
-                            alt={image.prompt}
-                            className="absolute inset-0 w-full h-full object-cover"
-                            loading="lazy"
-                          />
-                        </div>
-                      </div>
-                    ))}
-                    
-                    {/* Duplicate set for infinite scroll effect */}
-                    {recentImages.map((image) => (
-                      <div key={`dup-${image.id}`} className="flex-none w-64 sm:w-56 md:w-60 lg:w-64">
-                        <div className="relative pb-[100%] overflow-hidden rounded-lg shadow-sm bg-white">
-                          <img 
-                            src={image.thumbUrl || image.url} 
-                            alt={image.prompt}
-                            className="absolute inset-0 w-full h-full object-cover"
-                            loading="lazy"
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center justify-center h-64 bg-slate-50 rounded-lg">
-                  <div className="w-8 h-8 rounded-full border-2 border-t-blue-500 animate-spin"></div>
-                </div>
-              )}
-            </div>
-          </section>
-        )}
+        {/* Recent Gallery section has been removed */}
 
         {/* Call to Action */}
         <section className="py-14 px-4 sm:px-6 lg:px-8">

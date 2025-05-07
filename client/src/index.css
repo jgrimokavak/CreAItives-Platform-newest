@@ -101,34 +101,5 @@
     }
   }
   
-  /* Modern carousel styling - Mobile first approach */
-  
-  /* Hide scrollbars */
-  .scrollbar-hide {
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
-  }
-  
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, and Opera */
-  }
-  
-  /* Enable smooth scrolling */
-  .smooth-scroll {
-    scroll-behavior: smooth;
-  }
-  
-  /* Hardware acceleration for smoother animations */
-  .hardware-accelerated {
-    transform: translateZ(0);
-    backface-visibility: hidden;
-    perspective: 1000px;
-  }
-  
-  /* Special optimizations for iOS */
-  @supports (-webkit-touch-callout: none) {
-    .hardware-accelerated {
-      -webkit-overflow-scrolling: touch;
-    }
-  }
+  /* Carousel section has been removed */
 }
