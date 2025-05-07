@@ -1002,7 +1002,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-4">
               {/* Models */}
               <div className="space-y-2">
                 <h4 className="text-xs font-medium text-muted-foreground mb-1.5">Models</h4>
@@ -1013,55 +1013,21 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
                       variant={activeFilters.models.includes(model) ? "default" : "outline"}
                       size="sm"
                       onClick={() => toggleFilter('models', model)}
-                      className="h-7 px-2 text-xs rounded-full"
+                      className={cn(
+                        "h-7 px-2 text-xs rounded-full",
+                        !activeFilters.models.includes(model) && (
+                          model === "car-generator" ? "border-amber-200 text-amber-700 bg-amber-50/30" :
+                          model === "gpt-image-1" ? "border-blue-200 text-blue-700 bg-blue-50/30" :
+                          model === "imagen-3" ? "border-emerald-200 text-emerald-700 bg-emerald-50/30" :
+                          model === "flux-pro" ? "border-violet-200 text-violet-700 bg-violet-50/30" : ""
+                        )
+                      )}
                     >
                       {model}
                     </Button>
                   ))}
                   {filterOptions.models.length === 0 && (
                     <p className="text-xs text-muted-foreground">No models found</p>
-                  )}
-                </div>
-              </div>
-              
-              {/* Sizes */}
-              <div className="space-y-2">
-                <h4 className="text-xs font-medium text-muted-foreground mb-1.5">Sizes</h4>
-                <div className="flex flex-wrap gap-1.5">
-                  {filterOptions.sizes.map(size => (
-                    <Button
-                      key={size}
-                      variant={activeFilters.sizes.includes(size) ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => toggleFilter('sizes', size)}
-                      className="h-7 px-2 text-xs rounded-full"
-                    >
-                      {size}
-                    </Button>
-                  ))}
-                  {filterOptions.sizes.length === 0 && (
-                    <p className="text-xs text-muted-foreground">No sizes found</p>
-                  )}
-                </div>
-              </div>
-              
-              {/* Qualities */}
-              <div className="space-y-2">
-                <h4 className="text-xs font-medium text-muted-foreground mb-1.5">Quality</h4>
-                <div className="flex flex-wrap gap-1.5">
-                  {filterOptions.qualities.map(quality => (
-                    <Button
-                      key={quality}
-                      variant={activeFilters.qualities.includes(quality) ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => toggleFilter('qualities', quality)}
-                      className="h-7 px-2 text-xs rounded-full"
-                    >
-                      {quality}
-                    </Button>
-                  ))}
-                  {filterOptions.qualities.length === 0 && (
-                    <p className="text-xs text-muted-foreground">No quality options found</p>
                   )}
                 </div>
               </div>
@@ -1073,7 +1039,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
               </span> 
               <span>
                 {filteredImages.length === 1 ? 'result' : 'results'} 
-                {(activeFilters.starred || activeFilters.models.length > 0 || activeFilters.sizes.length > 0 || activeFilters.qualities.length > 0) ? ' with current filters' : ''}
+                {(activeFilters.starred || activeFilters.models.length > 0) ? ' with current filters' : ''}
               </span>
             </div>
           </div>
