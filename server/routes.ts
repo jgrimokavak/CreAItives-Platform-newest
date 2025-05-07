@@ -21,6 +21,7 @@ import { persistImage } from "./fs-storage";
 import { models } from "./config/models";
 import modelRoutes, { initializeModels } from "./routes/model-routes";
 import upscaleRoutes from "./routes/upscale-routes";
+import enhancePromptRouter from "./routes/enhancePrompt";
 import { listMakes, listModels, listBodyStyles, listTrims, flushCarCache, loadCarData, getLastFetchTime, setupCarDataAutoRefresh } from "./carData";
 import axios from "axios";
 import Papa from "papaparse";
