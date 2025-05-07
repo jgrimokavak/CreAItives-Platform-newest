@@ -24,11 +24,12 @@ interface ImageCardProps {
   onDelete?: (id: string, permanent?: boolean) => void;
   onStar?: (id: string, status: boolean) => void;
   onRestore?: (id: string) => void;
-  onSelect?: (id: string, selected: boolean) => void;
+  onSelect?: (id: string) => void;
   onCopyPrompt?: (prompt: string) => void;  // Add handler for copying the prompt
   onUpscale?: (image: GeneratedImage) => void; // Handler for upscaling
-  onClick?: () => void;  // Add onClick handler for full-size preview
+  onClick?: (e?: React.MouseEvent) => void;  // Add onClick handler for full-size preview
   selected?: boolean;
+  selectionMode?: 'none' | 'selecting';
 }
 
 export default function ImageCard({ 
@@ -43,7 +44,8 @@ export default function ImageCard({
   onCopyPrompt,
   onUpscale,
   onClick,
-  selected
+  selected,
+  selectionMode = 'none'
 }: ImageCardProps) {
   const [isHovered, setIsHovered] = useState(false);
 

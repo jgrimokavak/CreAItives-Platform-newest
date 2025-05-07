@@ -9,7 +9,7 @@ import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from '@/comp
 import { useToast } from '@/hooks/use-toast';
 import { useDebounce } from '@/hooks/useDebounce';
 import { apiRequest, queryClient } from '@/lib/queryClient';
-import { Loader2, FolderOpen, Star, Trash2, RotateCcw, Trash, Search, X, Sparkles } from 'lucide-react';
+import { Loader2, FolderOpen, Star, Trash2, RotateCcw, Trash, Search, X, Sparkles, CheckSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ImageCard from '@/components/ImageCard';
 
@@ -126,19 +126,28 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
   
   // Toggle selection
   const toggleSelection = (id: string) => {
-    setSelectedIds(prev =>
-      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-    );
+    if (selectionMode === 'none') {
+      // If not in selection mode, entering it automatically selects the image
+      setSelectionMode('selecting');
+      setSelectedIds([id]);
+    } else {
+      // In selection mode, toggle the selection status
+      setSelectedIds(prev =>
+        prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+      );
+    }
   };
   
   // Select all images
   const selectAll = () => {
+    setSelectionMode('selecting');
     setSelectedIds(images.map(img => img.id));
   };
   
   // Clear selection
   const clearSelection = () => {
     setSelectedIds([]);
+    setSelectionMode('none');
   };
   
   // Handle edit
@@ -596,15 +605,28 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
   return (
     <div className="pb-20">
       {/* Gallery toolbar */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border p-4 flex flex-col gap-3">
+      <div className={cn(
+        "sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border p-4 flex flex-col gap-3",
+        selectionMode === 'selecting' && "bg-primary/5"
+      )}>
         <div className="flex flex-wrap gap-3 items-center justify-between">
           <div className="flex flex-wrap gap-3 items-center">
             {/* Page title and count */}
             <div className="flex items-center mr-2">
               <h1 className="text-lg font-medium mr-2">
-                {mode === 'gallery' ? 'Gallery' : 'Trash'}
+                {selectionMode === 'selecting' 
+                  ? 'Select Images' 
+                  : mode === 'gallery' 
+                    ? 'Gallery' 
+                    : 'Trash'
+                }
               </h1>
-              <span className="text-sm text-muted-foreground bg-muted/50 px-2.5 py-0.5 rounded-full">
+              <span className={cn(
+                "text-sm px-2.5 py-0.5 rounded-full",
+                selectionMode === 'selecting'
+                  ? "bg-primary/20 text-primary font-medium"
+                  : "bg-muted/50 text-muted-foreground"
+              )}>
                 {selectedIds.length > 0
                   ? `${selectedIds.length} selected`
                   : `${filteredImages.length} ${mode === 'trash' ? 'items' : 'images'}`
@@ -819,23 +841,50 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
                 )}
               </>
             ) : (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={selectAll}
-                      disabled={images.length === 0}
-                      className="gap-2"
-                    >
-                      <span className="hidden sm:inline">Select All</span>
-                      <span className="sm:hidden">Select</span>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">Select all images</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <>
+                {selectionMode === 'selecting' ? (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={clearSelection}
+                          className="text-muted-foreground hover:text-foreground"
+                        >
+                          Exit Selection
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">Exit selection mode</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            // Enter selection mode or select all if there are images
+                            if (images.length > 0) {
+                              selectAll();
+                            } else {
+                              setSelectionMode('selecting');
+                            }
+                          }}
+                          disabled={images.length === 0}
+                          className="gap-2"
+                        >
+                          <CheckSquare className="h-4 w-4 mr-1" />
+                          <span className="hidden sm:inline">Select</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">Enter selection mode</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -971,7 +1020,10 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       </div>
       
       {/* Gallery grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 p-6">
+      <div className={cn(
+        "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 p-6",
+        selectionMode === 'selecting' && "cursor-pointer"
+      )}>
         {filteredImages.map((image) => (
           <ImageCard
             key={image.id}
@@ -990,8 +1042,15 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
             onUpscale={() => handleUpscale(image)}
             onSelect={toggleSelection}
             selected={selectedIds.includes(image.id)}
-            onClick={() => {
-              // Show image in fullscreen when clicked
+            selectionMode={selectionMode}
+            onClick={(e) => {
+              // In selection mode, clicking the card toggles selection
+              if (selectionMode === 'selecting') {
+                toggleSelection(image.id);
+                return;
+              }
+              
+              // Regular fullscreen view when not in selection mode
               const img = document.createElement('div');
               img.className = 'fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/95';
               img.onclick = () => document.body.removeChild(img);
