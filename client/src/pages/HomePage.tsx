@@ -1,14 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { 
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselPrevious,
-  CarouselNext,
-} from '@/components/ui/carousel';
 import { 
   Sparkles, 
   Zap,
@@ -19,7 +12,8 @@ import {
   MessageSquareText,
   CarFront,
   ChevronRight,
-  ArrowRight
+  ArrowRight,
+  ChevronLeft
 } from 'lucide-react';
 import { GeneratedImage } from '@/types/image';
 
@@ -27,8 +21,8 @@ export default function HomePage() {
   const [recentImages, setRecentImages] = useState<GeneratedImage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeSlide, setActiveSlide] = useState(0);
-  const carouselRef = useRef<HTMLDivElement>(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [autoRotateInterval, setAutoRotateInterval] = useState<NodeJS.Timeout | null>(null);
 
   // Fetch the recent images from the gallery
   useEffect(() => {
@@ -57,28 +51,48 @@ export default function HomePage() {
     fetchRecentImages();
   }, []);
 
-  // Set up auto-rotation for the carousel
+  // Set up auto-rotation for the image gallery
   useEffect(() => {
-    if (recentImages.length > 0) {
+    const startAutoRotation = () => {
       const interval = setInterval(() => {
-        setActiveSlide((prevSlide) => {
-          const nextSlide = (prevSlide + 1) % recentImages.length;
-          
-          // If we have a carousel ref, programmatically navigate to the next slide
-          if (carouselRef.current) {
-            const carousel = carouselRef.current as any;
-            if (carousel.scrollTo) {
-              carousel.scrollTo(nextSlide);
-            }
-          }
-          
-          return nextSlide;
-        });
-      }, 3000); // Change slide every 3 seconds
-      
-      return () => clearInterval(interval);
+        setCurrentImageIndex((prevIndex) => (prevIndex + 1) % recentImages.length);
+      }, 3000);
+      setAutoRotateInterval(interval);
+      return interval;
+    };
+
+    if (recentImages.length > 0 && !isLoading) {
+      const interval = startAutoRotation();
+      return () => {
+        if (interval) clearInterval(interval);
+      };
     }
-  }, [recentImages.length]);
+  }, [recentImages.length, isLoading]);
+
+  // Navigation functions for the image gallery
+  const goToNextImage = () => {
+    if (autoRotateInterval) clearInterval(autoRotateInterval);
+    setCurrentImageIndex((prevIndex) => (prevIndex + 1) % recentImages.length);
+    
+    // Restart auto-rotation after manual navigation
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % recentImages.length);
+    }, 3000);
+    setAutoRotateInterval(interval);
+  };
+
+  const goToPrevImage = () => {
+    if (autoRotateInterval) clearInterval(autoRotateInterval);
+    setCurrentImageIndex((prevIndex) => 
+      prevIndex === 0 ? recentImages.length - 1 : prevIndex - 1
+    );
+    
+    // Restart auto-rotation after manual navigation
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % recentImages.length);
+    }, 3000);
+    setAutoRotateInterval(interval);
+  };
 
   const capabilities = [
     {
@@ -221,45 +235,54 @@ export default function HomePage() {
 
               {!isLoading ? (
                 <div className="relative">
-                  <Carousel
-                    opts={{
-                      align: "start",
-                      loop: true,
-                    }}
-                    className="w-full"
-                    ref={carouselRef}
-                    onSelect={(index) => setActiveSlide(index)}
-                  >
-                    <CarouselContent>
-                      {recentImages.map((image, index) => (
-                        <CarouselItem key={image.id} className="basis-full md:basis-1/2 lg:basis-1/3 xl:basis-1/4 pl-2 md:pl-4">
-                          <Link to="/gallery">
-                            <div className="overflow-hidden rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow h-full">
-                              <img 
-                                src={image.thumbUrl || image.url} 
-                                alt={image.prompt} 
-                                className="w-full h-64 object-cover"
-                              />
-                            </div>
-                          </Link>
-                        </CarouselItem>
-                      ))}
-                    </CarouselContent>
-                    
-                    <div className="flex justify-center gap-2 mt-4">
-                      {recentImages.map((_, index) => (
-                        <span 
-                          key={index} 
-                          className={`block h-2 w-2 rounded-full ${index === activeSlide ? 'bg-blue-600' : 'bg-slate-200'}`}
-                        />
-                      ))}
-                    </div>
-
-                    <div className="flex justify-between w-full absolute top-1/2 -translate-y-1/2 px-2">
-                      <CarouselPrevious className="relative left-0 translate-y-0" />
-                      <CarouselNext className="relative right-0 translate-y-0" />
-                    </div>
-                  </Carousel>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 relative">
+                    {/* Display 4 images at a time, starting from currentImageIndex */}
+                    {Array.from({ length: Math.min(4, recentImages.length) }).map((_, i) => {
+                      const imageIndex = (currentImageIndex + i) % recentImages.length;
+                      const image = recentImages[imageIndex];
+                      return (
+                        <Link key={image.id} to="/gallery">
+                          <div className="overflow-hidden rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow h-full">
+                            <img 
+                              src={image.thumbUrl || image.url} 
+                              alt={image.prompt} 
+                              className="w-full h-64 object-cover"
+                            />
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                  
+                  {/* Navigation Controls */}
+                  <div className="flex justify-between w-full absolute top-1/2 -translate-y-1/2 pointer-events-none">
+                    <button 
+                      className="bg-white rounded-full p-2 shadow-md pointer-events-auto"
+                      onClick={goToPrevImage}
+                    >
+                      <ChevronLeft className="h-5 w-5 text-slate-700" />
+                    </button>
+                    <button 
+                      className="bg-white rounded-full p-2 shadow-md pointer-events-auto"
+                      onClick={goToNextImage}
+                    >
+                      <ChevronRight className="h-5 w-5 text-slate-700" />
+                    </button>
+                  </div>
+                  
+                  {/* Pagination Dots */}
+                  <div className="flex justify-center gap-2 mt-6">
+                    {recentImages.slice(0, Math.min(recentImages.length, 8)).map((_, index) => (
+                      <span 
+                        key={index}
+                        className={`block h-2 w-2 rounded-full ${
+                          index >= currentImageIndex && index < currentImageIndex + 4 
+                            ? 'bg-blue-600' 
+                            : 'bg-slate-200'
+                        }`}
+                      />
+                    ))}
+                  </div>
                 </div>
               ) : (
                 <div className="flex items-center justify-center h-64 bg-slate-50 rounded-lg">
