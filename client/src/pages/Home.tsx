@@ -10,6 +10,7 @@ import EmptyState from "@/components/EmptyState";
 import { GeneratedImage } from "@/types/image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEditor } from "@/context/EditorContext";
+import "@/components/ui/custom-tabs.css";
 
 export default function Home() {
   const [images, setImages] = useState<GeneratedImage[]>([]);
@@ -65,9 +66,9 @@ export default function Home() {
                 className="w-full h-full flex flex-col"
               >
                 <div className="mb-6">
-                  <TabsList className="grid w-full grid-cols-2 relative z-10">
-                    <TabsTrigger value="generate" className="text-sm py-2.5 px-2">Create New</TabsTrigger>
-                    <TabsTrigger value="edit" className="text-sm py-2.5 px-2">Edit Image</TabsTrigger>
+                  <TabsList className="custom-tabs-list grid w-full grid-cols-2 relative z-10">
+                    <TabsTrigger value="generate" className="custom-tabs-trigger text-sm">Create New</TabsTrigger>
+                    <TabsTrigger value="edit" className="custom-tabs-trigger text-sm">Edit Image</TabsTrigger>
                   </TabsList>
                 </div>
                 
