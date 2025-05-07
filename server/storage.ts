@@ -101,6 +101,9 @@ export class DatabaseStorage implements IStorage {
       sourceThumb: image.sourceThumb || null,
       sourceImage: image.sourceImage || null, // Add sourceImage to database
       starred: "false",
+      // Store user-selected parameters for enhanced display
+      aspectRatio: image.aspectRatio || null,
+      quality: image.quality || null,
       // Don't set deletedAt - it's null by default
     };
     
@@ -123,6 +126,8 @@ export class DatabaseStorage implements IStorage {
         starred: savedImage.starred === "true",
         sourceThumb: savedImage.sourceThumb,
         sourceImage: savedImage.sourceImage,
+        aspectRatio: savedImage.aspectRatio,
+        quality: savedImage.quality,
         deletedAt: savedImage.deletedAt ? new Date(savedImage.deletedAt).toISOString() : null
       }
     });

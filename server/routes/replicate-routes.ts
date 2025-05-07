@@ -182,6 +182,8 @@ export async function generateWithReplicate(modelKey: string, inputs: any): Prom
       createdAt: new Date().toISOString(),
       width: width.toString(),
       height: height.toString(),
+      // Store the exact aspect ratio selected by the user
+      aspectRatio: inputs.aspect_ratio || undefined,
     };
     
     // We no longer need to call storage.saveImage here

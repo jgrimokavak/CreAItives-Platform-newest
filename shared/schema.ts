@@ -81,6 +81,9 @@ export const images = pgTable("images", {
   sourceImage: text("source_image"),  // Full original source image data
   starred: text("starred").default("false"),
   deletedAt: timestamp("deleted_at"),
+  // New fields for enhanced display
+  aspectRatio: text("aspect_ratio"),  // Direct aspect ratio as selected by user (e.g., "16:9")
+  quality: text("quality"),           // Image quality setting
 });
 
 export const insertImageSchema = createInsertSchema(images);
