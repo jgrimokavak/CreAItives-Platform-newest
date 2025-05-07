@@ -528,10 +528,6 @@ const CarCreationPage: React.FC = () => {
                 <div className="space-y-5">
                   {/* Car identification section */}
                   <div>
-                    <h2 className="text-lg font-semibold text-foreground mb-1">Car Identification</h2>
-                    <p className="text-xs text-muted-foreground mb-4">
-                      Select the make, model and specifications of your vehicle
-                    </p>
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-2">
                         <Label htmlFor="make">Make</Label>
