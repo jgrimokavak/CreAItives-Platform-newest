@@ -69,32 +69,32 @@ export default function HomePage() {
       <main className="flex-grow">
         {/* Hero Section */}
         <section className="pt-10 pb-12 px-4 sm:px-6 lg:px-8 bg-white border-b">
-          <div className="container mx-auto max-w-7xl text-center lg:text-left">
+          <div className="container mx-auto max-w-7xl text-left">
             <div className="flex flex-col">
               <div className="w-full">
                 <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-600 mb-4">
-                  <span className="mr-1">✨</span> New Platform Release
+                  <span className="mr-1.5">✨</span> New Platform Release
                 </div>
-                <h1 className="text-4xl md:text-5xl font-bold mb-4">
+                <h1 className="text-5xl font-bold mb-4">
                   <span className="text-blue-600">CreAItives</span> Platform 2.0
                 </h1>
-                <p className="text-lg text-slate-600 mb-6 max-w-3xl mx-auto lg:mx-0">
+                <p className="text-lg text-slate-600 mb-6">
                   Transform your creative vision into stunning AI-generated imagery with our powerful suite of creation tools.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                <div className="flex flex-row gap-4">
                   <Link to="/create">
-                    <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white font-medium flex items-center gap-2">
-                      Get Started <ArrowRight className="h-4 w-4" />
+                    <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white font-medium flex items-center gap-2 h-12 px-6">
+                      Get Started <ArrowRight className="h-5 w-5 ml-1" />
                     </Button>
                   </Link>
                   <Link to="/gallery">
-                    <Button size="lg" variant="outline" className="bg-white border-slate-200 text-slate-700 font-medium">
+                    <Button size="lg" variant="outline" className="bg-white border-slate-200 text-slate-700 font-medium h-12 px-6">
                       Browse Gallery
                     </Button>
                   </Link>
                 </div>
                 
-                <div className="flex items-center gap-6 mt-8 justify-center lg:justify-start">
+                <div className="flex items-center gap-12 mt-8">
                   <div className="flex items-center gap-2">
                     <Zap className="h-5 w-5 text-blue-600" />
                     <span className="text-sm font-medium text-slate-700">Fast Generation</span>
