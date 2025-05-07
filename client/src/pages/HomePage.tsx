@@ -54,87 +54,23 @@ export default function HomePage() {
     fetchRecentImages();
   }, []);
 
-  // Add CSS for animations and carousel
+  // Minimal CSS for a smooth carousel
   useEffect(() => {
     const style = document.createElement('style');
     style.textContent = `
-      @keyframes blob {
-        0% {
-          transform: translate(0, 0) scale(1);
-        }
-        33% {
-          transform: translate(30px, -20px) scale(1.1);
-        }
-        66% {
-          transform: translate(-20px, 20px) scale(0.9);
-        }
-        100% {
-          transform: translate(0, 0) scale(1);
-        }
-      }
-      .animate-blob {
-        animation: blob 7s infinite;
-      }
-      .animation-delay-2000 {
-        animation-delay: 2s;
-      }
-      .animation-delay-4000 {
-        animation-delay: 4s;
-      }
-      
-      /* Custom Slider Styles */
+      /* Minimalistic Slider Styles */
       .image-carousel .slick-track {
         display: flex;
-        gap: 12px;
-        margin-left: -6px;
-        margin-right: -6px;
+        gap: 8px;
       }
       
       .image-carousel .slick-slide {
-        transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        opacity: 0.85;
+        transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
       }
       
-      .image-carousel .slick-slide img {
-        transform: scale(0.95);
-        transition: transform 0.7s cubic-bezier(0.19, 1, 0.22, 1);
-        backface-visibility: hidden;
-      }
-      
-      .image-carousel .slick-center img {
-        transform: scale(1);
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-      }
-      
-      /* Add image glint/shine effect */
-      .image-shine {
-        position: relative;
-        overflow: hidden;
-      }
-      
-      .image-shine::after {
-        content: '';
-        position: absolute;
-        top: -50%;
-        left: -60%;
-        width: 30%;
-        height: 200%;
-        background: linear-gradient(
-          to right,
-          rgba(255, 255, 255, 0) 0%,
-          rgba(255, 255, 255, 0.3) 50%,
-          rgba(255, 255, 255, 0) 100%
-        );
-        transform: rotate(30deg);
-        animation: shine 6s infinite;
-      }
-      
-      @keyframes shine {
-        0% {
-          left: -100%;
-        }
-        20%, 100% {
-          left: 200%;
-        }
+      .image-carousel .slick-active {
+        opacity: 1;
       }
     `;
     document.head.appendChild(style);
@@ -285,31 +221,22 @@ export default function HomePage() {
 
               {!isLoading ? (
                 <div className="relative overflow-hidden">
-                  {/* Stylized gradient effects */}
-                  <div className="absolute -left-20 top-10 w-40 h-40 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-                  <div className="absolute -right-20 top-10 w-40 h-40 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-                  
-                  {/* Cool, fast, non-interactive slider */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="relative z-10"
-                  >
+                  {/* Minimalistic, smooth slider */}
+                  <div className="relative">
                     <Slider
                       ref={sliderRef}
                       dots={false}
                       infinite={true}
-                      speed={800}
+                      speed={1000}
                       slidesToShow={4}
                       slidesToScroll={1}
                       autoplay={true}
-                      autoplaySpeed={1500}
+                      autoplaySpeed={2000}
                       pauseOnHover={false}
                       swipe={false}
                       touchMove={false}
                       arrows={false}
-                      cssEase="cubic-bezier(0.45, 0, 0.55, 1)"
+                      cssEase="cubic-bezier(0.25, 1, 0.5, 1)" // Smooth easing
                       responsive={[
                         {
                           breakpoint: 1280,
@@ -334,65 +261,27 @@ export default function HomePage() {
                     >
                       {recentImages.map((image) => (
                         <div key={image.id} className="px-2">
-                          <motion.div 
-                            whileHover={{ scale: 1.02 }} 
-                            className="relative overflow-hidden rounded-lg shadow-md group"
-                          >
-                            <div className="aspect-w-16 aspect-h-9 bg-slate-800 image-shine">
-                              <img 
-                                src={image.thumbUrl || image.url} 
-                                alt={image.prompt}
-                                className="w-full h-64 object-cover transition-transform duration-700 ease-in-out"
-                              />
-                            </div>
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300">
-                              <div className="absolute bottom-0 left-0 right-0 p-4">
-                                <h3 className="text-white text-sm font-medium line-clamp-2 mb-1">{image.prompt}</h3>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs text-white/70">{image.model}</span>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="absolute top-2 right-2">
-                              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-100">
-                                {image.size}
-                              </span>
-                            </div>
-                          </motion.div>
+                          <div className="overflow-hidden rounded-lg bg-white">
+                            <img 
+                              src={image.thumbUrl || image.url} 
+                              alt={image.prompt}
+                              className="w-full h-64 object-cover"
+                            />
+                          </div>
                         </div>
                       ))}
                     </Slider>
-                  </motion.div>
+                  </div>
                   
-                  {/* Fancy progress indicator */}
+                  {/* Simple progress indicator */}
                   <div className="mt-6 flex justify-center">
-                    <div className="w-64 h-1 bg-slate-200 rounded-full overflow-hidden">
-                      <motion.div 
-                        className="h-full bg-gradient-to-r from-blue-500 to-indigo-500"
-                        initial={{ width: "0%" }}
-                        animate={{ width: "100%" }}
-                        transition={{ 
-                          repeat: Infinity,
-                          duration: 15,
-                          ease: "linear"
-                        }}
-                      />
+                    <div className="w-16 h-1 bg-slate-200 rounded-full">
                     </div>
                   </div>
                 </div>
               ) : (
                 <div className="flex items-center justify-center h-64 bg-slate-50 rounded-lg">
-                  <motion.div 
-                    animate={{ 
-                      rotate: 360,
-                      scale: [1, 1.1, 1]
-                    }}
-                    transition={{ 
-                      rotate: { duration: 1.5, repeat: Infinity, ease: "linear" },
-                      scale: { duration: 1, repeat: Infinity, ease: "easeInOut" }
-                    }}
-                    className="w-12 h-12 rounded-full border-t-2 border-b-2 border-blue-600"
-                  />
+                  <div className="w-8 h-8 rounded-full border-2 border-t-blue-500 animate-spin"></div>
                 </div>
               )}
             </div>
