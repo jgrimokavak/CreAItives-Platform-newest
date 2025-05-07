@@ -1,7 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { 
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+} from '@/components/ui/carousel';
 import { 
   Sparkles, 
   Zap,
@@ -20,7 +27,10 @@ export default function HomePage() {
   const [recentImages, setRecentImages] = useState<GeneratedImage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeSlide, setActiveSlide] = useState(0);
+  const carouselRef = useRef<HTMLDivElement>(null);
 
+  // Fetch the recent images from the gallery
   useEffect(() => {
     const fetchRecentImages = async () => {
       try {
@@ -46,6 +56,29 @@ export default function HomePage() {
 
     fetchRecentImages();
   }, []);
+
+  // Set up auto-rotation for the carousel
+  useEffect(() => {
+    if (recentImages.length > 0) {
+      const interval = setInterval(() => {
+        setActiveSlide((prevSlide) => {
+          const nextSlide = (prevSlide + 1) % recentImages.length;
+          
+          // If we have a carousel ref, programmatically navigate to the next slide
+          if (carouselRef.current) {
+            const carousel = carouselRef.current as any;
+            if (carousel.scrollTo) {
+              carousel.scrollTo(nextSlide);
+            }
+          }
+          
+          return nextSlide;
+        });
+      }, 3000); // Change slide every 3 seconds
+      
+      return () => clearInterval(interval);
+    }
+  }, [recentImages.length]);
 
   const capabilities = [
     {
@@ -186,19 +219,53 @@ export default function HomePage() {
                 </Link>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {recentImages.slice(0, 8).map((image) => (
-                  <Link key={image.id} to="/gallery">
-                    <div className="overflow-hidden rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                      <img 
-                        src={image.thumbUrl || image.url} 
-                        alt={image.prompt} 
-                        className="w-full h-48 object-cover"
-                      />
+              {!isLoading ? (
+                <div className="relative">
+                  <Carousel
+                    opts={{
+                      align: "start",
+                      loop: true,
+                    }}
+                    className="w-full"
+                    ref={carouselRef}
+                    onSelect={(index) => setActiveSlide(index)}
+                  >
+                    <CarouselContent>
+                      {recentImages.map((image, index) => (
+                        <CarouselItem key={image.id} className="basis-full md:basis-1/2 lg:basis-1/3 xl:basis-1/4 pl-2 md:pl-4">
+                          <Link to="/gallery">
+                            <div className="overflow-hidden rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow h-full">
+                              <img 
+                                src={image.thumbUrl || image.url} 
+                                alt={image.prompt} 
+                                className="w-full h-64 object-cover"
+                              />
+                            </div>
+                          </Link>
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                    
+                    <div className="flex justify-center gap-2 mt-4">
+                      {recentImages.map((_, index) => (
+                        <span 
+                          key={index} 
+                          className={`block h-2 w-2 rounded-full ${index === activeSlide ? 'bg-blue-600' : 'bg-slate-200'}`}
+                        />
+                      ))}
                     </div>
-                  </Link>
-                ))}
-              </div>
+
+                    <div className="flex justify-between w-full absolute top-1/2 -translate-y-1/2 px-2">
+                      <CarouselPrevious className="relative left-0 translate-y-0" />
+                      <CarouselNext className="relative right-0 translate-y-0" />
+                    </div>
+                  </Carousel>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-64 bg-slate-50 rounded-lg">
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+                </div>
+              )}
             </div>
           </section>
         )}
