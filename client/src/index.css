@@ -101,88 +101,135 @@
     }
   }
   
-  /* Carousel responsive styling */
+  /* 
+  * Mobile-first Carousel Styling
+  * Built to be extremely robust on all screen sizes
+  */
+
+  /* Base carousel container */
   .image-carousel {
     width: 100%;
     margin: 0 auto;
+    position: relative;
+  }
+
+  /* Override default slick styles for better consistency */
+  .image-carousel .slick-list {
+    margin: 0 -8px;
     overflow: hidden;
   }
-  
-  /* Core slider elements */
-  .image-carousel .slick-list {
-    overflow: visible;
-  }
-  
+
   .image-carousel .slick-track {
     display: flex;
     align-items: center;
   }
-  
-  /* Individual slide styles */
+
+  /* Fix slide sizing in all browsers */
   .image-carousel .slick-slide {
-    height: auto;
-    opacity: 0.85;
-    transition: opacity 0.3s ease;
-    padding: 0 10px;
+    box-sizing: border-box;
+    padding: 0 8px;
+    height: auto !important;
   }
-  
-  .image-carousel .slick-slide.slick-active {
-    opacity: 1;
+
+  .image-carousel .slick-slide > div {
+    width: 100%;
+    height: 100%;
   }
-  
-  /* Image container style */
+
+  /* Ensure slide content maintains correct proportions */
+  .carousel-image-wrapper {
+    padding-bottom: 100%; /* 1:1 aspect ratio */
+    position: relative;
+    width: 100%;
+    height: 0;
+  }
+
+  /* Image container with shadow and rounded corners */
   .carousel-image-container {
-    aspect-ratio: 1/1;
-    overflow: hidden;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     border-radius: 0.5rem;
     background-color: white;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    margin: 0 auto;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
-  
-  /* Image style */
+
+  /* Image size and positioning */
   .carousel-image {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
   }
-  
-  /* Responsive adjustments */
-  /* Large screens */
-  @media (min-width: 1536px) {
-    .carousel-image-container {
-      max-width: 220px;
+
+  /* Mobile screens optimization (default) */
+  .carousel-slide {
+    width: 100%;
+    max-width: 280px;
+    margin: 0 auto;
+  }
+
+  /* Small devices (640px and up) */
+  @media (min-width: 640px) {
+    .carousel-slide {
+      max-width: 180px;
+    }
+    .image-carousel .slick-list {
+      margin: 0 -10px;
+    }
+    .image-carousel .slick-slide {
+      padding: 0 10px;
     }
   }
-  
-  /* Medium-large screens */
-  @media (max-width: 1535px) and (min-width: 1024px) {
-    .carousel-image-container {
-      max-width: 200px;
-    }
-  }
-  
-  /* Medium screens */
-  @media (max-width: 1023px) and (min-width: 768px) {
-    .carousel-image-container {
+
+  /* Medium devices (768px and up) */
+  @media (min-width: 768px) {
+    .carousel-slide {
       max-width: 180px;
     }
   }
-  
-  /* Small screens */
-  @media (max-width: 767px) and (min-width: 640px) {
-    .carousel-image-container {
-      max-width: 160px;
+
+  /* Large devices (1024px and up) */
+  @media (min-width: 1024px) {
+    .carousel-slide {
+      max-width: 200px;
+    }
+  }
+
+  /* Extra Large devices (1280px and up) */
+  @media (min-width: 1280px) {
+    .carousel-slide {
+      max-width: 220px;
     }
   }
   
-  /* Extra small screens */
-  @media (max-width: 639px) {
-    .carousel-image-container {
-      max-width: 220px;
+  /* Special fixes for mobile browsers */
+  @supports (-webkit-touch-callout: none) {
+    /* Fixes for iOS Safari */
+    .image-carousel .slick-track {
+      display: flex !important;
     }
+    
     .image-carousel .slick-slide {
-      padding: 0 5px;
+      height: inherit !important;
+    }
+    
+    .carousel-image-container {
+      transform: translateZ(0); /* Force hardware acceleration */
+    }
+  }
+  
+  /* Android Chrome sometimes needs this fix */
+  @media screen and (-webkit-min-device-pixel-ratio: 0) {
+    .image-carousel {
+      -webkit-transform: translateZ(0);
+      backface-visibility: hidden;
+      perspective: 1000;
     }
   }
 }

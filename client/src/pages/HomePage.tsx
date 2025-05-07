@@ -196,9 +196,9 @@ export default function HomePage() {
               </div>
 
               {!isLoading ? (
-                <div className="relative overflow-hidden">
-                  {/* Minimalistic, smooth slider */}
-                  <div className="relative w-full">
+                <div className="relative overflow-hidden p-1">
+                  {/* Mobile-friendly carousel wrapper */}
+                  <div className="relative w-full max-w-full">
                     <Slider
                       ref={sliderRef}
                       dots={false}
@@ -207,57 +207,62 @@ export default function HomePage() {
                       slidesToShow={5}
                       slidesToScroll={1}
                       autoplay={true}
-                      autoplaySpeed={0} // No pause
-                      cssEase="linear" // Linear motion for continuous flow
+                      autoplaySpeed={0} // Continuous scrolling
+                      cssEase="linear" // Smooth linear motion
                       pauseOnHover={false}
-                      swipe={false}
-                      touchMove={false}
+                      swipe={true} // Enable swipe for better mobile experience
+                      touchMove={true} // Enable touch for better mobile experience
                       arrows={false}
+                      variableWidth={false} // Fixed width for consistency
+                      adaptiveHeight={false} // No adaptive height to prevent jumps
+                      draggable={true} // Can be dragged on desktop
                       responsive={[
                         {
-                          breakpoint: 1536, // 2xl
+                          breakpoint: 1536, // 2xl screens
                           settings: {
                             slidesToShow: 4,
                           }
                         },
                         {
-                          breakpoint: 1280, // xl
+                          breakpoint: 1280, // xl screens
                           settings: {
                             slidesToShow: 3,
                           }
                         },
                         {
-                          breakpoint: 1024, // lg
+                          breakpoint: 1024, // lg screens
                           settings: {
                             slidesToShow: 2,
                           }
                         },
                         {
-                          breakpoint: 768, // md
+                          breakpoint: 768, // md screens
                           settings: {
                             slidesToShow: 2,
                           }
                         },
                         {
-                          breakpoint: 640, // sm
+                          breakpoint: 640, // sm screens and below (mobile)
                           settings: {
                             slidesToShow: 1,
                             centerMode: true,
-                            centerPadding: '30px',
-                            speed: 4000, // Slightly faster on mobile
+                            centerPadding: '10%',
+                            speed: 4000,
                           }
                         }
                       ]}
                       className="image-carousel mx-auto"
                     >
                       {recentImages.map((image) => (
-                        <div key={image.id}>
-                          <div className="carousel-image-container">
-                            <img 
-                              src={image.thumbUrl || image.url} 
-                              alt={image.prompt}
-                              className="carousel-image"
-                            />
+                        <div key={image.id} className="carousel-slide">
+                          <div className="carousel-image-wrapper">
+                            <div className="carousel-image-container">
+                              <img 
+                                src={image.thumbUrl || image.url} 
+                                alt={image.prompt}
+                                className="carousel-image"
+                              />
+                            </div>
                           </div>
                         </div>
                       ))}
