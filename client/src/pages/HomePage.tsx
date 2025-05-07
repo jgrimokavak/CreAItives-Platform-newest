@@ -1,7 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import Slider from 'react-slick';
+import { motion, AnimatePresence } from 'framer-motion';
+import 'slick-carousel/slick/slick.css';
+import 'slick-carousel/slick/slick-theme.css';
 import { 
   Sparkles, 
   Zap,
@@ -21,8 +25,7 @@ export default function HomePage() {
   const [recentImages, setRecentImages] = useState<GeneratedImage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [autoRotateInterval, setAutoRotateInterval] = useState<ReturnType<typeof setInterval> | null>(null);
+  const sliderRef = useRef<any>(null);
 
   // Fetch the recent images from the gallery
   useEffect(() => {
@@ -51,48 +54,95 @@ export default function HomePage() {
     fetchRecentImages();
   }, []);
 
-  // Set up auto-rotation for the image gallery
+  // Add CSS for animations and carousel
   useEffect(() => {
-    const startAutoRotation = () => {
-      const interval = setInterval(() => {
-        setCurrentImageIndex((prevIndex) => (prevIndex + 1) % recentImages.length);
-      }, 3000);
-      setAutoRotateInterval(interval);
-      return interval;
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes blob {
+        0% {
+          transform: translate(0, 0) scale(1);
+        }
+        33% {
+          transform: translate(30px, -20px) scale(1.1);
+        }
+        66% {
+          transform: translate(-20px, 20px) scale(0.9);
+        }
+        100% {
+          transform: translate(0, 0) scale(1);
+        }
+      }
+      .animate-blob {
+        animation: blob 7s infinite;
+      }
+      .animation-delay-2000 {
+        animation-delay: 2s;
+      }
+      .animation-delay-4000 {
+        animation-delay: 4s;
+      }
+      
+      /* Custom Slider Styles */
+      .image-carousel .slick-track {
+        display: flex;
+        gap: 12px;
+        margin-left: -6px;
+        margin-right: -6px;
+      }
+      
+      .image-carousel .slick-slide {
+        transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+      }
+      
+      .image-carousel .slick-slide img {
+        transform: scale(0.95);
+        transition: transform 0.7s cubic-bezier(0.19, 1, 0.22, 1);
+        backface-visibility: hidden;
+      }
+      
+      .image-carousel .slick-center img {
+        transform: scale(1);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      }
+      
+      /* Add image glint/shine effect */
+      .image-shine {
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .image-shine::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -60%;
+        width: 30%;
+        height: 200%;
+        background: linear-gradient(
+          to right,
+          rgba(255, 255, 255, 0) 0%,
+          rgba(255, 255, 255, 0.3) 50%,
+          rgba(255, 255, 255, 0) 100%
+        );
+        transform: rotate(30deg);
+        animation: shine 6s infinite;
+      }
+      
+      @keyframes shine {
+        0% {
+          left: -100%;
+        }
+        20%, 100% {
+          left: 200%;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
     };
-
-    if (recentImages.length > 0 && !isLoading) {
-      const interval = startAutoRotation();
-      return () => {
-        if (interval) clearInterval(interval);
-      };
-    }
-  }, [recentImages.length, isLoading]);
-
-  // Navigation functions for the image gallery
-  const goToNextImage = () => {
-    if (autoRotateInterval) clearInterval(autoRotateInterval);
-    setCurrentImageIndex((prevIndex) => (prevIndex + 1) % recentImages.length);
-    
-    // Restart auto-rotation after manual navigation
-    const interval = setInterval(() => {
-      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % recentImages.length);
-    }, 3000);
-    setAutoRotateInterval(interval);
-  };
-
-  const goToPrevImage = () => {
-    if (autoRotateInterval) clearInterval(autoRotateInterval);
-    setCurrentImageIndex((prevIndex) => 
-      prevIndex === 0 ? recentImages.length - 1 : prevIndex - 1
-    );
-    
-    // Restart auto-rotation after manual navigation
-    const interval = setInterval(() => {
-      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % recentImages.length);
-    }, 3000);
-    setAutoRotateInterval(interval);
-  };
+  }, []);
 
   const capabilities = [
     {
@@ -234,76 +284,115 @@ export default function HomePage() {
               </div>
 
               {!isLoading ? (
-                <div className="relative">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 relative">
-                    {/* Display 4 images at a time, starting from currentImageIndex */}
-                    {Array.from({ length: Math.min(4, recentImages.length) }).map((_, i) => {
-                      const imageIndex = (currentImageIndex + i) % recentImages.length;
-                      const image = recentImages[imageIndex];
-                      return (
-                        <Link key={image.id} to="/gallery">
-                          <div className="overflow-hidden rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow h-full group">
-                            <img 
-                              src={image.thumbUrl || image.url} 
-                              alt={image.prompt} 
-                              className="w-full h-64 object-cover transition-transform duration-500 ease-in-out group-hover:scale-105"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
-                              <p className="text-white text-sm font-medium line-clamp-2">{image.prompt}</p>
+                <div className="relative overflow-hidden">
+                  {/* Stylized gradient effects */}
+                  <div className="absolute -left-20 top-10 w-40 h-40 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+                  <div className="absolute -right-20 top-10 w-40 h-40 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+                  
+                  {/* Cool, fast, non-interactive slider */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="relative z-10"
+                  >
+                    <Slider
+                      ref={sliderRef}
+                      dots={false}
+                      infinite={true}
+                      speed={800}
+                      slidesToShow={4}
+                      slidesToScroll={1}
+                      autoplay={true}
+                      autoplaySpeed={1500}
+                      pauseOnHover={false}
+                      swipe={false}
+                      touchMove={false}
+                      arrows={false}
+                      cssEase="cubic-bezier(0.45, 0, 0.55, 1)"
+                      responsive={[
+                        {
+                          breakpoint: 1280,
+                          settings: {
+                            slidesToShow: 3,
+                          }
+                        },
+                        {
+                          breakpoint: 768,
+                          settings: {
+                            slidesToShow: 2,
+                          }
+                        },
+                        {
+                          breakpoint: 640,
+                          settings: {
+                            slidesToShow: 1,
+                          }
+                        }
+                      ]}
+                      className="image-carousel mx-auto"
+                    >
+                      {recentImages.map((image) => (
+                        <div key={image.id} className="px-2">
+                          <motion.div 
+                            whileHover={{ scale: 1.02 }} 
+                            className="relative overflow-hidden rounded-lg shadow-md group"
+                          >
+                            <div className="aspect-w-16 aspect-h-9 bg-slate-800 image-shine">
+                              <img 
+                                src={image.thumbUrl || image.url} 
+                                alt={image.prompt}
+                                className="w-full h-64 object-cover transition-transform duration-700 ease-in-out"
+                              />
                             </div>
-                          </div>
-                        </Link>
-                      );
-                    })}
-                  </div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300">
+                              <div className="absolute bottom-0 left-0 right-0 p-4">
+                                <h3 className="text-white text-sm font-medium line-clamp-2 mb-1">{image.prompt}</h3>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-white/70">{image.model}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="absolute top-2 right-2">
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-100">
+                                {image.size}
+                              </span>
+                            </div>
+                          </motion.div>
+                        </div>
+                      ))}
+                    </Slider>
+                  </motion.div>
                   
-                  {/* Navigation Controls */}
-                  <div className="flex justify-between w-full absolute top-1/2 -translate-y-1/2 pointer-events-none px-3 md:px-6">
-                    <button 
-                      className="bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full p-2 shadow-md hover:shadow-lg pointer-events-auto border border-slate-100 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      onClick={goToPrevImage}
-                      aria-label="Previous images"
-                    >
-                      <ChevronLeft className="h-5 w-5 text-slate-700" />
-                    </button>
-                    <button 
-                      className="bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full p-2 shadow-md hover:shadow-lg pointer-events-auto border border-slate-100 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      onClick={goToNextImage}
-                      aria-label="Next images"
-                    >
-                      <ChevronRight className="h-5 w-5 text-slate-700" />
-                    </button>
-                  </div>
-                  
-                  {/* Pagination Dots */}
-                  <div className="flex justify-center gap-2 mt-6">
-                    {recentImages.slice(0, Math.min(recentImages.length, 8)).map((_, index) => {
-                      // Calculate if this dot should be active
-                      // If there are less than 4 images, we want to highlight all of them
-                      // Otherwise, determine which ones are currently visible
-                      const isActive = recentImages.length <= 4 ? 
-                        true : 
-                        (
-                          index === currentImageIndex || 
-                          index === (currentImageIndex + 1) % recentImages.length || 
-                          index === (currentImageIndex + 2) % recentImages.length || 
-                          index === (currentImageIndex + 3) % recentImages.length
-                        );
-                        
-                      return (
-                        <span 
-                          key={index}
-                          className={`block h-2 w-2 rounded-full transition-colors duration-300 ${
-                            isActive ? 'bg-blue-600' : 'bg-slate-200'
-                          }`}
-                        />
-                      );
-                    })}
+                  {/* Fancy progress indicator */}
+                  <div className="mt-6 flex justify-center">
+                    <div className="w-64 h-1 bg-slate-200 rounded-full overflow-hidden">
+                      <motion.div 
+                        className="h-full bg-gradient-to-r from-blue-500 to-indigo-500"
+                        initial={{ width: "0%" }}
+                        animate={{ width: "100%" }}
+                        transition={{ 
+                          repeat: Infinity,
+                          duration: 15,
+                          ease: "linear"
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
               ) : (
                 <div className="flex items-center justify-center h-64 bg-slate-50 rounded-lg">
-                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+                  <motion.div 
+                    animate={{ 
+                      rotate: 360,
+                      scale: [1, 1.1, 1]
+                    }}
+                    transition={{ 
+                      rotate: { duration: 1.5, repeat: Infinity, ease: "linear" },
+                      scale: { duration: 1, repeat: Infinity, ease: "easeInOut" }
+                    }}
+                    className="w-12 h-12 rounded-full border-t-2 border-b-2 border-blue-600"
+                  />
                 </div>
               )}
             </div>
