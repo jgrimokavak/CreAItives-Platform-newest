@@ -782,7 +782,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       done: job.done,
       failed: job.failed,
       percent: Math.round((job.done + job.failed) / job.total * 100),
-      zipUrl: job.zipPath ? `/downloads/${path.basename(job.zipPath)}` : null
+      zipUrl: job.zipUrl || null
     };
     
     console.log(`Batch job ${jobId} status:`, response);

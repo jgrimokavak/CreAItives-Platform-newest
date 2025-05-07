@@ -21,6 +21,7 @@ export type BatchJob = {
   done: number;
   failed: number;
   zipPath?: string;
+  zipUrl?: string;
   errors: {row: number; reason: string; details?: string}[];
 };
 
@@ -234,13 +235,14 @@ export async function processBatch(id: string, rows: Row[]) {
 export function cleanupOldZips(maxAgeHours = 6) {
   console.log(`Running ZIP cleanup for files older than ${maxAgeHours} hours`);
   
+  // Clean up in /tmp directory
   try {
-    const files = fs.readdirSync("/tmp").filter(f => f.endsWith(".zip"));
-    console.log(`Found ${files.length} ZIP files in /tmp directory`);
+    const tmpFiles = fs.readdirSync("/tmp").filter(f => f.endsWith(".zip"));
+    console.log(`Found ${tmpFiles.length} ZIP files in /tmp directory`);
     
-    let cleaned = 0;
+    let tmpCleaned = 0;
     
-    files.forEach(f => {
+    tmpFiles.forEach(f => {
       const p = path.join("/tmp", f);
       
       try {
@@ -249,19 +251,54 @@ export function cleanupOldZips(maxAgeHours = 6) {
         const ageHours = ageMs / (3600 * 1000);
         
         if (ageHours > maxAgeHours) {
-          console.log(`Deleting old ZIP file: ${f} (age: ${ageHours.toFixed(2)} hours)`);
+          console.log(`Deleting old ZIP file from /tmp: ${f} (age: ${ageHours.toFixed(2)} hours)`);
           fs.unlinkSync(p);
-          cleaned++;
+          tmpCleaned++;
         } else {
-          console.log(`Keeping ZIP file: ${f} (age: ${ageHours.toFixed(2)} hours)`);
+          console.log(`Keeping ZIP file in /tmp: ${f} (age: ${ageHours.toFixed(2)} hours)`);
         }
       } catch (statError) {
         console.error(`Error checking file stats for ${p}:`, statError);
       }
     });
     
-    console.log(`ZIP cleanup completed. Deleted ${cleaned} old files.`);
+    console.log(`/tmp ZIP cleanup completed. Deleted ${tmpCleaned} old files.`);
   } catch (error) {
-    console.error("Error cleaning up old ZIP files:", error);
+    console.error("Error cleaning up old ZIP files in /tmp:", error);
+  }
+  
+  // Clean up in downloads directory
+  try {
+    const downloadsDir = path.join(process.cwd(), "downloads");
+    if (fs.existsSync(downloadsDir)) {
+      const downloadFiles = fs.readdirSync(downloadsDir).filter(f => f.endsWith(".zip"));
+      console.log(`Found ${downloadFiles.length} ZIP files in downloads directory`);
+      
+      let downloadsCleaned = 0;
+      
+      downloadFiles.forEach(f => {
+        const p = path.join(downloadsDir, f);
+        
+        try {
+          const stats = fs.statSync(p);
+          const ageMs = Date.now() - stats.mtimeMs;
+          const ageHours = ageMs / (3600 * 1000);
+          
+          if (ageHours > maxAgeHours) {
+            console.log(`Deleting old ZIP file from downloads: ${f} (age: ${ageHours.toFixed(2)} hours)`);
+            fs.unlinkSync(p);
+            downloadsCleaned++;
+          } else {
+            console.log(`Keeping ZIP file in downloads: ${f} (age: ${ageHours.toFixed(2)} hours)`);
+          }
+        } catch (statError) {
+          console.error(`Error checking file stats for ${p}:`, statError);
+        }
+      });
+      
+      console.log(`Downloads ZIP cleanup completed. Deleted ${downloadsCleaned} old files.`);
+    }
+  } catch (error) {
+    console.error("Error cleaning up old ZIP files in downloads:", error);
   }
 }
