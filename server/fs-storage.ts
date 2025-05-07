@@ -70,6 +70,43 @@ export async function persistImage(b64: string, meta: ImageMetadata, customId?: 
 
   // Use Drizzle ORM instead of Prisma to store image metadata
   try {
+    // Determine aspect ratio
+    let aspectRatio = meta.params.aspect_ratio;
+    
+    // Check if we need to calculate the aspect ratio
+    if (!aspectRatio) {
+      // Try to infer from dimensions
+      if (width && height) {
+        // Map common dimensions to standard aspect ratios
+        const ratioMap: Record<string, string> = {
+          "1024x1024": "1:1",
+          "1024x1792": "9:16",
+          "1792x1024": "16:9",
+          "1024x1536": "2:3",
+          "1536x1024": "3:2"
+        };
+        
+        aspectRatio = ratioMap[sizeStr] || "1:1";
+        
+        // For custom sizes not in our map, try to determine common ratios
+        if (!ratioMap[sizeStr]) {
+          if (width === height) {
+            aspectRatio = "1:1";
+          } else if (Math.abs(width/height - 16/9) < 0.01) {
+            aspectRatio = "16:9";
+          } else if (Math.abs(height/width - 16/9) < 0.01) {
+            aspectRatio = "9:16";
+          }
+        }
+      } else {
+        // Default to 1:1 if we can't determine
+        aspectRatio = "1:1";
+      }
+    }
+    
+    // Determine quality (if available in params)
+    const quality = meta.params.quality || null;
+    
     // Create a single object matching the schema
     const record = {
       id: id,
@@ -81,7 +118,9 @@ export async function persistImage(b64: string, meta: ImageMetadata, customId?: 
       height: heightStr,
       thumbUrl: `/uploads/${thumbPath}`,
       fullUrl: `/uploads/${fullPath}`,
-      starred: starredStr
+      starred: starredStr,
+      aspectRatio,
+      quality
     };
     
     // Insert the record properly
