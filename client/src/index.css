@@ -101,84 +101,33 @@
     }
   }
   
-  /* Modern Splide carousel styling */
+  /* Modern carousel styling - Mobile first approach */
   
-  /* Core carousel container */
-  .home-carousel {
-    margin: 0 auto;
-    width: 100%;
+  /* Hide scrollbars */
+  .scrollbar-hide {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
   }
   
-  /* Square aspect ratio container for images */
-  .carousel-item {
-    position: relative;
-    width: 100%;
-    padding: 8px;
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, and Opera */
   }
   
-  /* Inner container for image */
-  .carousel-item-inner {
-    position: relative;
-    width: 100%;
-    padding-top: 100%; /* 1:1 aspect ratio */
-    border-radius: 8px;
-    overflow: hidden; 
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    background-color: white;
+  /* Enable smooth scrolling */
+  .smooth-scroll {
+    scroll-behavior: smooth;
   }
   
-  /* Image positioning */
-  .carousel-image {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-    transition: transform 0.3s ease;
-  }
-  
-  /* Ensure splide has proper spacing */
-  .splide {
-    padding: 1rem 0;
-  }
-  
-  /* Set correct track height */
-  .splide__track {
-    overflow: visible;
-  }
-  
-  /* Fix for mobile browsers */
-  @media (max-width: 640px) {
-    .carousel-item {
-      padding: 4px;
-    }
-    
-    .carousel-item-inner {
-      border-radius: 6px;
-    }
-  }
-  
-  /* Create smoother animations on all devices */
-  .splide__track {
-    will-change: transform;
+  /* Hardware acceleration for smoother animations */
+  .hardware-accelerated {
     transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
   }
   
-  /* Remove pagination for cleaner look */
-  .splide__pagination {
-    display: none;
-  }
-  
-  /* Auto-animation control for infinite scrolling */
-  .auto-scroll .splide__slide {
-    transition: opacity 0.3s;
-  }
-  
-  /* Special optimizations for touch devices */
+  /* Special optimizations for iOS */
   @supports (-webkit-touch-callout: none) {
-    .splide__track {
+    .hardware-accelerated {
       -webkit-overflow-scrolling: touch;
     }
   }

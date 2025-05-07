@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Splide, SplideSlide, SplideTrack } from '@splidejs/react-splide';
 import { motion } from 'framer-motion';
 import { 
   Sparkles, 
@@ -17,9 +16,6 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { GeneratedImage } from '@/types/image';
-
-// Import Splide base CSS
-import '@splidejs/splide/dist/css/splide.min.css';
 
 export default function HomePage() {
   const [recentImages, setRecentImages] = useState<GeneratedImage[]>([]);
@@ -53,31 +49,47 @@ export default function HomePage() {
     fetchRecentImages();
   }, []);
   
-  // Splide carousel options
-  const splideOptions = {
-    type: 'loop',
-    gap: '0rem',
-    perPage: 5,
-    arrows: false,
-    pagination: false,
-    autoplay: true,
-    interval: 0, // Continuous movement
-    speed: 7000, // Slow speed for smooth scrolling
-    pauseOnHover: false,
-    pauseOnFocus: false,
-    resetProgress: false,
-    easing: 'linear',
-    drag: true,
-    snap: false,
-    perMove: 1,
-    breakpoints: {
-      1536: { perPage: 4 },
-      1280: { perPage: 3 },
-      1024: { perPage: 3 },
-      768: { perPage: 2 },
-      640: { perPage: 1, gap: '1rem' }
-    }
-  };
+  // Track scroll position for auto-scrolling effect
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    // Create simple auto-scrolling effect with requestAnimationFrame
+    if (!scrollContainerRef.current) return;
+    
+    let animationId: number;
+    let startTime: number;
+    
+    const scrollSpeed = 0.3; // pixels per frame - extremely slow and smooth
+    let currentPosition = 0;
+    
+    const animate = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      if (!scrollContainerRef.current) return;
+      
+      // Increment position
+      currentPosition += scrollSpeed;
+      
+      // Reset when we've scrolled past half the width to create seamless loop
+      const containerWidth = scrollContainerRef.current.scrollWidth;
+      if (currentPosition >= containerWidth / 2) {
+        currentPosition = 0;
+      }
+      
+      // Apply scroll position
+      scrollContainerRef.current.scrollLeft = currentPosition;
+      
+      // Continue animation
+      animationId = requestAnimationFrame(animate);
+    };
+    
+    // Start animation
+    animationId = requestAnimationFrame(animate);
+    
+    // Cleanup function
+    return () => {
+      cancelAnimationFrame(animationId);
+    };
+  }, [recentImages]);
 
   // Platform capabilities
   const capabilities = [
@@ -206,7 +218,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Recent Gallery Section - Using Splide for robustness */}
+        {/* Recent Gallery Section - Simple CSS Grid Approach */}
         {recentImages.length > 0 && (
           <section className="py-14 px-4 sm:px-6 lg:px-8 bg-white border-t">
             <div className="container mx-auto max-w-7xl">
@@ -220,30 +232,40 @@ export default function HomePage() {
               </div>
 
               {!isLoading ? (
-                <div className="home-carousel relative w-full">
-                  <Splide
-                    options={splideOptions}
-                    className="auto-scroll"
-                    hasTrack={false}
-                    aria-label="Recent creations"
+                <div className="relative overflow-hidden">
+                  {/* Doubled images for seamless scrolling */}
+                  <div 
+                    ref={scrollContainerRef} 
+                    className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide smooth-scroll hardware-accelerated"
                   >
-                    <div className="splide__track">
-                      <SplideTrack>
-                        {recentImages.map((image) => (
-                          <SplideSlide key={image.id} className="carousel-item">
-                            <div className="carousel-item-inner">
-                              <img 
-                                src={image.thumbUrl || image.url} 
-                                alt={image.prompt}
-                                className="carousel-image"
-                                loading="lazy"
-                              />
-                            </div>
-                          </SplideSlide>
-                        ))}
-                      </SplideTrack>
-                    </div>
-                  </Splide>
+                    {/* First set of images */}
+                    {recentImages.map((image) => (
+                      <div key={image.id} className="flex-none w-64 sm:w-56 md:w-60 lg:w-64">
+                        <div className="relative pb-[100%] overflow-hidden rounded-lg shadow-sm bg-white">
+                          <img 
+                            src={image.thumbUrl || image.url} 
+                            alt={image.prompt}
+                            className="absolute inset-0 w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {/* Duplicate set for infinite scroll effect */}
+                    {recentImages.map((image) => (
+                      <div key={`dup-${image.id}`} className="flex-none w-64 sm:w-56 md:w-60 lg:w-64">
+                        <div className="relative pb-[100%] overflow-hidden rounded-lg shadow-sm bg-white">
+                          <img 
+                            src={image.thumbUrl || image.url} 
+                            alt={image.prompt}
+                            className="absolute inset-0 w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ) : (
                 <div className="flex items-center justify-center h-64 bg-slate-50 rounded-lg">
