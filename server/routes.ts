@@ -663,6 +663,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Add upscale routes
   app.use('/api', upscaleRoutes);
   
+  // Add prompt enhancement routes
+  app.use('/api', enhancePromptRouter);
+  
   // Car generation routes
   app.get("/api/cars/makes", async (_req, res) => res.json(await listMakes()));
   app.get("/api/cars/models", async (req, res) => res.json(await listModels(req.query.make as string)));
