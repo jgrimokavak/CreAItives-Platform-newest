@@ -24,14 +24,14 @@ export default function HomePage() {
       title: 'Text-to-Image',
       description: 'Transform your ideas into stunning images with 3 powerful AI models',
       icon: <ImageIcon className="h-5 w-5 text-white" />,
-      to: '/create?mode=generate',
+      to: '/create',
       bgColor: 'bg-red-400',
     },
     {
       title: 'Image Editing',
       description: 'Erase, replace, and remix existing images with precision',
       icon: <PenTool className="h-5 w-5 text-white" />,
-      to: '/create?mode=edit',
+      to: '/create',
       bgColor: 'bg-blue-400',
     },
     {
@@ -45,7 +45,7 @@ export default function HomePage() {
       title: 'Car Generator',
       description: 'Create realistic car renders with simple requests or CSV batches',
       icon: <CarFront className="h-5 w-5 text-white" />,
-      to: '/car',
+      to: '/cars',
       bgColor: 'bg-green-400',
     },
     {
@@ -58,7 +58,7 @@ export default function HomePage() {
     {
       title: 'AI Prompt Helper',
       description: 'Smart autocompletes and prompt polish to perfect your ideas',
-      icon: <Wand2 className="h-5 w-5 text-white" />,
+      icon: <Sparkles className="h-5 w-5 text-white" />,
       to: '/create',
       bgColor: 'bg-pink-400',
     },
