@@ -22,7 +22,7 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [autoRotateInterval, setAutoRotateInterval] = useState<NodeJS.Timeout | null>(null);
+  const [autoRotateInterval, setAutoRotateInterval] = useState<ReturnType<typeof setInterval> | null>(null);
 
   // Fetch the recent images from the gallery
   useEffect(() => {
@@ -242,12 +242,15 @@ export default function HomePage() {
                       const image = recentImages[imageIndex];
                       return (
                         <Link key={image.id} to="/gallery">
-                          <div className="overflow-hidden rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow h-full">
+                          <div className="overflow-hidden rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow h-full group">
                             <img 
                               src={image.thumbUrl || image.url} 
                               alt={image.prompt} 
-                              className="w-full h-64 object-cover"
+                              className="w-full h-64 object-cover transition-transform duration-500 ease-in-out group-hover:scale-105"
                             />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                              <p className="text-white text-sm font-medium line-clamp-2">{image.prompt}</p>
+                            </div>
                           </div>
                         </Link>
                       );
@@ -255,16 +258,18 @@ export default function HomePage() {
                   </div>
                   
                   {/* Navigation Controls */}
-                  <div className="flex justify-between w-full absolute top-1/2 -translate-y-1/2 pointer-events-none">
+                  <div className="flex justify-between w-full absolute top-1/2 -translate-y-1/2 pointer-events-none px-3 md:px-6">
                     <button 
-                      className="bg-white rounded-full p-2 shadow-md pointer-events-auto"
+                      className="bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full p-2 shadow-md hover:shadow-lg pointer-events-auto border border-slate-100 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       onClick={goToPrevImage}
+                      aria-label="Previous images"
                     >
                       <ChevronLeft className="h-5 w-5 text-slate-700" />
                     </button>
                     <button 
-                      className="bg-white rounded-full p-2 shadow-md pointer-events-auto"
+                      className="bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full p-2 shadow-md hover:shadow-lg pointer-events-auto border border-slate-100 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       onClick={goToNextImage}
+                      aria-label="Next images"
                     >
                       <ChevronRight className="h-5 w-5 text-slate-700" />
                     </button>
@@ -272,16 +277,28 @@ export default function HomePage() {
                   
                   {/* Pagination Dots */}
                   <div className="flex justify-center gap-2 mt-6">
-                    {recentImages.slice(0, Math.min(recentImages.length, 8)).map((_, index) => (
-                      <span 
-                        key={index}
-                        className={`block h-2 w-2 rounded-full ${
-                          index >= currentImageIndex && index < currentImageIndex + 4 
-                            ? 'bg-blue-600' 
-                            : 'bg-slate-200'
-                        }`}
-                      />
-                    ))}
+                    {recentImages.slice(0, Math.min(recentImages.length, 8)).map((_, index) => {
+                      // Calculate if this dot should be active
+                      // If there are less than 4 images, we want to highlight all of them
+                      // Otherwise, determine which ones are currently visible
+                      const isActive = recentImages.length <= 4 ? 
+                        true : 
+                        (
+                          index === currentImageIndex || 
+                          index === (currentImageIndex + 1) % recentImages.length || 
+                          index === (currentImageIndex + 2) % recentImages.length || 
+                          index === (currentImageIndex + 3) % recentImages.length
+                        );
+                        
+                      return (
+                        <span 
+                          key={index}
+                          className={`block h-2 w-2 rounded-full transition-colors duration-300 ${
+                            isActive ? 'bg-blue-600' : 'bg-slate-200'
+                          }`}
+                        />
+                      );
+                    })}
                   </div>
                 </div>
               ) : (
