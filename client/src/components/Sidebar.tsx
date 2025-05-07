@@ -28,7 +28,7 @@ const SidebarLink = ({ to, icon, children }: SidebarLinkProps) => {
     <Link to={to}>
       <div
         className={cn(
-          'flex items-center space-x-3 px-4 py-3 rounded-md text-sm font-medium cursor-pointer transition-colors',
+          'flex items-center space-x-3 px-3 py-3 rounded-md text-sm font-medium cursor-pointer transition-colors',
           isActive
             ? 'bg-primary/10 text-primary hover:bg-primary/15'
             : 'text-slate-600 hover:bg-slate-100'
@@ -71,11 +71,11 @@ const Sidebar = ({ children }: SidebarProps) => {
           'flex flex-col'
         )}
       >
-        <div className="p-4 border-b border-slate-200 flex items-center">
-          <img src={kavakLogo} alt="Kavak Logo" className="h-6" />
+        <div className="px-6 py-5 border-b border-slate-200 flex items-center">
+          <img src={kavakLogo} alt="Kavak Logo" className="h-6 ml-1" />
         </div>
         
-        <nav className="flex-1 p-4 space-y-1">
+        <nav className="flex-1 px-6 py-4 space-y-1">
           <SidebarLink to="/home" icon={<Home size={18} />}>
             Home
           </SidebarLink>
