@@ -714,27 +714,44 @@ const CarCreationPage: React.FC = () => {
                           value={form.watch('aspect_ratio')}
                           onValueChange={(value) => setValue('aspect_ratio', value as any)}
                         >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select aspect ratio" />
+                          <SelectTrigger className="h-10">
+                            <span className="flex items-center">
+                              {form.watch('aspect_ratio') === '4:3' && (
+                                <div className="w-7 h-5 bg-primary/20 rounded mr-2"></div>
+                              )}
+                              {form.watch('aspect_ratio') === '16:9' && (
+                                <div className="w-7 h-4 bg-primary/20 rounded mr-2"></div>
+                              )}
+                              {form.watch('aspect_ratio') === '1:1' && (
+                                <div className="w-5 h-5 bg-primary/20 rounded mr-2"></div>
+                              )}
+                              {form.watch('aspect_ratio') === '9:16' && (
+                                <div className="w-4 h-7 bg-primary/20 rounded mr-2"></div>
+                              )}
+                              {form.watch('aspect_ratio') === '3:4' && (
+                                <div className="w-4 h-5 bg-primary/20 rounded mr-2"></div>
+                              )}
+                              <SelectValue placeholder="Select aspect ratio" />
+                            </span>
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="4:3" className="flex items-center">
+                            <SelectItem value="4:3" className="flex items-center h-9">
                               <div className="w-8 h-6 bg-primary/20 rounded mr-2"></div>
                               <span>4:3 (Classic)</span>
                             </SelectItem>
-                            <SelectItem value="16:9" className="flex items-center">
+                            <SelectItem value="16:9" className="flex items-center h-9">
                               <div className="w-8 h-4.5 bg-primary/20 rounded mr-2"></div>
                               <span>16:9 (Landscape)</span>
                             </SelectItem>
-                            <SelectItem value="1:1" className="flex items-center">
+                            <SelectItem value="1:1" className="flex items-center h-9">
                               <div className="w-6 h-6 bg-primary/20 rounded mr-2"></div>
                               <span>1:1 (Square)</span>
                             </SelectItem>
-                            <SelectItem value="9:16" className="flex items-center">
+                            <SelectItem value="9:16" className="flex items-center h-9">
                               <div className="w-4.5 h-8 bg-primary/20 rounded mr-2"></div>
                               <span>9:16 (Portrait)</span>
                             </SelectItem>
-                            <SelectItem value="3:4" className="flex items-center">
+                            <SelectItem value="3:4" className="flex items-center h-9">
                               <div className="w-4.5 h-6 bg-primary/20 rounded mr-2"></div>
                               <span>3:4 (Portrait)</span>
                             </SelectItem>
