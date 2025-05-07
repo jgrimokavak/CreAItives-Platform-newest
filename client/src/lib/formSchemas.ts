@@ -54,4 +54,5 @@ export type GenericFormValues = z.infer<typeof commonSchema> & {
   aspect_ratio?: string;
   negative_prompt?: string;
   seed?: number;
+  kavakStyle?: boolean;
 };
