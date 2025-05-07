@@ -1033,12 +1033,16 @@ const CarCreationPage: React.FC = () => {
               ) : (
                 <div className="bg-card border rounded-lg shadow-sm p-6">
                   <div className="mb-6">
-                    <div className="flex items-center gap-3 mb-3">
+                    <div className="flex items-center gap-3 mb-2">
                       <div className="bg-primary/10 p-2 rounded-full">
                         <CarFront className="h-6 w-6 text-primary" />
                       </div>
                       <h3 className="text-lg font-medium text-[#0C0A09]">Batch Car Generation</h3>
                     </div>
+                    
+                    <p className="text-sm text-muted-foreground mb-4 ml-1">
+                      Upload a CSV file to create multiple car images at once. Ideal for inventory displays and marketing.
+                    </p>
                     
                     <div className="bg-blue-50 border border-blue-100 rounded-md p-4 mb-4 flex gap-3 items-center">
                       <div className="bg-blue-100 p-2 rounded-full flex-shrink-0">
@@ -1074,11 +1078,7 @@ const CarCreationPage: React.FC = () => {
                     </div>
                     
                     <div className="flex flex-col gap-3">
-                      <p className="text-muted-foreground">
-                        Generate multiple car images in one batch by uploading a CSV file with your specifications.
-                        Perfect for creating images for inventory, marketing materials, or pre-visualizing a series of vehicle configurations.
-                      </p>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-1">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div className="flex items-center gap-2 text-sm">
                           <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">1</div>
                           <span>Prepare your CSV file</span>
