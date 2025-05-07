@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, Loader2 } from 'lucide-react';
+import { Sparkles, Loader2, ChevronDown, ChevronRight } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
 // Interface for prompt suggestions
@@ -46,6 +46,8 @@ export function AISuggestionBadges({
 }: AISuggestionBadgesProps) {
   // Track which suggestions have been selected (to remove them)
   const [selectedSuggestions, setSelectedSuggestions] = useState<Set<string>>(new Set());
+  // Control whether the suggestions panel is expanded or collapsed
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
   
   // Handle suggestion selection
   const handleSelect = (suggestion: string): void => {
@@ -60,77 +62,95 @@ export function AISuggestionBadges({
     onSuggestionSelect(suggestion);
   };
   
+  // Toggle expand/collapse state
+  const toggleExpanded = () => {
+    setIsExpanded(!isExpanded);
+  };
+  
   return (
-    <div className="space-y-4 mt-4 p-5 relative overflow-hidden bg-gradient-to-r from-violet-50 via-indigo-50 to-purple-50 rounded-lg border border-purple-200 shadow-sm">
-      {/* Header */}
-      <div>
-        <div className="flex items-center justify-between">
-          <h3 className="text-base font-medium text-purple-800 flex items-center">
-            <span className="bg-gradient-to-r from-purple-500 to-indigo-500 p-1.5 rounded-md mr-2 shadow-sm">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-white">
-                <path d="M12 1V5M12 19V23M4.22 4.22L7.05 7.05M16.95 16.95L19.78 19.78M1 12H5M19 12H23M4.22 19.78L7.05 16.95M16.95 7.05L19.78 4.22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </span>
-            AI-powered Prompt Suggestions
-          </h3>
-          <div className="inline-flex items-center rounded-full bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700">
+    <div className="mt-4 relative overflow-hidden bg-gradient-to-r from-violet-50 via-indigo-50 to-purple-50 rounded-lg border border-purple-200 shadow-sm">
+      {/* Clickable Header */}
+      <div 
+        className="p-5 flex items-center justify-between cursor-pointer"
+        onClick={toggleExpanded}
+      >
+        <h3 className="text-base font-medium text-purple-800 flex items-center">
+          <span className="bg-gradient-to-r from-purple-500 to-indigo-500 p-1.5 rounded-md mr-2 shadow-sm">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-white">
+              <path d="M12 1V5M12 19V23M4.22 4.22L7.05 7.05M16.95 16.95L19.78 19.78M1 12H5M19 12H23M4.22 19.78L7.05 16.95M16.95 7.05L19.78 4.22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </span>
+          AI-powered Prompt Suggestions
+        </h3>
+        <div className="flex items-center">
+          <div className="inline-flex items-center rounded-full bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700 mr-2">
             <span className="h-1.5 w-1.5 rounded-full bg-purple-500 mr-1 animate-pulse"></span>
             Active
           </div>
+          {isExpanded ? 
+            <ChevronDown className="h-5 w-5 text-purple-700" /> : 
+            <ChevronRight className="h-5 w-5 text-purple-700" />
+          }
         </div>
-        <p className="text-xs text-slate-600 mt-1 pl-9">
-          Click any suggestion to enhance your prompt. Suggestions are tailored to your input and selected model.
-        </p>
       </div>
       
-      {/* Render only visible categories */}
-      {visibleCategories.map(category => {
-        const values = suggestions[category];
-        // Filter out suggestions that have already been selected
-        const availableSuggestions = values.filter((v: string) => !selectedSuggestions.has(v));
-        
-        // Skip empty categories
-        if (availableSuggestions.length === 0 && !isLoading) return null;
-        
-        return (
-          <div key={category}>
-            <div className="flex items-center mb-2">
-              <h4 className="text-sm font-medium text-purple-700">{categoryLabels[category]}</h4>
-              {isLoading && (
-                <Loader2 className="ml-2 h-3 w-3 animate-spin text-purple-600" />
-              )}
-            </div>
+      {/* Collapsible Content */}
+      {isExpanded && (
+        <div className="px-5 pb-5 space-y-4">
+          <p className="text-xs text-slate-600 pl-9">
+            Click any suggestion to enhance your prompt. Suggestions are tailored to your input and selected model.
+          </p>
+          
+          {/* Render only visible categories */}
+          {visibleCategories.map(category => {
+            const values = suggestions[category];
+            // Filter out suggestions that have already been selected
+            const availableSuggestions = values.filter((v: string) => !selectedSuggestions.has(v));
             
-            <div className="flex flex-wrap gap-2">
-              {isLoading && availableSuggestions.length === 0 ? (
-                // Loading placeholders
-                Array(3).fill(0).map((_, i) => (
-                  <div 
-                    key={`loading-${i}`}
-                    className="h-7 bg-purple-100/80 animate-pulse rounded-full w-20"
-                  />
-                ))
-              ) : (
-                // Actual suggestion badges (without sparkle icon)
-                availableSuggestions.map((suggestion: string) => (
-                  <button
-                    key={suggestion}
-                    onClick={() => handleSelect(suggestion)}
-                    className={cn(
-                      "px-3 py-1 rounded-full text-sm font-medium transition-all",
-                      "bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-800 border border-purple-200",
-                      "hover:from-purple-200 hover:to-indigo-200 hover:border-purple-300 hover:shadow-sm",
-                      "active:scale-95 focus:outline-none focus:ring-2 focus:ring-purple-300"
-                    )}
-                  >
-                    {suggestion}
-                  </button>
-                ))
-              )}
-            </div>
-          </div>
-        );
-      })}
+            // Skip empty categories
+            if (availableSuggestions.length === 0 && !isLoading) return null;
+            
+            return (
+              <div key={category}>
+                <div className="flex items-center mb-2">
+                  <h4 className="text-sm font-medium text-purple-700">{categoryLabels[category]}</h4>
+                  {isLoading && (
+                    <Loader2 className="ml-2 h-3 w-3 animate-spin text-purple-600" />
+                  )}
+                </div>
+                
+                <div className="flex flex-wrap gap-2">
+                  {isLoading && availableSuggestions.length === 0 ? (
+                    // Loading placeholders
+                    Array(3).fill(0).map((_, i) => (
+                      <div 
+                        key={`loading-${i}`}
+                        className="h-7 bg-purple-100/80 animate-pulse rounded-full w-20"
+                      />
+                    ))
+                  ) : (
+                    // Actual suggestion badges (without sparkle icon)
+                    availableSuggestions.map((suggestion: string) => (
+                      <button
+                        key={suggestion}
+                        onClick={() => handleSelect(suggestion)}
+                        className={cn(
+                          "px-3 py-1 rounded-full text-sm font-medium transition-all",
+                          "bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-800 border border-purple-200",
+                          "hover:from-purple-200 hover:to-indigo-200 hover:border-purple-300 hover:shadow-sm",
+                          "active:scale-95 focus:outline-none focus:ring-2 focus:ring-purple-300"
+                        )}
+                      >
+                        {suggestion}
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
