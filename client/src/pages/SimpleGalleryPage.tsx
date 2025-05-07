@@ -828,7 +828,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
                             onClick={() => handleBulkAction('star')}
                             className="h-9 w-9 p-0"
                           >
-                            <Star className="h-4 w-4" />
+                            <Star className="h-4 w-4 fill-current text-yellow-400" />
                             <span className="sr-only">Star</span>
                           </Button>
                         </TooltipTrigger>
@@ -845,7 +845,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
                             onClick={() => handleBulkAction('unstar')}
                             className="h-9 w-9 p-0"
                           >
-                            <Star className="h-4 w-4 fill-current text-yellow-400" />
+                            <Star className="h-4 w-4" />
                             <span className="sr-only">Unstar</span>
                           </Button>
                         </TooltipTrigger>
