@@ -20,7 +20,7 @@ import ModelInfoCard from "@/components/ModelInfoCard";
 import DynamicForm from "@/components/DynamicForm";
 import { Label } from "@/components/ui/label";
 import { useHotkeys } from "react-hotkeys-hook";
-import { PromptDropdowns, PromptSuggestions, emptySuggestions } from "@/components/PromptDropdowns";
+import { AISuggestionBadges } from "@/components/AISuggestionBadges";
 import { usePromptSuggestions } from "@/hooks/usePromptSuggestions";
 
 // Component to manage prompt suggestions
@@ -38,17 +38,11 @@ function PromptSuggestionsSection({
   // Use our custom hook to fetch suggestions
   const { suggestions, isLoading } = usePromptSuggestions(prompt, modelKey);
   
-  // Handle suggestion selection
-  const handleSuggestionSelect = (field: keyof PromptSuggestions, value: string) => {
-    onSuggestionSelect(value);
-  };
-  
   return (
-    <div className="mt-4">
-      <h4 className="text-sm font-medium text-muted-foreground mb-2">Suggested Style Details</h4>
-      <PromptDropdowns 
+    <div>
+      <AISuggestionBadges 
         suggestions={suggestions}
-        onChange={handleSuggestionSelect}
+        onSuggestionSelect={onSuggestionSelect}
         isLoading={isLoading}
       />
     </div>
