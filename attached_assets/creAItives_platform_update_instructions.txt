@@ -1,0 +1,91 @@
+Make these changes:
+
+---
+
+Typography and Text Layout
+
+1. Main Title Styling
+- Keep the title text as: "CreAItives Platform 2.0"
+- Apply a gradient with the color #2563EB (Tailwind blue-600) only to the word "CreAItives"
+- Apply bold black (#000000) to "Platform 2.0"
+- Font weight:
+  - "CreAItives" → font-weight: 700
+  - "Platform 2.0" → font-weight: 800
+- Font size: 32px (2rem)
+- Bottom margin: at least 32px between the title and subtitle
+
+2. Subtitle Formatting
+- Rewrite the single-line subtitle to be displayed in two distinct lines using a manual line break (<br> or \n) at this point:
+  Transform your creative vision into stunning AI-generated
+  imagery with our powerful suite of creation tools.
+- Font size: 16px (1rem)
+- Font color: #4B5563 (Tailwind gray-700)
+- Line height: 1.5 (for improved readability)
+- Font weight: 400 (regular)
+- No italics, all text left-aligned
+- Max-width: constrain text block to 700px to ensure proper wrapping
+
+---
+
+Buttons Styling
+
+3. Primary Button (“Get Started”)
+- Text: "Get Started"
+- Background color: #1E40AF (Tailwind blue-900)
+- Text color: #FFFFFF
+- Padding: 12px 24px
+- Border radius: 12px (not the default 4px or 6px)
+- Font size: 16px, weight 600
+- Add hover effect:
+  - Slight box-shadow (0px 2px 6px rgba(0,0,0,0.15))
+  - Darken background to #1E3A8A on hover
+- Add a right arrow icon with margin-left: 8px (keep it inline)
+
+4. Secondary Button (“Browse Gallery”)
+- Text: "Browse Gallery"
+- Background color: #FFFFFF
+- Border: 1px solid #D1D5DB (Tailwind gray-300)
+- Text color: #2563EB
+- Border radius: 12px
+- Padding: 12px 24px
+- Font size: 16px, weight 500
+- Hover state:
+  - Light gray background (#F3F4F6)
+  - Cursor changes to pointer
+
+---
+
+Feature Icons Section (Fast Generation, High Resolution, Smart Prompts)
+
+5. Icon + Label Layout
+- Use a flex container with justify-between or gap: 64px to space all three feature blocks evenly across one row
+- Each feature block contains:
+  - An icon (SVG or PNG) aligned vertically centered with its text
+  - A label (e.g., "Fast Generation") directly under or to the right of the icon
+
+6. Icon Styling
+- Icon size: 20px × 20px
+- Add right margin (8px) if icon is inline with text
+- Color: #2563EB (to match branding) or monochrome depending on brand style
+
+7. Text Styling (Labels)
+- Font size: 14px
+- Font weight: 500
+- Text color: #4B5563
+- Line height: 1.5
+
+8. Spacing Above Section
+- Add top margin of 24px between the button row and the features section
+
+---
+
+Layout and Container Settings
+
+9. Overall Container
+- Use a container with max-width: 1100px and margin: 0 auto for horizontal centering
+- Apply padding: 60px left and right, 40px top and bottom
+- Background: use a gradient from #F9FBFF (top) to #F3F7FE (bottom)
+- All text and buttons must be left-aligned within the container
+
+10. Vertical Alignment
+- Use flex or grid with align-items: center or place-items: center to vertically align the content block in the middle of the screen (if layout is split horizontally)
