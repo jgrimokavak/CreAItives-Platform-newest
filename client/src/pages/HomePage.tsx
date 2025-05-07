@@ -218,35 +218,53 @@ export default function HomePage() {
                       draggable={true} // Can be dragged on desktop
                       responsive={[
                         {
+                          breakpoint: 3000, // Above 1536px
+                          settings: {
+                            slidesToShow: 5,
+                            slidesToScroll: 1,
+                            infinite: true,
+                          }
+                        },
+                        {
                           breakpoint: 1536, // 2xl screens
                           settings: {
                             slidesToShow: 4,
+                            slidesToScroll: 1,
+                            infinite: true,
                           }
                         },
                         {
                           breakpoint: 1280, // xl screens
                           settings: {
                             slidesToShow: 3,
+                            slidesToScroll: 1,
+                            infinite: true,
                           }
                         },
                         {
                           breakpoint: 1024, // lg screens
                           settings: {
                             slidesToShow: 2,
+                            slidesToScroll: 1,
+                            infinite: true,
                           }
                         },
                         {
                           breakpoint: 768, // md screens
                           settings: {
                             slidesToShow: 2,
+                            slidesToScroll: 1,
+                            infinite: true,
                           }
                         },
                         {
                           breakpoint: 640, // sm screens and below (mobile)
                           settings: {
                             slidesToShow: 1,
+                            slidesToScroll: 1,
                             centerMode: true,
-                            centerPadding: '10%',
+                            centerPadding: '20px',
+                            infinite: true,
                             speed: 4000,
                           }
                         }

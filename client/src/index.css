@@ -170,34 +170,38 @@
   /* Mobile screens optimization (default) */
   .carousel-slide {
     width: 100%;
-    max-width: 280px;
-    margin: 0 auto;
+    max-width: 100%;
+    padding: 0 8px;
   }
 
   /* Small devices (640px and up) */
   @media (min-width: 640px) {
     .carousel-slide {
-      max-width: 180px;
+      max-width: 300px;
     }
     .image-carousel .slick-list {
-      margin: 0 -10px;
-    }
-    .image-carousel .slick-slide {
-      padding: 0 10px;
+      margin: 0 -8px;
     }
   }
 
   /* Medium devices (768px and up) */
   @media (min-width: 768px) {
     .carousel-slide {
-      max-width: 180px;
+      max-width: 320px;
     }
   }
 
   /* Large devices (1024px and up) */
   @media (min-width: 1024px) {
     .carousel-slide {
-      max-width: 200px;
+      max-width: 340px;
+    }
+  }
+
+  /* XL devices (1280px and up) */
+  @media (min-width: 1280px) {
+    .carousel-slide {
+      max-width: 360px;
     }
   }
 
