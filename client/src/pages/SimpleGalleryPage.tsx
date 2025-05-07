@@ -9,7 +9,7 @@ import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from '@/comp
 import { useToast } from '@/hooks/use-toast';
 import { useDebounce } from '@/hooks/useDebounce';
 import { apiRequest, queryClient } from '@/lib/queryClient';
-import { Loader2, FolderOpen, Star, Trash2, RotateCcw, Trash, Search, X } from 'lucide-react';
+import { Loader2, FolderOpen, Star, Trash2, RotateCcw, Trash, Search, X, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ImageCard from '@/components/ImageCard';
 
