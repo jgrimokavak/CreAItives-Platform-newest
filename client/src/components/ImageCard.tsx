@@ -24,7 +24,7 @@ interface ImageCardProps {
   onDelete?: (id: string, permanent?: boolean) => void;
   onStar?: (id: string, status: boolean) => void;
   onRestore?: (id: string) => void;
-  onSelect?: (id: string) => void;
+  onSelect?: (id: string, shiftKey?: boolean) => void;
   onCopyPrompt?: (prompt: string) => void;  // Add handler for copying the prompt
   onUpscale?: (image: GeneratedImage) => void; // Handler for upscaling
   onClick?: (e?: React.MouseEvent) => void;  // Add onClick handler for full-size preview
@@ -90,7 +90,7 @@ export default function ImageCard({
             )}
             onClick={(e) => {
               e.stopPropagation();
-              onSelect(image.id);
+              onSelect(image.id, e.shiftKey);
             }}
           >
             <div className="relative w-5 h-5 flex items-center justify-center">
@@ -99,7 +99,7 @@ export default function ImageCard({
                 checked={selected}
                 onChange={(e) => {
                   e.stopPropagation();
-                  onSelect(image.id);
+                  onSelect(image.id, e.nativeEvent.shiftKey);
                 }}
                 className={cn(
                   "h-4 w-4 rounded-sm border-2 cursor-pointer transition-colors",

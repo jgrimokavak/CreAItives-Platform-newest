@@ -1105,7 +1105,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
             onRestore={(id) => handleTrash(id, true)}
             onCopyPrompt={handleCopyPrompt}
             onUpscale={() => handleUpscale(image)}
-            onSelect={toggleSelection}
+            onSelect={(id, shiftKey = false) => toggleSelection(id, shiftKey)}
             selected={selectedIds.includes(image.id)}
             selectionMode={selectionMode}
             onClick={(e) => {
