@@ -105,38 +105,84 @@
   .image-carousel {
     width: 100%;
     margin: 0 auto;
-    padding: 0 15px;
+    overflow: hidden;
   }
   
-  /* Ensure images maintain aspect ratio across all devices */
-  .image-carousel .slick-slide {
-    height: auto;
-    opacity: 0.85;
-    transition: opacity 0.3s ease;
+  /* Core slider elements */
+  .image-carousel .slick-list {
+    overflow: visible;
   }
   
-  /* Maintain consistent height across all screen sizes */
   .image-carousel .slick-track {
     display: flex;
     align-items: center;
   }
   
-  /* Ensure images don't get too small on mobile */
-  @media (max-width: 640px) {
-    .image-carousel .slick-slide > div {
-      max-width: 90vw;
-      margin: 0 auto;
-    }
+  /* Individual slide styles */
+  .image-carousel .slick-slide {
+    height: auto;
+    opacity: 0.85;
+    transition: opacity 0.3s ease;
+    padding: 0 10px;
   }
   
   .image-carousel .slick-slide.slick-active {
     opacity: 1;
   }
   
-  /* CSS for making sure the carousel is responsive */
-  @media (max-width: 768px) {
-    .image-carousel {
-      padding: 0 10px;
+  /* Image container style */
+  .carousel-image-container {
+    aspect-ratio: 1/1;
+    overflow: hidden;
+    border-radius: 0.5rem;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin: 0 auto;
+  }
+  
+  /* Image style */
+  .carousel-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  /* Responsive adjustments */
+  /* Large screens */
+  @media (min-width: 1536px) {
+    .carousel-image-container {
+      max-width: 220px;
+    }
+  }
+  
+  /* Medium-large screens */
+  @media (max-width: 1535px) and (min-width: 1024px) {
+    .carousel-image-container {
+      max-width: 200px;
+    }
+  }
+  
+  /* Medium screens */
+  @media (max-width: 1023px) and (min-width: 768px) {
+    .carousel-image-container {
+      max-width: 180px;
+    }
+  }
+  
+  /* Small screens */
+  @media (max-width: 767px) and (min-width: 640px) {
+    .carousel-image-container {
+      max-width: 160px;
+    }
+  }
+  
+  /* Extra small screens */
+  @media (max-width: 639px) {
+    .carousel-image-container {
+      max-width: 220px;
+    }
+    .image-carousel .slick-slide {
+      padding: 0 5px;
     }
   }
 }

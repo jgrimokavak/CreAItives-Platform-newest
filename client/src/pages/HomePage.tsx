@@ -54,31 +54,7 @@ export default function HomePage() {
     fetchRecentImages();
   }, []);
 
-  // Minimal CSS for a smooth carousel
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.textContent = `
-      /* Minimalistic Slider Styles */
-      .image-carousel .slick-track {
-        display: flex;
-        gap: 8px;
-      }
-      
-      .image-carousel .slick-slide {
-        opacity: 0.85;
-        transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-      }
-      
-      .image-carousel .slick-active {
-        opacity: 1;
-      }
-    `;
-    document.head.appendChild(style);
-    
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
+  // No need for inline styles as we use CSS file now
 
   const capabilities = [
     {
@@ -253,7 +229,7 @@ export default function HomePage() {
                         {
                           breakpoint: 1024, // lg
                           settings: {
-                            slidesToShow: 3,
+                            slidesToShow: 2,
                           }
                         },
                         {
@@ -266,6 +242,8 @@ export default function HomePage() {
                           breakpoint: 640, // sm
                           settings: {
                             slidesToShow: 1,
+                            centerMode: true,
+                            centerPadding: '30px',
                             speed: 4000, // Slightly faster on mobile
                           }
                         }
@@ -273,12 +251,12 @@ export default function HomePage() {
                       className="image-carousel mx-auto"
                     >
                       {recentImages.map((image) => (
-                        <div key={image.id} className="px-3">
-                          <div className="overflow-hidden rounded-lg bg-white aspect-square shadow-sm">
+                        <div key={image.id}>
+                          <div className="carousel-image-container">
                             <img 
                               src={image.thumbUrl || image.url} 
                               alt={image.prompt}
-                              className="w-full h-full object-cover"
+                              className="carousel-image"
                             />
                           </div>
                         </div>
