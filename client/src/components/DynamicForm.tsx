@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { UseFormReturn } from "react-hook-form";
 import { GenericFormValues } from "@/lib/formSchemas";
 
@@ -275,6 +276,31 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form }) => {
               <p className="text-xs text-muted-foreground">
                 Use the same seed to create variations of similar images
               </p>
+            </FormItem>
+          )}
+        />
+      )}
+      
+      {/* KAVAK Style toggle for all models */}
+      {fields.includes("kavakStyle") && (
+        <FormField
+          control={form.control}
+          name="kavakStyle"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm space-y-0 mt-3 bg-gradient-to-r from-violet-50 to-indigo-50">
+              <div className="space-y-0.5">
+                <FormLabel className="text-sm font-medium">KAVAK Style</FormLabel>
+                <p className="text-xs text-muted-foreground">
+                  Apply professional product photography style with dramatic lighting
+                </p>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                  className="data-[state=checked]:bg-violet-600"
+                />
+              </FormControl>
             </FormItem>
           )}
         />

@@ -21,6 +21,7 @@ type EditFormValues = {
   size: string;
   quality: string;
   n: number;
+  kavakStyle: boolean;
 };
 
 interface EditFormProps {
@@ -99,6 +100,7 @@ export default function EditForm({
         size: z.enum(["auto", "1024x1024", "1536x1024", "1024x1536"]),
         quality: z.enum(["auto", "high", "medium", "low"]),
         n: z.coerce.number().int().min(1).max(10),
+        kavakStyle: z.boolean().default(false),
       })
     ),
     defaultValues: {
@@ -106,6 +108,7 @@ export default function EditForm({
       size: "1024x1024",
       quality: "high",
       n: 1,
+      kavakStyle: false,
     },
   });
 

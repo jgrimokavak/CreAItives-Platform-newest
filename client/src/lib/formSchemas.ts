@@ -4,6 +4,7 @@ import { ModelKey } from "./modelCatalog";
 // Common fields for all models
 const commonSchema = z.object({
   prompt: z.string().min(1, "Prompt is required").max(32000),
+  kavakStyle: z.boolean().optional().default(false),
 });
 
 // Model-specific schemas
@@ -31,14 +32,17 @@ export const modelDefaults = {
     quality: "high",
     count: "1",
     background: "auto",
+    kavakStyle: false,
   },
   "imagen-3": {
     aspect_ratio: "1:1",
     negative_prompt: "",
+    kavakStyle: false,
   },
   "flux-pro": {
     aspect_ratio: "1:1",
     seed: undefined,
+    kavakStyle: false,
   },
 };
 

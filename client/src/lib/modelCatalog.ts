@@ -2,17 +2,17 @@ export const modelCatalog = {
   "gpt-image-1": {
     label: "GPT-Image-1 (OpenAI)",
     description: "Most accurate, but slow.",
-    visible: ["prompt", "size", "quality", "n"]
+    visible: ["prompt", "size", "quality", "n", "kavakStyle"]
   },
   "imagen-3": {
     label: "Imagen-3 (Google)",
     description: "Accurate, fast, consistent, but not very creative.",
-    visible: ["prompt", "aspect_ratio", "negative_prompt"]
+    visible: ["prompt", "aspect_ratio", "negative_prompt", "kavakStyle"]
   },
   "flux-pro": {
     label: "Flux-Pro (Black-forest-labs)",
     description: "Fast, creative, high-quality; less prompt-accurate.",
-    visible: ["prompt", "aspect_ratio", "seed"]
+    visible: ["prompt", "aspect_ratio", "seed", "kavakStyle"]
   }
 } as const;
 
