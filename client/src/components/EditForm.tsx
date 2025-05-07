@@ -406,23 +406,46 @@ export default function EditForm({
                 name="size"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium">Output Size</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select size" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="auto">Auto</SelectItem>
-                        <SelectItem value="1024x1024">1024 × 1024</SelectItem>
-                        <SelectItem value="1536x1024">Landscape</SelectItem>
-                        <SelectItem value="1024x1536">Portrait</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormLabel className="text-sm font-medium">Aspect Ratio</FormLabel>
+                    <div className="flex items-center gap-3">
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="flex-grow">
+                            <SelectValue placeholder="Select aspect ratio" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="auto">Auto (Recommended)</SelectItem>
+                          <SelectItem value="1024x1024">1:1 (Square)</SelectItem>
+                          <SelectItem value="1536x1024">16:9 (Landscape)</SelectItem>
+                          <SelectItem value="1024x1536">9:16 (Portrait)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      
+                      {/* Visual aspect ratio indicator */}
+                      {field.value && (
+                        <div className="bg-primary/5 rounded p-1.5 border border-primary/10 flex items-center justify-center">
+                          {field.value === "1024x1024" && (
+                            <div className="w-8 h-8 bg-primary/20 rounded"></div>
+                          )}
+                          {field.value === "1536x1024" && (
+                            <div className="w-10 h-6 bg-primary/20 rounded"></div>
+                          )}
+                          {field.value === "1024x1536" && (
+                            <div className="w-6 h-10 bg-primary/20 rounded"></div>
+                          )}
+                          {field.value === "auto" && (
+                            <div className="w-8 h-8 bg-primary/20 rounded"></div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Choose the dimensions that best suit your needs
+                    </p>
                   </FormItem>
                 )}
               />
