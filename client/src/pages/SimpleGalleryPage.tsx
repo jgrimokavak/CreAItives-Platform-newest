@@ -541,6 +541,34 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
     fetchImages();
   }, [searchTerm]);
   
+  // Keyboard shortcuts
+  useEffect(() => {
+    // Global keyboard event handler
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Escape key to exit selection mode
+      if (e.key === 'Escape' && selectionMode === 'selecting') {
+        clearSelection();
+      }
+      
+      // Ctrl/Cmd + A to select all
+      if ((e.ctrlKey || e.metaKey) && e.key === 'a' && filteredImages.length > 0) {
+        // Only if we're in the gallery page, not in an input field
+        if (document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+          e.preventDefault(); // Prevent default browser select all
+          selectAll();
+        }
+      }
+    };
+    
+    // Add event listener
+    document.addEventListener('keydown', handleKeyDown);
+    
+    // Cleanup on unmount
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectionMode, filteredImages.length, clearSelection, selectAll]);
+  
   // Loading state
   if (loading) {
     return (
@@ -661,6 +689,14 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
                   : `${filteredImages.length} ${mode === 'trash' ? 'items' : 'images'}`
                 }
               </span>
+              
+              {/* Selection mode indicator */}
+              {selectionMode === 'selecting' && (
+                <span className="ml-2 text-xs text-muted-foreground bg-muted/30 px-2 py-0.5 rounded-full">
+                  Selection Mode 
+                  <span className="hidden sm:inline"> • Shift+click for range selection • Esc to cancel</span>
+                </span>
+              )}
             </div>
             
             {/* Filters for gallery mode */}
@@ -1075,7 +1111,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
             onClick={(e) => {
               // In selection mode, clicking the card toggles selection
               if (selectionMode === 'selecting') {
-                toggleSelection(image.id);
+                toggleSelection(image.id, e.shiftKey);
                 return;
               }
               
