@@ -102,7 +102,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   cron.schedule("0 * * * *", () => cleanupOldZips());
   
   // Serve the downloads directory
-  app.use("/downloads", express.static("/tmp", { maxAge: "1d" }));
+  const downloadsPath = path.join(process.cwd(), "downloads");
+  // Ensure downloads directory exists
+  if (!fs.existsSync(downloadsPath)) {
+    fs.mkdirSync(downloadsPath, { recursive: true });
+    console.log(`Created downloads directory at ${downloadsPath}`);
+  }
+  app.use("/downloads", express.static(downloadsPath, { maxAge: "1d" }));
+  console.log(`Serving downloads from ${downloadsPath}`);
   // Helper function to run image generation job
   async function runGenerateJob(jobId: string, data: any) {
     console.log(`Starting job ${jobId} for image generation`);

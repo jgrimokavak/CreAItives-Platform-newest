@@ -147,14 +147,25 @@ export async function processBatch(id: string, rows: Row[]) {
 
   // Create ZIP file with all generated images
   console.log(`Creating ZIP file for job ${id} with ${job.done} successful images and ${job.failed} failed items`);
-  const zipPath = path.join("/tmp", `${id}.zip`);
+  
+  // Create paths for both temp and downloads directory
+  const tmpZipPath = path.join("/tmp", `${id}.zip`);
+  const downloadDir = path.join(process.cwd(), "downloads");
+  const downloadZipPath = path.join(downloadDir, `${id}.zip`);
+  
+  // Make sure downloads directory exists
+  if (!fs.existsSync(downloadDir)) {
+    console.log(`Creating downloads directory: ${downloadDir}`);
+    fs.mkdirSync(downloadDir, { recursive: true });
+  }
+  
   try {
     await new Promise<void>((resolve, reject) => {
-      const output = createWriteStream(zipPath);
+      const output = createWriteStream(tmpZipPath);
       const archive = archiver("zip", { zlib: { level: 9 } });
       
       output.on("close", () => {
-        console.log(`ZIP file created: ${zipPath}, size: ${archive.pointer()} bytes`);
+        console.log(`ZIP file created: ${tmpZipPath}, size: ${archive.pointer()} bytes`);
         resolve();
       });
       
@@ -188,9 +199,16 @@ export async function processBatch(id: string, rows: Row[]) {
       archive.finalize();
     });
     
-    // Update the job with the ZIP path
-    job.zipPath = zipPath;
-    console.log(`Job ${id} updated with zipPath: ${zipPath}`);
+    // Copy the ZIP file to the downloads directory
+    console.log(`Copying ZIP file from ${tmpZipPath} to ${downloadZipPath}`);
+    fs.copyFileSync(tmpZipPath, downloadZipPath);
+    
+    // Update the job with the ZIP path and URL
+    job.zipPath = downloadZipPath;
+    // Set the publicly accessible URL for the ZIP file
+    const filename = path.basename(downloadZipPath);
+    job.zipUrl = `/downloads/${filename}`;
+    console.log(`Job ${id} updated with zipPath: ${downloadZipPath} and zipUrl: ${job.zipUrl}`);
     
   } catch (zipError) {
     console.error(`Failed to create ZIP file for job ${id}:`, zipError);
