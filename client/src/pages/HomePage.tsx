@@ -58,9 +58,9 @@ export default function HomePage() {
     {
       title: 'AI Prompt Helper',
       description: 'Smart autocompletes and prompt polish to perfect your ideas',
-      icon: <Wand2 className="h-5 w-5 text-white" />,
+      icon: <Sparkles className="h-5 w-5 text-white" />,
       to: '/create',
-      bgColor: 'bg-pink-400',
+      bgColor: 'bg-purple-500',
     },
   ];
 
