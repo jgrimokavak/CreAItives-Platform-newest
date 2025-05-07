@@ -227,16 +227,16 @@ export default function HomePage() {
                       ref={sliderRef}
                       dots={false}
                       infinite={true}
-                      speed={1000}
-                      slidesToShow={4}
+                      speed={500}
+                      slidesToShow={5}
                       slidesToScroll={1}
                       autoplay={true}
-                      autoplaySpeed={2000}
+                      autoplaySpeed={0} // Continuous scrolling
+                      cssEase="linear" // Linear motion for continuous flow
                       pauseOnHover={false}
                       swipe={false}
                       touchMove={false}
                       arrows={false}
-                      cssEase="cubic-bezier(0.25, 1, 0.5, 1)" // Smooth easing
                       responsive={[
                         {
                           breakpoint: 1280,
@@ -261,22 +261,16 @@ export default function HomePage() {
                     >
                       {recentImages.map((image) => (
                         <div key={image.id} className="px-2">
-                          <div className="overflow-hidden rounded-lg bg-white">
+                          <div className="overflow-hidden rounded-lg bg-white aspect-square">
                             <img 
                               src={image.thumbUrl || image.url} 
                               alt={image.prompt}
-                              className="w-full h-64 object-cover"
+                              className="w-full h-full object-cover"
                             />
                           </div>
                         </div>
                       ))}
                     </Slider>
-                  </div>
-                  
-                  {/* Simple progress indicator */}
-                  <div className="mt-6 flex justify-center">
-                    <div className="w-16 h-1 bg-slate-200 rounded-full">
-                    </div>
                   </div>
                 </div>
               ) : (
