@@ -227,11 +227,11 @@ export default function HomePage() {
                       ref={sliderRef}
                       dots={false}
                       infinite={true}
-                      speed={500}
+                      speed={10000} // Extremely slow transition
                       slidesToShow={5}
                       slidesToScroll={1}
                       autoplay={true}
-                      autoplaySpeed={0} // Continuous scrolling
+                      autoplaySpeed={0} // No pause
                       cssEase="linear" // Linear motion for continuous flow
                       pauseOnHover={false}
                       swipe={false}
@@ -260,8 +260,8 @@ export default function HomePage() {
                       className="image-carousel mx-auto"
                     >
                       {recentImages.map((image) => (
-                        <div key={image.id} className="px-2">
-                          <div className="overflow-hidden rounded-lg bg-white aspect-square">
+                        <div key={image.id} className="px-3">
+                          <div className="overflow-hidden rounded-lg bg-white aspect-square shadow-sm">
                             <img 
                               src={image.thumbUrl || image.url} 
                               alt={image.prompt}
