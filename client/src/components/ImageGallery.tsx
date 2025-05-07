@@ -103,27 +103,26 @@ export default function ImageGallery({ images, onClearResults }: ImageGalleryPro
   };
 
   return (
-    <div className="h-full">
+    <div className="h-full flex flex-col">
       {/* Image Modal for fullscreen viewing */}
       <ImageModal 
         imageUrl={selectedImage} 
         onClose={() => setSelectedImage(null)} 
       />
       
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-semibold">Generated Results</h2>
+      <div className="flex justify-between items-center mb-3">
         <Button
           variant="ghost"
           size="sm"
           onClick={onClearResults}
-          className="text-muted-foreground hover:text-foreground transition-colors text-xs flex items-center"
+          className="text-muted-foreground hover:text-foreground transition-colors text-xs flex items-center p-2 h-8"
         >
-          <FaRegTimesCircle className="mr-1.5 h-3.5 w-3.5" />
-          <span>Clear</span>
+          <FaRegTimesCircle className="mr-1.5 h-3 w-3" />
+          <span>Clear All</span>
         </Button>
       </div>
 
-      <div className="h-[calc(100%-2.5rem)] overflow-y-auto pr-1 space-y-4">
+      <div className="flex-1 overflow-y-auto pr-1 space-y-4 pb-4">
         <div className="grid grid-cols-1 gap-4">
           {images.map((image) => (
             <div key={image.id} className="relative">

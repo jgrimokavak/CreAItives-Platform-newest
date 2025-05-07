@@ -400,50 +400,7 @@ export default function EditForm({
               </div>
             </div>
             
-            <div className="border border-dashed border-border rounded-lg p-5">
-              <h3 className="text-sm font-medium mb-3">Mask Image <span className="text-xs font-normal text-muted-foreground">(Optional)</span></h3>
-              
-              {maskPreview ? (
-                <div className="relative w-full h-40 mb-4">
-                  <img 
-                    src={maskPreview} 
-                    alt="Mask" 
-                    className="h-full mx-auto object-contain"
-                  />
-                  <button
-                    type="button"
-                    onClick={removeMask}
-                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1"
-                  >
-                    <FaTrash size={12} />
-                  </button>
-                </div>
-              ) : (
-                <div 
-                  className="w-full h-32 flex items-center justify-center border border-dashed border-border rounded-md hover:bg-muted mb-4 cursor-pointer transition-colors"
-                  onClick={() => maskInputRef.current?.click()}
-                >
-                  <div className="text-center">
-                    <FaUpload className="mx-auto text-muted-foreground mb-2" />
-                    <div className="text-sm text-muted-foreground">Upload a mask image</div>
-                  </div>
-                </div>
-              )}
-              
-              <input
-                type="file"
-                ref={maskInputRef}
-                onChange={handleMaskChange}
-                accept="image/png"
-                className="hidden"
-              />
-              
-              <div className="text-xs text-muted-foreground">
-                Transparent areas in the mask (PNG) determine which parts will be edited
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-muted/40 p-4 rounded-lg border border-border/50">
+            <div className="grid grid-cols-1 gap-5 bg-muted/40 p-4 rounded-lg border border-border/50">
               <FormField
                 control={form.control}
                 name="size"
