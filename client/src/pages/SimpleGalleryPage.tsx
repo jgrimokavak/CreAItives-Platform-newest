@@ -145,8 +145,9 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
         
         // Add the range to the selection
         setSelectedIds(prev => {
-          const newSelection = [...new Set([...prev, ...rangeIds])];
-          return newSelection;
+          // Create a Set and convert back to array to remove duplicates
+          const set = new Set([...prev, ...rangeIds]);
+          return Array.from(set);
         });
         setLastSelectedId(id);
       }
@@ -956,7 +957,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-medium">Filter by</h3>
               <div className="flex items-center gap-2">
-                {Object.values(activeFilters).some(arr => arr.length > 0) && (
+                {(activeFilters.models.length > 0 || activeFilters.starred) && (
                   <Button
                     variant="ghost"
                     size="sm"
@@ -1039,7 +1040,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
               </span> 
               <span>
                 {filteredImages.length === 1 ? 'result' : 'results'} 
-                {(activeFilters.starred || activeFilters.models.length > 0) ? ' with current filters' : ''}
+                {(activeFilters.starred || activeFilters.models.length > 0) ? ' with applied filters' : ''}
               </span>
             </div>
           </div>
@@ -1073,7 +1074,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
             onClick={(e) => {
               // In selection mode, clicking the card toggles selection
               if (selectionMode === 'selecting') {
-                toggleSelection(image.id, e.shiftKey);
+                toggleSelection(image.id, e?.shiftKey || false);
                 return;
               }
               
