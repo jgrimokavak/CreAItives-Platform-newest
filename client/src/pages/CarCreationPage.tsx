@@ -1079,15 +1079,15 @@ const CarCreationPage: React.FC = () => {
                     
                     <div className="flex flex-col gap-4 mb-6">
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div className="flex items-center gap-3 text-sm p-2.5 border rounded-md">
+                        <div className="flex items-center gap-3 text-sm p-2.5 rounded-md">
                           <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">1</div>
                           <span>Prepare your CSV file</span>
                         </div>
-                        <div className="flex items-center gap-3 text-sm p-2.5 border rounded-md">
+                        <div className="flex items-center gap-3 text-sm p-2.5 rounded-md">
                           <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">2</div>
                           <span>Upload and validate</span>
                         </div>
-                        <div className="flex items-center gap-3 text-sm p-2.5 border rounded-md">
+                        <div className="flex items-center gap-3 text-sm p-2.5 rounded-md">
                           <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">3</div>
                           <span>Download ZIP when complete</span>
                         </div>
