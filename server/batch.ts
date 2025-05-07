@@ -87,8 +87,8 @@ export async function processBatch(id: string, rows: Row[]) {
       // Clean up the aspect_ratio value to handle spaces or case differences
       let aspect_ratio = (r.aspect_ratio || "1:1").toString().trim().toLowerCase();
       
-      // Validate aspect ratio - expanded list to include more common ratios
-      const validAspectRatios = ["1:1", "9:16", "16:9", "3:4", "4:3", "4:5", "5:4", "2:1", "1:2", "2:3", "3:2"];
+      // Validate aspect ratio - must be one of: "1:1", "9:16", "16:9", "3:4", "4:3"
+      const validAspectRatios = ["1:1", "9:16", "16:9", "3:4", "4:3"];
       
       // Check for common variations that should be normalized
       if (aspect_ratio === "4:3" || aspect_ratio === "4/3" || aspect_ratio === "4-3") {
@@ -99,10 +99,6 @@ export async function processBatch(id: string, rows: Row[]) {
         aspect_ratio = "16:9";
       } else if (aspect_ratio === "9:16" || aspect_ratio === "9/16" || aspect_ratio === "9-16") {
         aspect_ratio = "9:16";
-      } else if (aspect_ratio === "4:5" || aspect_ratio === "4/5" || aspect_ratio === "4-5") {
-        aspect_ratio = "4:5";
-      } else if (aspect_ratio === "5:4" || aspect_ratio === "5/4" || aspect_ratio === "5-4") {
-        aspect_ratio = "5:4";
       } else if (aspect_ratio === "1:1" || aspect_ratio === "1/1" || aspect_ratio === "1-1" || aspect_ratio === "square") {
         aspect_ratio = "1:1";
       } else if (!validAspectRatios.includes(aspect_ratio)) {
