@@ -1071,10 +1071,10 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
             onSelect={(id, shiftKey = false) => toggleSelection(id, shiftKey)}
             selected={selectedIds.includes(image.id)}
             selectionMode={selectionMode}
-            onClick={(e) => {
+            onClick={(e: React.MouseEvent<HTMLDivElement>) => {
               // In selection mode, clicking the card toggles selection
               if (selectionMode === 'selecting') {
-                toggleSelection(image.id, e?.shiftKey || false);
+                toggleSelection(image.id, e.shiftKey);
                 return;
               }
               
