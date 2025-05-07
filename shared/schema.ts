@@ -41,6 +41,8 @@ export const generateImageSchema = z.object({
   // Replicate-specific parameters
   aspect_ratio: z.string().optional(), // For Imagen-3 and Flux-Pro
   seed: z.number().int().optional(),   // For Flux-Pro
+  // KAVAK style toggle
+  kavakStyle: z.boolean().optional().default(false)
 });
 
 // Map to hold form data for different model types
@@ -118,7 +120,8 @@ export const editImageSchema = z.object({
   size: z.enum(["auto", "1024x1024", "1536x1024", "1024x1536"]),
   quality: z.enum(["auto", "high", "medium", "low"]).default("auto"),
   n: z.coerce.number().int().min(1).max(10).default(1),
-  mask: z.string().nullable().optional()
+  mask: z.string().nullable().optional(),
+  kavakStyle: z.boolean().optional().default(false)
 });
 
 export type EditImageInput = z.infer<typeof editImageSchema>;

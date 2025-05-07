@@ -1,0 +1,66 @@
+add_kavak_style_toggle_prompt.txt
+=================================================
+
+Objective:
+Add a “KAVAK STYLE” toggle to both Create and Edit tabs. When toggled ON, the back‑end silently appends a predefined stylistic string to the user’s prompt before the image or edit request is sent to the generation model; the user never sees the appended text.
+
+1. Back‑end modifications
+   - **File**: `src/constants/stylePrompts.ts`
+     ```ts
+     export const KAVAK_STYLE_PROMPT =
+       "— in the style of a hyperrealistic vertical photograph shot on a Canon EOS R5 with a 24mm f/1.4 lens wide open, using direct on-camera flash for harsh shadows, high contrast, and a flattened foreground. Captured at close range with intentional lens distortion, using tight, asymmetrical compositions — frontal or diagonal. Emphasizes mid-action gestures, emotional expressiveness, and aggressive cropping. Features ultra-detailed textures: skin, wool, metal, glass — all rendered with cinematic clarity. Backgrounds are sunlit urban environments with brutalist architecture, stone pavement, and soft defocus. Built-in imperfections like floating dust, bloom, lens flares, and chromatic aberration add grit and realism. The entire scene feels loud, raw, and alive — processed with photographic realism and cinematic post-production to match a consistent editorial visual system.";
+     ```
+   - **File**: `src/routes/generate.ts`
+     - Extend Zod body schema:
+       ```ts
+       kavakStyle: z.boolean().optional().default(false)
+       ```
+     - Build final prompt:
+       ```ts
+       const finalPrompt = body.kavakStyle
+         ? body.prompt + " " + KAVAK_STYLE_PROMPT
+         : body.prompt;
+       ```
+   - **File**: `src/routes/editImage.ts`
+     - Same `kavakStyle` boolean in schema.
+     - Append to `prompt` before calling GPT‑Image‑1 edits endpoint.
+
+2. Front‑end – Create page
+   - **File**: `pages/CreatePage.tsx`
+     - Import `Switch` from shadcn/ui.
+     - State:
+       ```ts
+       const [kavakStyle, setKavakStyle] = useState(false);
+       ```
+     - UI (place below model selector):
+       ```tsx
+       <div className="flex items-center gap-2 mt-4">
+         <Switch id="kavak-style" checked={kavakStyle} onCheckedChange={setKavakStyle} />
+         <label htmlFor="kavak-style" className="text-sm">KAVAK STYLE</label>
+       </div>
+       ```
+     - When calling `api.generate`, include `kavakStyle`.
+
+3. Front‑end – Edit tab
+   - **File**: `pages/EditPage.tsx`
+     - Mirror the same Switch and state, included in `/api/edit-image` payload.
+
+4. Type definitions
+   - **File**: `types/generateRequest.ts`
+     ```ts
+     kavakStyle?: boolean;
+     ```
+
+5. Disable enhance prompt interaction when toggle ON (optional)
+   - If `kavakStyle` is ON and user presses “Enhance Prompt”, do not duplicate style text; Enhancement endpoint only sees user prompt.
+
+Testing
+- Create tab: enter “Blue sedan on highway”, toggle KAVAK STYLE ON, generate. Confirm server logs show prompt ending with the full stylistic string, UI still displays only “Blue sedan on highway”.
+- Create tab: toggle OFF → prompt sent exactly as typed.
+- Edit tab: upload image, toggle ON, run edit; server receives appended style.
+- Verify API payloads include `"kavakStyle": true/false` and no double‑appends on multiple generations.
+
+Reminders & Constraints
+- Do NOT display the large style string anywhere in the front‑end.
+- Keep default toggle OFF.
+- Ensure Zod schemas reject requests where `kavakStyle` is not boolean.
