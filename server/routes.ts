@@ -684,10 +684,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/car-batch", upload.single("file"), async (req, res) => {
     console.log(`Received batch car generation request: ${req.file?.originalname || 'No file'}, size: ${req.file?.size || 0} bytes`);
     
+    // Check for required environment variables
+    if (!process.env.REPLICATE_API_TOKEN) {
+      console.error("Batch request error: REPLICATE_API_TOKEN not set");
+      return res.status(500).json({ error: "REPLICATE_API_TOKEN not set" });
+    }
+    
     if (!req.file?.buffer) {
       console.error(`Batch request error: CSV file is required`);
       return res.status(400).json({ error: "CSV file is required" });
     }
+    
+    // Log buffer details to help with debugging
+    console.log("Received CSV, size:", req.file.buffer.length);
     
     const text = req.file.buffer.toString("utf8");
     console.log(`CSV file parsed to text (${text.length} chars), first 100 chars: ${text.substring(0, 100)}...`);
@@ -741,6 +750,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Return immediately with job ID
     console.log(`Responding with job ID: ${jobId}`);
     res.status(202).json({ jobId });
+  });
+  
+  // Debug route for batch jobs (must come before the general route)
+  app.get("/api/batch/debug/:id", (req, res) => {
+    const jobId = req.params.id;
+    console.log(`Debug request for batch job ID: ${jobId}`);
+    res.json(batchJobs.get(jobId) || { error: "Job not found" });
   });
   
   // Batch job status endpoint

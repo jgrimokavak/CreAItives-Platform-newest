@@ -8,6 +8,11 @@ import axios from 'axios';
 import { models } from './config/models';
 import { createPrediction, waitForPrediction } from './replicate';
 
+// Early check for required environment variables
+if (!process.env.REPLICATE_API_TOKEN) {
+  console.error("Missing REPLICATE_API_TOKEN - batch processing will fail!");
+}
+
 // Store batch jobs with progress information
 export type Row = Partial<Record<"make"|"model"|"body_style"|"trim"|"year"|"color"|"background"|"aspect_ratio", string>>;
 export type BatchJob = {
@@ -66,14 +71,25 @@ export async function processBatch(id: string, rows: Row[]) {
 
   for (let i = 0; i < rows.length; i++) {
     const r = rows[i];
+    console.log(`Batch ${id}: Processing row ${i+1}/${rows.length}`);
+    
     try {
       // Build prompt from template
       const prompt = buildPrompt(r);
-      console.log(`Processing row ${i+1}/${rows.length}: ${prompt.substring(0, 50)}...`);
+      console.log(`Batch ${id}: Row ${i+1}/${rows.length} prompt: ${prompt.substring(0, 50)}...`);
       console.log(`Row data:`, JSON.stringify(r));
       
-      // Set default aspect ratio if not specified
-      const aspect_ratio = r.aspect_ratio || "1:1";
+      // Set default aspect ratio if not specified and validate it
+      let aspect_ratio = r.aspect_ratio || "1:1";
+      
+      // Validate aspect ratio - must be one of: "1:1", "9:16", "16:9", "3:4", "4:3"
+      const validAspectRatios = ["1:1", "9:16", "16:9", "3:4", "4:3"];
+      if (!validAspectRatios.includes(aspect_ratio)) {
+        console.warn(`Invalid aspect_ratio "${aspect_ratio}" for row ${i+1}, defaulting to "1:1"`);
+        aspect_ratio = "1:1";
+      }
+      
+      console.log(`Using aspect_ratio: ${aspect_ratio} for row ${i+1}`);
       
       // Create prediction with Replicate
       console.log(`Creating prediction with model version: ${imagenModel.version}`);
@@ -119,7 +135,7 @@ export async function processBatch(id: string, rows: Row[]) {
         throw predictionError;
       }
     } catch (e: any) {
-      console.error(`Failed to process row ${i+1}:`, e);
+      console.error(`Batch ${id}: Row ${i+1} error:`, e);
       job.failed++;
       job.errors.push({ 
         row: i+2, 
