@@ -527,7 +527,7 @@ const CarCreationPage: React.FC = () => {
                 {/* Form fields in logical groups */}
                 <div className="space-y-5">
                   {/* Car identification section */}
-                  <div>
+                  <div className="bg-background/60 p-4 rounded-lg border border-border/40 shadow-sm">
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-2">
                         <Label htmlFor="make">Make</Label>
@@ -626,7 +626,7 @@ const CarCreationPage: React.FC = () => {
                   </div>
                   
                   {/* Appearance section */}
-                  <div>
+                  <div className="bg-background/60 p-4 rounded-lg border border-border/40 shadow-sm">
                     <h2 className="text-lg font-semibold text-foreground mb-1">Appearance</h2>
                     <p className="text-xs text-muted-foreground mb-4">
                       Customize your vehicle's visual style
@@ -695,7 +695,7 @@ const CarCreationPage: React.FC = () => {
                   </div>
                   
                   {/* Image settings section */}
-                  <div>
+                  <div className="bg-background/60 p-4 rounded-lg border border-border/40 shadow-sm">
                     <h2 className="text-lg font-semibold text-foreground mb-1">Image Settings</h2>
                     <p className="text-xs text-muted-foreground mb-4">
                       Configure background and aspect ratio for your image
