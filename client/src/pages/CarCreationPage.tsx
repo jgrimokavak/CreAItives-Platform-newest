@@ -1044,9 +1044,9 @@ const CarCreationPage: React.FC = () => {
                       </div>
                     </div>
                     
-                    <div className="bg-blue-50 border border-blue-100 rounded-md p-4 mb-4 flex gap-3 items-center">
-                      <div className="bg-blue-100 p-2 rounded-full flex-shrink-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600">
+                    <div className="bg-blue-50 border border-blue-100 rounded-md p-5 mb-6 flex gap-4 items-start">
+                      <div className="bg-blue-100 p-3 rounded-full flex-shrink-0 mt-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600">
                           <path d="M14 3v4a1 1 0 0 0 1 1h4" />
                           <path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z" />
                           <path d="M9 9h1" />
@@ -1055,15 +1055,15 @@ const CarCreationPage: React.FC = () => {
                         </svg>
                       </div>
                       <div>
-                        <h4 className="font-medium text-blue-800 mb-1">Use our pre-formatted template</h4>
-                        <p className="text-sm text-blue-700 mb-2">
-                          Start with our ready-to-use spreadsheet template that's already formatted for batch car generation.
+                        <h4 className="font-medium text-blue-800 mb-2 text-base">Use our pre-formatted template</h4>
+                        <p className="text-sm text-blue-700 mb-3 leading-relaxed">
+                          Start with our ready-to-use spreadsheet template that's already formatted for batch car generation. Just fill in your car details and download as CSV.
                         </p>
                         <a 
                           href="https://docs.google.com/spreadsheets/d/1-YxShxye41KXVQtSr97crhM_mFH0H4qwOAidgdZ42Cc/copy" 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 px-3 py-1.5 rounded-md transition-colors"
+                          className="inline-flex items-center gap-2 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-md transition-colors"
                           onClick={(e) => {
                             e.preventDefault();
                             window.open("https://docs.google.com/spreadsheets/d/1-YxShxye41KXVQtSr97crhM_mFH0H4qwOAidgdZ42Cc/copy", "_blank", "noopener,noreferrer");
@@ -1077,36 +1077,38 @@ const CarCreationPage: React.FC = () => {
                       </div>
                     </div>
                     
-                    <div className="flex flex-col gap-3">
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div className="flex items-center gap-2 text-sm">
-                          <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">1</div>
+                    <div className="flex flex-col gap-4 mb-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="flex items-center gap-3 text-sm p-2 bg-muted/20 rounded-md">
+                          <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">1</div>
                           <span>Prepare your CSV file</span>
                         </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">2</div>
+                        <div className="flex items-center gap-3 text-sm p-2 bg-muted/20 rounded-md">
+                          <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">2</div>
                           <span>Upload and validate</span>
                         </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">3</div>
+                        <div className="flex items-center gap-3 text-sm p-2 bg-muted/20 rounded-md">
+                          <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">3</div>
                           <span>Download ZIP when complete</span>
                         </div>
                       </div>
                     </div>
                     
-                    <CSVUpload onUpload={handleBatchUpload} isLoading={isUploadingBatch} />
+                    <div className="mt-2">
+                      <CSVUpload onUpload={handleBatchUpload} isLoading={isUploadingBatch} />
+                    </div>
                   </div>
                   
                   <div className="mt-6 bg-card border rounded-md overflow-hidden">
-                    <div className="bg-muted px-4 py-3 border-b">
-                      <h4 className="font-medium flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-primary"></span>
+                    <div className="bg-muted px-5 py-3.5 border-b">
+                      <h4 className="font-medium flex items-center gap-2 text-base">
+                        <span className="h-2.5 w-2.5 rounded-full bg-primary"></span>
                         CSV Format Guide
                       </h4>
                     </div>
                     
-                    <div className="p-4">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                    <div className="p-5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                         {[
                           { name: 'make', example: 'Audi, BMW', desc: 'Car manufacturer' },
                           { name: 'model', example: 'Q5, X5', desc: 'Car model' },
@@ -1117,25 +1119,25 @@ const CarCreationPage: React.FC = () => {
                           { name: 'background', example: 'white, hub', desc: 'Studio or showroom' },
                           { name: 'aspect_ratio', example: '4:3, 16:9, 1:1', desc: 'Image proportions' }
                         ].map(col => (
-                          <div key={col.name} className="bg-muted/50 rounded-md p-3 border">
-                            <div className="font-mono text-sm text-primary-foreground bg-primary/90 rounded px-2 py-1 inline-block mb-1.5">{col.name}</div>
-                            <div className="text-xs text-muted-foreground">{col.desc}</div>
-                            <div className="text-xs mt-1 font-medium truncate">{col.example}</div>
+                          <div key={col.name} className="bg-muted/40 hover:bg-muted/60 transition-colors rounded-md p-3.5 border shadow-sm">
+                            <div className="font-mono text-sm text-primary-foreground bg-primary/90 rounded px-2.5 py-1 inline-block mb-2">{col.name}</div>
+                            <div className="text-xs text-muted-foreground mb-1.5">{col.desc}</div>
+                            <div className="text-xs font-medium text-foreground/80">{col.example}</div>
                           </div>
                         ))}
                       </div>
                       
-                      <div className="bg-primary/5 rounded-md p-3 text-sm border border-primary/10">
-                        <h5 className="font-medium mb-1 text-foreground">CSV Tips</h5>
-                        <ul className="text-xs space-y-1 list-disc list-inside text-muted-foreground">
+                      <div className="bg-primary/5 rounded-md p-4 text-sm border border-primary/10">
+                        <h5 className="font-medium mb-2 text-foreground">CSV Tips</h5>
+                        <ul className="text-sm space-y-2 list-disc list-inside text-muted-foreground">
                           <li>All columns are optional. Default values will be used for missing columns.</li>
                           <li>The first row must contain column headers (names) as shown above.</li>
                           <li>Maximum 50 cars per batch for optimal performance.</li>
                         </ul>
                         
-                        <div className="mt-3 bg-blue-50 rounded-md p-3 border border-blue-100 flex items-start gap-2">
+                        <div className="mt-4 bg-blue-50 rounded-md p-4 border border-blue-100 flex items-start gap-3">
                           <div className="text-blue-500 mt-0.5">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M14 3v4a1 1 0 0 0 1 1h4" />
                               <path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z" />
                               <path d="M9 9h1" />
@@ -1144,8 +1146,8 @@ const CarCreationPage: React.FC = () => {
                             </svg>
                           </div>
                           <div>
-                            <span className="text-xs font-medium text-blue-800 block">Example Template Available</span>
-                            <p className="text-xs text-blue-700 mt-1">
+                            <span className="text-sm font-medium text-blue-800 block">Example Template Available</span>
+                            <p className="text-sm text-blue-700 mt-1.5 leading-relaxed">
                               Get our <a 
                                 href="#" 
                                 onClick={(e) => {
