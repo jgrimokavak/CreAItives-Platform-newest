@@ -1037,7 +1037,7 @@ const CarCreationPage: React.FC = () => {
                       <div className="bg-primary/10 p-2 rounded-full">
                         <CarFront className="h-6 w-6 text-primary" />
                       </div>
-                      <h3 className="text-lg font-medium text-[#0C0A09]">Car Details</h3>
+                      <h3 className="text-lg font-medium text-[#0C0A09]">Batch Car Generation</h3>
                     </div>
                     
                     <div className="bg-blue-50 border border-blue-100 rounded-md p-4 mb-4 flex gap-3 items-center">
