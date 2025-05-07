@@ -24,14 +24,14 @@ export default function HomePage() {
       title: 'Text-to-Image',
       description: 'Transform your ideas into stunning images with 3 powerful AI models',
       icon: <ImageIcon className="h-5 w-5 text-white" />,
-      to: '/create',
+      to: '/create?mode=generate',
       bgColor: 'bg-red-400',
     },
     {
       title: 'Image Editing',
       description: 'Erase, replace, and remix existing images with precision',
       icon: <PenTool className="h-5 w-5 text-white" />,
-      to: '/create',
+      to: '/create?mode=edit',
       bgColor: 'bg-blue-400',
     },
     {

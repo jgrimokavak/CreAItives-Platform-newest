@@ -10,10 +10,12 @@ import NavTabs, { TabContent } from "@/components/NavTabs";
 import { useEditor } from "@/context/EditorContext";
 
 export default function Home() {
+  const [searchParams] = new URLSearchParams(window.location.search);
+  const [mode, setMode] = useState<"generate" | "edit">(searchParams.get("mode") as "generate" | "edit" || "generate");
   const [images, setImages] = useState<GeneratedImage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { mode, setMode } = useEditor();
+  const {  } = useEditor();
 
   const handleGenerateStart = () => {
     setIsLoading(true);
@@ -54,7 +56,7 @@ export default function Home() {
                 Generate custom images or enhance existing ones with our AI-powered tools
               </p>
             </div>
-            
+
             <div className="h-[calc(100%-5rem)]">
               <div className="w-full h-full flex flex-col">
                 <div className="mb-6">
@@ -67,7 +69,7 @@ export default function Home() {
                     ]}
                   />
                 </div>
-                
+
                 <div className="flex-1">
                   <TabContent value="generate" currentTab={mode}>
                     <PromptForm
@@ -76,7 +78,7 @@ export default function Home() {
                       onError={handleError}
                     />
                   </TabContent>
-                  
+
                   <TabContent value="edit" currentTab={mode}>
                     <EditForm
                       onEditStart={handleGenerateStart}
@@ -97,7 +99,7 @@ export default function Home() {
                 Your generated images will appear here
               </p>
             </div>
-            
+
             <div className="h-[calc(100%-4rem)]">
               {isLoading && (
                 <div className="h-full">
