@@ -61,7 +61,7 @@ export function AISuggestionBadges({
   };
   
   return (
-    <div className="space-y-6 mt-4 p-5 relative overflow-hidden bg-gradient-to-r from-violet-50 via-indigo-50 to-purple-50 rounded-lg border border-purple-200 shadow-sm">
+    <div className="space-y-6 mt-4 pt-0 px-5 pb-5 relative overflow-hidden bg-gradient-to-r from-violet-50 via-indigo-50 to-purple-50 rounded-lg border border-purple-200 shadow-sm">
       {/* Animated background pattern */}
       <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,rgba(255,255,255,0.6),rgba(255,255,255,0.9))] opacity-50"></div>
       
@@ -69,7 +69,7 @@ export function AISuggestionBadges({
       <div className="absolute -inset-1 bg-gradient-to-r from-violet-500/5 via-purple-500/5 to-indigo-500/5 blur-xl"></div>
       
       {/* Header */}
-      <div className="relative z-10">
+      <div className="relative z-10 pt-5">
         <div className="flex items-center justify-between">
           <h3 className="text-base font-medium text-purple-800 flex items-center">
             <span className="bg-gradient-to-r from-purple-500 to-indigo-500 p-1.5 rounded-md mr-2 shadow-sm">
