@@ -228,9 +228,23 @@ const CSVUpload: React.FC<CSVUploadProps> = ({ onUpload, isLoading }) => {
           <h3 className="text-xl font-medium mb-2">
             Upload your CSV file
           </h3>
-          <p className="text-muted-foreground mb-4 max-w-lg mx-auto">
+          <p className="text-muted-foreground mb-2 max-w-lg mx-auto">
             Drag and drop your file here or click to browse. Your CSV must include car details like make, model, color, etc.
           </p>
+          <div className="mb-4">
+            <a 
+              href="https://docs.google.com/spreadsheets/d/1-YxShxye41KXVQtSr97crhM_mFH0H4qwOAidgdZ42Cc/copy" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full border border-blue-100 hover:bg-blue-100 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+                <path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z" />
+              </svg>
+              Get pre-formatted template
+            </a>
+          </div>
           <div className="flex flex-wrap gap-2 justify-center mb-2">
             {validColumns.map(col => (
               <span key={col} className="bg-muted px-2 py-1 rounded-md text-xs font-medium">{col}</span>
