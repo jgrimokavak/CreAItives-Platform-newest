@@ -1,0 +1,98 @@
+prompt_suggestion_dropdowns.txt
+================================================
+
+Objective:
+Add four AI‑powered dropdowns—Image Type, Camera Position, Lighting Style, and Color Palette—that auto‑populate context‑aware suggestions as the user types a prompt in the Create page.
+
+1. Back‑end: `/api/prompt-suggestions` endpoint
+   - **File**: `routes/promptSuggestions.ts`
+   - Register in `app.ts`.
+   - Logic:
+     ```ts
+     import { Router } from "express";
+     import { z } from "zod";
+     import { openai } from "@/lib/openai";
+     import LRU from "lru-cache";
+
+     const router = Router();
+     const bodySchema = z.object({
+       text: z.string().min(3),
+       model: z.enum(["gpt-image-1", "imagen-3", "flux-pro-1.1"]),
+     });
+
+     const cache = new LRU<string, any>({ max: 300, ttl: 1000 * 60 * 10 });
+
+     router.post("/api/prompt-suggestions", async (req, res) => {
+       const { text, model } = bodySchema.parse(req.body);
+       const key = `${model}:${text}`;
+       if (cache.has(key)) return res.json(cache.get(key));
+
+       const sys = `You are an assistant that suggests creative styling options for text-to-image prompts. Return JSON with four arrays: "imageTypes", "cameraPositions", "lightingStyles", "colorPalettes". Pick up to 6 concise suggestions for each, tailored to the user's text and the ${model} model.`;
+       const completion = await openai.chat.completions.create({
+         model: "gpt-4o-mini",
+         messages: [
+           { role: "system", content: sys },
+           { role: "user", content: text },
+         ],
+         response_format: { type: "json_object" },
+       });
+       const suggestions = JSON.parse(completion.choices[0].message.content);
+       cache.set(key, suggestions);
+       res.json(suggestions);
+     });
+
+     export default router;
+     ```
+
+2. Front‑end: dropdown components
+   - **File**: `components/PromptDropdowns.tsx`
+     ```tsx
+     import { Combobox } from "@/components/ui/combobox";
+     interface Suggs { imageTypes: string[]; cameraPositions: string[]; lightingStyles: string[]; colorPalettes: string[]; }
+     export function PromptDropdowns({ suggestions, onChange }: { suggestions: Suggs; onChange: (field: keyof Suggs, value: string) => void; }) {
+       return (
+         <div className="grid sm:grid-cols-2 gap-4 mt-4">
+           <Combobox label="Image Type"      options={suggestions.imageTypes}      onSelect={v => onChange("imageTypes", v)} />
+           <Combobox label="Camera Position" options={suggestions.cameraPositions} onSelect={v => onChange("cameraPositions", v)} />
+           <Combobox label="Lighting Style"  options={suggestions.lightingStyles}  onSelect={v => onChange("lightingStyles", v)} />
+           <Combobox label="Color Palette"   options={suggestions.colorPalettes}   onSelect={v => onChange("colorPalettes", v)} />
+         </div>
+       );
+     }
+     ```
+
+3. Integrate with Create page
+   - **File**: `pages/CreatePage.tsx`
+     - State:
+       ```ts
+       const [suggestions, setSuggestions] = useState<Suggs>({
+         imageTypes: [], cameraPositions: [], lightingStyles: [], colorPalettes: []
+       });
+       ```
+     - Debounced fetch on prompt change:
+       ```ts
+       const fetchSuggestions = useDebounce(async (text: string) => {
+         if (text.length < 3) return;
+         const { data } = await api.post("/api/prompt-suggestions", { text, model: selectedModel });
+         setSuggestions(data);
+       }, 600);
+       ```
+     - Call `fetchSuggestions(prompt);` inside `useEffect` watching `prompt`.
+     - Render `<PromptDropdowns suggestions={suggestions} onChange={handleDropdown} />`.
+   - **handleDropdown**:
+     ```ts
+     function handleDropdown(field: keyof Suggs, value: string) {
+       setPrompt(p => p + ", " + value); // append to main prompt
+     }
+     ```
+
+4. UI/UX details
+   - Disable dropdowns while `suggestions` arrays are empty; show “Type to get suggestions…”.
+   - Add subtle spinner next to dropdown labels while fetching.
+   - Chips selected are highlighted; prevent duplicates in prompt.
+   - Mobile: make Combobox full‑width; desktop two‑column grid.
+
+Reminders & Constraints
+- Keep all styles within existing Tailwind/shadcn theme.
+- Debounce API calls to ≥600 ms to minimize token cost.
+- Respect OpenAI policy by stripping any user NSFW input before sending to LLM.

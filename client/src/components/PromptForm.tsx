@@ -20,6 +20,40 @@ import ModelInfoCard from "@/components/ModelInfoCard";
 import DynamicForm from "@/components/DynamicForm";
 import { Label } from "@/components/ui/label";
 import { useHotkeys } from "react-hotkeys-hook";
+import { PromptDropdowns, PromptSuggestions, emptySuggestions } from "@/components/PromptDropdowns";
+import { usePromptSuggestions } from "@/hooks/usePromptSuggestions";
+
+// Component to manage prompt suggestions
+interface PromptSuggestionsSectionProps {
+  prompt: string;
+  modelKey: ModelKey;
+  onSuggestionSelect: (suggestion: string) => void;
+}
+
+function PromptSuggestionsSection({ 
+  prompt, 
+  modelKey, 
+  onSuggestionSelect 
+}: PromptSuggestionsSectionProps) {
+  // Use our custom hook to fetch suggestions
+  const { suggestions, isLoading } = usePromptSuggestions(prompt, modelKey);
+  
+  // Handle suggestion selection
+  const handleSuggestionSelect = (field: keyof PromptSuggestions, value: string) => {
+    onSuggestionSelect(value);
+  };
+  
+  return (
+    <div className="mt-4">
+      <h4 className="text-sm font-medium text-muted-foreground mb-2">Suggested Style Details</h4>
+      <PromptDropdowns 
+        suggestions={suggestions}
+        onChange={handleSuggestionSelect}
+        isLoading={isLoading}
+      />
+    </div>
+  );
+}
 
 // Model interface from API
 interface ModelInfo {
@@ -327,6 +361,21 @@ export default function PromptForm({
                   <p className="text-xs text-muted-foreground">
                     For best results, include details about style, lighting, colors, and composition or click ✨ to enhance your prompt
                   </p>
+                  
+                  {/* Prompt Suggestions Dropdowns - only show when prompt has 3+ characters */}
+                  {field.value && field.value.length >= 3 && (
+                    <PromptSuggestionsSection 
+                      prompt={field.value} 
+                      modelKey={modelKey} 
+                      onSuggestionSelect={(suggestion) => {
+                        // Append the suggestion to the current prompt
+                        const currentPrompt = form.getValues("prompt");
+                        form.setValue("prompt" as keyof GenericFormValues, 
+                          currentPrompt + (currentPrompt.endsWith(",") || currentPrompt.endsWith(" ") ? " " : ", ") + suggestion
+                        );
+                      }} 
+                    />
+                  )}
                 </FormItem>
               )}
             />
