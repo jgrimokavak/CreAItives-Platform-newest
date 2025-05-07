@@ -31,7 +31,7 @@ export default function HomePage() {
       title: 'Image Editing',
       description: 'Erase, replace, and remix existing images with precision',
       icon: <PenTool className="h-5 w-5 text-white" />,
-      to: '/create',
+      to: '/gallery',  // Navigate to gallery first to select an image to edit
       bgColor: 'bg-blue-400',
     },
     {
@@ -45,7 +45,7 @@ export default function HomePage() {
       title: 'Car Generator',
       description: 'Create realistic car renders with simple requests or CSV batches',
       icon: <CarFront className="h-5 w-5 text-white" />,
-      to: '/cars',
+      to: '/car',
       bgColor: 'bg-green-400',
     },
     {
@@ -59,7 +59,7 @@ export default function HomePage() {
       title: 'AI Prompt Helper',
       description: 'Smart autocompletes and prompt polish to perfect your ideas',
       icon: <Sparkles className="h-5 w-5 text-white" />,
-      to: '/create',
+      to: '/create',  // The prompt helper is integrated in the creation page
       bgColor: 'bg-pink-400',
     },
   ];
