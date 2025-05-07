@@ -708,8 +708,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const text = req.file.buffer.toString("utf8");
     console.log(`CSV file parsed to text (${text.length} chars), first 100 chars: ${text.substring(0, 100)}...`);
     
-    const parsed = Papa.parse<BatchRow>(text, { header: true, skipEmptyLines: true });
+    // First parse the CSV to analyze the headers
+    const preparse = Papa.parse(text, { header: false, skipEmptyLines: true });
+    
+    if (preparse.data.length < 2) {
+      console.error("CSV must have at least two rows (header + data)");
+      return res.status(400).json({ error: "CSV must have at least two rows (header + data)" });
+    }
+    
+    // Get the headers from the first row
+    const headers = preparse.data[0] as string[];
+    console.log("Original CSV headers:", headers);
+    
+    // Normalize headers to match expected property names
+    const normalizedHeaders = headers.map(header => {
+      // Convert to lowercase and remove any spaces
+      const normalized = header.toLowerCase().trim().replace(/\s+/g, '_');
+      
+      // Map common variations to expected property names
+      if (normalized === 'aspect' || normalized === 'aspect_ratio' || normalized === 'aspectratio') {
+        return 'aspect_ratio';
+      }
+      if (normalized === 'body' || normalized === 'bodystyle' || normalized === 'body_style') {
+        return 'body_style';
+      }
+      if (normalized === 'bg' || normalized === 'background') {
+        return 'background';
+      }
+      
+      // Return the normalized header or the original if no mapping found
+      return normalized;
+    });
+    
+    console.log("Normalized CSV headers:", normalizedHeaders);
+    
+    // Now reparse with the normalized headers
+    const parsed = Papa.parse<BatchRow>(text, { 
+      header: true, 
+      skipEmptyLines: true,
+      transformHeader: header => {
+        const index = headers.indexOf(header);
+        return index >= 0 ? normalizedHeaders[index] : header;
+      }
+    });
+    
     console.log(`CSV parsed with ${parsed.data.length} rows and ${parsed.errors.length} errors`);
+    
+    // Log the first row of parsed data to verify aspect_ratio is correctly mapped
+    if (parsed.data.length > 0) {
+      console.log("First row sample:", parsed.data[0]);
+    }
     
     if (parsed.errors.length) {
       console.error(`CSV parsing errors:`, parsed.errors);

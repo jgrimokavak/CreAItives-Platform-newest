@@ -81,16 +81,32 @@ export async function processBatch(id: string, rows: Row[]) {
       console.log(`Row data:`, JSON.stringify(r));
       
       // Set default aspect ratio if not specified and validate it
-      let aspect_ratio = r.aspect_ratio || "1:1";
+      // Log the raw value for debugging
+      console.log(`Row ${i+1} raw aspect_ratio value:`, r.aspect_ratio, typeof r.aspect_ratio);
+      
+      // Clean up the aspect_ratio value to handle spaces or case differences
+      let aspect_ratio = (r.aspect_ratio || "1:1").toString().trim().toLowerCase();
       
       // Validate aspect ratio - must be one of: "1:1", "9:16", "16:9", "3:4", "4:3"
       const validAspectRatios = ["1:1", "9:16", "16:9", "3:4", "4:3"];
-      if (!validAspectRatios.includes(aspect_ratio)) {
+      
+      // Check for common variations that should be normalized
+      if (aspect_ratio === "4:3" || aspect_ratio === "4/3" || aspect_ratio === "4-3") {
+        aspect_ratio = "4:3";
+      } else if (aspect_ratio === "3:4" || aspect_ratio === "3/4" || aspect_ratio === "3-4") {
+        aspect_ratio = "3:4";
+      } else if (aspect_ratio === "16:9" || aspect_ratio === "16/9" || aspect_ratio === "16-9") {
+        aspect_ratio = "16:9";
+      } else if (aspect_ratio === "9:16" || aspect_ratio === "9/16" || aspect_ratio === "9-16") {
+        aspect_ratio = "9:16";
+      } else if (aspect_ratio === "1:1" || aspect_ratio === "1/1" || aspect_ratio === "1-1" || aspect_ratio === "square") {
+        aspect_ratio = "1:1";
+      } else if (!validAspectRatios.includes(aspect_ratio)) {
         console.warn(`Invalid aspect_ratio "${aspect_ratio}" for row ${i+1}, defaulting to "1:1"`);
         aspect_ratio = "1:1";
       }
       
-      console.log(`Using aspect_ratio: ${aspect_ratio} for row ${i+1}`);
+      console.log(`Using normalized aspect_ratio: ${aspect_ratio} for row ${i+1}`);
       
       // Create prediction with Replicate
       console.log(`Creating prediction with model version: ${imagenModel.version}`);
