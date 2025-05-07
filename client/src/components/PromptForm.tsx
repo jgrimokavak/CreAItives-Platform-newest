@@ -359,9 +359,6 @@ export default function PromptForm({
                       </div>
                     </div>
                   </FormControl>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    For best results, include details about style, lighting, colors, and composition or use the AI Enhance button
-                  </p>
                   
                   {/* Prompt Suggestions Dropdowns - only show when prompt has 3+ characters */}
                   {field.value && field.value.length >= 3 && (
