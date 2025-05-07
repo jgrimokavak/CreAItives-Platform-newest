@@ -11,12 +11,15 @@ import {
 } from '@/components/ui/carousel';
 import { 
   Sparkles, 
+  Zap,
+  Image as ImageIcon,
+  ScanSearch,
   ImageUpscale, 
   Images, 
-  Trash2, 
   MessageSquareText,
   CarFront,
-  ChevronRight
+  ChevronRight,
+  ArrowRight
 } from 'lucide-react';
 import { GeneratedImage } from '@/types/image';
 import ImageCard from '@/components/ImageCard';
@@ -52,199 +55,220 @@ export default function HomePage() {
     fetchRecentImages();
   }, []);
 
-  const features = [
+  const capabilities = [
     {
-      title: 'Image Creation',
-      description: 'Generate stunning AI images with simple text prompts',
-      icon: <Sparkles className="h-6 w-6 text-indigo-500" />,
+      title: 'Text-to-Image',
+      description: 'Transform your ideas into stunning images with 3 powerful AI models',
+      icon: <ImageIcon className="h-5 w-5 text-white" />,
       to: '/create',
-      color: 'bg-indigo-50',
-      borderColor: 'border-indigo-200',
-      iconColor: 'text-indigo-500',
+      bgColor: 'bg-red-400',
     },
     {
-      title: 'Car Designer',
-      description: 'Design custom cars with precise make, model and style options',
-      icon: <CarFront className="h-6 w-6 text-blue-500" />,
-      to: '/car',
-      color: 'bg-blue-50',
-      borderColor: 'border-blue-200',
-      iconColor: 'text-blue-500',
+      title: 'Image Editing',
+      description: 'Erase, replace, and remix existing images with precision',
+      icon: <ScanSearch className="h-5 w-5 text-white" />,
+      to: '/create',
+      bgColor: 'bg-blue-400',
     },
     {
-      title: 'Image Gallery',
-      description: 'Browse, search and manage your collection of AI images',
-      icon: <Images className="h-6 w-6 text-emerald-500" />,
-      to: '/gallery',
-      color: 'bg-emerald-50',
-      borderColor: 'border-emerald-200',
-      iconColor: 'text-emerald-500',
-    },
-    {
-      title: 'Upscaling Tool',
-      description: 'Enhance image resolution and quality with AI upscaling',
-      icon: <ImageUpscale className="h-6 w-6 text-purple-500" />,
+      title: 'Upscale',
+      description: 'Enhance resolution and quality for sharper, larger outputs',
+      icon: <ImageUpscale className="h-5 w-5 text-white" />,
       to: '/upscale',
-      color: 'bg-purple-50',
-      borderColor: 'border-purple-200',
-      iconColor: 'text-purple-500',
+      bgColor: 'bg-violet-400',
+    },
+    {
+      title: 'Car Generator',
+      description: 'Create realistic car renders with simple requests or CSV batches',
+      icon: <CarFront className="h-5 w-5 text-white" />,
+      to: '/car',
+      bgColor: 'bg-green-400',
+    },
+    {
+      title: 'Live Gallery',
+      description: 'Browse and manage your creations with real-time updates',
+      icon: <Images className="h-5 w-5 text-white" />,
+      to: '/gallery',
+      bgColor: 'bg-amber-400',
     },
     {
       title: 'AI Prompt Helper',
-      description: 'Get intelligent suggestions to improve your image prompts',
-      icon: <MessageSquareText className="h-6 w-6 text-amber-500" />,
+      description: 'Smart autocompletes and prompt polish to perfect your ideas',
+      icon: <MessageSquareText className="h-5 w-5 text-white" />,
       to: '/create',
-      color: 'bg-amber-50', 
-      borderColor: 'border-amber-200',
-      iconColor: 'text-amber-500',
-    },
-    {
-      title: 'Trash Management',
-      description: 'Recover or permanently delete previously removed images',
-      icon: <Trash2 className="h-6 w-6 text-rose-500" />,
-      to: '/trash',
-      color: 'bg-rose-50',
-      borderColor: 'border-rose-200',
-      iconColor: 'text-rose-500',
+      bgColor: 'bg-pink-400',
     },
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      <main className="container mx-auto px-4 py-8 flex-grow">
+    <div className="flex flex-col min-h-screen bg-slate-50">
+      <main className="flex-grow">
         {/* Hero Section */}
-        <section className="mb-16">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
-              CreAItives Platform 2.0
-            </h1>
-            <p className="text-xl text-muted-foreground mb-8">
-              Transform your ideas into stunning visual creations with our advanced AI image generation tools
-            </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Link to="/create">
-                <Button size="lg" className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700">
-                  Start Creating <Sparkles className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
-              <Link to="/car">
-                <Button size="lg" variant="outline" className="border-2 border-slate-200">
-                  Try Car Designer <CarFront className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
+        <section className="pt-10 pb-12 px-4 sm:px-6 lg:px-8 bg-white border-b">
+          <div className="container mx-auto max-w-7xl">
+            <div className="flex flex-col lg:flex-row items-center gap-10">
+              <div className="w-full lg:w-1/2 lg:pr-6">
+                <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-600 mb-4">
+                  <span className="mr-1">✨</span> New Platform Release
+                </div>
+                <h1 className="text-4xl md:text-5xl font-bold mb-4">
+                  <span className="text-blue-600">CreAItives</span> Platform 2.0
+                </h1>
+                <p className="text-lg text-slate-600 mb-6">
+                  Transform your creative vision into stunning AI-generated imagery with our powerful suite of creation tools.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Link to="/create">
+                    <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white font-medium flex items-center gap-2">
+                      Get Started <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                  <Link to="/gallery">
+                    <Button size="lg" variant="outline" className="bg-white border-slate-200 text-slate-700 font-medium">
+                      Browse Gallery
+                    </Button>
+                  </Link>
+                </div>
+                
+                <div className="flex items-center gap-6 mt-8">
+                  <div className="flex items-center gap-2">
+                    <Zap className="h-5 w-5 text-blue-600" />
+                    <span className="text-sm font-medium text-slate-700">Fast Generation</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <ScanSearch className="h-5 w-5 text-blue-600" />
+                    <span className="text-sm font-medium text-slate-700">High Resolution</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-blue-600" />
+                    <span className="text-sm font-medium text-slate-700">Smart Prompts</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="w-full lg:w-1/2 mt-8 lg:mt-0">
+                {!isLoading && recentImages.length > 0 ? (
+                  <Carousel
+                    opts={{
+                      align: "start",
+                      loop: true,
+                    }}
+                    className="w-full"
+                  >
+                    <CarouselContent className="-ml-2 md:-ml-4">
+                      {recentImages.slice(0, 4).map((image) => (
+                        <CarouselItem key={image.id} className="pl-2 md:pl-4 basis-full">
+                          <div className="p-1">
+                            <img 
+                              src={image.thumbUrl || image.url} 
+                              alt={image.prompt} 
+                              className="w-full h-64 object-cover rounded-lg shadow-md"
+                              onClick={() => window.location.href = '/gallery'}
+                            />
+                          </div>
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                    <div className="flex justify-center gap-1 mt-4">
+                      {[...Array(Math.min(recentImages.length, 10))].map((_, i) => (
+                        <span 
+                          key={i} 
+                          className={`block h-2 w-2 rounded-full ${i === 0 ? 'bg-blue-600' : 'bg-slate-200'}`}
+                        />
+                      ))}
+                    </div>
+                  </Carousel>
+                ) : isLoading ? (
+                  <div className="flex items-center justify-center h-64 bg-slate-100 rounded-lg">
+                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-64 bg-slate-100 rounded-lg">
+                    <p className="text-slate-500">No recent images available</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </section>
 
-        {/* Features Grid */}
-        <section className="mb-16">
-          <h2 className="text-2xl font-bold mb-8 text-center">Platform Features</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, index) => (
-              <Link key={index} to={feature.to}>
-                <Card className={`h-full hover:shadow-md transition-shadow border ${feature.borderColor} hover:border-slate-300`}>
-                  <CardContent className={`p-6 ${feature.color}`}>
-                    <div className="flex items-start gap-4">
-                      <div className={`p-3 rounded-full ${feature.color} border ${feature.borderColor}`}>
-                        {feature.icon}
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
-                        <p className="text-muted-foreground text-sm">{feature.description}</p>
-                        <div className="flex items-center mt-4 text-sm font-medium text-primary">
-                          Explore <ChevronRight className="h-4 w-4 ml-1" />
+        {/* Platform Capabilities */}
+        <section className="py-14 px-4 sm:px-6 lg:px-8">
+          <div className="container mx-auto max-w-7xl">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl font-bold mb-2">Platform Capabilities</h2>
+              <p className="text-slate-600 max-w-2xl mx-auto">
+                Explore the powerful features of our AI image generation platform
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {capabilities.map((capability, index) => (
+                <Link key={index} to={capability.to}>
+                  <Card className="h-full hover:shadow-md transition-shadow border border-slate-200 overflow-hidden">
+                    <CardContent className="p-6">
+                      <div className="flex items-start gap-4">
+                        <div className={`p-3 rounded-md ${capability.bgColor}`}>
+                          {capability.icon}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold mb-1">{capability.title}</h3>
+                          <p className="text-slate-600 text-sm">{capability.description}</p>
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
           </div>
         </section>
 
-        {/* Recent Gallery Carousel */}
-        <section className="mb-16">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold">Recent Creations</h2>
-            <Link to="/gallery">
-              <Button variant="ghost" className="font-medium text-primary">
-                View Gallery <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
-            </Link>
-          </div>
-
-          {isLoading ? (
-            <div className="h-64 flex items-center justify-center">
-              <div className="flex flex-col items-center">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
-                <p className="mt-4 text-sm text-muted-foreground">Loading recent images...</p>
-              </div>
-            </div>
-          ) : error ? (
-            <div className="h-64 flex items-center justify-center border border-dashed rounded-lg bg-slate-50">
-              <div className="text-center p-6">
-                <p className="text-muted-foreground mb-2">{error}</p>
-                <Button 
-                  variant="outline" 
-                  onClick={() => window.location.reload()}
-                  className="mt-2"
-                >
-                  Try Again
-                </Button>
-              </div>
-            </div>
-          ) : recentImages.length === 0 ? (
-            <div className="h-64 flex items-center justify-center border border-dashed rounded-lg bg-slate-50">
-              <div className="text-center p-6">
-                <p className="text-muted-foreground">No images found in your gallery</p>
-                <Link to="/create">
-                  <Button className="mt-4">Create Your First Image</Button>
+        {/* Recent Gallery Section */}
+        {recentImages.length > 0 && (
+          <section className="py-14 px-4 sm:px-6 lg:px-8 bg-white border-t">
+            <div className="container mx-auto max-w-7xl">
+              <div className="flex justify-between items-center mb-8">
+                <h2 className="text-2xl font-bold">Recent Creations</h2>
+                <Link to="/gallery">
+                  <Button variant="ghost" className="font-medium text-blue-600 flex items-center gap-1">
+                    View All <ChevronRight className="h-4 w-4" />
+                  </Button>
                 </Link>
               </div>
-            </div>
-          ) : (
-            <Carousel
-              opts={{
-                align: "start",
-                loop: true,
-              }}
-              className="w-full"
-            >
-              <CarouselContent className="-ml-2 md:-ml-4">
-                {recentImages.map((image) => (
-                  <CarouselItem key={image.id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
-                    <div className="p-1">
-                      <ImageCard
-                        image={image}
-                        mode="preview"
-                        onClick={() => window.location.href = '/gallery'}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {recentImages.slice(0, 8).map((image) => (
+                  <Link key={image.id} to="/gallery">
+                    <div className="overflow-hidden rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                      <img 
+                        src={image.thumbUrl || image.url} 
+                        alt={image.prompt} 
+                        className="w-full h-48 object-cover"
                       />
                     </div>
-                  </CarouselItem>
+                  </Link>
                 ))}
-              </CarouselContent>
-              <div className="flex justify-end gap-2 mt-4">
-                <CarouselPrevious className="static translate-y-0 !mr-0" />
-                <CarouselNext className="static translate-y-0 !mr-0" />
               </div>
-            </Carousel>
-          )}
-        </section>
+            </div>
+          </section>
+        )}
 
         {/* Call to Action */}
-        <section className="mb-8">
-          <div className="rounded-xl bg-gradient-to-r from-indigo-100 to-purple-100 border border-slate-200 p-8 text-center">
-            <h2 className="text-2xl font-bold mb-4">Ready to unleash your creativity?</h2>
-            <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-              Start generating stunning AI images with our powerful tools. Whether you're designing cars, 
-              creating art, or visualizing ideas, CreAItives Platform 2.0 has everything you need.
-            </p>
-            <Link to="/create">
-              <Button size="lg" className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700">
-                Start Creating Now <Sparkles className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
+        <section className="py-14 px-4 sm:px-6 lg:px-8">
+          <div className="container mx-auto max-w-5xl">
+            <div className="rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 p-8 text-center">
+              <h2 className="text-2xl font-bold mb-4 text-slate-800">Ready to unleash your creativity?</h2>
+              <p className="text-slate-600 mb-6 max-w-2xl mx-auto">
+                Start generating stunning AI images with our powerful tools. Whether you're designing cars, 
+                creating art, or visualizing ideas, CreAItives Platform 2.0 has everything you need.
+              </p>
+              <Link to="/create">
+                <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white font-medium">
+                  Start Creating Now <Sparkles className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
           </div>
         </section>
       </main>
