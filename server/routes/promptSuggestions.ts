@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { openai } from "../openai";
-import LRU from "lru-cache";
+import { LRUCache } from "lru-cache";
 
 const router = Router();
 const bodySchema = z.object({
@@ -10,9 +10,9 @@ const bodySchema = z.object({
 });
 
 // Cache suggestions to reduce API calls and costs
-const cache = new LRU<string, any>({ max: 300, ttl: 1000 * 60 * 10 }); // 10 minute TTL
+const cache = new LRUCache<string, any>({ max: 300, ttl: 1000 * 60 * 10 }); // 10 minute TTL
 
-router.post("/api/prompt-suggestions", async (req, res) => {
+router.post("/prompt-suggestions", async (req, res) => {
   try {
     // Validate request body
     const { text, model } = bodySchema.parse(req.body);
