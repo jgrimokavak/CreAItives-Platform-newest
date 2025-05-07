@@ -214,11 +214,13 @@ export default function PromptForm({
     },
     onSuccess: (data) => {
       // Update the form with the enhanced prompt
-      form.setValue("prompt" as const, data.prompt);
+      form.setValue("prompt" as keyof GenericFormValues, data.prompt);
       
       // If negative prompt exists and is applicable to this model
-      if (data.negativePrompt && modelCatalog[modelKey].visible.includes("negative_prompt")) {
-        form.setValue("negative_prompt" as any, data.negativePrompt);
+      if (data.negativePrompt && 
+          // Type assertion to make TypeScript happy with the string literal type
+          modelCatalog[modelKey].visible.includes("negative_prompt" as any)) {
+        form.setValue("negative_prompt" as keyof GenericFormValues, data.negativePrompt);
       }
       
       setEnhancing(false);
