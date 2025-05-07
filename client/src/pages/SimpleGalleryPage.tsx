@@ -489,6 +489,19 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       {/* Gallery toolbar */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border p-4 flex flex-wrap gap-3 items-center justify-between">
         <div className="flex flex-wrap gap-3 items-center">
+          {/* Page title and count */}
+          <div className="flex items-center mr-2">
+            <h1 className="text-lg font-medium mr-2">
+              {mode === 'gallery' ? 'Gallery' : 'Trash'}
+            </h1>
+            <span className="text-sm text-muted-foreground bg-muted/50 px-2.5 py-0.5 rounded-full">
+              {selectedIds.length > 0
+                ? `${selectedIds.length} selected`
+                : `${images.length} ${mode === 'trash' ? 'items' : 'images'}`
+              }
+            </span>
+          </div>
+          
           {/* Filters for gallery mode */}
           {mode === 'gallery' && (
             <Button
@@ -499,15 +512,15 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
             >
               <Star className={cn(
                 "h-4 w-4", 
-                showStarredOnly ? "fill-current" : ""
+                showStarredOnly ? "fill-current text-yellow-400" : ""
               )} />
-              {showStarredOnly ? "Starred Only" : "All Images"}
+              {showStarredOnly ? "Starred" : "All Images"}
             </Button>
           )}
           
           {/* Search input */}
           <form 
-            className="relative w-full max-w-sm flex items-center gap-2"
+            className="relative flex-1 max-w-md flex items-center gap-2"
             onClick={(e) => e.stopPropagation()} 
             onSubmit={(e) => {
               e.preventDefault(); // Prevent default form submission
@@ -519,13 +532,12 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
               <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 type="text" 
-                placeholder="Search by prompt..."
+                placeholder="Search by prompt"
                 value={searchInput}
                 onChange={(e) => {
-                  console.log(`Search input changed to: "${e.target.value}"`);
                   setSearchInput(e.target.value);
                 }}
-                className="pl-8 pr-10 h-9 md:w-[200px] lg:w-[300px] border-slate-300 focus:border-primary transition-colors"
+                className="pl-8 pr-10 h-9 md:w-[200px] lg:w-[300px] border-muted focus:border-primary transition-colors"
                 onKeyDown={(e) => {
                   // Process Enter key to trigger search
                   if (e.key === 'Enter') {
@@ -534,120 +546,165 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
                     if (searchInput.trim()) {
                       handleSearch();
                     }
-                    console.log('Enter key press in search triggered search');
                     return false;
                   }
                 }}
               />
               {searchInput && (
-                <X
-                  className="absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground cursor-pointer hover:text-foreground"
-                  onClick={clearSearch}
-                />
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    clearSearch();
+                  }}
+                  className="absolute right-2 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted/80 inline-flex items-center justify-center"
+                  aria-label="Clear search"
+                >
+                  <X className="h-3 w-3" />
+                </button>
               )}
             </div>
             <Button 
               type="submit" 
               size="sm"
+              variant="secondary"
               className="h-9"
               disabled={!searchInput.trim()}
             >
               Search
             </Button>
           </form>
-          
-          {/* Item count */}
-          <div className="text-sm text-muted-foreground">
-            {selectedIds.length > 0
-              ? `${selectedIds.length} selected`
-              : `${images.length} ${mode === 'trash' ? 'items' : 'images'}`
-            }
-          </div>
         </div>
         
-        <div className="flex flex-wrap gap-3 items-center">
+        <div className="flex flex-wrap gap-2 items-center">
           {/* Selection actions */}
           {selectedIds.length > 0 ? (
             <>
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={clearSelection}
+                className="text-muted-foreground hover:text-foreground"
               >
                 Cancel
               </Button>
               
               {mode === 'gallery' && (
                 <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleBulkAction('star')}
-                    className="gap-2"
-                  >
-                    <Star className="h-4 w-4" />
-                    Star
-                  </Button>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleBulkAction('star')}
+                          className="h-9 w-9 p-0"
+                        >
+                          <Star className="h-4 w-4" />
+                          <span className="sr-only">Star</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">Star selected</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                   
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleBulkAction('unstar')}
-                    className="gap-2"
-                  >
-                    <Star className="h-4 w-4 fill-current" />
-                    Unstar
-                  </Button>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleBulkAction('unstar')}
+                          className="h-9 w-9 p-0"
+                        >
+                          <Star className="h-4 w-4 fill-current text-yellow-400" />
+                          <span className="sr-only">Unstar</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">Unstar selected</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                   
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleBulkAction('trash')}
-                    className="gap-2 text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Delete
-                  </Button>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleBulkAction('trash')}
+                          className="h-9 w-9 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          <span className="sr-only">Delete</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">Move to trash</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </>
               )}
               
               {mode === 'trash' && (
                 <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleBulkAction('restore')}
-                    className="gap-2"
-                  >
-                    <RotateCcw className="h-4 w-4" />
-                    Restore
-                  </Button>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleBulkAction('restore')}
+                          className="h-9 w-9 p-0"
+                        >
+                          <RotateCcw className="h-4 w-4" />
+                          <span className="sr-only">Restore</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">Restore selected</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                   
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      if (window.confirm('Are you sure you want to permanently delete these images? This action cannot be undone.')) {
-                        handleBulkAction('delete-permanent');
-                      }
-                    }}
-                    className="gap-2 text-destructive hover:text-destructive"
-                  >
-                    <Trash className="h-4 w-4" />
-                    Delete Permanently
-                  </Button>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            if (window.confirm(`Are you sure you want to permanently delete ${selectedIds.length} images? This action cannot be undone.`)) {
+                              handleBulkAction('delete-permanent');
+                            }
+                          }}
+                          className="h-9 w-9 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash className="h-4 w-4" />
+                          <span className="sr-only">Delete Permanently</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">Delete permanently</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </>
               )}
             </>
           ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={selectAll}
-              disabled={images.length === 0}
-            >
-              Select All
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={selectAll}
+                    disabled={images.length === 0}
+                    className="gap-2"
+                  >
+                    <span className="hidden sm:inline">Select All</span>
+                    <span className="sm:hidden">Select</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">Select all images</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
         </div>
       </div>
