@@ -305,8 +305,8 @@ export async function processBatch(id: string, rows: Row[]) {
   if (!zipResult.success) {
     console.error(`Failed to create ZIP file for job ${id}`);
     // If the job wasn't already marked as failed, mark it now
-    if (job.status !== "failed" as const) {
-      job.status = "failed" as const;
+    if (job.status !== "failed") {
+      job.status = "failed";
     }
   }
   
