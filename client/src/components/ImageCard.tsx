@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { 
   CheckIcon,
   CopyIcon,
@@ -377,105 +378,110 @@ export default function ImageCard({
           </div>
         </div>
         
-        {/* Parameters section with color coding */}
+        {/* Parameters section with standardized badges */}
         <div className="space-y-1.5">
           <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Parameters</h4>
           
           <div className="flex flex-wrap gap-2 text-xs">
-            {/* AI Model tag - blue color scheme */}
-            <span className="bg-blue-50 text-blue-700 border border-blue-200 rounded-full px-2.5 py-0.5 flex items-center shadow-sm">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5"></span>
+            {/* AI Model badge */}
+            <Badge variant="outline" className="bg-blue-50/80 text-blue-700 border-blue-200 whitespace-nowrap">
               {image.model}
-            </span>
+            </Badge>
             
-            {/* Aspect Ratio tag - purple color scheme */}
+            {/* Aspect Ratio badge - standardized, always display */}
             {(() => {
               // Priority 1: Use explicitly stored aspect ratio (new format)
               if (image.aspectRatio) {
                 return (
-                  <span className="bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-2.5 py-0.5 flex items-center shadow-sm">
-                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mr-1.5"></span>
+                  <Badge variant="outline" className="bg-purple-50/80 text-purple-700 border-purple-200 whitespace-nowrap">
                     {image.aspectRatio}
-                  </span>
+                  </Badge>
                 );
               }
               
               // Priority 2: Check if size field contains a ratio format (e.g., "1:1", "16:9")
               if (image.size && image.size.includes(':')) {
                 return (
-                  <span className="bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-2.5 py-0.5 flex items-center shadow-sm">
-                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mr-1.5"></span>
+                  <Badge variant="outline" className="bg-purple-50/80 text-purple-700 border-purple-200 whitespace-nowrap">
                     {image.size}
-                  </span>
+                  </Badge>
                 );
               }
               
-              // Priority 3: Try to calculate a ratio from width/height if available
-              if (image.width && image.height) {
-                const w = parseInt(image.width as string);
-                const h = parseInt(image.height as string);
-                if (!isNaN(w) && !isNaN(h)) {
-                  // For common ratios, use standard notation
-                  if (w === h) return (
-                    <span className="bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-2.5 py-0.5 flex items-center shadow-sm">
-                      <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mr-1.5"></span>
-                      1:1
-                    </span>
-                  );
-                  if (w/h === 16/9 || Math.abs(w/h - 16/9) < 0.01) return (
-                    <span className="bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-2.5 py-0.5 flex items-center shadow-sm">
-                      <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mr-1.5"></span>
-                      16:9
-                    </span>
-                  );
-                  if (h/w === 16/9 || Math.abs(h/w - 16/9) < 0.01) return (
-                    <span className="bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-2.5 py-0.5 flex items-center shadow-sm">
-                      <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mr-1.5"></span>
-                      9:16
-                    </span>
-                  );
-                  if (w/h === 4/3 || Math.abs(w/h - 4/3) < 0.01) return (
-                    <span className="bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-2.5 py-0.5 flex items-center shadow-sm">
-                      <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mr-1.5"></span>
-                      4:3
-                    </span>
-                  );
-                  if (h/w === 4/3 || Math.abs(h/w - 4/3) < 0.01) return (
-                    <span className="bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-2.5 py-0.5 flex items-center shadow-sm">
-                      <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mr-1.5"></span>
-                      3:4
-                    </span>
+              // Priority 3: Calculate based on common dimensions
+              if (image.size) {
+                const ratioMap: Record<string, string> = {
+                  "1024x1024": "1:1",
+                  "1024x1792": "9:16",
+                  "1792x1024": "16:9",
+                  "1024x1536": "2:3",
+                  "1536x1024": "3:2"
+                };
+                
+                // Check if we have a mapping for this size
+                const aspectRatio = ratioMap[image.size];
+                if (aspectRatio) {
+                  return (
+                    <Badge variant="outline" className="bg-purple-50/80 text-purple-700 border-purple-200 whitespace-nowrap">
+                      {aspectRatio}
+                    </Badge>
                   );
                 }
               }
               
-              // Priority 4: Size display as fallback if it's a dimension (e.g., "1024x1024")
-              if (image.size && image.size.match(/\d+x\d+/i)) {
-                return (
-                  <span className="bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-2.5 py-0.5 flex items-center shadow-sm">
-                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500 mr-1.5"></span>
-                    {image.size}
-                  </span>
-                );
+              // Priority 4: Calculate from width/height
+              if (image.width && image.height) {
+                const w = parseInt(image.width as string);
+                const h = parseInt(image.height as string);
+                
+                if (!isNaN(w) && !isNaN(h)) {
+                  // Check for common aspect ratios
+                  if (w === h) {
+                    return (
+                      <Badge variant="outline" className="bg-purple-50/80 text-purple-700 border-purple-200 whitespace-nowrap">
+                        1:1
+                      </Badge>
+                    );
+                  }
+                  
+                  if (Math.abs(w/h - 16/9) < 0.01) {
+                    return (
+                      <Badge variant="outline" className="bg-purple-50/80 text-purple-700 border-purple-200 whitespace-nowrap">
+                        16:9
+                      </Badge>
+                    );
+                  }
+                  
+                  if (Math.abs(h/w - 16/9) < 0.01) {
+                    return (
+                      <Badge variant="outline" className="bg-purple-50/80 text-purple-700 border-purple-200 whitespace-nowrap">
+                        9:16
+                      </Badge>
+                    );
+                  }
+                }
               }
               
-              return null; // Don't show anything if we can't determine a useful ratio
+              // Default fallback
+              return (
+                <Badge variant="outline" className="bg-purple-50/80 text-purple-700 border-purple-200 whitespace-nowrap">
+                  1:1
+                </Badge>
+              );
             })()}
             
-            {/* Resolution dimensions tag - amber color scheme */}
+            {/* Resolution dimensions badge */}
             {image.width && image.height && (
-              <span className="bg-amber-50 text-amber-700 border border-amber-200 rounded-full px-2.5 py-0.5 flex items-center shadow-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5"></span>
+              <Badge variant="outline" className="bg-amber-50/80 text-amber-700 border-amber-200 whitespace-nowrap">
                 {image.width}×{image.height}
-              </span>
+              </Badge>
             )}
             
-            {/* Quality tag - green color scheme */}
+            {/* Quality badge */}
             {image.quality && (
-              <span className="bg-green-50 text-green-700 border border-green-200 rounded-full px-2.5 py-0.5 flex items-center shadow-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>
+              <Badge variant="outline" className="bg-green-50/80 text-green-700 border-green-200 whitespace-nowrap">
                 {image.quality.charAt(0).toUpperCase() + image.quality.slice(1)}
-              </span>
+              </Badge>
             )}
           </div>
         </div>
