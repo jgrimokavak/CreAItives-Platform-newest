@@ -2,15 +2,16 @@ import { useState } from "react";
 import { CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
+  CheckIcon,
+  CopyIcon,
   DownloadIcon, 
+  ImageIcon,
+  ImageUpscale,
   PenToolIcon, 
+  RotateCcwIcon,
   StarIcon, 
   Trash2Icon,
-  TrashIcon,
-  RotateCcwIcon,
-  CopyIcon,
-  ImageIcon,
-  ImageUpscale
+  TrashIcon
 } from "lucide-react";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -84,16 +85,28 @@ export default function ImageCard({
         {onSelect && (
           <div 
             className={cn(
-              "absolute top-2 left-2 z-10 bg-white/80 backdrop-blur-sm rounded-full p-1 shadow-sm transition-all cursor-pointer",
-              selected ? "bg-primary/20" : "hover:bg-white/95",
-              selectionMode === 'selecting' ? "opacity-100 scale-100" : "opacity-75 scale-90 hover:opacity-100 hover:scale-100"
+              "absolute top-2 left-2 z-10 transition-all duration-200 cursor-pointer",
+              selectionMode === 'selecting' ? "opacity-100 scale-100" : "opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100"
             )}
             onClick={(e) => {
               e.stopPropagation();
-              onSelect(image.id, e.shiftKey);
+              // Cast the event to MouseEvent to access shiftKey
+              onSelect(image.id, (e as React.MouseEvent).shiftKey);
             }}
           >
-            <div className="relative w-5 h-5 flex items-center justify-center">
+            <div 
+              className={cn(
+                "flex items-center justify-center w-6 h-6 rounded-full shadow-md border border-white/40 backdrop-blur-md transition-colors",
+                selected 
+                  ? "bg-primary text-white" 
+                  : "bg-background/70 hover:bg-background"
+              )}
+            >
+              {selected ? (
+                <CheckIcon className="h-3.5 w-3.5" />
+              ) : (
+                <div className="w-3.5 h-3.5 rounded-sm border-2 border-muted-foreground/70" />
+              )}
               <input
                 type="checkbox"
                 checked={selected}
@@ -102,10 +115,7 @@ export default function ImageCard({
                   // Cast to MouseEvent to access shiftKey
                   onSelect(image.id, (e.nativeEvent as MouseEvent).shiftKey);
                 }}
-                className={cn(
-                  "h-4 w-4 rounded-sm border-2 cursor-pointer transition-colors",
-                  selected ? "border-primary bg-primary text-white" : "border-gray-400"
-                )}
+                className="sr-only" // Hide the actual checkbox but keep it accessible
                 onClick={(e) => e.stopPropagation()}
               />
             </div>
