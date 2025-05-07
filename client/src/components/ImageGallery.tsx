@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { FaCopy, FaTrash } from "react-icons/fa";
+import { FaCopy, FaTrash, FaRegTimesCircle } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { GeneratedImage } from "@/types/image";
 import ImageModal from "./ImageModal";
-import { useLocation, useRoute } from "wouter";
+import { useLocation } from "wouter";
 import { useEditor } from "@/context/EditorContext";
 import ImageCard from "./ImageCard";
 
@@ -99,49 +99,47 @@ export default function ImageGallery({ images, onClearResults }: ImageGalleryPro
     // Navigate to upscale page with the image URL as a query parameter
     // Use the fullUrl if available, otherwise fallback to url
     const imageUrl = image.fullUrl || image.url;
-    console.log(`Upscaling image with URL: ${imageUrl}`);
     navigate(`/upscale?sourceUrl=${encodeURIComponent(imageUrl)}`);
   };
 
   return (
-    <section className="mb-12">
+    <div className="h-full">
       {/* Image Modal for fullscreen viewing */}
       <ImageModal 
         imageUrl={selectedImage} 
         onClose={() => setSelectedImage(null)} 
       />
       
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold">Your Generated Images</h2>
-        <div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClearResults}
-            className="text-accent hover:text-foreground transition-colors text-sm flex items-center space-x-1"
-          >
-            <FaTrash className="mr-1" />
-            <span>Clear all</span>
-          </Button>
-        </div>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-semibold">Generated Results</h2>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onClearResults}
+          className="text-muted-foreground hover:text-foreground transition-colors text-xs flex items-center"
+        >
+          <FaRegTimesCircle className="mr-1.5 h-3.5 w-3.5" />
+          <span>Clear</span>
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-        {images.map((image) => (
-          <div key={image.id} className="relative">
-            <ImageCard
-              image={image}
-              mode="preview"
-              onEdit={handleSendToEditor}
-              onDownload={handleDownload}
-              onCopyPrompt={handleCopyPrompt}
-              onUpscale={handleUpscale}
-              // Add click handler to the image itself instead of an overlay
-              onClick={() => setSelectedImage(image.url)}
-            />
-          </div>
-        ))}
+      <div className="h-[calc(100%-2.5rem)] overflow-y-auto pr-1 space-y-4">
+        <div className="grid grid-cols-1 gap-4">
+          {images.map((image) => (
+            <div key={image.id} className="relative">
+              <ImageCard
+                image={image}
+                mode="preview"
+                onEdit={handleSendToEditor}
+                onDownload={handleDownload}
+                onCopyPrompt={handleCopyPrompt}
+                onUpscale={handleUpscale}
+                onClick={() => setSelectedImage(image.url)}
+              />
+            </div>
+          ))}
+        </div>
       </div>
-    </section>
+    </div>
   );
 }

@@ -196,9 +196,9 @@ export default function PromptForm({
   };
 
   return (
-    <div className="bg-card rounded-xl shadow-sm border p-6 max-w-3xl mx-auto">
+    <div className="bg-card rounded-xl shadow-sm border h-full">
       {isSubmitting && (
-        <div className="mb-6">
+        <div className="p-5 border-b">
           <div className="flex justify-between mb-2 text-sm">
             <span className="font-medium flex items-center">
               <svg className="animate-spin mr-2 h-4 w-4 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -211,61 +211,63 @@ export default function PromptForm({
           </div>
           <Progress value={progress} className="h-2 bg-primary/10" />
           <p className="text-xs text-muted-foreground mt-2 text-center">
-            This may take up to 30 seconds depending on the complexity of your request
+            Processing your request, typically takes 15-30 seconds
           </p>
         </div>
       )}
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {/* Model selector at the top */}
-          <div className="space-y-1.5">
-            <Label className="text-sm font-medium">AI Model</Label>
-            <ModelSelect value={modelKey} onChange={setModelKey} />
-            <p className="text-muted-foreground text-xs mt-1.5">
-              {modelCatalog[modelKey].description}
-            </p>
-          </div>
+      <div className="p-6">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+            {/* Model selector at the top */}
+            <div className="space-y-1.5">
+              <Label className="text-sm font-medium">AI Model</Label>
+              <ModelSelect value={modelKey} onChange={setModelKey} />
+              <p className="text-muted-foreground text-xs mt-1.5">
+                {modelCatalog[modelKey].description}
+              </p>
+            </div>
 
-          {/* Prompt field */}
-          <FormField
-            control={form.control}
-            name="prompt"
-            render={({ field }) => (
-              <FormItem className="space-y-1.5">
-                <FormLabel className="text-sm font-medium">Describe what you want to create</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="A detailed description of what you want to see. For example: An astronaut riding a horse on Mars, digital art style with vibrant colors"
-                    className="resize-none min-h-[100px] text-sm"
-                    {...field}
-                  />
-                </FormControl>
-                <p className="text-xs text-muted-foreground">
-                  Be specific about style, colors, lighting, and composition for best results
-                </p>
-              </FormItem>
-            )}
-          />
+            {/* Prompt field */}
+            <FormField
+              control={form.control}
+              name="prompt"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-sm font-medium">Image Description</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Describe what you want to see. Be specific about details, style, and composition."
+                      className="resize-none min-h-[100px] text-sm"
+                      {...field}
+                    />
+                  </FormControl>
+                  <p className="text-xs text-muted-foreground">
+                    For best results, include details about style, lighting, colors, and composition
+                  </p>
+                </FormItem>
+              )}
+            />
 
-          {/* Dynamic form fields based on the selected model */}
-          <div className="p-4 bg-muted/40 rounded-lg border border-border/50">
-            <h3 className="text-sm font-medium mb-3">Image Options</h3>
-            <DynamicForm modelKey={modelKey} form={form} />
-          </div>
+            {/* Dynamic form fields based on the selected model */}
+            <div className="p-4 bg-muted/40 rounded-lg border border-border/50">
+              <h3 className="text-sm font-medium mb-3">Image Settings</h3>
+              <DynamicForm modelKey={modelKey} form={form} />
+            </div>
 
-          <div className="flex justify-center pt-2">
-            <Button 
-              type="submit" 
-              disabled={isSubmitting}
-              className="px-8 py-2.5 h-auto font-medium text-sm"
-              size="lg"
-            >
-              <span>Create Images</span>
-              <FaMagic className="ml-2 h-4 w-4" />
-            </Button>
-          </div>
-        </form>
-      </Form>
+            <div className="flex justify-center pt-2">
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+                className="w-full sm:w-auto sm:px-8 py-2.5 h-auto font-medium text-sm"
+                size="lg"
+              >
+                <span>Generate Images</span>
+                <FaMagic className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </div>
     </div>
   );
 }

@@ -314,215 +314,230 @@ export default function EditForm({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 max-w-3xl mx-auto">
+    <div className="bg-card rounded-xl shadow-sm border h-full">
       {isSubmitting && (
-        <div className="mb-6">
+        <div className="p-5 border-b">
           <div className="flex justify-between mb-2 text-sm">
-            <span>Processing images...</span>
-            <span>{Math.round(progress)}%</span>
+            <span className="font-medium flex items-center">
+              <svg className="animate-spin mr-2 h-4 w-4 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Processing images...
+            </span>
+            <span className="font-medium text-primary">{Math.round(progress)}%</span>
           </div>
-          <Progress value={progress} className="h-2" />
+          <Progress value={progress} className="h-2 bg-primary/10" />
+          <p className="text-xs text-muted-foreground mt-2 text-center">
+            Processing your request, typically takes 15-30 seconds
+          </p>
         </div>
       )}
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <FormField
-            control={form.control}
-            name="prompt"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Edit Prompt</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="Add a red hat to the person"
-                    className="resize-none min-h-[80px]"
-                    {...field}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
+      <div className="p-6">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+            <FormField
+              control={form.control}
+              name="prompt"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-sm font-medium">Edit Instructions</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Describe what changes you want to make to the image"
+                      className="resize-none min-h-[80px] text-sm"
+                      {...field}
+                    />
+                  </FormControl>
+                  <p className="text-xs text-muted-foreground">
+                    Be specific about what to add, remove, or change in the image
+                  </p>
+                </FormItem>
+              )}
+            />
 
-          <div className="border border-dashed border-slate-300 rounded-lg p-6">
-            <h3 className="text-sm font-medium mb-4">Source Images (1-16 images)</h3>
+            <div className="border border-dashed border-border rounded-lg p-5">
+              <h3 className="text-sm font-medium mb-3">Source Images</h3>
+              
+              <div className="flex flex-wrap gap-2 mb-4">
+                {selectedFiles.map((file) => (
+                  <div key={file.name} className="relative w-20 h-20 group">
+                    <img 
+                      src={previews[file.name]} 
+                      alt={file.name} 
+                      className="w-full h-full object-cover rounded-md"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeFile(file.name)}
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <FaTrash size={10} />
+                    </button>
+                  </div>
+                ))}
+                
+                <button
+                  type="button"
+                  onClick={() => imageInputRef.current?.click()}
+                  className="w-20 h-20 flex items-center justify-center border border-dashed border-border rounded-md hover:bg-muted transition-colors"
+                >
+                  <FaUpload className="text-muted-foreground" />
+                </button>
+              </div>
+              
+              <input
+                type="file"
+                ref={imageInputRef}
+                onChange={handleFileChange}
+                accept="image/png,image/jpeg,image/webp"
+                multiple
+                className="hidden"
+              />
+              
+              <div className="text-xs text-muted-foreground">
+                Upload 1-16 PNG, JPEG, or WebP images (max 25MB each)
+              </div>
+            </div>
             
-            <div className="flex flex-wrap gap-2 mb-4">
-              {selectedFiles.map((file) => (
-                <div key={file.name} className="relative w-20 h-20 group">
+            <div className="border border-dashed border-border rounded-lg p-5">
+              <h3 className="text-sm font-medium mb-3">Mask Image <span className="text-xs font-normal text-muted-foreground">(Optional)</span></h3>
+              
+              {maskPreview ? (
+                <div className="relative w-full h-40 mb-4">
                   <img 
-                    src={previews[file.name]} 
-                    alt={file.name} 
-                    className="w-full h-full object-cover rounded-md"
+                    src={maskPreview} 
+                    alt="Mask" 
+                    className="h-full mx-auto object-contain"
                   />
                   <button
                     type="button"
-                    onClick={() => removeFile(file.name)}
-                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={removeMask}
+                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1"
                   >
-                    <FaTrash size={10} />
+                    <FaTrash size={12} />
                   </button>
                 </div>
-              ))}
-              
-              <button
-                type="button"
-                onClick={() => imageInputRef.current?.click()}
-                className="w-20 h-20 flex items-center justify-center border border-dashed border-slate-300 rounded-md hover:bg-slate-50"
-              >
-                <FaUpload className="text-slate-400" />
-              </button>
-            </div>
-            
-            <input
-              type="file"
-              ref={imageInputRef}
-              onChange={handleFileChange}
-              accept="image/png,image/jpeg,image/webp"
-              multiple
-              className="hidden"
-            />
-            
-            <div className="text-xs text-slate-500">
-              Select PNG, JPEG, or WebP files (max 16 images, each ≤ 25MB)
-            </div>
-          </div>
-          
-          <div className="border border-dashed border-slate-300 rounded-lg p-6">
-            <h3 className="text-sm font-medium mb-4">Mask Image (Optional)</h3>
-            
-            {maskPreview ? (
-              <div className="relative w-full h-40 mb-4">
-                <img 
-                  src={maskPreview} 
-                  alt="Mask" 
-                  className="h-full mx-auto object-contain"
-                />
-                <button
-                  type="button"
-                  onClick={removeMask}
-                  className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1"
+              ) : (
+                <div 
+                  className="w-full h-32 flex items-center justify-center border border-dashed border-border rounded-md hover:bg-muted mb-4 cursor-pointer transition-colors"
+                  onClick={() => maskInputRef.current?.click()}
                 >
-                  <FaTrash size={12} />
-                </button>
-              </div>
-            ) : (
-              <div 
-                className="w-full h-40 flex items-center justify-center border border-dashed border-slate-300 rounded-md hover:bg-slate-50 mb-4 cursor-pointer"
-                onClick={() => maskInputRef.current?.click()}
-              >
-                <div className="text-center">
-                  <FaUpload className="mx-auto text-slate-400 mb-2" />
-                  <div className="text-sm text-slate-500">Click to upload a mask</div>
+                  <div className="text-center">
+                    <FaUpload className="mx-auto text-muted-foreground mb-2" />
+                    <div className="text-sm text-muted-foreground">Upload a mask image</div>
+                  </div>
                 </div>
+              )}
+              
+              <input
+                type="file"
+                ref={maskInputRef}
+                onChange={handleMaskChange}
+                accept="image/png"
+                className="hidden"
+              />
+              
+              <div className="text-xs text-muted-foreground">
+                Transparent areas in the mask (PNG) determine which parts will be edited
               </div>
-            )}
-            
-            <input
-              type="file"
-              ref={maskInputRef}
-              onChange={handleMaskChange}
-              accept="image/png"
-              className="hidden"
-            />
-            
-            <div className="text-xs text-slate-500">
-              Transparent areas in the mask (PNG) will be edited. If no mask is provided, the entire image will be editable.
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <FormField
-              control={form.control}
-              name="size"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Size</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select size" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="auto">Auto</SelectItem>
-                      <SelectItem value="1024x1024">1024 × 1024</SelectItem>
-                      <SelectItem value="1536x1024">1536 × 1024 (Landscape)</SelectItem>
-                      <SelectItem value="1024x1536">1024 × 1536 (Portrait)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-muted/40 p-4 rounded-lg border border-border/50">
+              <FormField
+                control={form.control}
+                name="size"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">Output Size</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select size" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="auto">Auto</SelectItem>
+                        <SelectItem value="1024x1024">1024 × 1024</SelectItem>
+                        <SelectItem value="1536x1024">Landscape</SelectItem>
+                        <SelectItem value="1024x1536">Portrait</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="quality"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Quality</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select quality" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="auto">Auto</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="low">Low</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="quality"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">Quality</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select quality" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="auto">Auto</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="low">Low</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="n"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Number of Outputs</FormLabel>
-                  <Select
-                    onValueChange={(value) => field.onChange(parseInt(value))}
-                    defaultValue={field.value.toString()}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select count" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-                        <SelectItem key={num} value={num.toString()}>
-                          {num} {num === 1 ? 'Image' : 'Images'}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )}
-            />
-          </div>
+              <FormField
+                control={form.control}
+                name="n"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">Number of Outputs</FormLabel>
+                    <Select
+                      onValueChange={(value) => field.onChange(parseInt(value))}
+                      defaultValue={field.value.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Count" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {[1, 2, 3, 4].map((num) => (
+                          <SelectItem key={num} value={num.toString()}>
+                            {num} {num === 1 ? 'Image' : 'Images'}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+            </div>
 
-          <div className="flex justify-center">
-            <Button 
-              type="submit" 
-              disabled={isSubmitting || selectedFiles.length === 0}
-              className="px-6 py-3"
-            >
-              <span>Edit Images</span>
-              <FaMagic className="ml-2" />
-            </Button>
-          </div>
-        </form>
-      </Form>
+            <div className="flex justify-center pt-2">
+              <Button 
+                type="submit" 
+                disabled={isSubmitting || selectedFiles.length === 0}
+                className="w-full sm:w-auto sm:px-8 py-2.5 h-auto font-medium text-sm"
+                size="lg"
+              >
+                <span>Edit Images</span>
+                <FaMagic className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </div>
     </div>
   );
 }
