@@ -29,7 +29,7 @@ interface ImageCardProps {
   onSelect?: (id: string, shiftKey?: boolean) => void;
   onCopyPrompt?: (prompt: string) => void;  // Add handler for copying the prompt
   onUpscale?: (image: GeneratedImage) => void; // Handler for upscaling
-  onClick?: (e?: React.MouseEvent) => void;  // Add onClick handler for full-size preview
+  onClick?: (e?: React.MouseEvent<Element, MouseEvent>) => void;  // Add onClick handler for full-size preview
   selected?: boolean;
   selectionMode?: 'none' | 'selecting';
 }

@@ -9,7 +9,7 @@ import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from '@/comp
 import { useToast } from '@/hooks/use-toast';
 import { useDebounce } from '@/hooks/useDebounce';
 import { apiRequest, queryClient } from '@/lib/queryClient';
-import { Loader2, FolderOpen, Star, Trash2, RotateCcw, Trash, Search, X, Sparkles, CheckSquare } from 'lucide-react';
+import { Loader2, FolderOpen, Star, Trash2, RotateCcw, Trash, Search, X, Sparkles, CheckSquare, SquareX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ImageCard from '@/components/ImageCard';
 
@@ -905,21 +905,62 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
             ) : (
               <>
                 {selectionMode === 'selecting' ? (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={clearSelection}
-                          className="text-muted-foreground hover:text-foreground"
-                        >
-                          Exit Selection
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom">Exit selection mode</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <div className="flex items-center gap-2">
+                    {/* Select All button */}
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={selectAll}
+                            disabled={images.length === 0 || selectedIds.length === images.length}
+                            className="gap-2"
+                          >
+                            <CheckSquare className="h-4 w-4" />
+                            <span className="hidden sm:inline">Select All</span>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">Select all visible images</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    
+                    {/* Clear Selection button */}
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSelectedIds([])}
+                            disabled={selectedIds.length === 0}
+                            className="gap-2"
+                          >
+                            <SquareX className="h-4 w-4" />
+                            <span className="hidden sm:inline">Clear Selection</span>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">Clear current selection</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    
+                    {/* Exit Selection Mode button */}
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={clearSelection}
+                            className="text-muted-foreground hover:text-foreground"
+                          >
+                            Exit Selection
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">Exit selection mode</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
                 ) : (
                   <TooltipProvider>
                     <Tooltip>
@@ -928,12 +969,8 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
                           variant="outline"
                           size="sm"
                           onClick={() => {
-                            // Enter selection mode or select all if there are images
-                            if (images.length > 0) {
-                              selectAll();
-                            } else {
-                              setSelectionMode('selecting');
-                            }
+                            // Enter selection mode
+                            setSelectionMode('selecting');
                           }}
                           disabled={images.length === 0}
                           className="gap-2"
@@ -1071,7 +1108,10 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
             onSelect={(id, shiftKey = false) => toggleSelection(id, shiftKey)}
             selected={selectedIds.includes(image.id)}
             selectionMode={selectionMode}
-            onClick={(e: React.MouseEvent<HTMLDivElement>) => {
+            onClick={(e) => {
+              // Check if e exists (handle the case when it's undefined)
+              if (!e) return;
+              
               // In selection mode, clicking the card toggles selection
               if (selectionMode === 'selecting') {
                 toggleSelection(image.id, e.shiftKey);
