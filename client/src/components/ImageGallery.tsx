@@ -87,7 +87,7 @@ export default function ImageGallery({ images, onClearResults }: ImageGalleryPro
   const handleSendToEditor = (image: GeneratedImage) => {
     setSourceImages([image.url]);
     setMode("edit");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    navigate('/create?mode=edit');
     toast({
       title: "Image ready for editing",
       description: "Use the edit form to modify this image",
