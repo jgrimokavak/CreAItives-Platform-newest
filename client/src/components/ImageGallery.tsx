@@ -87,7 +87,20 @@ export default function ImageGallery({ images, onClearResults }: ImageGalleryPro
   const handleSendToEditor = (image: GeneratedImage) => {
     setSourceImages([image.url]);
     setMode("edit");
-    navigate('/create?mode=edit');
+    
+    // Check if we're already on the create page
+    if (window.location.pathname === '/create' || window.location.pathname === '/') {
+      // If already on create page, just update the URL without navigating
+      window.history.replaceState(null, '', '/create?mode=edit');
+      // Dispatch a custom event to notify about URL change
+      window.dispatchEvent(new Event('urlchange'));
+      // Manually scroll to top
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      // If not on create page, navigate there
+      navigate('/create?mode=edit');
+    }
+    
     toast({
       title: "Image ready for editing",
       description: "Use the edit form to modify this image",

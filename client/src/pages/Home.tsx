@@ -10,12 +10,35 @@ import NavTabs, { TabContent } from "@/components/NavTabs";
 import { useEditor } from "@/context/EditorContext";
 
 export default function Home() {
-  const searchParams = new URLSearchParams(window.location.search);
-  const [mode, setMode] = useState<"generate" | "edit">(searchParams.get("mode") as "generate" | "edit" || "generate");
+  // Get initial mode from URL
+  const getInitialMode = () => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("mode") as "generate" | "edit" || "generate";
+  };
+  
+  const [mode, setMode] = useState<"generate" | "edit">(getInitialMode());
   const [images, setImages] = useState<GeneratedImage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { mode: editorMode } = useEditor();
+  
+  // Listen for URL changes to update the mode
+  useEffect(() => {
+    const handleUrlChange = () => {
+      setMode(getInitialMode());
+    };
+    
+    // Listen for popstate events (browser back/forward)
+    window.addEventListener('popstate', handleUrlChange);
+    
+    // Custom event for our replaceState changes
+    window.addEventListener('urlchange', handleUrlChange);
+    
+    return () => {
+      window.removeEventListener('popstate', handleUrlChange);
+      window.removeEventListener('urlchange', handleUrlChange);
+    };
+  }, []);
 
   const handleGenerateStart = () => {
     setIsLoading(true);
