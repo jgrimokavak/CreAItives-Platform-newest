@@ -181,7 +181,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
     // Set up editor context for edit mode
     setMode('edit');
     setSourceImages([image.fullUrl]);
-    navigate('/create');
+    navigate('/create?mode=edit');
   };
   
   // Handle copy prompt

@@ -138,7 +138,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => {
   const handleEdit = (image: GalleryImage) => {
     setMode('edit');
     setSourceImages([image.fullUrl]);
-    navigate('/');
+    navigate('/create?mode=edit');
   };
   
   // Download image
@@ -327,7 +327,7 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => {
           </Button>
         )}
         {mode === 'gallery' && !showStarredOnly && (
-          <Button onClick={() => navigate('/')}>
+          <Button onClick={() => navigate('/create')}>
             Create images
           </Button>
         )}
