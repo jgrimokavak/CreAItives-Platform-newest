@@ -912,8 +912,8 @@ const CarCreationPage: React.FC = () => {
                           setMode('edit');
                           setSourceImages([sourceUrl]);
                           
-                          // Navigate to the create page
-                          setLocation('/create');
+                          // Navigate to the create page with edit mode
+                          setLocation('/create?mode=edit');
                         }}
                         onUpscale={(img) => {
                           // Navigate to upscale page with the image URL
@@ -961,7 +961,7 @@ const CarCreationPage: React.FC = () => {
                               const sourceUrl = image.fullUrl || image.url;
                               setMode('edit');
                               setSourceImages([sourceUrl]);
-                              setLocation('/create');
+                              setLocation('/create?mode=edit');
                             }}
                           >
                             <Pencil className="h-3.5 w-3.5" />
