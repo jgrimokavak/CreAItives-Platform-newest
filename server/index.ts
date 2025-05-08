@@ -13,6 +13,9 @@ const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
+// Serve static files from the public directory (for favicon and other assets)
+app.use(express.static('public'));
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
