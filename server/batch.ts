@@ -273,7 +273,7 @@ export async function processBatch(id: string, rows: Row[]) {
         const prediction = await createPrediction(imagenModel.version, {
           prompt, 
           aspect_ratio, 
-          negative_prompt: "", 
+          negative_prompt: "license plate, plates, text in license plate", 
           safety_filter_level: "block_only_high"
         });
         
