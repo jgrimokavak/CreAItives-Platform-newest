@@ -26,7 +26,8 @@ export const models: ModelConfig[] = [
     slug: "google/imagen-3",
     version: "7a54f1d7f23abba0bd8341bd31412a06ebea759eca9e15ce5fcf4059bcc6c0f1",
     defaults: { 
-      safety_filter_level: "block_only_high" 
+      safety_filter_level: "block_only_high",
+      negative_prompt: "license plate, plates, text in license plate"
     },
     visible: ["prompt", "aspect_ratio"],
     description: "Imagen‑3 – accurate, fast, consistent, but not very creative."

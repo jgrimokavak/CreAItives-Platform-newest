@@ -22,6 +22,9 @@ export async function createPrediction(version: string, input: any): Promise<Rep
     throw new Error('REPLICATE_API_TOKEN is not set in environment variables');
   }
 
+  // Log the complete input for debugging
+  console.log(`Creating Replicate prediction with version ${version} and input:`, JSON.stringify(input, null, 2));
+  
   log({
     ts: new Date().toISOString(),
     direction: "request",
