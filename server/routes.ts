@@ -938,8 +938,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Using Replicate model: google/imagen-3 version: ${imagenModel.version}`);
       
-      // Replicate call with specific version
-      const response = await axios.post("https://api.replicate.com/v1/predictions", {
+      // Prepare request data
+      const requestData = {
         version: imagenModel.version,
         input: {
           prompt,
@@ -947,12 +947,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           negative_prompt: "license plate, plates, text in license plate",
           safety_filter_level: "block_only_high"
         }
-      }, {
-        headers: { 
-          Authorization: `Bearer ${process.env.REPLICATE_API_TOKEN}`, 
-          "Content-Type": "application/json" 
-        }
-      });
+      };
+      
+      // Log the exact request being sent
+      console.log("DIRECT REPLICATE REQUEST:", JSON.stringify(requestData, null, 2));
+      
+      // Replicate call with specific version
+      const response = await axios.post("https://api.replicate.com/v1/predictions", 
+        requestData, 
+        {
+          headers: { 
+            Authorization: `Bearer ${process.env.REPLICATE_API_TOKEN}`, 
+            "Content-Type": "application/json" 
+          }
+        });
       
       const pred = response.data;
       

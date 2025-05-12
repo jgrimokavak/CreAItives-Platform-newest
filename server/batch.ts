@@ -270,12 +270,17 @@ export async function processBatch(id: string, rows: Row[]) {
       console.log(`Creating prediction with model version: ${imagenModel.version}`);
       
       try {
-        const prediction = await createPrediction(imagenModel.version, {
+        const predInput = {
           prompt, 
           aspect_ratio, 
           negative_prompt: "license plate, plates, text in license plate", 
           safety_filter_level: "block_only_high"
-        });
+        };
+        
+        // Log what's being sent to Replicate
+        console.log(`BATCH PREDICTION INPUT for row ${i+1}:`, JSON.stringify(predInput, null, 2));
+        
+        const prediction = await createPrediction(imagenModel.version, predInput);
         
         console.log(`Prediction created with ID: ${prediction.id}, waiting for result...`);
         
