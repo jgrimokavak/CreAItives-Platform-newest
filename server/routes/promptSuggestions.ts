@@ -38,7 +38,7 @@ Keep all suggestions concise and directly applicable - no need for explanations.
     
     // Call OpenAI API
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini", // Use cheaper model for cost control
+      model: "gpt-4o", // Using GPT-4o for better quality suggestions
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: text },
