@@ -47,7 +47,7 @@ export const providerColors = {
 export const getModelColors = (modelKey: string) => {
   if (modelKey.includes("gpt-") || modelKey === "gpt-image-1") {
     return providerColors.openai;
-  } else if (modelKey === "imagen-3") {
+  } else if (modelKey === "imagen-3" || modelKey === "imagen-4") {
     return providerColors.google;
   } else if (modelKey === "flux-pro") {
     return providerColors["black-forest-labs"];

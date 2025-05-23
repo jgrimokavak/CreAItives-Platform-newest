@@ -9,6 +9,11 @@ export const modelCatalog = {
     description: "Accurate, fast, consistent, but not very creative.",
     visible: ["prompt", "aspect_ratio", "negative_prompt", "kavakStyle"] as string[]
   },
+  "imagen-4": {
+    label: "Imagen-4 (Google)",
+    description: "Latest Google model with improved quality and accuracy.",
+    visible: ["prompt", "aspect_ratio", "kavakStyle"] as string[]
+  },
   "flux-pro": {
     label: "Flux-Pro (Black-forest-labs)",
     description: "Fast, creative, high-quality; less prompt-accurate.",
@@ -21,5 +26,5 @@ export type ModelKey = keyof typeof modelCatalog;
 // Aspect ratio options for Flux-Pro (no custom options)
 export const fluxAspectRatios = ["1:1", "16:9", "9:16", "3:2", "2:3", "4:5", "5:4", "3:4", "4:3"];
 
-// Aspect ratio options for Imagen-3 (includes custom options)
+// Aspect ratio options for Imagen-3 and Imagen-4 (includes custom options)
 export const imagenAspectRatios = ["1:1", "16:9", "9:16", "4:3", "3:4"];
