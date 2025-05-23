@@ -24,10 +24,11 @@ const ModelSelect: React.FC<ModelSelectProps> = ({ value, onChange }) => {
       onValueChange={(val: ModelKey) => onChange(val)}
     >
       <SelectTrigger 
-        className="w-full font-semibold focus:ring-1 focus:ring-primary/50 transition-colors"
+        className="w-full font-semibold focus:ring-1 transition-colors"
         style={{
           borderColor: selectedColors.trigger.borderColor,
           backgroundColor: selectedColors.trigger.backgroundColor,
+          "--tw-ring-color": `${selectedColors.trigger.borderColor}80`,
         }}
       >
         <SelectValue placeholder="Select model">
