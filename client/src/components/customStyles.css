@@ -1,0 +1,19 @@
+/* Custom focus ring override */
+[data-radix-dropdown-menu-trigger][data-state] {
+  outline: none !important;
+}
+
+[data-radix-dropdown-menu-trigger]:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.focus-ring-custom:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.focus-ring-custom:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
