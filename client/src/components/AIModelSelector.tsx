@@ -62,82 +62,99 @@ interface AIModelSelectorProps {
 }
 
 export default function AIModelSelector({ value, onChange, className }: AIModelSelectorProps) {
+  const [isHovered, setIsHovered] = React.useState(false);
+  
   // Get selected model data
   const selectedModel = modelCatalog[value];
   const colors = getModelColors(value);
   
   return (
     <div className={className}>
-      {/* Model selection as a single unified card with dropdown */}
-      <Card className="overflow-hidden">
-        <div 
-          className="p-3 flex items-center justify-between border-b transition-colors"
-          style={{ 
-            backgroundColor: `${colors.bg}60`, 
-            borderColor: `${colors.light}30`
-          }}
-        >
-          <div className="flex items-center gap-3">
-            <ModelIcon modelKey={value} />
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">
-                  {getCleanModelName(selectedModel.label)}
-                </span>
-                <ModelVersionBadge modelKey={value} />
+      {/* Interactive model card that acts as a dropdown */}
+      <div 
+        className={cn(
+          "rounded-lg border overflow-hidden cursor-pointer transition-all",
+          isHovered && "shadow-md"
+        )}
+        style={{ 
+          borderColor: isHovered ? colors.light : `${colors.light}50` 
+        }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        <Select value={value} onValueChange={(val: ModelKey) => onChange(val)}>
+          <SelectTrigger className="h-auto p-0 border-0 w-full shadow-none focus:ring-0 bg-transparent">
+            <div className="w-full">
+              {/* Card header with model info */}
+              <div 
+                className="p-3 flex items-center gap-3 transition-colors border-b"
+                style={{ 
+                  backgroundColor: `${colors.bg}60`, 
+                  borderColor: `${colors.light}30` 
+                }}
+              >
+                <ModelIcon modelKey={value} />
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-medium text-sm">
+                        {getCleanModelName(selectedModel.label)}
+                      </span>
+                      <ModelVersionBadge modelKey={value} />
+                    </div>
+                    
+                    {/* Subtle dropdown indicator */}
+                    <ChevronDown 
+                      className={cn(
+                        "h-4 w-4 transition-transform duration-200",
+                        isHovered ? "text-foreground" : "text-muted-foreground opacity-70"
+                      )}
+                    />
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {getProviderName(value)} • {getModelFeatureDescription(value)}
+                  </div>
+                </div>
               </div>
-              <div className="text-xs text-muted-foreground">
-                {getProviderName(value)} • {getModelFeatureDescription(value)}
+              
+              {/* Description */}
+              <div className="px-3 py-2 text-xs text-muted-foreground">
+                {selectedModel.description}
               </div>
             </div>
-          </div>
+          </SelectTrigger>
           
-          <Select value={value} onValueChange={(val: ModelKey) => onChange(val)}>
-            <SelectTrigger className="h-8 w-auto bg-background/80 border-muted px-2 focus:ring-0">
-              <div className="flex items-center">
-                <span className="text-xs mr-1">Change</span>
-                <ChevronDown className="h-3.5 w-3.5 opacity-70" />
-              </div>
-            </SelectTrigger>
-            <SelectContent align="end" className="w-[220px]">
-              {Object.entries(modelCatalog).map(([key, model]) => {
-                const modelKey = key as ModelKey;
-                const isSelected = value === modelKey;
-                const modelColors = getModelColors(modelKey);
-                
-                return (
-                  <SelectItem 
-                    key={modelKey} 
-                    value={modelKey}
-                    className={cn("py-1.5 px-2 cursor-pointer", 
-                      isSelected && "bg-muted"
-                    )}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <ModelIcon modelKey={modelKey} size="sm" />
-                      <div className="flex flex-col min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-medium text-sm truncate">
-                            {getCleanModelName(model.label)}
-                          </span>
-                          {isSelected && <Check className="h-3.5 w-3.5 text-primary shrink-0" />}
-                        </div>
-                        <span className="text-xs text-muted-foreground">
-                          {getProviderName(modelKey)}
-                        </span>
+          <SelectContent className="w-[min(320px,calc(100vw-2rem))]">
+            {Object.entries(modelCatalog).map(([key, model]) => {
+              const modelKey = key as ModelKey;
+              const modelColors = getModelColors(modelKey);
+              const provider = getProviderName(modelKey);
+              const name = getCleanModelName(model.label);
+              
+              return (
+                <SelectItem 
+                  key={modelKey} 
+                  value={modelKey}
+                  className="py-2 px-2.5 cursor-pointer"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <ModelIcon modelKey={modelKey} size="sm" />
+                    <div className="flex flex-col min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-medium text-sm">{name}</span>
+                        <ModelVersionBadge modelKey={modelKey} />
                       </div>
+                      <span className="text-xs text-muted-foreground">
+                        {provider}
+                      </span>
                     </div>
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <CardContent className="p-3 text-xs text-muted-foreground">
-          {selectedModel.description}
-        </CardContent>
-      </Card>
+                  </div>
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
+      </div>
     </div>
   );
 }
