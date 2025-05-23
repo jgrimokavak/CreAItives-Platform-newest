@@ -14,9 +14,18 @@ export const providerColors = {
     bgHover: "#d0ebe5",
     text: "#10a37f"
   },
-  // Google (Imagen) - Blue color
-  google: {
-    light: "#4285f4", // Google Blue
+  // Google Imagen-4 - Deeper Blue color
+  "google-imagen-4": {
+    light: "#1a73e8", // Google Blue (deeper)
+    medium: "#1967d2",
+    dark: "#174ea6",
+    bg: "#e8f0fe",
+    bgHover: "#d2e3fc",
+    text: "#1a73e8"
+  },
+  // Google Imagen-3 - Standard Blue color
+  "google-imagen-3": {
+    light: "#4285f4", // Google Blue (standard)
     medium: "#3b78e7",
     dark: "#2a56c6",
     bg: "#e8f0fe",
@@ -47,8 +56,10 @@ export const providerColors = {
 export const getModelColors = (modelKey: string) => {
   if (modelKey.includes("gpt-") || modelKey === "gpt-image-1") {
     return providerColors.openai;
-  } else if (modelKey === "imagen-3" || modelKey === "imagen-4") {
-    return providerColors.google;
+  } else if (modelKey === "imagen-4") {
+    return providerColors["google-imagen-4"];
+  } else if (modelKey === "imagen-3") {
+    return providerColors["google-imagen-3"];
   } else if (modelKey === "flux-pro") {
     return providerColors["black-forest-labs"];
   }

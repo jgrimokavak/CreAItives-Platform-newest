@@ -15,8 +15,7 @@ import { GeneratedImage } from "@/types/image";
 import { Progress } from "@/components/ui/progress";
 import { ModelKey, modelCatalog } from "@/lib/modelCatalog";
 import { modelSchemas, modelDefaults, GenericFormValues } from "@/lib/formSchemas";
-import ModelSelect from "@/components/ModelSelect";
-import ModelInfoCard from "@/components/ModelInfoCard";
+import AIModelSelector from "@/components/AIModelSelector";
 import DynamicForm from "@/components/DynamicForm";
 import { Label } from "@/components/ui/label";
 import { useHotkeys } from "react-hotkeys-hook";
@@ -309,13 +308,10 @@ export default function PromptForm({
       <div className="p-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-            {/* Model selector at the top */}
+            {/* Enhanced AI Model selector */}
             <div className="space-y-1.5">
               <Label className="text-sm font-medium">AI Model</Label>
-              <ModelSelect value={modelKey} onChange={setModelKey} />
-              
-              {/* Model info card with color coding based on provider */}
-              <ModelInfoCard modelKey={modelKey} className="mt-3" />
+              <AIModelSelector value={modelKey} onChange={setModelKey} className="mt-2" />
             </div>
 
             {/* Prompt field */}
