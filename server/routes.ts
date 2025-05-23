@@ -930,22 +930,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ error: "REPLICATE_API_TOKEN environment variable is not set" });
       }
       
-      // Get the Imagen-3 model from the configured models
-      const imagenModel = models.find(m => m.key === 'imagen-3');
-      if (!imagenModel || !imagenModel.version) {
-        return res.status(500).json({ error: "Imagen-3 model not properly initialized" });
+      // Get the Imagen-4 model from the configured models
+      const imagenModel = models.find(m => m.key === 'imagen-4');
+      if (!imagenModel) {
+        return res.status(500).json({ error: "Imagen-4 model not properly initialized" });
       }
       
-      console.log(`Using Replicate model: google/imagen-3 version: ${imagenModel.version}`);
+      console.log(`Using Replicate model: google/imagen-4`);
       
-      // Prepare request data
+      // Prepare request data for Imagen-4 (note: no negative_prompt support)
       const requestData = {
-        version: imagenModel.version,
+        version: "google/imagen-4",
         input: {
           prompt,
           aspect_ratio,
-          negative_prompt: "license plate, plates, text in license plate",
-          safety_filter_level: "block_only_high"
+          safety_filter_level: "block_medium_and_above"
         }
       };
       

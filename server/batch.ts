@@ -205,12 +205,12 @@ export async function processBatch(id: string, rows: Row[]) {
   // Update job status
   job.status = "processing";
 
-  // Get Imagen-3 model config
-  const imagenModel = models.find(m => m.key === 'imagen-3');
-  if (!imagenModel || !imagenModel.version) {
-    console.error(`Imagen-3 model not properly configured. Model config:`, imagenModel);
+  // Get Imagen-4 model config
+  const imagenModel = models.find(m => m.key === 'imagen-4');
+  if (!imagenModel) {
+    console.error(`Imagen-4 model not properly configured. Model config:`, imagenModel);
     job.failed = job.total;
-    job.errors.push({ row: 0, reason: "Imagen-3 model not properly configured" });
+    job.errors.push({ row: 0, reason: "Imagen-4 model not properly configured" });
     job.status = "failed";
     job.completedAt = new Date();
     
@@ -219,7 +219,7 @@ export async function processBatch(id: string, rows: Row[]) {
     return;
   }
   
-  console.log(`Using Imagen-3 model version: ${imagenModel.version}`);
+  console.log(`Using Imagen-4 model`);
   console.log(`Starting to process ${rows.length} rows for batch job ${id}`);
 
   for (let i = 0; i < rows.length; i++) {
@@ -266,21 +266,20 @@ export async function processBatch(id: string, rows: Row[]) {
       
       console.log(`Using normalized aspect_ratio: ${aspect_ratio} for row ${i+1}`);
       
-      // Create prediction with Replicate
-      console.log(`Creating prediction with model version: ${imagenModel.version}`);
+      // Create prediction with Replicate using Imagen-4
+      console.log(`Creating prediction with model: google/imagen-4`);
       
       try {
         const predInput = {
           prompt, 
           aspect_ratio, 
-          negative_prompt: "license plate, plates, text in license plate", 
-          safety_filter_level: "block_only_high"
+          safety_filter_level: "block_medium_and_above"
         };
         
         // Log what's being sent to Replicate
         console.log(`BATCH PREDICTION INPUT for row ${i+1}:`, JSON.stringify(predInput, null, 2));
         
-        const prediction = await createPrediction(imagenModel.version, predInput);
+        const prediction = await createPrediction("google/imagen-4", predInput);
         
         console.log(`Prediction created with ID: ${prediction.id}, waiting for result...`);
         

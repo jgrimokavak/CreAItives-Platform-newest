@@ -33,6 +33,16 @@ export const models: ModelConfig[] = [
     description: "Imagen‑3 – accurate, fast, consistent, but not very creative."
   },
   {
+    key: "imagen-4",
+    provider: "replicate",
+    slug: "google/imagen-4",
+    defaults: { 
+      safety_filter_level: "block_medium_and_above"
+    },
+    visible: ["prompt", "aspect_ratio"],
+    description: "Imagen‑4 – latest Google model with improved quality and accuracy."
+  },
+  {
     key: "flux-pro",
     provider: "replicate",
     slug: "black-forest-labs/flux-1.1-pro",
