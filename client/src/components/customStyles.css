@@ -1,19 +1,30 @@
-/* Custom focus ring override */
-[data-radix-dropdown-menu-trigger][data-state] {
+/* Custom focus ring override - more specific selectors */
+#root [data-radix-dropdown-menu-trigger],
+#root [data-radix-dropdown-menu-trigger][data-state],
+#root [data-radix-dropdown-menu-trigger]:focus, 
+#root [data-radix-dropdown-menu-trigger]:focus-visible,
+.dropdown-menu-trigger-container,
+.dropdown-menu-trigger-container:focus,
+.dropdown-menu-trigger-container:focus-visible {
   outline: none !important;
+  box-shadow: none !important;
+  border-radius: 0.5rem !important;
+  overflow: hidden !important;
 }
 
-[data-radix-dropdown-menu-trigger]:focus-visible {
+/* This will override any focus styling on the body */
+body:has(:focus) .dropdown-menu-trigger-container {
   outline: none !important;
   box-shadow: none !important;
 }
 
-.focus-ring-custom:focus {
+/* Very high specificity to override Tailwind */
+body .dropdown-menu-trigger-container.ring-0 {
   outline: none !important;
   box-shadow: none !important;
-}
-
-.focus-ring-custom:focus-visible {
-  outline: none !important;
-  box-shadow: none !important;
+  --tw-ring-offset-width: 0 !important;
+  --tw-ring-offset-color: transparent !important;
+  --tw-ring-color: transparent !important;
+  --tw-ring-offset-shadow: none !important;
+  --tw-ring-shadow: none !important;
 }
