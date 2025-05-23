@@ -21,6 +21,17 @@ export const models: ModelConfig[] = [
     description: "GPT‑Image‑1 – most accurate, but slow."
   },
   {
+    key: "imagen-4",
+    provider: "replicate",
+    slug: "google/imagen-4",
+    version: "7a54f1d7f23abba0bd8341bd31412a06ebea759eca9e15ce5fcf4059bcc6c0f1",
+    defaults: { 
+      safety_filter_level: "block_medium_and_above"
+    },
+    visible: ["prompt", "aspect_ratio"],
+    description: "Imagen‑4 – latest Google model with improved quality and accuracy."
+  },
+  {
     key: "imagen-3",
     provider: "replicate",
     slug: "google/imagen-3",
@@ -31,16 +42,6 @@ export const models: ModelConfig[] = [
     },
     visible: ["prompt", "aspect_ratio"],
     description: "Imagen‑3 – accurate, fast, consistent, but not very creative."
-  },
-  {
-    key: "imagen-4",
-    provider: "replicate",
-    slug: "google/imagen-4",
-    defaults: { 
-      safety_filter_level: "block_medium_and_above"
-    },
-    visible: ["prompt", "aspect_ratio"],
-    description: "Imagen‑4 – latest Google model with improved quality and accuracy."
   },
   {
     key: "flux-pro",

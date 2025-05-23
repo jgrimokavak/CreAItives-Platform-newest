@@ -4,15 +4,15 @@ export const modelCatalog = {
     description: "Most accurate, but slow.",
     visible: ["prompt", "size", "quality", "n", "kavakStyle"] as string[]
   },
-  "imagen-3": {
-    label: "Imagen-3 (Google)",
-    description: "Accurate, fast, consistent, but not very creative.",
-    visible: ["prompt", "aspect_ratio", "negative_prompt", "kavakStyle"] as string[]
-  },
   "imagen-4": {
     label: "Imagen-4 (Google)",
     description: "Latest Google model with improved quality and accuracy.",
     visible: ["prompt", "aspect_ratio", "kavakStyle"] as string[]
+  },
+  "imagen-3": {
+    label: "Imagen-3 (Google)",
+    description: "Accurate, fast, consistent, but not very creative.",
+    visible: ["prompt", "aspect_ratio", "negative_prompt", "kavakStyle"] as string[]
   },
   "flux-pro": {
     label: "Flux-Pro (Black-forest-labs)",
