@@ -721,6 +721,25 @@ const CarCreationPage: React.FC = () => {
                             ? 'Clean white studio background with professional lighting' 
                             : 'Dynamic dealership showroom environment with ambient lighting'}
                         </p>
+                        
+                        {/* Beta disclaimer for Studio style */}
+                        {bg === 'white' && (
+                          <div className="mt-2 bg-amber-50 border border-amber-200 rounded-md p-2.5 flex items-start gap-2">
+                            <div className="text-amber-500 mt-0.5">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+                                <path d="M12 9v4"/>
+                                <path d="m12 17 .01 0"/>
+                              </svg>
+                            </div>
+                            <div>
+                              <span className="text-xs font-medium text-amber-800 block">Studio Style (Beta)</span>
+                              <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
+                                The Studio style is currently in beta and may occasionally produce images with a gray floor instead of the intended white background. We're working to improve this feature.
+                              </p>
+                            </div>
+                          </div>
+                        )}
                       </div>
                       
                       {/* Aspect ratio with visual representations */}
