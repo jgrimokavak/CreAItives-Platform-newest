@@ -1,0 +1,141 @@
+client:536 WebSocket connection to 'wss://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/?token=R97vxdwpD2PJ' failed: 
+setupWebSocket @ client:536
+(anonymous) @ client:531
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=R97vxdwpD2PJ' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+setupWebSocket @ client:536
+fallback @ client:509
+(anonymous) @ client:555
+chunk-WERSD76P.js?v=f29cfde0:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+websocket.ts:25 WebSocket connected
+usePromptSuggestions.ts:24 
+            
+            
+           POST https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/api/prompt-suggestions 500 (Internal Server Error)
+(anonymous) @ usePromptSuggestions.ts:24
+(anonymous) @ usePromptSuggestions.ts:65
+setTimeout
+(anonymous) @ usePromptSuggestions.ts:64
+commitHookEffectListMount @ chunk-WERSD76P.js?v=f29cfde0:16915
+commitPassiveMountOnFiber @ chunk-WERSD76P.js?v=f29cfde0:18156
+commitPassiveMountEffects_complete @ chunk-WERSD76P.js?v=f29cfde0:18129
+commitPassiveMountEffects_begin @ chunk-WERSD76P.js?v=f29cfde0:18119
+commitPassiveMountEffects @ chunk-WERSD76P.js?v=f29cfde0:18109
+flushPassiveEffectsImpl @ chunk-WERSD76P.js?v=f29cfde0:19490
+flushPassiveEffects @ chunk-WERSD76P.js?v=f29cfde0:19447
+commitRootImpl @ chunk-WERSD76P.js?v=f29cfde0:19416
+commitRoot @ chunk-WERSD76P.js?v=f29cfde0:19277
+performSyncWorkOnRoot @ chunk-WERSD76P.js?v=f29cfde0:18895
+flushSyncCallbacks @ chunk-WERSD76P.js?v=f29cfde0:9119
+flushSync @ chunk-WERSD76P.js?v=f29cfde0:18959
+finishEventHandler @ chunk-WERSD76P.js?v=f29cfde0:3569
+batchedUpdates @ chunk-WERSD76P.js?v=f29cfde0:3582
+dispatchEventForPluginEventSystem @ chunk-WERSD76P.js?v=f29cfde0:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-WERSD76P.js?v=f29cfde0:5478
+dispatchEvent @ chunk-WERSD76P.js?v=f29cfde0:5472
+dispatchDiscreteEvent @ chunk-WERSD76P.js?v=f29cfde0:5449
+usePromptSuggestions.ts:39 Error fetching prompt suggestions: Error: Failed to fetch suggestions
+    at usePromptSuggestions.ts:33:15
+(anonymous) @ usePromptSuggestions.ts:39
+await in (anonymous)
+(anonymous) @ usePromptSuggestions.ts:65
+setTimeout
+(anonymous) @ usePromptSuggestions.ts:64
+commitHookEffectListMount @ chunk-WERSD76P.js?v=f29cfde0:16915
+commitPassiveMountOnFiber @ chunk-WERSD76P.js?v=f29cfde0:18156
+commitPassiveMountEffects_complete @ chunk-WERSD76P.js?v=f29cfde0:18129
+commitPassiveMountEffects_begin @ chunk-WERSD76P.js?v=f29cfde0:18119
+commitPassiveMountEffects @ chunk-WERSD76P.js?v=f29cfde0:18109
+flushPassiveEffectsImpl @ chunk-WERSD76P.js?v=f29cfde0:19490
+flushPassiveEffects @ chunk-WERSD76P.js?v=f29cfde0:19447
+commitRootImpl @ chunk-WERSD76P.js?v=f29cfde0:19416
+commitRoot @ chunk-WERSD76P.js?v=f29cfde0:19277
+performSyncWorkOnRoot @ chunk-WERSD76P.js?v=f29cfde0:18895
+flushSyncCallbacks @ chunk-WERSD76P.js?v=f29cfde0:9119
+flushSync @ chunk-WERSD76P.js?v=f29cfde0:18959
+finishEventHandler @ chunk-WERSD76P.js?v=f29cfde0:3569
+batchedUpdates @ chunk-WERSD76P.js?v=f29cfde0:3582
+dispatchEventForPluginEventSystem @ chunk-WERSD76P.js?v=f29cfde0:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-WERSD76P.js?v=f29cfde0:5478
+dispatchEvent @ chunk-WERSD76P.js?v=f29cfde0:5472
+dispatchDiscreteEvent @ chunk-WERSD76P.js?v=f29cfde0:5449
+usePromptSuggestions.ts:24 
+            
+            
+           POST https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/api/prompt-suggestions 500 (Internal Server Error)
+(anonymous) @ usePromptSuggestions.ts:24
+(anonymous) @ usePromptSuggestions.ts:65
+setTimeout
+(anonymous) @ usePromptSuggestions.ts:64
+commitHookEffectListMount @ chunk-WERSD76P.js?v=f29cfde0:16915
+commitPassiveMountOnFiber @ chunk-WERSD76P.js?v=f29cfde0:18156
+commitPassiveMountEffects_complete @ chunk-WERSD76P.js?v=f29cfde0:18129
+commitPassiveMountEffects_begin @ chunk-WERSD76P.js?v=f29cfde0:18119
+commitPassiveMountEffects @ chunk-WERSD76P.js?v=f29cfde0:18109
+flushPassiveEffectsImpl @ chunk-WERSD76P.js?v=f29cfde0:19490
+flushPassiveEffects @ chunk-WERSD76P.js?v=f29cfde0:19447
+performSyncWorkOnRoot @ chunk-WERSD76P.js?v=f29cfde0:18868
+flushSyncCallbacks @ chunk-WERSD76P.js?v=f29cfde0:9119
+commitRootImpl @ chunk-WERSD76P.js?v=f29cfde0:19432
+commitRoot @ chunk-WERSD76P.js?v=f29cfde0:19277
+finishConcurrentRender @ chunk-WERSD76P.js?v=f29cfde0:18805
+performConcurrentWorkOnRoot @ chunk-WERSD76P.js?v=f29cfde0:18718
+workLoop @ chunk-WERSD76P.js?v=f29cfde0:197
+flushWork @ chunk-WERSD76P.js?v=f29cfde0:176
+performWorkUntilDeadline @ chunk-WERSD76P.js?v=f29cfde0:384
+usePromptSuggestions.ts:39 Error fetching prompt suggestions: Error: Failed to fetch suggestions
+    at usePromptSuggestions.ts:33:15
+(anonymous) @ usePromptSuggestions.ts:39
+await in (anonymous)
+(anonymous) @ usePromptSuggestions.ts:65
+setTimeout
+(anonymous) @ usePromptSuggestions.ts:64
+commitHookEffectListMount @ chunk-WERSD76P.js?v=f29cfde0:16915
+commitPassiveMountOnFiber @ chunk-WERSD76P.js?v=f29cfde0:18156
+commitPassiveMountEffects_complete @ chunk-WERSD76P.js?v=f29cfde0:18129
+commitPassiveMountEffects_begin @ chunk-WERSD76P.js?v=f29cfde0:18119
+commitPassiveMountEffects @ chunk-WERSD76P.js?v=f29cfde0:18109
+flushPassiveEffectsImpl @ chunk-WERSD76P.js?v=f29cfde0:19490
+flushPassiveEffects @ chunk-WERSD76P.js?v=f29cfde0:19447
+performSyncWorkOnRoot @ chunk-WERSD76P.js?v=f29cfde0:18868
+flushSyncCallbacks @ chunk-WERSD76P.js?v=f29cfde0:9119
+commitRootImpl @ chunk-WERSD76P.js?v=f29cfde0:19432
+commitRoot @ chunk-WERSD76P.js?v=f29cfde0:19277
+finishConcurrentRender @ chunk-WERSD76P.js?v=f29cfde0:18805
+performConcurrentWorkOnRoot @ chunk-WERSD76P.js?v=f29cfde0:18718
+workLoop @ chunk-WERSD76P.js?v=f29cfde0:197
+flushWork @ chunk-WERSD76P.js?v=f29cfde0:176
+performWorkUntilDeadline @ chunk-WERSD76P.js?v=f29cfde0:384
+queryClient.ts:15 
+            
+            
+           POST https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/api/generate 400 (Bad Request)
+apiRequest @ queryClient.ts:15
+mutationFn @ PromptForm.tsx:141
+fn @ @tanstack_react-query.js?v=f29cfde0:1189
+run @ @tanstack_react-query.js?v=f29cfde0:494
+start @ @tanstack_react-query.js?v=f29cfde0:536
+execute @ @tanstack_react-query.js?v=f29cfde0:1225
+await in execute
+mutate @ @tanstack_react-query.js?v=f29cfde0:2630
+(anonymous) @ @tanstack_react-query.js?v=f29cfde0:3295
+onSubmit @ PromptForm.tsx:286
+(anonymous) @ chunk-CXJMC5RA.js?v=f29cfde0:1465
+await in (anonymous)
+callCallback2 @ chunk-WERSD76P.js?v=f29cfde0:3674
+invokeGuardedCallbackDev @ chunk-WERSD76P.js?v=f29cfde0:3699
+invokeGuardedCallback @ chunk-WERSD76P.js?v=f29cfde0:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-WERSD76P.js?v=f29cfde0:3736
+executeDispatch @ chunk-WERSD76P.js?v=f29cfde0:7014
+processDispatchQueueItemsInOrder @ chunk-WERSD76P.js?v=f29cfde0:7034
+processDispatchQueue @ chunk-WERSD76P.js?v=f29cfde0:7043
+dispatchEventsForPlugins @ chunk-WERSD76P.js?v=f29cfde0:7051
+(anonymous) @ chunk-WERSD76P.js?v=f29cfde0:7174
+batchedUpdates$1 @ chunk-WERSD76P.js?v=f29cfde0:18913
+batchedUpdates @ chunk-WERSD76P.js?v=f29cfde0:3579
+dispatchEventForPluginEventSystem @ chunk-WERSD76P.js?v=f29cfde0:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-WERSD76P.js?v=f29cfde0:5478
+dispatchEvent @ chunk-WERSD76P.js?v=f29cfde0:5472
+dispatchDiscreteEvent @ chunk-WERSD76P.js?v=f29cfde0:5449

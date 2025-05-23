@@ -39,7 +39,10 @@ export const generateImageSchema = z.object({
   output_format: z.enum(["url", "b64_json"]).optional(),
   background: z.enum(["auto", "transparent", "opaque"]).optional(),
   // Replicate-specific parameters
-  aspect_ratio: z.string().optional(), // For Imagen-3 and Flux-Pro
+  aspect_ratio: z.union([
+    z.enum(["1:1", "16:9", "9:16", "4:3", "3:4"]),
+    z.string()
+  ]).optional(), // For Imagen-3, Imagen-4, and Flux-Pro
   seed: z.number().int().optional(),   // For Flux-Pro
   // KAVAK style toggle
   kavakStyle: z.boolean().optional().default(false)
