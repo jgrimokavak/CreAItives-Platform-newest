@@ -67,10 +67,11 @@ export default function AIModelSelector({ value, onChange, className }: AIModelS
       <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild>
           <div 
-            className="rounded-lg border overflow-hidden cursor-pointer transition-all hover:shadow-sm"
+            className="rounded-lg border overflow-hidden cursor-pointer transition-all hover:shadow-sm focus:outline-none focus:ring-[3px] focus:ring-offset-2"
             style={{ 
               borderColor: open ? colors.light : "rgba(var(--border))",
-              borderWidth: open ? "1.5px" : "1px" 
+              borderWidth: open ? "1.5px" : "1px",
+              boxShadow: open ? `0 0 0 3px ${colors.light}40` : "none"
             }}
           >
             {/* Card header with model info */}
