@@ -6,7 +6,7 @@ import { LRUCache } from "lru-cache";
 const router = Router();
 const bodySchema = z.object({
   text: z.string().min(3),
-  model: z.enum(["gpt-image-1", "imagen-3", "flux-pro"]),
+  model: z.enum(["gpt-image-1", "imagen-3", "imagen-4", "flux-pro"]),
 });
 
 // Cache suggestions to reduce API calls and costs

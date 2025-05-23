@@ -25,6 +25,7 @@ export default function ModelBadge({
   // Maps model keys to display names and provider info
   const modelInfo: Record<string, { name: string, provider: string }> = {
     "gpt-image-1": { name: "GPT-Image-1", provider: "OpenAI" },
+    "imagen-4": { name: "Imagen-4", provider: "Google" },
     "imagen-3": { name: "Imagen-3", provider: "Google" },
     "flux-pro": { name: "Flux-Pro", provider: "Black Forest Labs" }
   };

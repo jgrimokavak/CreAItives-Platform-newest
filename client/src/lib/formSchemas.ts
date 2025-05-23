@@ -15,6 +15,9 @@ export const modelSchemas = {
     count: z.enum(["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]),
     background: z.enum(["auto", "transparent", "opaque"]).optional(),
   }),
+  "imagen-4": commonSchema.extend({
+    aspect_ratio: z.enum(["1:1", "16:9", "9:16", "4:3", "3:4"]),
+  }),
   "imagen-3": commonSchema.extend({
     aspect_ratio: z.enum(["1:1", "16:9", "9:16", "4:3", "3:4"]),
     negative_prompt: z.string().optional(),
