@@ -74,7 +74,7 @@ export default function AIModelSelector({ value, onChange, className }: AIModelS
           <div 
             className="rounded-lg overflow-hidden cursor-pointer transition-all hover:shadow-sm outline-none"
             style={{ 
-              border: open ? `1.5px solid ${colors.light}` : `1px solid ${colors.light}40`,
+              border: open ? `2px solid ${colors.light}` : `2px solid ${colors.light}40`,
               boxShadow: open ? `0 0 0 3px ${colors.light}40` : "none"
             }}
           >
