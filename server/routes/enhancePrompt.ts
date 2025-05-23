@@ -14,7 +14,7 @@ const promptCache = new NodeCache({
 // Schema for the request body
 const bodySchema = z.object({
   text: z.string().min(3),
-  model: z.enum(["gpt-image-1", "imagen-3", "flux-pro"]),
+  model: z.enum(["gpt-image-1", "imagen-3", "imagen-4", "flux-pro"]),
 });
 
 // Model-specific templates
@@ -64,6 +64,9 @@ Return a JSON object with two keys:
       break;
     case "imagen-3":
       modelSpecificGuidance = "For Imagen-3: Add descriptive color, lighting, or scene composition terms to boost vividness and structure. Don't include \"ArtStation\" or stylized terms unless the user leans into illustration or concept art.";
+      break;
+    case "imagen-4":
+      modelSpecificGuidance = "For Imagen-4: Focus on precise visual details, lighting quality, and composition. This model excels at photorealistic rendering with accurate colors and textures. Emphasize specific camera angles, lighting conditions, and material properties for best results.";
       break;
     case "flux-pro":
       modelSpecificGuidance = "For Flux-Pro: Lean into lighting and realism enhancements. For car prompts, add \"modern car\" by default and include studio-like rendering terms if fitting (e.g. \"reflective floor\", \"white backdrop\").";

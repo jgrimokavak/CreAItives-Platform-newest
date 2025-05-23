@@ -61,8 +61,14 @@ async function downloadAndSaveImage(url: string, userId: string = "system", prom
 export async function generateWithReplicate(modelKey: string, inputs: any): Promise<GeneratedImage[]> {
   const model = models.find(m => m.key === modelKey);
   
-  if (!model || model.provider !== 'replicate' || !model.version) {
+  if (!model || model.provider !== 'replicate') {
     throw new Error(`Invalid Replicate model: ${modelKey}`);
+  }
+  
+  // Get the model identifier - use version if available, otherwise use slug
+  const modelIdentifier = model.version || model.slug;
+  if (!modelIdentifier) {
+    throw new Error(`Model ${modelKey} missing version or slug`);
   }
   
   // Combine default inputs with user inputs
@@ -79,7 +85,7 @@ export async function generateWithReplicate(modelKey: string, inputs: any): Prom
   });
   
   // Create a prediction
-  const prediction = await createPrediction(model.version, body);
+  const prediction = await createPrediction(modelIdentifier, body);
   
   // Wait for prediction to complete (with polling)
   console.log(`Waiting for Replicate prediction ${prediction.id}...`);
