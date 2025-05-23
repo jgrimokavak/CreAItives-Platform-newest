@@ -46,7 +46,7 @@ const CarCreationPage: React.FC = () => {
   const [models, setModels] = useState<string[]>([]);
   const [bodyStyles, setBodyStyles] = useState<string[]>([]);
   const [trims, setTrims] = useState<string[]>([]);
-  const [bg, setBg] = useState<"white" | "hub">("white");
+  const [bg, setBg] = useState<"white" | "hub">("hub");
   const [progress, setProgress] = useState<number | null>(null);
   const [image, setImage] = useState<GeneratedImage | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -70,7 +70,7 @@ const CarCreationPage: React.FC = () => {
       body_style: 'None',
       trim: 'None',
       color: 'silver', // Set default color to silver
-      background: 'white'
+      background: 'hub'
     }
   });
 
