@@ -37,6 +37,10 @@ export const modelDefaults = {
     background: "auto",
     kavakStyle: false,
   },
+  "imagen-4": {
+    aspect_ratio: "1:1",
+    kavakStyle: false,
+  },
   "imagen-3": {
     aspect_ratio: "1:1",
     negative_prompt: "",
