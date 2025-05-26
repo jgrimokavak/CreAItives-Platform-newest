@@ -976,10 +976,11 @@ export default function EmailBuilderPage() {
                 value={component.content.link || ''}
                 onChange={(e) => updateContent({ link: e.target.value })}
                 placeholder="https://..."
+                className="h-9"
               />
             </div>
 
-            {/* Spacing - Same pattern as text component */}
+            {/* Spacing */}
             <div className="space-y-3">
               <Label className="font-medium text-sm">Espaciado</Label>
               
@@ -1228,32 +1229,37 @@ export default function EmailBuilderPage() {
 
       case 'button':
         return (
-          <div className="h-full flex flex-col space-y-3">
+          <div className="h-full flex flex-col space-y-4">
             {/* Content */}
-            <div className="space-y-2">
-              <Label className="font-semibold">Contenido</Label>
-              <Input
-                value={component.content.text || ''}
-                onChange={(e) => updateContent({ text: e.target.value })}
-                placeholder="Texto del botón"
-              />
-              <Input
-                value={component.content.href || ''}
-                onChange={(e) => updateContent({ href: e.target.value })}
-                placeholder="https://..."
-              />
+            <div className="space-y-3">
+              <Label className="font-medium text-sm">Contenido</Label>
+              <div className="space-y-2">
+                <Input
+                  value={component.content.text || ''}
+                  onChange={(e) => updateContent({ text: e.target.value })}
+                  placeholder="Texto del botón"
+                  className="h-9"
+                />
+                <Input
+                  value={component.content.href || ''}
+                  onChange={(e) => updateContent({ href: e.target.value })}
+                  placeholder="https://..."
+                  className="h-9"
+                />
+              </div>
             </div>
 
             {/* Typography */}
             <div className="space-y-3">
-              <Label className="font-semibold">Tipografía</Label>
-              <div>
-                <Label className="text-xs">Familia</Label>
+              <Label className="font-medium text-sm">Tipografía</Label>
+              
+              <div className="space-y-2">
+                <Label className="text-xs text-gray-600">Fuente</Label>
                 <Select 
-                  value={component.content.fontFamily || 'Arial, sans-serif'} 
+                  value={component.content.fontFamily || 'Helvetica, sans-serif'} 
                   onValueChange={(value) => updateContent({ fontFamily: value })}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-9 w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1262,22 +1268,45 @@ export default function EmailBuilderPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <Label className="text-xs">Tamaño</Label>
-                  <Input
-                    value={component.content.fontSize || '16px'}
-                    onChange={(e) => updateContent({ fontSize: e.target.value })}
-                    placeholder="16px"
-                  />
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label className="text-xs text-gray-600">Tamaño</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full h-9 justify-between">
+                        {stripPx(component.content.fontSize || '16px')}px
+                        <Sliders className="h-4 w-4" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-64">
+                      <div className="space-y-3">
+                        <Label className="text-sm font-medium">Tamaño de fuente</Label>
+                        <Slider
+                          value={[parseInt(stripPx(component.content.fontSize || '16px'))]}
+                          onValueChange={(value) => updateContent({ fontSize: `${value[0]}px` })}
+                          max={48}
+                          min={8}
+                          step={1}
+                          className="w-full"
+                        />
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>8px</span>
+                          <span>{stripPx(component.content.fontSize || '16px')}px</span>
+                          <span>48px</span>
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
-                <div>
-                  <Label className="text-xs">Peso</Label>
+
+                <div className="space-y-2">
+                  <Label className="text-xs text-gray-600">Peso</Label>
                   <Select 
                     value={component.content.fontWeight || 'bold'} 
                     onValueChange={(value) => updateContent({ fontWeight: value })}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="h-9 w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -1293,22 +1322,24 @@ export default function EmailBuilderPage() {
 
             {/* Colors */}
             <div className="space-y-3">
-              <Label className="font-semibold">Colores</Label>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <Label className="text-xs">Color de texto</Label>
+              <Label className="font-medium text-sm">Colores</Label>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label className="text-xs text-gray-600">Color de texto</Label>
                   <Input
                     type="color"
                     value={component.content.textColor || '#ffffff'}
                     onChange={(e) => updateContent({ textColor: e.target.value })}
+                    className="h-9"
                   />
                 </div>
-                <div>
-                  <Label className="text-xs">Fondo</Label>
+                <div className="space-y-2">
+                  <Label className="text-xs text-gray-600">Fondo</Label>
                   <Input
                     type="color"
                     value={component.content.backgroundColor || '#1553ec'}
                     onChange={(e) => updateContent({ backgroundColor: e.target.value })}
+                    className="h-9"
                   />
                 </div>
               </div>
@@ -1316,32 +1347,69 @@ export default function EmailBuilderPage() {
 
             {/* Border */}
             <div className="space-y-3">
-              <Label className="font-semibold">Borde</Label>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <Label className="text-xs">Color</Label>
+              <Label className="font-medium text-sm">Borde</Label>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label className="text-xs text-gray-600">Color</Label>
                   <Input
                     type="color"
                     value={component.content.borderColor || '#1553ec'}
                     onChange={(e) => updateContent({ borderColor: e.target.value })}
+                    className="h-9"
                   />
                 </div>
-                <div>
-                  <Label className="text-xs">Grosor (px)</Label>
-                  <Input
-                    value={component.content.borderWidth || '0px'}
-                    onChange={(e) => updateContent({ borderWidth: e.target.value })}
-                    placeholder="0px"
-                  />
+                <div className="space-y-2">
+                  <Label className="text-xs text-gray-600">Grosor</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full h-9 justify-between">
+                        {stripPx(component.content.borderWidth || '0px')}px
+                        <Sliders className="h-4 w-4" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-56">
+                      <div className="space-y-2">
+                        <Label className="text-sm">Grosor del borde</Label>
+                        <Slider
+                          value={[parseInt(stripPx(component.content.borderWidth || '0px'))]}
+                          onValueChange={(value) => updateContent({ borderWidth: `${value[0]}px` })}
+                          max={10}
+                          min={0}
+                          step={1}
+                        />
+                        <div className="text-center text-xs text-gray-500">
+                          {stripPx(component.content.borderWidth || '0px')}px
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
-              <div>
-                <Label className="text-xs">Border radius (px)</Label>
-                <Input
-                  value={component.content.borderRadius || '6px'}
-                  onChange={(e) => updateContent({ borderRadius: e.target.value })}
-                  placeholder="6px"
-                />
+              <div className="space-y-2">
+                <Label className="text-xs text-gray-600">Border radius</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full h-9 justify-between">
+                      {stripPx(component.content.borderRadius || '6px')}px
+                      <Sliders className="h-4 w-4" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-56">
+                    <div className="space-y-2">
+                      <Label className="text-sm">Border Radius</Label>
+                      <Slider
+                        value={[parseInt(stripPx(component.content.borderRadius || '6px'))]}
+                        onValueChange={(value) => updateContent({ borderRadius: `${value[0]}px` })}
+                        max={50}
+                        min={0}
+                        step={1}
+                      />
+                      <div className="text-center text-xs text-gray-500">
+                        {stripPx(component.content.borderRadius || '6px')}px
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
 
@@ -1440,42 +1508,116 @@ export default function EmailBuilderPage() {
 
       case 'spacer':
         return (
-          <div className="space-y-4">
-            <div>
-              <Label className="font-semibold">Altura (px) - Requerido</Label>
-              <Input
-                value={component.content.height || '20px'}
-                onChange={(e) => updateContent({ height: e.target.value })}
-                placeholder="20px"
-                required
-              />
+          <div className="h-full flex flex-col space-y-4">
+            {/* Height */}
+            <div className="space-y-3">
+              <Label className="font-medium text-sm">Altura</Label>
+              <div className="space-y-2">
+                <Label className="text-xs text-gray-600">Altura del espaciador</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full h-9 justify-between">
+                      {stripPx(component.content.height || '20px')}px
+                      <Sliders className="h-4 w-4" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-64">
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">Altura del espaciador</Label>
+                      <Slider
+                        value={[parseInt(stripPx(component.content.height || '20px'))]}
+                        onValueChange={(value) => updateContent({ height: `${value[0]}px` })}
+                        max={200}
+                        min={5}
+                        step={5}
+                        className="w-full"
+                      />
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <span>5px</span>
+                        <span>{stripPx(component.content.height || '20px')}px</span>
+                        <span>200px</span>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
-            <div>
-              <Label className="text-xs">Color de fondo (opcional)</Label>
-              <Input
-                type="color"
-                value={component.content.backgroundColor || 'transparent'}
-                onChange={(e) => updateContent({ backgroundColor: e.target.value })}
-              />
+
+            {/* Background Color */}
+            <div className="space-y-3">
+              <Label className="font-medium text-sm">Apariencia</Label>
+              <div className="space-y-2">
+                <Label className="text-xs text-gray-600">Color de fondo (opcional)</Label>
+                <Input
+                  type="color"
+                  value={component.content.backgroundColor || '#ffffff'}
+                  onChange={(e) => updateContent({ backgroundColor: e.target.value })}
+                  className="h-9"
+                />
+              </div>
             </div>
-            <div>
-              <Label className="text-xs">Margin (top, bottom)</Label>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <Label className="text-xs">Top</Label>
-                  <Input
-                    value={component.styles.marginTop || '0px'}
-                    onChange={(e) => updateStyles({ marginTop: e.target.value })}
-                    placeholder="0px"
-                  />
-                </div>
-                <div>
-                  <Label className="text-xs">Bottom</Label>
-                  <Input
-                    value={component.styles.marginBottom || '0px'}
-                    onChange={(e) => updateStyles({ marginBottom: e.target.value })}
-                    placeholder="0px"
-                  />
+
+            {/* Spacing */}
+            <div className="space-y-3">
+              <Label className="font-medium text-sm">Espaciado</Label>
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label className="text-xs text-gray-600">Margin</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label className="text-xs text-gray-500">Top</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" className="w-full h-9 justify-between text-xs">
+                            {stripPx(component.styles.marginTop || '0px')}px
+                            <Sliders className="h-3 w-3" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-56">
+                          <div className="space-y-2">
+                            <Label className="text-sm">Margin Top</Label>
+                            <Slider
+                              value={[parseInt(stripPx(component.styles.marginTop || '0px'))]}
+                              onValueChange={(value) => updateStyles({ marginTop: `${value[0]}px` })}
+                              max={100}
+                              min={0}
+                              step={1}
+                            />
+                            <div className="text-center text-xs text-gray-500">
+                              {stripPx(component.styles.marginTop || '0px')}px
+                            </div>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs text-gray-500">Bottom</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" className="w-full h-9 justify-between text-xs">
+                            {stripPx(component.styles.marginBottom || '0px')}px
+                            <Sliders className="h-3 w-3" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-56">
+                          <div className="space-y-2">
+                            <Label className="text-sm">Margin Bottom</Label>
+                            <Slider
+                              value={[parseInt(stripPx(component.styles.marginBottom || '0px'))]}
+                              onValueChange={(value) => updateStyles({ marginBottom: `${value[0]}px` })}
+                              max={100}
+                              min={0}
+                              step={1}
+                            />
+                            <div className="text-center text-xs text-gray-500">
+                              {stripPx(component.styles.marginBottom || '0px')}px
+                            </div>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
