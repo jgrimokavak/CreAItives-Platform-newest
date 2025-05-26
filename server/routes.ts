@@ -23,6 +23,7 @@ import modelRoutes, { initializeModels } from "./routes/model-routes";
 import upscaleRoutes from "./routes/upscale-routes";
 import enhancePromptRouter from "./routes/enhancePrompt";
 import promptSuggestionsRouter from "./routes/promptSuggestions";
+import { generateEmailContent, saveEmailTemplate, getEmailTemplates, generateEmailHTML } from "./routes/email-routes";
 import { listMakes, listModels, listBodyStyles, listTrims, flushCarCache, loadCarData, getLastFetchTime, setupCarDataAutoRefresh } from "./carData";
 import axios from "axios";
 import Papa from "papaparse";

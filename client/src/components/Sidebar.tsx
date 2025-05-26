@@ -9,7 +9,8 @@ import {
   X,
   ImageUpscale,
   CarFront,
-  Home
+  Home,
+  Mail
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import kavakLogo from '@assets/LOGO_W (low quality)-01.png';
@@ -90,6 +91,9 @@ const Sidebar = ({ children }: SidebarProps) => {
           </SidebarLink>
           <SidebarLink to="/upscale" icon={<ImageUpscale size={18} />}>
             Upscale
+          </SidebarLink>
+          <SidebarLink to="/email-builder" icon={<Mail size={18} />}>
+            Email CreAItor
           </SidebarLink>
           <SidebarLink to="/trash" icon={<Trash2 size={18} />}>
             Trash

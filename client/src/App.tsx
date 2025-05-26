@@ -8,6 +8,7 @@ import HomePage from "@/pages/HomePage";
 import SimpleGalleryPage from "@/pages/SimpleGalleryPage";
 import UpscalePage from "./pages/UpscalePageNew";
 import CarCreationPage from "./pages/CarCreationPage";
+import EmailBuilderPage from "./pages/EmailBuilderPage";
 import { EditorProvider } from "@/context/EditorContext";
 import Sidebar from "@/components/Sidebar";
 import { useWebSocket } from "@/lib/websocket";
@@ -23,8 +24,9 @@ function Router() {
         <Route path="/home" component={HomePage} />
         <Route path="/create" component={Create} />
         <Route path="/gallery" component={() => <SimpleGalleryPage mode="gallery" />} />
-        <Route path="/trash" component={() => <SimpleGalleryPage mode="trash" />} />
         <Route path="/upscale" component={UpscalePage} />
+        <Route path="/email-builder" component={EmailBuilderPage} />
+        <Route path="/trash" component={() => <SimpleGalleryPage mode="trash" />} />
         <Route path="/car" component={CarCreationPage} />
         <Route component={NotFound} />
       </Switch>
