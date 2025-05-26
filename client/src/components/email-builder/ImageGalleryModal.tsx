@@ -16,7 +16,7 @@ export const ImageGalleryModal: React.FC = () => {
   } = useEmailBuilder();
 
   // Fetch images from gallery for image selection
-  const { data: galleryImages = [], isLoading } = useQuery({
+  const { data: galleryImages = [], isLoading } = useQuery<any[]>({
     queryKey: ['/api/gallery'],
     enabled: showImageGallery
   });

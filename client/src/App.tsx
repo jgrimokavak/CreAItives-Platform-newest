@@ -8,7 +8,7 @@ import HomePage from "@/pages/HomePage";
 import SimpleGalleryPage from "@/pages/SimpleGalleryPage";
 import UpscalePage from "./pages/UpscalePageNew";
 import CarCreationPage from "./pages/CarCreationPage";
-import EmailBuilderPage from "./pages/EmailBuilderPage";
+import EmailBuilderPage from "./pages/EmailBuilderPageNew";
 import { EditorProvider } from "@/context/EditorContext";
 import Sidebar from "@/components/Sidebar";
 import { useWebSocket } from "@/lib/websocket";
