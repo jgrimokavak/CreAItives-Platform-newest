@@ -1,1 +1,0 @@
-Creating a backup to restore the working EmailBuilderPage.tsx
