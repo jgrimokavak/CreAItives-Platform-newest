@@ -562,20 +562,54 @@ export default function EmailBuilderPage() {
             <div className="space-y-3">
               <Label className="font-semibold">Espaciado</Label>
               <div>
-                <Label className="text-xs">Padding (px)</Label>
-                <Input
-                  value={component.styles.padding || '15px 20px'}
-                  onChange={(e) => updateStyles({ padding: e.target.value })}
-                  placeholder="15px 20px"
-                />
+                <Label className="text-xs">Padding (top, right, bottom, left)</Label>
+                <div className="grid grid-cols-2 gap-1">
+                  <Input
+                    value={component.styles.paddingTop || '15px'}
+                    onChange={(e) => updateStyles({ paddingTop: e.target.value })}
+                    placeholder="Top"
+                  />
+                  <Input
+                    value={component.styles.paddingRight || '20px'}
+                    onChange={(e) => updateStyles({ paddingRight: e.target.value })}
+                    placeholder="Right"
+                  />
+                  <Input
+                    value={component.styles.paddingBottom || '15px'}
+                    onChange={(e) => updateStyles({ paddingBottom: e.target.value })}
+                    placeholder="Bottom"
+                  />
+                  <Input
+                    value={component.styles.paddingLeft || '20px'}
+                    onChange={(e) => updateStyles({ paddingLeft: e.target.value })}
+                    placeholder="Left"
+                  />
+                </div>
               </div>
               <div>
-                <Label className="text-xs">Margin (px)</Label>
-                <Input
-                  value={component.styles.margin || '0px'}
-                  onChange={(e) => updateStyles({ margin: e.target.value })}
-                  placeholder="0px"
-                />
+                <Label className="text-xs">Margin (top, right, bottom, left)</Label>
+                <div className="grid grid-cols-2 gap-1">
+                  <Input
+                    value={component.styles.marginTop || '0px'}
+                    onChange={(e) => updateStyles({ marginTop: e.target.value })}
+                    placeholder="Top"
+                  />
+                  <Input
+                    value={component.styles.marginRight || '0px'}
+                    onChange={(e) => updateStyles({ marginRight: e.target.value })}
+                    placeholder="Right"
+                  />
+                  <Input
+                    value={component.styles.marginBottom || '0px'}
+                    onChange={(e) => updateStyles({ marginBottom: e.target.value })}
+                    placeholder="Bottom"
+                  />
+                  <Input
+                    value={component.styles.marginLeft || '0px'}
+                    onChange={(e) => updateStyles({ marginLeft: e.target.value })}
+                    placeholder="Left"
+                  />
+                </div>
               </div>
             </div>
 
@@ -584,7 +618,7 @@ export default function EmailBuilderPage() {
               <Label className="font-semibold">Layout</Label>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <Label className="text-xs">Ancho máximo</Label>
+                  <Label className="text-xs">Ancho máximo (px)</Label>
                   <Input
                     value={component.styles.maxWidth || '100%'}
                     onChange={(e) => updateStyles({ maxWidth: e.target.value })}
@@ -592,13 +626,28 @@ export default function EmailBuilderPage() {
                   />
                 </div>
                 <div>
-                  <Label className="text-xs">Border radius</Label>
+                  <Label className="text-xs">Border radius (px)</Label>
                   <Input
                     value={component.styles.borderRadius || '0px'}
                     onChange={(e) => updateStyles({ borderRadius: e.target.value })}
                     placeholder="0px"
                   />
                 </div>
+              </div>
+              <div>
+                <Label className="text-xs">Display</Label>
+                <Select 
+                  value={component.styles.display || 'block'} 
+                  onValueChange={(value) => updateStyles({ display: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="block">Block</SelectItem>
+                    <SelectItem value="inline-block">Inline-block</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
@@ -707,20 +756,54 @@ export default function EmailBuilderPage() {
             <div className="space-y-3">
               <Label className="font-semibold">Espaciado</Label>
               <div>
-                <Label className="text-xs">Padding (px)</Label>
-                <Input
-                  value={component.styles.padding || '10px'}
-                  onChange={(e) => updateStyles({ padding: e.target.value })}
-                  placeholder="10px"
-                />
+                <Label className="text-xs">Padding (top, right, bottom, left)</Label>
+                <div className="grid grid-cols-2 gap-1">
+                  <Input
+                    value={component.styles.paddingTop || '10px'}
+                    onChange={(e) => updateStyles({ paddingTop: e.target.value })}
+                    placeholder="Top"
+                  />
+                  <Input
+                    value={component.styles.paddingRight || '10px'}
+                    onChange={(e) => updateStyles({ paddingRight: e.target.value })}
+                    placeholder="Right"
+                  />
+                  <Input
+                    value={component.styles.paddingBottom || '10px'}
+                    onChange={(e) => updateStyles({ paddingBottom: e.target.value })}
+                    placeholder="Bottom"
+                  />
+                  <Input
+                    value={component.styles.paddingLeft || '10px'}
+                    onChange={(e) => updateStyles({ paddingLeft: e.target.value })}
+                    placeholder="Left"
+                  />
+                </div>
               </div>
               <div>
-                <Label className="text-xs">Margin (px)</Label>
-                <Input
-                  value={component.styles.margin || '0px'}
-                  onChange={(e) => updateStyles({ margin: e.target.value })}
-                  placeholder="0px"
-                />
+                <Label className="text-xs">Margin (top, right, bottom, left)</Label>
+                <div className="grid grid-cols-2 gap-1">
+                  <Input
+                    value={component.styles.marginTop || '0px'}
+                    onChange={(e) => updateStyles({ marginTop: e.target.value })}
+                    placeholder="Top"
+                  />
+                  <Input
+                    value={component.styles.marginRight || '0px'}
+                    onChange={(e) => updateStyles({ marginRight: e.target.value })}
+                    placeholder="Right"
+                  />
+                  <Input
+                    value={component.styles.marginBottom || '0px'}
+                    onChange={(e) => updateStyles({ marginBottom: e.target.value })}
+                    placeholder="Bottom"
+                  />
+                  <Input
+                    value={component.styles.marginLeft || '0px'}
+                    onChange={(e) => updateStyles({ marginLeft: e.target.value })}
+                    placeholder="Left"
+                  />
+                </div>
               </div>
               <div>
                 <Label className="text-xs">Border radius (px)</Label>
@@ -729,6 +812,21 @@ export default function EmailBuilderPage() {
                   onChange={(e) => updateContent({ borderRadius: e.target.value })}
                   placeholder="0px"
                 />
+              </div>
+              <div>
+                <Label className="text-xs">Display</Label>
+                <Select 
+                  value={component.content.display || 'block'} 
+                  onValueChange={(value) => updateContent({ display: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="block">Block</SelectItem>
+                    <SelectItem value="inline-block">Inline-block</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
@@ -860,39 +958,91 @@ export default function EmailBuilderPage() {
             <div className="space-y-3">
               <Label className="font-semibold">Espaciado</Label>
               <div>
-                <Label className="text-xs">Padding (px)</Label>
-                <Input
-                  value={component.styles.padding || '12px 24px'}
-                  onChange={(e) => updateStyles({ padding: e.target.value })}
-                  placeholder="12px 24px"
-                />
+                <Label className="text-xs">Padding (top, right, bottom, left)</Label>
+                <div className="grid grid-cols-2 gap-1">
+                  <Input
+                    value={component.styles.paddingTop || '12px'}
+                    onChange={(e) => updateStyles({ paddingTop: e.target.value })}
+                    placeholder="Top"
+                  />
+                  <Input
+                    value={component.styles.paddingRight || '24px'}
+                    onChange={(e) => updateStyles({ paddingRight: e.target.value })}
+                    placeholder="Right"
+                  />
+                  <Input
+                    value={component.styles.paddingBottom || '12px'}
+                    onChange={(e) => updateStyles({ paddingBottom: e.target.value })}
+                    placeholder="Bottom"
+                  />
+                  <Input
+                    value={component.styles.paddingLeft || '24px'}
+                    onChange={(e) => updateStyles({ paddingLeft: e.target.value })}
+                    placeholder="Left"
+                  />
+                </div>
               </div>
               <div>
-                <Label className="text-xs">Margin (px)</Label>
-                <Input
-                  value={component.styles.margin || '10px auto'}
-                  onChange={(e) => updateStyles({ margin: e.target.value })}
-                  placeholder="10px auto"
-                />
+                <Label className="text-xs">Margin (top, right, bottom, left)</Label>
+                <div className="grid grid-cols-2 gap-1">
+                  <Input
+                    value={component.styles.marginTop || '10px'}
+                    onChange={(e) => updateStyles({ marginTop: e.target.value })}
+                    placeholder="Top"
+                  />
+                  <Input
+                    value={component.styles.marginRight || 'auto'}
+                    onChange={(e) => updateStyles({ marginRight: e.target.value })}
+                    placeholder="Right"
+                  />
+                  <Input
+                    value={component.styles.marginBottom || '10px'}
+                    onChange={(e) => updateStyles({ marginBottom: e.target.value })}
+                    placeholder="Bottom"
+                  />
+                  <Input
+                    value={component.styles.marginLeft || 'auto'}
+                    onChange={(e) => updateStyles({ marginLeft: e.target.value })}
+                    placeholder="Left"
+                  />
+                </div>
               </div>
             </div>
 
-            {/* Alignment */}
-            <div>
-              <Label className="text-xs">Alineación</Label>
-              <Select 
-                value={component.content.alignment || 'center'} 
-                onValueChange={(value) => updateContent({ alignment: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="left">Izquierda</SelectItem>
-                  <SelectItem value="center">Centro</SelectItem>
-                  <SelectItem value="right">Derecha</SelectItem>
-                </SelectContent>
-              </Select>
+            {/* Layout */}
+            <div className="space-y-3">
+              <Label className="font-semibold">Layout</Label>
+              <div>
+                <Label className="text-xs">Alineación</Label>
+                <Select 
+                  value={component.content.alignment || 'center'} 
+                  onValueChange={(value) => updateContent({ alignment: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="left">Izquierda</SelectItem>
+                    <SelectItem value="center">Centro</SelectItem>
+                    <SelectItem value="right">Derecha</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Display</Label>
+                <Select 
+                  value={component.content.display || 'inline-block'} 
+                  onValueChange={(value) => updateContent({ display: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="inline-block">Inline-block</SelectItem>
+                    <SelectItem value="block">Block</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
         );
@@ -901,28 +1051,42 @@ export default function EmailBuilderPage() {
         return (
           <div className="space-y-4">
             <div>
-              <Label className="font-semibold">Altura (px)</Label>
+              <Label className="font-semibold">Altura (px) - Requerido</Label>
               <Input
                 value={component.content.height || '20px'}
                 onChange={(e) => updateContent({ height: e.target.value })}
                 placeholder="20px"
+                required
               />
             </div>
             <div>
               <Label className="text-xs">Color de fondo (opcional)</Label>
               <Input
                 type="color"
-                value={component.content.backgroundColor || '#transparent'}
+                value={component.content.backgroundColor || 'transparent'}
                 onChange={(e) => updateContent({ backgroundColor: e.target.value })}
               />
             </div>
             <div>
-              <Label className="text-xs">Margin (px)</Label>
-              <Input
-                value={component.styles.margin || '0px'}
-                onChange={(e) => updateStyles({ margin: e.target.value })}
-                placeholder="0px"
-              />
+              <Label className="text-xs">Margin (top, bottom)</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">Top</Label>
+                  <Input
+                    value={component.styles.marginTop || '0px'}
+                    onChange={(e) => updateStyles({ marginTop: e.target.value })}
+                    placeholder="0px"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Bottom</Label>
+                  <Input
+                    value={component.styles.marginBottom || '0px'}
+                    onChange={(e) => updateStyles({ marginBottom: e.target.value })}
+                    placeholder="0px"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         );
