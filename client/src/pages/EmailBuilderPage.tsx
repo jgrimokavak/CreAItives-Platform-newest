@@ -168,13 +168,50 @@ export default function EmailBuilderPage() {
   const getDefaultContent = (type: string) => {
     switch (type) {
       case 'text':
-        return { text: 'Nuevo párrafo de texto. Haz clic para editar.' };
+        return { 
+          text: 'Nuevo párrafo de texto. Haz clic para editar.',
+          fontFamily: 'Arial, sans-serif',
+          fontSize: '16px',
+          fontWeight: 'normal',
+          color: '#000000',
+          lineHeight: '1.6',
+          textAlign: 'left',
+          backgroundColor: 'transparent',
+          borderRadius: '0px',
+          maxWidth: '100%',
+          display: 'block'
+        };
       case 'image':
-        return { src: '', alt: 'Imagen', width: '100%' };
+        return { 
+          src: '', 
+          alt: 'Imagen', 
+          width: '100%',
+          height: 'auto',
+          objectFit: 'cover',
+          alignment: 'center',
+          borderRadius: '0px',
+          link: ''
+        };
       case 'button':
-        return { text: 'Hacer Clic Aquí', href: '#' };
+        return { 
+          text: 'Hacer Clic Aquí', 
+          href: '#',
+          fontFamily: 'Arial, sans-serif',
+          fontSize: '16px',
+          fontWeight: 'bold',
+          textColor: '#ffffff',
+          backgroundColor: '#1553ec',
+          borderColor: '#1553ec',
+          borderWidth: '0px',
+          borderRadius: '6px',
+          alignment: 'center',
+          display: 'inline-block'
+        };
       case 'spacer':
-        return { height: '20px' };
+        return { 
+          height: '20px',
+          backgroundColor: 'transparent'
+        };
       default:
         return {};
     }
@@ -183,22 +220,53 @@ export default function EmailBuilderPage() {
   const getDefaultStyles = (type: string, templateColor: string) => {
     switch (type) {
       case 'text':
-        return { padding: '15px 20px', fontSize: '16px', lineHeight: '1.6' };
+        return { 
+          padding: '15px 20px',
+          margin: '0px',
+          fontFamily: 'Arial, sans-serif',
+          fontSize: '16px',
+          fontWeight: 'normal',
+          color: '#000000',
+          lineHeight: '1.6',
+          textAlign: 'left',
+          backgroundColor: 'transparent',
+          borderRadius: '0px',
+          maxWidth: '100%',
+          display: 'block'
+        };
       case 'image':
-        return { textAlign: 'center', padding: '10px', maxWidth: '100%' };
+        return { 
+          padding: '10px',
+          margin: '0px',
+          textAlign: 'center',
+          width: '100%',
+          height: 'auto',
+          objectFit: 'cover',
+          borderRadius: '0px',
+          display: 'block'
+        };
       case 'button':
         return { 
-          backgroundColor: templateColor, 
-          color: '#ffffff', 
-          padding: '12px 24px', 
-          borderRadius: '6px', 
-          textAlign: 'center', 
+          padding: '12px 24px',
           margin: '10px auto',
+          fontFamily: 'Arial, sans-serif',
+          fontSize: '16px',
+          fontWeight: 'bold',
+          color: '#ffffff',
+          backgroundColor: templateColor,
+          borderColor: templateColor,
+          borderWidth: '0px',
+          borderRadius: '6px',
+          textAlign: 'center',
           display: 'inline-block',
           textDecoration: 'none'
         };
       case 'spacer':
-        return { height: '20px', backgroundColor: 'transparent' };
+        return { 
+          height: '20px', 
+          backgroundColor: 'transparent',
+          margin: '0px'
+        };
       default:
         return {};
     }
@@ -378,72 +446,175 @@ export default function EmailBuilderPage() {
     switch (component.type) {
       case 'text':
         return (
-          <div className="space-y-3">
+          <div className="space-y-4 max-h-96 overflow-y-auto">
+            {/* Content */}
             <div>
-              <Label>Texto</Label>
+              <Label className="font-semibold">Contenido</Label>
               <Textarea
-                value={component.content.text}
+                value={component.content.text || component.styles.text || ''}
                 onChange={(e) => updateContent({ text: e.target.value })}
                 rows={3}
+                className="mt-1"
               />
             </div>
-            <div>
-              <Label>Tamaño de Fuente</Label>
-              <Input
-                value={component.styles.fontSize || '16px'}
-                onChange={(e) => updateStyles({ fontSize: e.target.value })}
-              />
+
+            {/* Typography */}
+            <div className="space-y-3">
+              <Label className="font-semibold">Tipografía</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">Familia</Label>
+                  <Select 
+                    value={component.styles.fontFamily || 'Arial, sans-serif'} 
+                    onValueChange={(value) => updateStyles({ fontFamily: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Arial, sans-serif">Arial</SelectItem>
+                      <SelectItem value="Helvetica, sans-serif">Helvetica</SelectItem>
+                      <SelectItem value="Georgia, serif">Georgia</SelectItem>
+                      <SelectItem value="Times New Roman, serif">Times</SelectItem>
+                      <SelectItem value="Verdana, sans-serif">Verdana</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Tamaño</Label>
+                  <Input
+                    value={component.styles.fontSize || '16px'}
+                    onChange={(e) => updateStyles({ fontSize: e.target.value })}
+                    placeholder="16px"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">Peso</Label>
+                  <Select 
+                    value={component.styles.fontWeight || 'normal'} 
+                    onValueChange={(value) => updateStyles({ fontWeight: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="normal">Normal</SelectItem>
+                      <SelectItem value="bold">Bold</SelectItem>
+                      <SelectItem value="lighter">Lighter</SelectItem>
+                      <SelectItem value="bolder">Bolder</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Altura de línea</Label>
+                  <Input
+                    value={component.styles.lineHeight || '1.6'}
+                    onChange={(e) => updateStyles({ lineHeight: e.target.value })}
+                    placeholder="1.6"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs">Alineación</Label>
+                <Select 
+                  value={component.styles.textAlign || 'left'} 
+                  onValueChange={(value) => updateStyles({ textAlign: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="left">Izquierda</SelectItem>
+                    <SelectItem value="center">Centro</SelectItem>
+                    <SelectItem value="right">Derecha</SelectItem>
+                    <SelectItem value="justify">Justificado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div>
-              <Label>Color de Texto</Label>
-              <Input
-                type="color"
-                value={component.styles.color || '#000000'}
-                onChange={(e) => updateStyles({ color: e.target.value })}
-              />
+
+            {/* Colors */}
+            <div className="space-y-3">
+              <Label className="font-semibold">Colores</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">Color de texto</Label>
+                  <Input
+                    type="color"
+                    value={component.styles.color || '#000000'}
+                    onChange={(e) => updateStyles({ color: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Fondo</Label>
+                  <Input
+                    type="color"
+                    value={component.styles.backgroundColor || '#transparent'}
+                    onChange={(e) => updateStyles({ backgroundColor: e.target.value })}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Spacing */}
+            <div className="space-y-3">
+              <Label className="font-semibold">Espaciado</Label>
+              <div>
+                <Label className="text-xs">Padding (px)</Label>
+                <Input
+                  value={component.styles.padding || '15px 20px'}
+                  onChange={(e) => updateStyles({ padding: e.target.value })}
+                  placeholder="15px 20px"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Margin (px)</Label>
+                <Input
+                  value={component.styles.margin || '0px'}
+                  onChange={(e) => updateStyles({ margin: e.target.value })}
+                  placeholder="0px"
+                />
+              </div>
+            </div>
+
+            {/* Layout */}
+            <div className="space-y-3">
+              <Label className="font-semibold">Layout</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">Ancho máximo</Label>
+                  <Input
+                    value={component.styles.maxWidth || '100%'}
+                    onChange={(e) => updateStyles({ maxWidth: e.target.value })}
+                    placeholder="100%"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Border radius</Label>
+                  <Input
+                    value={component.styles.borderRadius || '0px'}
+                    onChange={(e) => updateStyles({ borderRadius: e.target.value })}
+                    placeholder="0px"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         );
-      case 'button':
-        return (
-          <div className="space-y-3">
-            <div>
-              <Label>Texto del Botón</Label>
-              <Input
-                value={component.content.text}
-                onChange={(e) => updateContent({ text: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label>Enlace</Label>
-              <Input
-                value={component.content.href}
-                onChange={(e) => updateContent({ href: e.target.value })}
-                placeholder="https://..."
-              />
-            </div>
-            <div>
-              <Label>Color de Fondo</Label>
-              <Input
-                type="color"
-                value={component.styles.backgroundColor || '#1553ec'}
-                onChange={(e) => updateStyles({ backgroundColor: e.target.value })}
-              />
-            </div>
-          </div>
-        );
+
       case 'image':
         return (
-          <div className="space-y-3">
-            <div>
-              <Label>URL de la Imagen</Label>
+          <div className="space-y-4 max-h-96 overflow-y-auto">
+            {/* Image Source */}
+            <div className="space-y-2">
+              <Label className="font-semibold">Imagen</Label>
               <Input
-                value={component.content.src}
+                value={component.content.src || ''}
                 onChange={(e) => updateContent({ src: e.target.value })}
                 placeholder="https://..."
               />
-            </div>
-            <div>
               <Button
                 variant="outline"
                 className="w-full"
@@ -453,23 +624,306 @@ export default function EmailBuilderPage() {
                 Seleccionar de Galería
               </Button>
             </div>
+
+            {/* Alt Text */}
             <div>
-              <Label>Texto Alternativo</Label>
+              <Label className="text-xs">Texto alternativo</Label>
               <Input
-                value={component.content.alt}
+                value={component.content.alt || ''}
                 onChange={(e) => updateContent({ alt: e.target.value })}
+                placeholder="Descripción de la imagen"
               />
+            </div>
+
+            {/* Dimensions */}
+            <div className="space-y-3">
+              <Label className="font-semibold">Dimensiones</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">Ancho</Label>
+                  <Input
+                    value={component.content.width || '100%'}
+                    onChange={(e) => updateContent({ width: e.target.value })}
+                    placeholder="100%"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Alto</Label>
+                  <Input
+                    value={component.content.height || 'auto'}
+                    onChange={(e) => updateContent({ height: e.target.value })}
+                    placeholder="auto"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs">Ajuste de objeto</Label>
+                <Select 
+                  value={component.content.objectFit || 'cover'} 
+                  onValueChange={(value) => updateContent({ objectFit: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="contain">Contain</SelectItem>
+                    <SelectItem value="cover">Cover</SelectItem>
+                    <SelectItem value="fill">Fill</SelectItem>
+                    <SelectItem value="none">None</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Alignment */}
+            <div>
+              <Label className="text-xs">Alineación</Label>
+              <Select 
+                value={component.content.alignment || 'center'} 
+                onValueChange={(value) => updateContent({ alignment: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="left">Izquierda</SelectItem>
+                  <SelectItem value="center">Centro</SelectItem>
+                  <SelectItem value="right">Derecha</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Link */}
+            <div>
+              <Label className="text-xs">Enlace (opcional)</Label>
+              <Input
+                value={component.content.link || ''}
+                onChange={(e) => updateContent({ link: e.target.value })}
+                placeholder="https://..."
+              />
+            </div>
+
+            {/* Spacing */}
+            <div className="space-y-3">
+              <Label className="font-semibold">Espaciado</Label>
+              <div>
+                <Label className="text-xs">Padding (px)</Label>
+                <Input
+                  value={component.styles.padding || '10px'}
+                  onChange={(e) => updateStyles({ padding: e.target.value })}
+                  placeholder="10px"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Margin (px)</Label>
+                <Input
+                  value={component.styles.margin || '0px'}
+                  onChange={(e) => updateStyles({ margin: e.target.value })}
+                  placeholder="0px"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Border radius (px)</Label>
+                <Input
+                  value={component.content.borderRadius || '0px'}
+                  onChange={(e) => updateContent({ borderRadius: e.target.value })}
+                  placeholder="0px"
+                />
+              </div>
             </div>
           </div>
         );
+
+      case 'button':
+        return (
+          <div className="space-y-4 max-h-96 overflow-y-auto">
+            {/* Content */}
+            <div className="space-y-2">
+              <Label className="font-semibold">Contenido</Label>
+              <Input
+                value={component.content.text || ''}
+                onChange={(e) => updateContent({ text: e.target.value })}
+                placeholder="Texto del botón"
+              />
+              <Input
+                value={component.content.href || ''}
+                onChange={(e) => updateContent({ href: e.target.value })}
+                placeholder="https://..."
+              />
+            </div>
+
+            {/* Typography */}
+            <div className="space-y-3">
+              <Label className="font-semibold">Tipografía</Label>
+              <div>
+                <Label className="text-xs">Familia</Label>
+                <Select 
+                  value={component.content.fontFamily || 'Arial, sans-serif'} 
+                  onValueChange={(value) => updateContent({ fontFamily: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Arial, sans-serif">Arial</SelectItem>
+                    <SelectItem value="Helvetica, sans-serif">Helvetica</SelectItem>
+                    <SelectItem value="Georgia, serif">Georgia</SelectItem>
+                    <SelectItem value="Times New Roman, serif">Times</SelectItem>
+                    <SelectItem value="Verdana, sans-serif">Verdana</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">Tamaño</Label>
+                  <Input
+                    value={component.content.fontSize || '16px'}
+                    onChange={(e) => updateContent({ fontSize: e.target.value })}
+                    placeholder="16px"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Peso</Label>
+                  <Select 
+                    value={component.content.fontWeight || 'bold'} 
+                    onValueChange={(value) => updateContent({ fontWeight: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="normal">Normal</SelectItem>
+                      <SelectItem value="bold">Bold</SelectItem>
+                      <SelectItem value="lighter">Lighter</SelectItem>
+                      <SelectItem value="bolder">Bolder</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
+            {/* Colors */}
+            <div className="space-y-3">
+              <Label className="font-semibold">Colores</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">Color de texto</Label>
+                  <Input
+                    type="color"
+                    value={component.content.textColor || '#ffffff'}
+                    onChange={(e) => updateContent({ textColor: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Fondo</Label>
+                  <Input
+                    type="color"
+                    value={component.content.backgroundColor || '#1553ec'}
+                    onChange={(e) => updateContent({ backgroundColor: e.target.value })}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Border */}
+            <div className="space-y-3">
+              <Label className="font-semibold">Borde</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">Color</Label>
+                  <Input
+                    type="color"
+                    value={component.content.borderColor || '#1553ec'}
+                    onChange={(e) => updateContent({ borderColor: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Grosor (px)</Label>
+                  <Input
+                    value={component.content.borderWidth || '0px'}
+                    onChange={(e) => updateContent({ borderWidth: e.target.value })}
+                    placeholder="0px"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs">Border radius (px)</Label>
+                <Input
+                  value={component.content.borderRadius || '6px'}
+                  onChange={(e) => updateContent({ borderRadius: e.target.value })}
+                  placeholder="6px"
+                />
+              </div>
+            </div>
+
+            {/* Spacing */}
+            <div className="space-y-3">
+              <Label className="font-semibold">Espaciado</Label>
+              <div>
+                <Label className="text-xs">Padding (px)</Label>
+                <Input
+                  value={component.styles.padding || '12px 24px'}
+                  onChange={(e) => updateStyles({ padding: e.target.value })}
+                  placeholder="12px 24px"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Margin (px)</Label>
+                <Input
+                  value={component.styles.margin || '10px auto'}
+                  onChange={(e) => updateStyles({ margin: e.target.value })}
+                  placeholder="10px auto"
+                />
+              </div>
+            </div>
+
+            {/* Alignment */}
+            <div>
+              <Label className="text-xs">Alineación</Label>
+              <Select 
+                value={component.content.alignment || 'center'} 
+                onValueChange={(value) => updateContent({ alignment: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="left">Izquierda</SelectItem>
+                  <SelectItem value="center">Centro</SelectItem>
+                  <SelectItem value="right">Derecha</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        );
+
       case 'spacer':
         return (
-          <div>
-            <Label>Altura</Label>
-            <Input
-              value={component.styles.height || '20px'}
-              onChange={(e) => updateStyles({ height: e.target.value })}
-            />
+          <div className="space-y-4">
+            <div>
+              <Label className="font-semibold">Altura (px)</Label>
+              <Input
+                value={component.content.height || '20px'}
+                onChange={(e) => updateContent({ height: e.target.value })}
+                placeholder="20px"
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Color de fondo (opcional)</Label>
+              <Input
+                type="color"
+                value={component.content.backgroundColor || '#transparent'}
+                onChange={(e) => updateContent({ backgroundColor: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Margin (px)</Label>
+              <Input
+                value={component.styles.margin || '0px'}
+                onChange={(e) => updateStyles({ margin: e.target.value })}
+                placeholder="0px"
+              />
+            </div>
           </div>
         );
       default:
