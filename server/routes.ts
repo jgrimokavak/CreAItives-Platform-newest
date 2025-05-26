@@ -688,6 +688,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Add prompt suggestions routes
   app.use('/api', promptSuggestionsRouter);
   
+  // Email CreAItor routes
+  app.post('/api/email/generate-content', generateEmailContent);
+  app.post('/api/email/generate-html', generateEmailHTML);
+  app.post('/api/email/save-template', saveEmailTemplate);
+  app.get('/api/email/templates', getEmailTemplates);
+  
   // Car generation routes
   app.get("/api/cars/makes", async (_req, res) => res.json(await listMakes()));
   app.get("/api/cars/models", async (req, res) => res.json(await listModels(req.query.make as string)));

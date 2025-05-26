@@ -5,8 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Mail, Download, Eye, Sparkles, FileText, Gift, Newspaper } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Mail, Download, Eye, Sparkles, FileText, Gift, Newspaper, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { apiRequest } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
 
 // Email template definitions in Spanish for KAVAK
 const emailTemplates = [
@@ -67,6 +70,9 @@ export default function EmailBuilderPage() {
     cta: ''
   });
   const [activeTab, setActiveTab] = useState('templates');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [tone, setTone] = useState<'professional' | 'friendly' | 'urgent' | 'promotional'>('friendly');
+  const { toast } = useToast();
 
   const handleTemplateSelect = (templateId: string) => {
     const template = emailTemplates.find(t => t.id === templateId);
@@ -74,6 +80,100 @@ export default function EmailBuilderPage() {
       setSelectedTemplate(templateId);
       setEmailContent(template.content);
       setActiveTab('builder');
+    }
+  };
+
+  const handleGenerateContent = async () => {
+    if (!selectedTemplate) {
+      toast({
+        title: "Selecciona una plantilla",
+        description: "Por favor selecciona una plantilla antes de generar contenido.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const response = await fetch('/api/email/generate-content', {
+        method: 'POST',
+        body: JSON.stringify({
+          templateType: selectedTemplate,
+          brand: 'KAVAK',
+          tone: tone
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setEmailContent({
+          subject: response.content.subject || '',
+          header: response.content.header || '',
+          body: response.content.body || '',
+          cta: response.content.cta || ''
+        });
+        
+        toast({
+          title: "¡Contenido generado!",
+          description: "El contenido del email ha sido generado con IA.",
+        });
+      } else {
+        throw new Error(response.error || 'Error al generar contenido');
+      }
+    } catch (error) {
+      console.error('Error generating content:', error);
+      toast({
+        title: "Error al generar",
+        description: "Hubo un problema generando el contenido. Inténtalo de nuevo.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handlePreviewEmail = async () => {
+    try {
+      const response = await apiRequest('/api/email/generate-html', {
+        method: 'POST',
+        body: JSON.stringify({
+          subject: emailContent.subject,
+          header: emailContent.header,
+          body: emailContent.body,
+          cta: emailContent.cta,
+          templateType: selectedTemplate
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.success) {
+        // Open HTML preview in a new window
+        const newWindow = window.open('', '_blank');
+        if (newWindow) {
+          newWindow.document.write(response.html);
+          newWindow.document.close();
+        }
+        
+        toast({
+          title: "Vista previa generada",
+          description: "Se ha abierto la vista previa del email en una nueva ventana.",
+        });
+      } else {
+        throw new Error(response.error || 'Error al generar vista previa');
+      }
+    } catch (error) {
+      console.error('Error generating preview:', error);
+      toast({
+        title: "Error en vista previa",
+        description: "No se pudo generar la vista previa del email.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -263,9 +363,32 @@ export default function EmailBuilderPage() {
                       />
                     </div>
                     
-                    <Button className="w-full mt-4">
-                      <Sparkles className="h-4 w-4 mr-2" />
-                      Generar con IA
+                    <div className="space-y-2">
+                      <Label htmlFor="tone">Tono del Mensaje</Label>
+                      <Select value={tone} onValueChange={(value: 'professional' | 'friendly' | 'urgent' | 'promotional') => setTone(value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona el tono" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="friendly">Amigable</SelectItem>
+                          <SelectItem value="professional">Profesional</SelectItem>
+                          <SelectItem value="urgent">Urgente</SelectItem>
+                          <SelectItem value="promotional">Promocional</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <Button 
+                      className="w-full mt-4" 
+                      onClick={handleGenerateContent}
+                      disabled={isGenerating}
+                    >
+                      {isGenerating ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Sparkles className="h-4 w-4 mr-2" />
+                      )}
+                      {isGenerating ? 'Generando...' : 'Generar con IA'}
                     </Button>
                   </CardContent>
                 </Card>
