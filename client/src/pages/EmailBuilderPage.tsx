@@ -546,6 +546,507 @@ export default function EmailBuilderPage() {
     }
   };
 
+  // Unified property panel sections for consistency
+  const renderTypographySection = (component: EmailComponent, updateStyles: any) => (
+    <Collapsible defaultOpen>
+      <CollapsibleTrigger asChild>
+        <Button variant="ghost" className="w-full justify-between p-0 h-auto">
+          <Label className="font-medium text-sm">Tipografía</Label>
+          <ChevronDown className="h-4 w-4" />
+        </Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent className="space-y-3 mt-3">
+        <div className="space-y-2">
+          <Label className="text-xs text-gray-600">Fuente</Label>
+          <Select 
+            value={component.styles.fontFamily || 'Helvetica, sans-serif'} 
+            onValueChange={(value) => updateStyles({ fontFamily: value })}
+          >
+            <SelectTrigger className="h-9 w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Helvetica, sans-serif">Helvetica</SelectItem>
+              <SelectItem value="Roboto, sans-serif">Roboto</SelectItem>
+              <SelectItem value="Arial, sans-serif">Arial</SelectItem>
+              <SelectItem value="Georgia, serif">Georgia</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <Label className="text-xs text-gray-600">Tamaño</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full h-9 justify-between">
+                  {stripPx(component.styles.fontSize || '16px')}px
+                  <Sliders className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64">
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Tamaño de fuente</Label>
+                  <Slider
+                    value={[parseInt(stripPx(component.styles.fontSize || '16px'))]}
+                    onValueChange={(value) => updateStyles({ fontSize: `${value[0]}px` })}
+                    max={48}
+                    min={8}
+                    step={1}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-gray-500">
+                    <span>8px</span>
+                    <span>{stripPx(component.styles.fontSize || '16px')}px</span>
+                    <span>48px</span>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs text-gray-600">Peso</Label>
+            <Select 
+              value={component.styles.fontWeight || 'normal'} 
+              onValueChange={(value) => updateStyles({ fontWeight: value })}
+            >
+              <SelectTrigger className="h-9 w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="lighter">Lighter</SelectItem>
+                <SelectItem value="normal">Normal</SelectItem>
+                <SelectItem value="bold">Bold</SelectItem>
+                <SelectItem value="bolder">Bolder</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-xs text-gray-600">Alineación</Label>
+          <Select 
+            value={component.styles.textAlign || 'left'} 
+            onValueChange={(value) => updateStyles({ textAlign: value })}
+          >
+            <SelectTrigger className="h-9 w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="left">Izquierda</SelectItem>
+              <SelectItem value="center">Centro</SelectItem>
+              <SelectItem value="right">Derecha</SelectItem>
+              <SelectItem value="justify">Justificado</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-xs text-gray-600">Altura de línea</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-full h-9 justify-between">
+                {component.styles.lineHeight || '1.6'}
+                <Sliders className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64">
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Altura de línea</Label>
+                <Slider
+                  value={[parseFloat(component.styles.lineHeight || '1.6')]}
+                  onValueChange={(value) => updateStyles({ lineHeight: value[0].toString() })}
+                  max={3}
+                  min={1}
+                  step={0.1}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-xs text-gray-500">
+                  <span>1.0</span>
+                  <span>{component.styles.lineHeight || '1.6'}</span>
+                  <span>3.0</span>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+
+  const renderColorsSection = (component: EmailComponent, updateStyles: any) => (
+    <Collapsible defaultOpen>
+      <CollapsibleTrigger asChild>
+        <Button variant="ghost" className="w-full justify-between p-0 h-auto">
+          <Label className="font-medium text-sm">Colores</Label>
+          <ChevronDown className="h-4 w-4" />
+        </Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent className="space-y-3 mt-3">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <Label className="text-xs text-gray-600">Color de texto</Label>
+            <Input
+              type="color"
+              value={component.styles.color || '#000000'}
+              onChange={(e) => updateStyles({ color: e.target.value })}
+              className="h-9"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs text-gray-600">Fondo</Label>
+            <Input
+              type="color"
+              value={component.styles.backgroundColor || 'transparent'}
+              onChange={(e) => updateStyles({ backgroundColor: e.target.value })}
+              className="h-9"
+            />
+          </div>
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+
+  const renderSpacingSection = (component: EmailComponent, updateStyles: any) => (
+    <Collapsible defaultOpen>
+      <CollapsibleTrigger asChild>
+        <Button variant="ghost" className="w-full justify-between p-0 h-auto">
+          <Label className="font-medium text-sm">Espaciado</Label>
+          <ChevronDown className="h-4 w-4" />
+        </Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent className="space-y-4 mt-3">
+        {/* Padding */}
+        <div className="space-y-3">
+          <Label className="text-xs text-gray-600 font-medium">Padding interno</Label>
+          <div className="grid grid-cols-4 gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="h-9 text-xs">
+                  T: {stripPx(component.styles.paddingTop || '0px')}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56">
+                <div className="space-y-2">
+                  <Label className="text-sm">Padding Top</Label>
+                  <Slider
+                    value={[parseInt(stripPx(component.styles.paddingTop || '0px'))]}
+                    onValueChange={(value) => updateStyles({ paddingTop: `${value[0]}px` })}
+                    max={100}
+                    min={0}
+                    step={1}
+                  />
+                  <div className="text-center text-xs text-gray-500">
+                    {stripPx(component.styles.paddingTop || '0px')}px
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="h-9 text-xs">
+                  R: {stripPx(component.styles.paddingRight || '0px')}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56">
+                <div className="space-y-2">
+                  <Label className="text-sm">Padding Right</Label>
+                  <Slider
+                    value={[parseInt(stripPx(component.styles.paddingRight || '0px'))]}
+                    onValueChange={(value) => updateStyles({ paddingRight: `${value[0]}px` })}
+                    max={100}
+                    min={0}
+                    step={1}
+                  />
+                  <div className="text-center text-xs text-gray-500">
+                    {stripPx(component.styles.paddingRight || '0px')}px
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="h-9 text-xs">
+                  B: {stripPx(component.styles.paddingBottom || '0px')}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56">
+                <div className="space-y-2">
+                  <Label className="text-sm">Padding Bottom</Label>
+                  <Slider
+                    value={[parseInt(stripPx(component.styles.paddingBottom || '0px'))]}
+                    onValueChange={(value) => updateStyles({ paddingBottom: `${value[0]}px` })}
+                    max={100}
+                    min={0}
+                    step={1}
+                  />
+                  <div className="text-center text-xs text-gray-500">
+                    {stripPx(component.styles.paddingBottom || '0px')}px
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="h-9 text-xs">
+                  L: {stripPx(component.styles.paddingLeft || '0px')}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56">
+                <div className="space-y-2">
+                  <Label className="text-sm">Padding Left</Label>
+                  <Slider
+                    value={[parseInt(stripPx(component.styles.paddingLeft || '0px'))]}
+                    onValueChange={(value) => updateStyles({ paddingLeft: `${value[0]}px` })}
+                    max={100}
+                    min={0}
+                    step={1}
+                  />
+                  <div className="text-center text-xs text-gray-500">
+                    {stripPx(component.styles.paddingLeft || '0px')}px
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+        </div>
+
+        {/* Margin */}
+        <div className="space-y-3">
+          <Label className="text-xs text-gray-600 font-medium">Margin externo</Label>
+          <div className="grid grid-cols-4 gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="h-9 text-xs">
+                  T: {stripPx(component.styles.marginTop || '0px')}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56">
+                <div className="space-y-2">
+                  <Label className="text-sm">Margin Top</Label>
+                  <Slider
+                    value={[parseInt(stripPx(component.styles.marginTop || '0px'))]}
+                    onValueChange={(value) => updateStyles({ marginTop: `${value[0]}px` })}
+                    max={100}
+                    min={0}
+                    step={1}
+                  />
+                  <div className="text-center text-xs text-gray-500">
+                    {stripPx(component.styles.marginTop || '0px')}px
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="h-9 text-xs">
+                  R: {stripPx(component.styles.marginRight || '0px')}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56">
+                <div className="space-y-2">
+                  <Label className="text-sm">Margin Right</Label>
+                  <Slider
+                    value={[parseInt(stripPx(component.styles.marginRight || '0px'))]}
+                    onValueChange={(value) => updateStyles({ marginRight: `${value[0]}px` })}
+                    max={100}
+                    min={0}
+                    step={1}
+                  />
+                  <div className="text-center text-xs text-gray-500">
+                    {stripPx(component.styles.marginRight || '0px')}px
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="h-9 text-xs">
+                  B: {stripPx(component.styles.marginBottom || '0px')}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56">
+                <div className="space-y-2">
+                  <Label className="text-sm">Margin Bottom</Label>
+                  <Slider
+                    value={[parseInt(stripPx(component.styles.marginBottom || '0px'))]}
+                    onValueChange={(value) => updateStyles({ marginBottom: `${value[0]}px` })}
+                    max={100}
+                    min={0}
+                    step={1}
+                  />
+                  <div className="text-center text-xs text-gray-500">
+                    {stripPx(component.styles.marginBottom || '0px')}px
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="h-9 text-xs">
+                  L: {stripPx(component.styles.marginLeft || '0px')}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56">
+                <div className="space-y-2">
+                  <Label className="text-sm">Margin Left</Label>
+                  <Slider
+                    value={[parseInt(stripPx(component.styles.marginLeft || '0px'))]}
+                    onValueChange={(value) => updateStyles({ marginLeft: `${value[0]}px` })}
+                    max={100}
+                    min={0}
+                    step={1}
+                  />
+                  <div className="text-center text-xs text-gray-500">
+                    {stripPx(component.styles.marginLeft || '0px')}px
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+
+  const renderBorderSection = (component: EmailComponent, updateStyles: any) => (
+    <Collapsible>
+      <CollapsibleTrigger asChild>
+        <Button variant="ghost" className="w-full justify-between p-0 h-auto">
+          <Label className="font-medium text-sm">Borde y Estilo</Label>
+          <ChevronDown className="h-4 w-4" />
+        </Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent className="space-y-3 mt-3">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <Label className="text-xs text-gray-600">Color del borde</Label>
+            <Input
+              type="color"
+              value={component.styles.borderColor || '#cccccc'}
+              onChange={(e) => updateStyles({ borderColor: e.target.value })}
+              className="h-9"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs text-gray-600">Grosor del borde</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full h-9 justify-between">
+                  {stripPx(component.styles.borderWidth || '0px')}px
+                  <Sliders className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56">
+                <div className="space-y-2">
+                  <Label className="text-sm">Grosor del borde</Label>
+                  <Slider
+                    value={[parseInt(stripPx(component.styles.borderWidth || '0px'))]}
+                    onValueChange={(value) => updateStyles({ 
+                      borderWidth: `${value[0]}px`,
+                      border: value[0] > 0 ? `${value[0]}px solid ${component.styles.borderColor || '#cccccc'}` : 'none'
+                    })}
+                    max={10}
+                    min={0}
+                    step={1}
+                  />
+                  <div className="text-center text-xs text-gray-500">
+                    {stripPx(component.styles.borderWidth || '0px')}px
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <Label className="text-xs text-gray-600">Border radius</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-full h-9 justify-between">
+                {stripPx(component.styles.borderRadius || '0px')}px
+                <Sliders className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56">
+              <div className="space-y-2">
+                <Label className="text-sm">Border Radius</Label>
+                <Slider
+                  value={[parseInt(stripPx(component.styles.borderRadius || '0px'))]}
+                  onValueChange={(value) => updateStyles({ borderRadius: `${value[0]}px` })}
+                  max={50}
+                  min={0}
+                  step={1}
+                />
+                <div className="text-center text-xs text-gray-500">
+                  {stripPx(component.styles.borderRadius || '0px')}px
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+
+  const renderLayoutSection = (component: EmailComponent, updateStyles: any) => (
+    <Collapsible>
+      <CollapsibleTrigger asChild>
+        <Button variant="ghost" className="w-full justify-between p-0 h-auto">
+          <Label className="font-medium text-sm">Layout y Dimensiones</Label>
+          <ChevronDown className="h-4 w-4" />
+        </Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent className="space-y-3 mt-3">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <Label className="text-xs text-gray-600">Ancho</Label>
+            <Input
+              value={component.styles.width || 'auto'}
+              onChange={(e) => updateStyles({ width: e.target.value })}
+              placeholder="auto, 100px, 50%"
+              className="h-9"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs text-gray-600">Alto</Label>
+            <Input
+              value={component.styles.height || 'auto'}
+              onChange={(e) => updateStyles({ height: e.target.value })}
+              placeholder="auto, 100px, 50%"
+              className="h-9"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-xs text-gray-600">Display</Label>
+          <Select 
+            value={component.styles.display || 'block'} 
+            onValueChange={(value) => updateStyles({ display: value })}
+          >
+            <SelectTrigger className="h-9 w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="block">Block</SelectItem>
+              <SelectItem value="inline-block">Inline-block</SelectItem>
+              <SelectItem value="inline">Inline</SelectItem>
+              <SelectItem value="flex">Flex</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+
   const renderComponentProperties = (component: EmailComponent) => {
     const updateContent = (updates: any) => {
       updateComponent(component.id, { content: { ...component.content, ...updates } });
@@ -558,41 +1059,186 @@ export default function EmailBuilderPage() {
     switch (component.type) {
       case 'text':
         return (
-          <div className="h-full flex flex-col space-y-3">
-            {/* Content */}
-            <div>
-              <Label className="font-semibold">Contenido</Label>
-              <Textarea
-                value={component.content.text || component.styles.text || ''}
-                onChange={(e) => updateContent({ text: e.target.value })}
-                rows={3}
-                className="mt-1"
-              />
-            </div>
+          <div className="h-full flex flex-col space-y-4">
+            {/* Content Section */}
+            <Collapsible defaultOpen>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full justify-between p-0 h-auto">
+                  <Label className="font-medium text-sm">Contenido</Label>
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-3">
+                <Textarea
+                  value={component.content.text || ''}
+                  onChange={(e) => updateContent({ text: e.target.value })}
+                  rows={3}
+                  placeholder="Escribe tu texto aquí..."
+                  className="resize-none"
+                />
+              </CollapsibleContent>
+            </Collapsible>
 
-            {/* Typography */}
-            <div className="space-y-3">
-              <Label className="font-medium text-sm">Tipografía</Label>
-              
-              <div className="space-y-2">
-                <Label className="text-xs text-gray-600">Fuente</Label>
-                <Select 
-                  value={component.styles.fontFamily || 'Helvetica, sans-serif'} 
-                  onValueChange={(value) => updateStyles({ fontFamily: value })}
-                >
-                  <SelectTrigger className="h-9 w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Helvetica, sans-serif">Helvetica</SelectItem>
-                    <SelectItem value="Roboto, sans-serif">Roboto</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            {renderTypographySection(component, updateStyles)}
+            {renderColorsSection(component, updateStyles)}
+            {renderSpacingSection(component, updateStyles)}
+            {renderBorderSection(component, updateStyles)}
+            {renderLayoutSection(component, updateStyles)}
+          </div>
+        );
 
-              <div className="grid grid-cols-2 gap-3">
+      case 'image':
+        return (
+          <div className="h-full flex flex-col space-y-4">
+            {/* Content Section */}
+            <Collapsible defaultOpen>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full justify-between p-0 h-auto">
+                  <Label className="font-medium text-sm">Imagen</Label>
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-3 mt-3">
                 <div className="space-y-2">
-                  <Label className="text-xs text-gray-600">Tamaño</Label>
+                  <Label className="text-xs text-gray-600">URL de la imagen</Label>
+                  <Input
+                    value={component.content.src || ''}
+                    onChange={(e) => updateContent({ src: e.target.value })}
+                    placeholder="https://ejemplo.com/imagen.jpg"
+                    className="h-9"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="text-xs text-gray-600">Texto alternativo</Label>
+                  <Input
+                    value={component.content.alt || ''}
+                    onChange={(e) => updateContent({ alt: e.target.value })}
+                    placeholder="Descripción de la imagen"
+                    className="h-9"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowImageGallery(true)}
+                    className="w-full h-9"
+                  >
+                    <Image className="h-4 w-4 mr-2" />
+                    Seleccionar de Galería
+                  </Button>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {renderColorsSection(component, updateStyles)}
+            {renderSpacingSection(component, updateStyles)}
+            {renderBorderSection(component, updateStyles)}
+            {renderLayoutSection(component, updateStyles)}
+          </div>
+        );
+
+      case 'button':
+        return (
+          <div className="h-full flex flex-col space-y-4">
+            {/* Content Section */}
+            <Collapsible defaultOpen>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full justify-between p-0 h-auto">
+                  <Label className="font-medium text-sm">Contenido del Botón</Label>
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-3 mt-3">
+                <div className="space-y-2">
+                  <Label className="text-xs text-gray-600">Texto del botón</Label>
+                  <Input
+                    value={component.content.text || ''}
+                    onChange={(e) => updateContent({ text: e.target.value })}
+                    placeholder="Hacer clic aquí"
+                    className="h-9"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="text-xs text-gray-600">Enlace (URL)</Label>
+                  <Input
+                    value={component.content.href || ''}
+                    onChange={(e) => updateContent({ href: e.target.value })}
+                    placeholder="https://ejemplo.com"
+                    className="h-9"
+                  />
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {renderTypographySection(component, updateStyles)}
+            {renderColorsSection(component, updateStyles)}
+            {renderSpacingSection(component, updateStyles)}
+            {renderBorderSection(component, updateStyles)}
+            {renderLayoutSection(component, updateStyles)}
+          </div>
+        );
+
+      case 'spacer':
+        return (
+          <div className="h-full flex flex-col space-y-4">
+            {/* Content Section */}
+            <Collapsible defaultOpen>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full justify-between p-0 h-auto">
+                  <Label className="font-medium text-sm">Espaciador</Label>
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-3 mt-3">
+                <div className="space-y-2">
+                  <Label className="text-xs text-gray-600">Altura del espacio</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full h-9 justify-between">
+                        {stripPx(component.styles.height || '20px')}px
+                        <Sliders className="h-4 w-4" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-64">
+                      <div className="space-y-3">
+                        <Label className="text-sm font-medium">Altura del espaciador</Label>
+                        <Slider
+                          value={[parseInt(stripPx(component.styles.height || '20px'))]}
+                          onValueChange={(value) => updateStyles({ height: `${value[0]}px` })}
+                          max={200}
+                          min={5}
+                          step={5}
+                          className="w-full"
+                        />
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>5px</span>
+                          <span>{stripPx(component.styles.height || '20px')}px</span>
+                          <span>200px</span>
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {renderColorsSection(component, updateStyles)}
+            {renderSpacingSection(component, updateStyles)}
+            {renderBorderSection(component, updateStyles)}
+          </div>
+        );
+
+      default:
+        return (
+          <div className="flex items-center justify-center h-32 text-gray-500">
+            <p>Selecciona un componente para editar sus propiedades</p>
+          </div>
+        );
+    }
+  };
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button variant="outline" className="w-full h-9 justify-between">
