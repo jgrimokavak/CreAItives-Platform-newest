@@ -1239,80 +1239,11 @@ export default function EmailBuilderPage() {
         );
     }
   };
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full h-9 justify-between">
-                        {stripPx(component.styles.fontSize || '16px')}px
-                        <Sliders className="h-4 w-4" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-64">
-                      <div className="space-y-3">
-                        <Label className="text-sm font-medium">Tamaño de fuente</Label>
-                        <Slider
-                          value={[parseInt(stripPx(component.styles.fontSize || '16px'))]}
-                          onValueChange={(value) => updateStyles({ fontSize: `${value[0]}px` })}
-                          max={72}
-                          min={8}
-                          step={1}
-                          className="w-full"
-                        />
-                        <div className="flex justify-between text-xs text-gray-500">
-                          <span>8px</span>
-                          <span>{stripPx(component.styles.fontSize || '16px')}px</span>
-                          <span>72px</span>
-                        </div>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                </div>
 
-                <div className="space-y-2">
-                  <Label className="text-xs text-gray-600">Peso</Label>
-                  <Select 
-                    value={component.styles.fontWeight || 'normal'} 
-                    onValueChange={(value) => updateStyles({ fontWeight: value })}
-                  >
-                    <SelectTrigger className="h-9 w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="normal">Normal</SelectItem>
-                      <SelectItem value="bold">Bold</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label className="text-xs text-gray-600">Altura línea</Label>
-                  <Input
-                    value={component.styles.lineHeight || '1.6'}
-                    onChange={(e) => updateStyles({ lineHeight: e.target.value })}
-                    placeholder="1.6"
-                    className="h-9"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label className="text-xs text-gray-600">Alineación</Label>
-                  <Select 
-                    value={component.styles.textAlign || 'left'} 
-                    onValueChange={(value) => updateStyles({ textAlign: value })}
-                  >
-                    <SelectTrigger className="h-9 w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="left">Izquierda</SelectItem>
-                      <SelectItem value="center">Centro</SelectItem>
-                      <SelectItem value="right">Derecha</SelectItem>
-                      <SelectItem value="justify">Justificado</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+  // Helper function to remove px from string values
+  const stripPx = (value: string) => {
+    return value?.replace('px', '') || '0';
+  };
             </div>
 
             {/* Colors */}
