@@ -446,7 +446,7 @@ export default function EmailBuilderPage() {
     switch (component.type) {
       case 'text':
         return (
-          <div className="space-y-4 max-h-96 overflow-y-auto">
+          <div className="h-full flex flex-col space-y-3">
             {/* Content */}
             <div>
               <Label className="font-semibold">Contenido</Label>
@@ -459,71 +459,53 @@ export default function EmailBuilderPage() {
             </div>
 
             {/* Typography */}
-            <div className="space-y-3">
-              <Label className="font-semibold">Tipografía</Label>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <Label className="text-xs">Familia</Label>
-                  <Select 
-                    value={component.styles.fontFamily || 'Arial, sans-serif'} 
-                    onValueChange={(value) => updateStyles({ fontFamily: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Arial, sans-serif">Arial</SelectItem>
-                      <SelectItem value="Helvetica, sans-serif">Helvetica</SelectItem>
-                      <SelectItem value="Georgia, serif">Georgia</SelectItem>
-                      <SelectItem value="Times New Roman, serif">Times</SelectItem>
-                      <SelectItem value="Verdana, sans-serif">Verdana</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label className="text-xs">Tamaño</Label>
-                  <Input
-                    value={component.styles.fontSize || '16px'}
-                    onChange={(e) => updateStyles({ fontSize: e.target.value })}
-                    placeholder="16px"
-                  />
-                </div>
+            <div className="space-y-2">
+              <Label className="font-medium text-sm">Tipografía</Label>
+              <div className="grid grid-cols-3 gap-2">
+                <Select 
+                  value={component.styles.fontFamily || 'Helvetica, sans-serif'} 
+                  onValueChange={(value) => updateStyles({ fontFamily: value })}
+                >
+                  <SelectTrigger className="h-8">
+                    <SelectValue placeholder="Fuente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Helvetica, sans-serif">Helvetica</SelectItem>
+                    <SelectItem value="Roboto, sans-serif">Roboto</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input
+                  value={component.styles.fontSize || '16px'}
+                  onChange={(e) => updateStyles({ fontSize: e.target.value })}
+                  placeholder="16px"
+                  className="h-8"
+                />
+                <Select 
+                  value={component.styles.fontWeight || 'normal'} 
+                  onValueChange={(value) => updateStyles({ fontWeight: value })}
+                >
+                  <SelectTrigger className="h-8">
+                    <SelectValue placeholder="Peso" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="normal">Normal</SelectItem>
+                    <SelectItem value="bold">Bold</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <Label className="text-xs">Peso</Label>
-                  <Select 
-                    value={component.styles.fontWeight || 'normal'} 
-                    onValueChange={(value) => updateStyles({ fontWeight: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="normal">Normal</SelectItem>
-                      <SelectItem value="bold">Bold</SelectItem>
-                      <SelectItem value="lighter">Lighter</SelectItem>
-                      <SelectItem value="bolder">Bolder</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label className="text-xs">Altura de línea</Label>
-                  <Input
-                    value={component.styles.lineHeight || '1.6'}
-                    onChange={(e) => updateStyles({ lineHeight: e.target.value })}
-                    placeholder="1.6"
-                  />
-                </div>
-              </div>
-              <div>
-                <Label className="text-xs">Alineación</Label>
+                <Input
+                  value={component.styles.lineHeight || '1.6'}
+                  onChange={(e) => updateStyles({ lineHeight: e.target.value })}
+                  placeholder="Altura línea"
+                  className="h-8"
+                />
                 <Select 
                   value={component.styles.textAlign || 'left'} 
                   onValueChange={(value) => updateStyles({ textAlign: value })}
                 >
-                  <SelectTrigger>
-                    <SelectValue />
+                  <SelectTrigger className="h-8">
+                    <SelectValue placeholder="Alineación" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="left">Izquierda</SelectItem>
@@ -536,126 +518,129 @@ export default function EmailBuilderPage() {
             </div>
 
             {/* Colors */}
-            <div className="space-y-3">
-              <Label className="font-semibold">Colores</Label>
+            <div className="space-y-2">
+              <Label className="font-medium text-sm">Colores</Label>
               <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <Label className="text-xs">Color de texto</Label>
+                <div className="flex items-center space-x-2">
                   <Input
                     type="color"
                     value={component.styles.color || '#000000'}
                     onChange={(e) => updateStyles({ color: e.target.value })}
+                    className="w-12 h-8 p-1"
                   />
+                  <span className="text-xs">Texto</span>
                 </div>
-                <div>
-                  <Label className="text-xs">Fondo</Label>
+                <div className="flex items-center space-x-2">
                   <Input
                     type="color"
-                    value={component.styles.backgroundColor || '#transparent'}
+                    value={component.styles.backgroundColor || '#ffffff'}
                     onChange={(e) => updateStyles({ backgroundColor: e.target.value })}
+                    className="w-12 h-8 p-1"
                   />
+                  <span className="text-xs">Fondo</span>
                 </div>
               </div>
             </div>
 
             {/* Spacing */}
-            <div className="space-y-3">
-              <Label className="font-semibold">Espaciado</Label>
-              <div>
-                <Label className="text-xs">Padding (top, right, bottom, left)</Label>
-                <div className="grid grid-cols-2 gap-1">
+            <div className="space-y-2">
+              <Label className="font-medium text-sm">Espaciado</Label>
+              <div className="space-y-2">
+                <Label className="text-xs text-gray-600">Padding</Label>
+                <div className="grid grid-cols-4 gap-1">
                   <Input
                     value={component.styles.paddingTop || '15px'}
                     onChange={(e) => updateStyles({ paddingTop: e.target.value })}
-                    placeholder="Top"
+                    placeholder="T"
+                    className="h-8 text-center"
                   />
                   <Input
                     value={component.styles.paddingRight || '20px'}
                     onChange={(e) => updateStyles({ paddingRight: e.target.value })}
-                    placeholder="Right"
+                    placeholder="R"
+                    className="h-8 text-center"
                   />
                   <Input
                     value={component.styles.paddingBottom || '15px'}
                     onChange={(e) => updateStyles({ paddingBottom: e.target.value })}
-                    placeholder="Bottom"
+                    placeholder="B"
+                    className="h-8 text-center"
                   />
                   <Input
                     value={component.styles.paddingLeft || '20px'}
                     onChange={(e) => updateStyles({ paddingLeft: e.target.value })}
-                    placeholder="Left"
+                    placeholder="L"
+                    className="h-8 text-center"
                   />
                 </div>
               </div>
-              <div>
-                <Label className="text-xs">Margin (top, right, bottom, left)</Label>
-                <div className="grid grid-cols-2 gap-1">
+              <div className="space-y-2">
+                <Label className="text-xs text-gray-600">Margin</Label>
+                <div className="grid grid-cols-4 gap-1">
                   <Input
                     value={component.styles.marginTop || '0px'}
                     onChange={(e) => updateStyles({ marginTop: e.target.value })}
-                    placeholder="Top"
+                    placeholder="T"
+                    className="h-8 text-center"
                   />
                   <Input
                     value={component.styles.marginRight || '0px'}
                     onChange={(e) => updateStyles({ marginRight: e.target.value })}
-                    placeholder="Right"
+                    placeholder="R"
+                    className="h-8 text-center"
                   />
                   <Input
                     value={component.styles.marginBottom || '0px'}
                     onChange={(e) => updateStyles({ marginBottom: e.target.value })}
-                    placeholder="Bottom"
+                    placeholder="B"
+                    className="h-8 text-center"
                   />
                   <Input
                     value={component.styles.marginLeft || '0px'}
                     onChange={(e) => updateStyles({ marginLeft: e.target.value })}
-                    placeholder="Left"
+                    placeholder="L"
+                    className="h-8 text-center"
                   />
                 </div>
               </div>
             </div>
 
             {/* Layout */}
-            <div className="space-y-3">
-              <Label className="font-semibold">Layout</Label>
+            <div className="space-y-2">
+              <Label className="font-medium text-sm">Layout</Label>
               <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <Label className="text-xs">Ancho máximo (px)</Label>
-                  <Input
-                    value={component.styles.maxWidth || '100%'}
-                    onChange={(e) => updateStyles({ maxWidth: e.target.value })}
-                    placeholder="100%"
-                  />
-                </div>
-                <div>
-                  <Label className="text-xs">Border radius (px)</Label>
-                  <Input
-                    value={component.styles.borderRadius || '0px'}
-                    onChange={(e) => updateStyles({ borderRadius: e.target.value })}
-                    placeholder="0px"
-                  />
-                </div>
+                <Input
+                  value={component.styles.maxWidth || '100%'}
+                  onChange={(e) => updateStyles({ maxWidth: e.target.value })}
+                  placeholder="Ancho máx"
+                  className="h-8"
+                />
+                <Input
+                  value={component.styles.borderRadius || '0px'}
+                  onChange={(e) => updateStyles({ borderRadius: e.target.value })}
+                  placeholder="Radius"
+                  className="h-8"
+                />
               </div>
-              <div>
-                <Label className="text-xs">Display</Label>
-                <Select 
-                  value={component.styles.display || 'block'} 
-                  onValueChange={(value) => updateStyles({ display: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="block">Block</SelectItem>
-                    <SelectItem value="inline-block">Inline-block</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <Select 
+                value={component.styles.display || 'block'} 
+                onValueChange={(value) => updateStyles({ display: value })}
+              >
+                <SelectTrigger className="h-8">
+                  <SelectValue placeholder="Display" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="block">Block</SelectItem>
+                  <SelectItem value="inline-block">Inline-block</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         );
 
       case 'image':
         return (
-          <div className="space-y-4 max-h-96 overflow-y-auto">
+          <div className="h-full flex flex-col space-y-3">
             {/* Image Source */}
             <div className="space-y-2">
               <Label className="font-semibold">Imagen</Label>
@@ -834,7 +819,7 @@ export default function EmailBuilderPage() {
 
       case 'button':
         return (
-          <div className="space-y-4 max-h-96 overflow-y-auto">
+          <div className="h-full flex flex-col space-y-3">
             {/* Content */}
             <div className="space-y-2">
               <Label className="font-semibold">Contenido</Label>
@@ -863,11 +848,8 @@ export default function EmailBuilderPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Arial, sans-serif">Arial</SelectItem>
                     <SelectItem value="Helvetica, sans-serif">Helvetica</SelectItem>
-                    <SelectItem value="Georgia, serif">Georgia</SelectItem>
-                    <SelectItem value="Times New Roman, serif">Times</SelectItem>
-                    <SelectItem value="Verdana, sans-serif">Verdana</SelectItem>
+                    <SelectItem value="Roboto, sans-serif">Roboto</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
