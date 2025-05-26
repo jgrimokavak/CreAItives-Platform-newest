@@ -5,8 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Mail, Download, Eye, Sparkles, FileText, Gift, Newspaper, Loader2, Plus, Trash2, Image, Upload, Save, Sliders, GripVertical } from 'lucide-react';
+import { Mail, Download, Eye, Sparkles, FileText, Gift, Newspaper, Loader2, Plus, Trash2, Image, Upload, Save, Sliders, GripVertical, ChevronDown, ChevronUp, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery } from '@tanstack/react-query';
@@ -1354,8 +1355,8 @@ export default function EmailBuilderPage() {
               <div className="space-y-2">
                 <Label className="text-xs text-gray-600">Fuente</Label>
                 <Select 
-                  value={component.content.fontFamily || 'Helvetica, sans-serif'} 
-                  onValueChange={(value) => updateContent({ fontFamily: value })}
+                  value={component.styles.fontFamily || 'Helvetica, sans-serif'} 
+                  onValueChange={(value) => updateStyles({ fontFamily: value })}
                 >
                   <SelectTrigger className="h-9 w-full">
                     <SelectValue />
@@ -1373,7 +1374,7 @@ export default function EmailBuilderPage() {
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button variant="outline" className="w-full h-9 justify-between">
-                        {stripPx(component.content.fontSize || '16px')}px
+                        {stripPx(component.styles.fontSize || '16px')}px
                         <Sliders className="h-4 w-4" />
                       </Button>
                     </PopoverTrigger>
@@ -1381,8 +1382,8 @@ export default function EmailBuilderPage() {
                       <div className="space-y-3">
                         <Label className="text-sm font-medium">Tamaño de fuente</Label>
                         <Slider
-                          value={[parseInt(stripPx(component.content.fontSize || '16px'))]}
-                          onValueChange={(value) => updateContent({ fontSize: `${value[0]}px` })}
+                          value={[parseInt(stripPx(component.styles.fontSize || '16px'))]}
+                          onValueChange={(value) => updateStyles({ fontSize: `${value[0]}px` })}
                           max={48}
                           min={8}
                           step={1}
@@ -1390,7 +1391,7 @@ export default function EmailBuilderPage() {
                         />
                         <div className="flex justify-between text-xs text-gray-500">
                           <span>8px</span>
-                          <span>{stripPx(component.content.fontSize || '16px')}px</span>
+                          <span>{stripPx(component.styles.fontSize || '16px')}px</span>
                           <span>48px</span>
                         </div>
                       </div>
@@ -1401,8 +1402,8 @@ export default function EmailBuilderPage() {
                 <div className="space-y-2">
                   <Label className="text-xs text-gray-600">Peso</Label>
                   <Select 
-                    value={component.content.fontWeight || 'bold'} 
-                    onValueChange={(value) => updateContent({ fontWeight: value })}
+                    value={component.styles.fontWeight || 'bold'} 
+                    onValueChange={(value) => updateStyles({ fontWeight: value })}
                   >
                     <SelectTrigger className="h-9 w-full">
                       <SelectValue />
@@ -1426,8 +1427,8 @@ export default function EmailBuilderPage() {
                   <Label className="text-xs text-gray-600">Color de texto</Label>
                   <Input
                     type="color"
-                    value={component.content.textColor || '#ffffff'}
-                    onChange={(e) => updateContent({ textColor: e.target.value })}
+                    value={component.styles.color || '#ffffff'}
+                    onChange={(e) => updateStyles({ color: e.target.value })}
                     className="h-9"
                   />
                 </div>
@@ -1435,33 +1436,33 @@ export default function EmailBuilderPage() {
                   <Label className="text-xs text-gray-600">Fondo</Label>
                   <Input
                     type="color"
-                    value={component.content.backgroundColor || '#1553ec'}
-                    onChange={(e) => updateContent({ backgroundColor: e.target.value })}
+                    value={component.styles.backgroundColor || '#1553ec'}
+                    onChange={(e) => updateStyles({ backgroundColor: e.target.value })}
                     className="h-9"
                   />
                 </div>
               </div>
             </div>
 
-            {/* Border */}
+            {/* Border & Styling */}
             <div className="space-y-3">
-              <Label className="font-medium text-sm">Borde</Label>
+              <Label className="font-medium text-sm">Estilo y Borde</Label>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
-                  <Label className="text-xs text-gray-600">Color</Label>
+                  <Label className="text-xs text-gray-600">Color del borde</Label>
                   <Input
                     type="color"
-                    value={component.content.borderColor || '#1553ec'}
-                    onChange={(e) => updateContent({ borderColor: e.target.value })}
+                    value={component.styles.borderColor || '#1553ec'}
+                    onChange={(e) => updateStyles({ borderColor: e.target.value })}
                     className="h-9"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs text-gray-600">Grosor</Label>
+                  <Label className="text-xs text-gray-600">Grosor del borde</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button variant="outline" className="w-full h-9 justify-between">
-                        {stripPx(component.content.borderWidth || '0px')}px
+                        {stripPx(component.styles.borderWidth || '0px')}px
                         <Sliders className="h-4 w-4" />
                       </Button>
                     </PopoverTrigger>
@@ -1469,14 +1470,14 @@ export default function EmailBuilderPage() {
                       <div className="space-y-2">
                         <Label className="text-sm">Grosor del borde</Label>
                         <Slider
-                          value={[parseInt(stripPx(component.content.borderWidth || '0px'))]}
-                          onValueChange={(value) => updateContent({ borderWidth: `${value[0]}px` })}
+                          value={[parseInt(stripPx(component.styles.borderWidth || '0px'))]}
+                          onValueChange={(value) => updateStyles({ borderWidth: `${value[0]}px solid` })}
                           max={10}
                           min={0}
                           step={1}
                         />
                         <div className="text-center text-xs text-gray-500">
-                          {stripPx(component.content.borderWidth || '0px')}px
+                          {stripPx(component.styles.borderWidth || '0px')}px
                         </div>
                       </div>
                     </PopoverContent>
@@ -1488,7 +1489,7 @@ export default function EmailBuilderPage() {
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="outline" className="w-full h-9 justify-between">
-                      {stripPx(component.content.borderRadius || '6px')}px
+                      {stripPx(component.styles.borderRadius || '6px')}px
                       <Sliders className="h-4 w-4" />
                     </Button>
                   </PopoverTrigger>
@@ -1496,14 +1497,14 @@ export default function EmailBuilderPage() {
                     <div className="space-y-2">
                       <Label className="text-sm">Border Radius</Label>
                       <Slider
-                        value={[parseInt(stripPx(component.content.borderRadius || '6px'))]}
-                        onValueChange={(value) => updateContent({ borderRadius: `${value[0]}px` })}
+                        value={[parseInt(stripPx(component.styles.borderRadius || '6px'))]}
+                        onValueChange={(value) => updateStyles({ borderRadius: `${value[0]}px` })}
                         max={50}
                         min={0}
                         step={1}
                       />
                       <div className="text-center text-xs text-gray-500">
-                        {stripPx(component.content.borderRadius || '6px')}px
+                        {stripPx(component.styles.borderRadius || '6px')}px
                       </div>
                     </div>
                   </PopoverContent>
