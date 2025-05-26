@@ -1,0 +1,75 @@
+Your goal is to significantly improve the “email builder” portion of the repo so it functions like a modern, maintainable, and secure email editor. Use the following ordered checklist as your guide:
+
+Modularize the Builder UI
+
+Create a folder client/src/components/email-builder/.
+
+Extract the large logic in EmailBuilderPage.tsx (currently a ~2000-line monolith) into smaller components:
+
+TemplateSelector (for template presets)
+
+ComponentSidebar (for adding elements like text, images, etc.)
+
+EmailCanvas (shows the list of components on the page)
+
+PropertiesPanel (edit styles/attributes of selected component)
+
+PreviewPane (live HTML preview)
+
+ImageGalleryModal (image selection/upload)
+
+Share state via EmailBuilderContext instead of prop drilling. Keep EmailBuilderPage.tsx minimal and mostly responsible for composing these components.
+
+Unify Email Component Types
+
+Export EmailComponent and EmailContent interfaces from a shared module, e.g., shared/email-types.ts.
+
+Replace any locally duplicated type definitions in client or server files with imports from this shared module to avoid drift.
+
+Centralize HTML Generation
+
+Move the HTML assembly logic to a server module (e.g., server/email/templates.ts).
+
+Expose an API endpoint that accepts an EmailContent object and returns the rendered HTML.
+
+Remove the duplicate HTML-generation code from EmailBuilderPage.tsx; the client should call the new endpoint for previews and downloads.
+
+Add Drag-and-Drop Reordering
+
+Integrate a library like react-beautiful-dnd or similar in the client.
+
+Wrap the list of email components in a Droppable container and each item in a Draggable.
+
+Update the emailComponents array order on drag events to allow easy reordering.
+
+Use MJML or Table-Based Markup for Email Output
+
+Replace the div-based HTML with MJML templates under server/email/templates.mjml.
+
+Use the mjml npm package to compile these templates to HTML on the server. This ensures compatibility across major email clients.
+
+Update any save/preview routes to serve the MJML-generated output.
+
+Sanitize User-Generated Content
+
+Implement sanitation using a library like sanitize-html on both client and server before inserting HTML into the DOM or saving templates.
+
+Add validation in the save API to reject or clean potentially unsafe HTML.
+
+Introduce Tests
+
+Set up a test runner (Vitest or Jest) for both front-end and back-end.
+
+Add unit tests for server routes (/api/email/generate-content, /generate-html, /save-template, and /templates) and component tests for the new modular email builder pieces.
+
+Ensure drag-and-drop and state updates behave as expected.
+
+General Cleanup and Best Practices
+
+Remove dead code or unused variables.
+
+Consolidate repetitive style or form-control logic into reusable components or hooks.
+
+Improve naming, comments, and documentation to make the codebase easier to follow.
+
+Implement these changes incrementally, committing logical steps as you go. The end result should be a maintainable email builder with a modular architecture, consistent types, server-driven HTML generation, drag‑and‑drop editing, sanitized content, and test coverage.
