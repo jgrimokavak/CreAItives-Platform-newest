@@ -1,9 +1,33 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { openai } from '../openai';
-import { emailTemplates, insertEmailTemplateSchema, type EmailTemplate, type InsertEmailTemplate } from '@shared/schema';
+import { emailTemplates, insertEmailTemplateSchema, type EmailTemplate, type InsertEmailTemplate, type EmailComponent } from '@shared/schema';
 import { db } from '../db';
 import { eq } from 'drizzle-orm';
+import DOMPurify from 'isomorphic-dompurify';
+
+// Enhanced validation schemas with sanitization
+const emailContentSchema = z.object({
+  subject: z.string().min(1, 'Subject is required').max(200, 'Subject too long'),
+  header: z.string().optional(),
+  body: z.string().optional(), 
+  cta: z.string().optional(),
+  templateType: z.string().optional(),
+  components: z.array(z.object({
+    id: z.string(),
+    type: z.enum(['text', 'image', 'button', 'spacer']),
+    content: z.record(z.any()),
+    styles: z.record(z.any())
+  })).optional()
+});
+
+// Sanitize user input to prevent XSS
+function sanitizeInput(input: string): string {
+  return DOMPurify.sanitize(input, {
+    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'br'],
+    ALLOWED_ATTR: []
+  });
+}
 
 // Email content generation schema
 const generateEmailContentSchema = z.object({
