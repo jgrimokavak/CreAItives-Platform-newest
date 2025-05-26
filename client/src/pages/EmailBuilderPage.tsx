@@ -6,12 +6,31 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Mail, Download, Eye, Sparkles, FileText, Gift, Newspaper, Loader2, Plus, Trash2, Image, Upload, Save, Sliders } from 'lucide-react';
+import { Mail, Download, Eye, Sparkles, FileText, Gift, Newspaper, Loader2, Plus, Trash2, Image, Upload, Save, Sliders, GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery } from '@tanstack/react-query';
 import { Slider } from '@/components/ui/slider';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 // Email template definitions for KAVAK
 const emailTemplates = [
@@ -102,6 +121,28 @@ export default function EmailBuilderPage() {
     if (!value) return '0px';
     const num = parseInt(value);
     return isNaN(num) ? '0px' : `${num}px`;
+  };
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Handle drag end for reordering components
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (active.id !== over?.id) {
+      setEmailComponents((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over?.id);
+
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
   };
 
   const handleTemplateSelect = (templateId: string) => {
@@ -414,6 +455,63 @@ export default function EmailBuilderPage() {
         });
       }
     }
+  };
+
+  // Sortable component wrapper
+  const SortableEmailComponent = ({ component }: { component: EmailComponent }) => {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+      isDragging,
+    } = useSortable({ id: component.id });
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.5 : 1,
+    };
+
+    return (
+      <div
+        ref={setNodeRef}
+        style={style}
+        className={cn(
+          "relative group border-2 border-transparent hover:border-blue-200 rounded-lg transition-all",
+          selectedComponent === component.id && "border-blue-500 bg-blue-50/30"
+        )}
+        onClick={() => setSelectedComponent(component.id)}
+      >
+        {/* Drag handle */}
+        <div
+          {...attributes}
+          {...listeners}
+          className="absolute left-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing z-10 bg-white rounded p-1 shadow-sm border"
+        >
+          <GripVertical className="h-4 w-4 text-gray-500" />
+        </div>
+
+        {/* Delete button */}
+        <Button
+          variant="destructive"
+          size="sm"
+          className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 h-6 w-6 p-0"
+          onClick={(e) => {
+            e.stopPropagation();
+            removeComponent(component.id);
+          }}
+        >
+          <Trash2 className="h-3 w-3" />
+        </Button>
+
+        {/* Component content */}
+        <div className="p-4">
+          {renderEmailComponent(component)}
+        </div>
+      </div>
+    );
   };
 
   const renderEmailComponent = (component: EmailComponent) => {
