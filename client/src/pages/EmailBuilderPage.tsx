@@ -6,9 +6,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Mail, Download, Eye, Sparkles, FileText, Gift, Newspaper, Loader2, Plus, Trash2, Image } from 'lucide-react';
+import { Mail, Download, Eye, Sparkles, FileText, Gift, Newspaper, Loader2, Plus, Trash2, Image, Upload, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { useQuery } from '@tanstack/react-query';
 
 // Email template definitions for KAVAK
 const emailTemplates = [
@@ -80,7 +81,15 @@ export default function EmailBuilderPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [tone, setTone] = useState<'professional' | 'friendly' | 'urgent' | 'promotional'>('friendly');
   const [selectedComponent, setSelectedComponent] = useState<string | null>(null);
+  const [showImageGallery, setShowImageGallery] = useState(false);
+  const [templateName, setTemplateName] = useState('');
   const { toast } = useToast();
+
+  // Fetch images from gallery for image selection
+  const { data: galleryImages = [] } = useQuery({
+    queryKey: ['/api/gallery'],
+    enabled: showImageGallery
+  });
 
   const handleTemplateSelect = (templateId: string) => {
     const template = emailTemplates.find(t => t.id === templateId);
@@ -262,6 +271,70 @@ export default function EmailBuilderPage() {
     }
   };
 
+  const saveTemplate = async () => {
+    if (!templateName.trim()) {
+      toast({
+        title: "Nombre requerido",
+        description: "Por favor ingresa un nombre para la plantilla.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/email/save-template', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: templateName,
+          subject: emailContent.subject,
+          content: JSON.stringify({
+            components: emailComponents,
+            emailContent: emailContent
+          }),
+          isTemplate: true
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast({
+          title: "¡Plantilla guardada!",
+          description: `La plantilla "${templateName}" se ha guardado correctamente.`,
+        });
+        setTemplateName('');
+      } else {
+        throw new Error(data.error || 'Error al guardar plantilla');
+      }
+    } catch (error) {
+      console.error('Error saving template:', error);
+      toast({
+        title: "Error al guardar",
+        description: "No se pudo guardar la plantilla. Inténtalo de nuevo.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const selectImageFromGallery = (imageUrl: string) => {
+    if (selectedComponent) {
+      const component = emailComponents.find(c => c.id === selectedComponent);
+      if (component && component.type === 'image') {
+        updateComponent(selectedComponent, {
+          content: { ...component.content, src: imageUrl }
+        });
+        setShowImageGallery(false);
+        toast({
+          title: "Imagen agregada",
+          description: "La imagen se ha agregado al componente.",
+        });
+      }
+    }
+  };
+
   const renderEmailComponent = (component: EmailComponent) => {
     switch (component.type) {
       case 'text':
@@ -369,6 +442,16 @@ export default function EmailBuilderPage() {
                 onChange={(e) => updateContent({ src: e.target.value })}
                 placeholder="https://..."
               />
+            </div>
+            <div>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setShowImageGallery(true)}
+              >
+                <Image className="h-4 w-4 mr-2" />
+                Seleccionar de Galería
+              </Button>
             </div>
             <div>
               <Label>Texto Alternativo</Label>
@@ -599,6 +682,25 @@ export default function EmailBuilderPage() {
                           ))}
                         </div>
                       </div>
+
+                      {/* Template Saving */}
+                      <div className="space-y-3 pt-4 border-t">
+                        <Label className="font-semibold">Guardar Plantilla</Label>
+                        <Input
+                          value={templateName}
+                          onChange={(e) => setTemplateName(e.target.value)}
+                          placeholder="Nombre de la plantilla"
+                        />
+                        <Button 
+                          className="w-full" 
+                          onClick={saveTemplate}
+                          disabled={!templateName.trim()}
+                          variant="secondary"
+                        >
+                          <Save className="h-4 w-4 mr-2" />
+                          Guardar
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 </div>
@@ -730,6 +832,48 @@ export default function EmailBuilderPage() {
             )}
           </TabsContent>
         </Tabs>
+
+        {/* Image Gallery Modal */}
+        {showImageGallery && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">Seleccionar Imagen de la Galería</h3>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowImageGallery(false)}
+                >
+                  Cerrar
+                </Button>
+              </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {galleryImages?.items?.map((image: any) => (
+                  <div
+                    key={image.id}
+                    className="relative cursor-pointer group border rounded-lg overflow-hidden hover:shadow-lg transition-shadow"
+                    onClick={() => selectImageFromGallery(image.url)}
+                  >
+                    <img
+                      src={image.thumbUrl || image.url}
+                      alt={image.prompt}
+                      className="w-full h-32 object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all flex items-center justify-center">
+                      <Button className="opacity-0 group-hover:opacity-100 transition-opacity">
+                        Seleccionar
+                      </Button>
+                    </div>
+                  </div>
+                )) || (
+                  <div className="col-span-full text-center py-8">
+                    <p className="text-gray-500">No hay imágenes en la galería</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

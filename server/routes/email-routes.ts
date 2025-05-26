@@ -89,9 +89,17 @@ export async function generateEmailContent(req: Request, res: Response) {
 
     const generatedContent = JSON.parse(response.choices[0].message.content || '{}');
     
+    // Ensure we have content, provide fallbacks if OpenAI doesn't respond properly
+    const finalContent = {
+      subject: generatedContent.subject || `Email ${templateType} - ${brand}`,
+      header: generatedContent.header || `Mensaje importante de ${brand}`,
+      body: generatedContent.body || `Contenido personalizado para tu experiencia con ${brand}.`,
+      cta: generatedContent.cta || 'Ver más'
+    };
+    
     res.json({
       success: true,
-      content: generatedContent,
+      content: finalContent,
       templateType,
       brand,
       tone
