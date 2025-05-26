@@ -168,122 +168,29 @@ export async function getEmailTemplates(req: Request, res: Response) {
 
 export async function generateEmailHTML(req: Request, res: Response) {
   try {
-    const { subject, header, body, cta, templateType } = req.body;
+    const { subject, header, body, cta, templateType, components } = req.body;
     
-    // KAVAK brand colors
-    const brandColors = {
-      primary: '#1553ec',
-      secondary: '#001dd1',
-      white: '#ffffff',
-      black: '#000000'
-    };
-
-    const html = `
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${subject}</title>
-    <style>
-        body { 
-            margin: 0; 
-            padding: 0; 
-            font-family: 'Roboto', 'Helvetica', Arial, sans-serif; 
-            background-color: #f5f5f5;
-            -webkit-text-size-adjust: 100%;
-            -ms-text-size-adjust: 100%;
-        }
-        .container { 
-            max-width: 600px; 
-            margin: 0 auto; 
-            background-color: ${brandColors.white};
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .header { 
-            background: linear-gradient(135deg, ${brandColors.primary} 0%, ${brandColors.secondary} 100%);
-            color: ${brandColors.white}; 
-            padding: 40px 20px; 
-            text-align: center; 
-        }
-        .header h1 { 
-            margin: 0; 
-            font-size: 28px; 
-            font-weight: bold; 
-            line-height: 1.2;
-        }
-        .content { 
-            padding: 40px 20px; 
-        }
-        .content h2 { 
-            color: #333333; 
-            font-size: 24px; 
-            margin-bottom: 20px; 
-            line-height: 1.3;
-        }
-        .content p { 
-            color: #666666; 
-            font-size: 16px; 
-            line-height: 1.6; 
-            margin-bottom: 20px; 
-        }
-        .cta-button { 
-            display: inline-block; 
-            background: linear-gradient(135deg, ${brandColors.primary} 0%, ${brandColors.secondary} 100%);
-            color: ${brandColors.white}; 
-            padding: 15px 30px; 
-            text-decoration: none; 
-            border-radius: 8px; 
-            font-weight: bold; 
-            margin-top: 20px;
-            transition: transform 0.2s ease;
-        }
-        .cta-button:hover {
-            transform: translateY(-2px);
-        }
-        .footer { 
-            background-color: #f8f9fa; 
-            padding: 30px 20px; 
-            text-align: center; 
-            color: #666666; 
-            font-size: 14px;
-            border-top: 1px solid #e9ecef;
-        }
-        .footer p {
-            margin: 5px 0;
-        }
-        .logo { 
-            max-width: 150px; 
-            height: auto; 
-        }
-        @media only screen and (max-width: 600px) {
-            .header h1 { font-size: 24px; }
-            .content { padding: 30px 15px; }
-            .header { padding: 30px 15px; }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>${header}</h1>
-        </div>
-        <div class="content">
-            <p>${body}</p>
-            <div style="text-align: center;">
-                <a href="#" class="cta-button">${cta}</a>
-            </div>
-        </div>
-        <div class="footer">
-            <p><strong>KAVAK</strong> - Tu experiencia automotriz</p>
-            <p>© ${new Date().getFullYear()} KAVAK. Todos los derechos reservados.</p>
-            <p style="font-size: 12px; color: #999;">
-                Este email fue generado con Email CreAItor
-            </p>
-        </div>
-    </div>
-</body>
-</html>`;
+    // Import centralized renderer
+    const { generateEmailHTML: generateHTML, generateLegacyEmailHTML } = await import('@shared/emailRenderer');
+    
+    let html: string;
+    
+    // Use new component-based rendering if components are provided
+    if (components && Array.isArray(components)) {
+      html = generateHTML({
+        subject,
+        components,
+        includeKavakFooter: true
+      });
+    } else {
+      // Fall back to legacy rendering for backward compatibility
+      html = generateLegacyEmailHTML({
+        subject: subject || 'Email de KAVAK',
+        header: header || 'Mensaje de KAVAK',
+        body: body || 'Contenido del email',
+        cta: cta || 'Ver más'
+      });
+    }
 
     res.json({
       success: true,
@@ -291,6 +198,7 @@ export async function generateEmailHTML(req: Request, res: Response) {
       metadata: {
         subject,
         templateType,
+        renderingMode: components ? 'component-based' : 'legacy',
         generatedAt: new Date().toISOString()
       }
     });
