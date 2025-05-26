@@ -1981,35 +1981,35 @@ export default function EmailBuilderPage() {
                             />
                           </div>
 
-                          {/* Dynamic Components */}
+                          {/* Dynamic Components with Drag & Drop */}
                           <div>
-                            {emailComponents.map((component) => (
-                              <div
-                                key={component.id}
-                                className={cn(
-                                  "relative group border-2 border-transparent hover:border-blue-300 cursor-pointer",
-                                  selectedComponent === component.id && "border-blue-500 bg-blue-50"
-                                )}
-                                onClick={() => setSelectedComponent(component.id)}
-                              >
-                                {renderEmailComponent(component)}
-
-                                {/* Component Controls */}
-                                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <Button
-                                    size="sm"
-                                    variant="destructive"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      removeComponent(component.id);
-                                    }}
-                                    className="h-8 w-8 p-0"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
+                            {emailComponents.length === 0 ? (
+                              <div className="text-center py-8 text-gray-500">
+                                <Mail className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                                <p>Agrega componentes para comenzar a construir tu email</p>
+                                <p className="text-sm mt-2">🚀 Arrastra y suelta para reordenar</p>
                               </div>
-                            ))}
+                            ) : (
+                              <DndContext 
+                                sensors={sensors}
+                                collisionDetection={closestCenter}
+                                onDragEnd={handleDragEnd}
+                              >
+                                <SortableContext 
+                                  items={emailComponents.map(c => c.id)}
+                                  strategy={verticalListSortingStrategy}
+                                >
+                                  <div className="space-y-1">
+                                    {emailComponents.map((component) => (
+                                      <SortableEmailComponent 
+                                        key={component.id} 
+                                        component={component} 
+                                      />
+                                    ))}
+                                  </div>
+                                </SortableContext>
+                              </DndContext>
+                            )}
                           </div>
 
                           {/* Email Footer */}
