@@ -111,10 +111,10 @@ export default function EmailBuilderPage() {
 
       if (data.success) {
         setEmailContent({
-          subject: response.content.subject || '',
-          header: response.content.header || '',
-          body: response.content.body || '',
-          cta: response.content.cta || ''
+          subject: data.content.subject || '',
+          header: data.content.header || '',
+          body: data.content.body || '',
+          cta: data.content.cta || ''
         });
         
         toast({
@@ -122,7 +122,7 @@ export default function EmailBuilderPage() {
           description: "El contenido del email ha sido generado con IA.",
         });
       } else {
-        throw new Error(response.error || 'Error al generar contenido');
+        throw new Error(data.error || 'Error al generar contenido');
       }
     } catch (error) {
       console.error('Error generating content:', error);
@@ -138,7 +138,7 @@ export default function EmailBuilderPage() {
 
   const handlePreviewEmail = async () => {
     try {
-      const response = await apiRequest('/api/email/generate-html', {
+      const response = await fetch('/api/email/generate-html', {
         method: 'POST',
         body: JSON.stringify({
           subject: emailContent.subject,
@@ -152,11 +152,13 @@ export default function EmailBuilderPage() {
         },
       });
 
-      if (response.success) {
+      const data = await response.json();
+
+      if (data.success) {
         // Open HTML preview in a new window
         const newWindow = window.open('', '_blank');
         if (newWindow) {
-          newWindow.document.write(response.html);
+          newWindow.document.write(data.html);
           newWindow.document.close();
         }
         
@@ -165,7 +167,7 @@ export default function EmailBuilderPage() {
           description: "Se ha abierto la vista previa del email en una nueva ventana.",
         });
       } else {
-        throw new Error(response.error || 'Error al generar vista previa');
+        throw new Error(data.error || 'Error al generar vista previa');
       }
     } catch (error) {
       console.error('Error generating preview:', error);
@@ -431,6 +433,34 @@ export default function EmailBuilderPage() {
                           <p className="text-xs text-gray-600">KAVAK - Tu experiencia automotriz</p>
                         </div>
                       </div>
+                    </div>
+                    
+                    {/* Action Buttons */}
+                    <div className="flex space-x-3 mt-6">
+                      <Button 
+                        onClick={handlePreviewEmail}
+                        className="flex-1"
+                        variant="outline"
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        Vista Previa
+                      </Button>
+                      <Button 
+                        onClick={() => {
+                          const htmlContent = generateEmailHTML();
+                          const blob = new Blob([htmlContent], { type: 'text/html' });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = `email-kavak-${selectedTemplate}.html`;
+                          a.click();
+                          URL.revokeObjectURL(url);
+                        }}
+                        className="flex-1"
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Descargar HTML
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
