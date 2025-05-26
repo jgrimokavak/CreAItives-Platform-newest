@@ -991,12 +991,14 @@ export default function EmailBuilderPage() {
             <div className="space-y-3">
               <Label className="font-medium text-sm">Contenido</Label>
               <div className="space-y-2">
+                <Label className="text-xs text-gray-600">Texto del botón</Label>
                 <Input
                   value={component.content.text || ''}
                   onChange={(e) => updateContent({ text: e.target.value })}
                   placeholder="Texto del botón"
                   className="h-9"
                 />
+                <Label className="text-xs text-gray-600">Enlace</Label>
                 <Input
                   value={component.content.href || ''}
                   onChange={(e) => updateContent({ href: e.target.value })}
@@ -1006,15 +1008,15 @@ export default function EmailBuilderPage() {
               </div>
             </div>
 
-            {/* Typography */}
+            {/* Typography (Button-specific) */}
             <div className="space-y-3">
               <Label className="font-medium text-sm">Tipografía</Label>
               
               <div className="space-y-2">
                 <Label className="text-xs text-gray-600">Fuente</Label>
                 <Select 
-                  value={component.content.fontFamily || 'Helvetica, sans-serif'} 
-                  onValueChange={(value) => updateContent({ fontFamily: value })}
+                  value={component.styles.fontFamily || 'Helvetica, sans-serif'} 
+                  onValueChange={(value) => updateStyles({ fontFamily: value })}
                 >
                   <SelectTrigger className="h-9 w-full">
                     <SelectValue />
@@ -1032,7 +1034,7 @@ export default function EmailBuilderPage() {
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button variant="outline" className="w-full h-9 justify-between">
-                        {stripPx(component.content.fontSize || '16px')}px
+                        {stripPx(component.styles.fontSize || '16px')}px
                         <Sliders className="h-4 w-4" />
                       </Button>
                     </PopoverTrigger>
@@ -1040,8 +1042,8 @@ export default function EmailBuilderPage() {
                       <div className="space-y-3">
                         <Label className="text-sm font-medium">Tamaño de fuente</Label>
                         <Slider
-                          value={[parseInt(stripPx(component.content.fontSize || '16px'))]}
-                          onValueChange={(value) => updateContent({ fontSize: `${value[0]}px` })}
+                          value={[parseInt(stripPx(component.styles.fontSize || '16px'))]}
+                          onValueChange={(value) => updateStyles({ fontSize: `${value[0]}px` })}
                           max={48}
                           min={8}
                           step={1}
@@ -1049,7 +1051,7 @@ export default function EmailBuilderPage() {
                         />
                         <div className="flex justify-between text-xs text-gray-500">
                           <span>8px</span>
-                          <span>{stripPx(component.content.fontSize || '16px')}px</span>
+                          <span>{stripPx(component.styles.fontSize || '16px')}px</span>
                           <span>48px</span>
                         </div>
                       </div>
@@ -1060,8 +1062,8 @@ export default function EmailBuilderPage() {
                 <div className="space-y-2">
                   <Label className="text-xs text-gray-600">Peso</Label>
                   <Select 
-                    value={component.content.fontWeight || 'bold'} 
-                    onValueChange={(value) => updateContent({ fontWeight: value })}
+                    value={component.styles.fontWeight || 'bold'} 
+                    onValueChange={(value) => updateStyles({ fontWeight: value })}
                   >
                     <SelectTrigger className="h-9 w-full">
                       <SelectValue />
@@ -1077,27 +1079,33 @@ export default function EmailBuilderPage() {
               </div>
             </div>
 
-            {/* Colors */}
+            {/* Colors (Button-specific) */}
             <div className="space-y-3">
               <Label className="font-medium text-sm">Colores</Label>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label className="text-xs text-gray-600">Color de texto</Label>
-                  <Input
-                    type="color"
-                    value={component.content.textColor || '#ffffff'}
-                    onChange={(e) => updateContent({ textColor: e.target.value })}
-                    className="h-9"
-                  />
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      type="color"
+                      value={component.styles.color || '#ffffff'}
+                      onChange={(e) => updateStyles({ color: e.target.value })}
+                      className="w-12 h-8 p-1"
+                    />
+                    <span className="text-xs">Texto</span>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs text-gray-600">Fondo</Label>
-                  <Input
-                    type="color"
-                    value={component.content.backgroundColor || '#1553ec'}
-                    onChange={(e) => updateContent({ backgroundColor: e.target.value })}
-                    className="h-9"
-                  />
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      type="color"
+                      value={component.styles.backgroundColor || '#1553ec'}
+                      onChange={(e) => updateStyles({ backgroundColor: e.target.value })}
+                      className="w-12 h-8 p-1"
+                    />
+                    <span className="text-xs">Fondo</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1110,9 +1118,9 @@ export default function EmailBuilderPage() {
                   <Label className="text-xs text-gray-600">Color</Label>
                   <Input
                     type="color"
-                    value={component.content.borderColor || '#1553ec'}
-                    onChange={(e) => updateContent({ borderColor: e.target.value })}
-                    className="h-9"
+                    value={component.styles.borderColor || '#1553ec'}
+                    onChange={(e) => updateStyles({ borderColor: e.target.value })}
+                    className="w-12 h-8 p-1"
                   />
                 </div>
                 <div className="space-y-2">
@@ -1120,7 +1128,7 @@ export default function EmailBuilderPage() {
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button variant="outline" className="w-full h-9 justify-between">
-                        {stripPx(component.content.borderWidth || '0px')}px
+                        {stripPx(component.styles.borderWidth || '0px')}px
                         <Sliders className="h-4 w-4" />
                       </Button>
                     </PopoverTrigger>
@@ -1128,113 +1136,35 @@ export default function EmailBuilderPage() {
                       <div className="space-y-2">
                         <Label className="text-sm">Grosor del borde</Label>
                         <Slider
-                          value={[parseInt(stripPx(component.content.borderWidth || '0px'))]}
-                          onValueChange={(value) => updateContent({ borderWidth: `${value[0]}px` })}
+                          value={[parseInt(stripPx(component.styles.borderWidth || '0px'))]}
+                          onValueChange={(value) => updateStyles({ borderWidth: `${value[0]}px` })}
                           max={10}
                           min={0}
                           step={1}
                         />
                         <div className="text-center text-xs text-gray-500">
-                          {stripPx(component.content.borderWidth || '0px')}px
+                          {stripPx(component.styles.borderWidth || '0px')}px
                         </div>
                       </div>
                     </PopoverContent>
                   </Popover>
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label className="text-xs text-gray-600">Border radius</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full h-9 justify-between">
-                      {stripPx(component.content.borderRadius || '6px')}px
-                      <Sliders className="h-4 w-4" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-56">
-                    <div className="space-y-2">
-                      <Label className="text-sm">Border Radius</Label>
-                      <Slider
-                        value={[parseInt(stripPx(component.content.borderRadius || '6px'))]}
-                        onValueChange={(value) => updateContent({ borderRadius: `${value[0]}px` })}
-                        max={50}
-                        min={0}
-                        step={1}
-                      />
-                      <div className="text-center text-xs text-gray-500">
-                        {stripPx(component.content.borderRadius || '6px')}px
-                      </div>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              </div>
             </div>
 
             {/* Spacing */}
-            <div className="space-y-3">
-              <Label className="font-semibold">Espaciado</Label>
-              <div>
-                <Label className="text-xs">Padding (top, right, bottom, left)</Label>
-                <div className="grid grid-cols-2 gap-1">
-                  <Input
-                    value={component.styles.paddingTop || '12px'}
-                    onChange={(e) => updateStyles({ paddingTop: e.target.value })}
-                    placeholder="Top"
-                  />
-                  <Input
-                    value={component.styles.paddingRight || '24px'}
-                    onChange={(e) => updateStyles({ paddingRight: e.target.value })}
-                    placeholder="Right"
-                  />
-                  <Input
-                    value={component.styles.paddingBottom || '12px'}
-                    onChange={(e) => updateStyles({ paddingBottom: e.target.value })}
-                    placeholder="Bottom"
-                  />
-                  <Input
-                    value={component.styles.paddingLeft || '24px'}
-                    onChange={(e) => updateStyles({ paddingLeft: e.target.value })}
-                    placeholder="Left"
-                  />
-                </div>
-              </div>
-              <div>
-                <Label className="text-xs">Margin (top, right, bottom, left)</Label>
-                <div className="grid grid-cols-2 gap-1">
-                  <Input
-                    value={component.styles.marginTop || '10px'}
-                    onChange={(e) => updateStyles({ marginTop: e.target.value })}
-                    placeholder="Top"
-                  />
-                  <Input
-                    value={component.styles.marginRight || 'auto'}
-                    onChange={(e) => updateStyles({ marginRight: e.target.value })}
-                    placeholder="Right"
-                  />
-                  <Input
-                    value={component.styles.marginBottom || '10px'}
-                    onChange={(e) => updateStyles({ marginBottom: e.target.value })}
-                    placeholder="Bottom"
-                  />
-                  <Input
-                    value={component.styles.marginLeft || 'auto'}
-                    onChange={(e) => updateStyles({ marginLeft: e.target.value })}
-                    placeholder="Left"
-                  />
-                </div>
-              </div>
-            </div>
+            {renderSpacingControls(component, updateStyles, '12px', '10px')}
 
             {/* Layout */}
             <div className="space-y-3">
-              <Label className="font-semibold">Layout</Label>
-              <div>
-                <Label className="text-xs">Alineación</Label>
+              <Label className="font-medium text-sm">Layout</Label>
+              <div className="space-y-2">
+                <Label className="text-xs text-gray-600">Alineación</Label>
                 <Select 
-                  value={component.content.alignment || 'center'} 
-                  onValueChange={(value) => updateContent({ alignment: value })}
+                  value={component.styles.textAlign || 'center'} 
+                  onValueChange={(value) => updateStyles({ textAlign: value })}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-9 w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1244,13 +1174,13 @@ export default function EmailBuilderPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label className="text-xs">Display</Label>
+              <div className="space-y-2">
+                <Label className="text-xs text-gray-600">Display</Label>
                 <Select 
-                  value={component.content.display || 'inline-block'} 
-                  onValueChange={(value) => updateContent({ display: value })}
+                  value={component.styles.display || 'inline-block'} 
+                  onValueChange={(value) => updateStyles({ display: value })}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-9 w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1268,13 +1198,13 @@ export default function EmailBuilderPage() {
           <div className="h-full flex flex-col space-y-4">
             {/* Height */}
             <div className="space-y-3">
-              <Label className="font-medium text-sm">Altura</Label>
+              <Label className="font-medium text-sm">Propiedades</Label>
               <div className="space-y-2">
                 <Label className="text-xs text-gray-600">Altura del espaciador</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="outline" className="w-full h-9 justify-between">
-                      {stripPx(component.content.height || '20px')}px
+                      {stripPx(component.styles.height || '20px')}px
                       <Sliders className="h-4 w-4" />
                     </Button>
                   </PopoverTrigger>
@@ -1282,8 +1212,8 @@ export default function EmailBuilderPage() {
                     <div className="space-y-3">
                       <Label className="text-sm font-medium">Altura del espaciador</Label>
                       <Slider
-                        value={[parseInt(stripPx(component.content.height || '20px'))]}
-                        onValueChange={(value) => updateContent({ height: `${value[0]}px` })}
+                        value={[parseInt(stripPx(component.styles.height || '20px'))]}
+                        onValueChange={(value) => updateStyles({ height: `${value[0]}px` })}
                         max={200}
                         min={5}
                         step={5}
@@ -1291,7 +1221,7 @@ export default function EmailBuilderPage() {
                       />
                       <div className="flex justify-between text-xs text-gray-500">
                         <span>5px</span>
-                        <span>{stripPx(component.content.height || '20px')}px</span>
+                        <span>{stripPx(component.styles.height || '20px')}px</span>
                         <span>200px</span>
                       </div>
                     </div>
@@ -1300,80 +1230,58 @@ export default function EmailBuilderPage() {
               </div>
             </div>
 
-            {/* Background Color */}
+            {/* Colors */}
             <div className="space-y-3">
-              <Label className="font-medium text-sm">Apariencia</Label>
+              <Label className="font-medium text-sm">Colores</Label>
               <div className="space-y-2">
                 <Label className="text-xs text-gray-600">Color de fondo (opcional)</Label>
-                <Input
-                  type="color"
-                  value={component.content.backgroundColor || '#ffffff'}
-                  onChange={(e) => updateContent({ backgroundColor: e.target.value })}
-                  className="h-9"
-                />
+                <div className="flex items-center space-x-2">
+                  <Input
+                    type="color"
+                    value={component.styles.backgroundColor || '#ffffff'}
+                    onChange={(e) => updateStyles({ backgroundColor: e.target.value })}
+                    className="w-12 h-8 p-1"
+                  />
+                  <span className="text-xs">Fondo</span>
+                </div>
               </div>
             </div>
 
-            {/* Spacing */}
+            {/* Spacing (Simplified for spacer) */}
             <div className="space-y-3">
               <Label className="font-medium text-sm">Espaciado</Label>
               <div className="space-y-3">
                 <div className="space-y-2">
                   <Label className="text-xs text-gray-600">Margin</Label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label className="text-xs text-gray-500">Top</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button variant="outline" className="w-full h-9 justify-between text-xs">
-                            {stripPx(component.styles.marginTop || '0px')}px
-                            <Sliders className="h-3 w-3" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-56">
-                          <div className="space-y-2">
-                            <Label className="text-sm">Margin Top</Label>
-                            <Slider
-                              value={[parseInt(stripPx(component.styles.marginTop || '0px'))]}
-                              onValueChange={(value) => updateStyles({ marginTop: `${value[0]}px` })}
-                              max={100}
-                              min={0}
-                              step={1}
-                            />
-                            <div className="text-center text-xs text-gray-500">
-                              {stripPx(component.styles.marginTop || '0px')}px
+                  <div className="grid grid-cols-2 gap-2">
+                    {['Top', 'Bottom'].map((dir) => {
+                      const key = `margin${dir}`;
+                      const defaultVal = '0px';
+                      return (
+                        <Popover key={key}>
+                          <PopoverTrigger asChild>
+                            <Button variant="outline" className="h-9 text-xs">
+                              {dir[0]}: {stripPx(component.styles[key] || defaultVal)}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-56">
+                            <div className="space-y-2">
+                              <Label className="text-sm">Margin {dir}</Label>
+                              <Slider
+                                value={[parseInt(stripPx(component.styles[key] || defaultVal))]}
+                                onValueChange={(value) => updateStyles({ [key]: `${value[0]}px` })}
+                                max={100}
+                                min={0}
+                                step={1}
+                              />
+                              <div className="text-center text-xs text-gray-500">
+                                {stripPx(component.styles[key] || defaultVal)}px
+                              </div>
                             </div>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-xs text-gray-500">Bottom</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button variant="outline" className="w-full h-9 justify-between text-xs">
-                            {stripPx(component.styles.marginBottom || '0px')}px
-                            <Sliders className="h-3 w-3" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-56">
-                          <div className="space-y-2">
-                            <Label className="text-sm">Margin Bottom</Label>
-                            <Slider
-                              value={[parseInt(stripPx(component.styles.marginBottom || '0px'))]}
-                              onValueChange={(value) => updateStyles({ marginBottom: `${value[0]}px` })}
-                              max={100}
-                              min={0}
-                              step={1}
-                            />
-                            <div className="text-center text-xs text-gray-500">
-                              {stripPx(component.styles.marginBottom || '0px')}px
-                            </div>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                    </div>
+                          </PopoverContent>
+                        </Popover>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
