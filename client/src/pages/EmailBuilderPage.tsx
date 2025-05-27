@@ -241,7 +241,9 @@ export default function EmailBuilderPage() {
   </style>
 </head>
 <body>
-  ${html}
+  <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+    ${componentsHTML}
+  </div>
   <!-- Add KAVAK footer -->
   <div style="max-width: 600px; margin: 0 auto; padding: 30px 20px; text-align: center; color: #666666; font-size: 14px; background-color: #f8f9fa; border-top: 1px solid #e9ecef;">
     <p style="margin: 5px 0;"><strong>KAVAK</strong> - Tu experiencia automotriz</p>
