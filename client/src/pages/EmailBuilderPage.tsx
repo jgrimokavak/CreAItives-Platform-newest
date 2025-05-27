@@ -689,11 +689,9 @@ export default function EmailBuilderPage() {
   // Unified property components for consistency
   const renderSpacingControls = (component: EmailComponent, updateStyles: (updates: any) => void, defaultPadding = '15px', defaultMargin = '0px') => (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <Label className="font-semibold text-base text-gray-800">Spacing</Label>
-        <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center">
-          <Square className="w-3 h-3 text-orange-600" />
-        </div>
+      <div className="inline-flex items-center gap-2 bg-orange-100 text-orange-800 px-3 py-1.5 rounded-full">
+        <Square className="w-4 h-4" />
+        <span className="text-sm font-semibold">Spacing</span>
       </div>
       
       <div className="space-y-6">
@@ -812,9 +810,9 @@ export default function EmailBuilderPage() {
 
   const renderTypographyControls = (component: EmailComponent, updateStyles: (updates: any) => void, includeAlign = true) => (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <Label className="font-medium text-sm">Typography</Label>
-        <div className="text-xs text-gray-500">Text formatting</div>
+      <div className="inline-flex items-center gap-2 bg-green-100 text-green-800 px-3 py-1.5 rounded-full">
+        <Type className="w-4 h-4" />
+        <span className="text-sm font-semibold">Typography</span>
       </div>
       
       {/* Font Family */}
@@ -1169,11 +1167,9 @@ export default function EmailBuilderPage() {
           <div className="h-full flex flex-col space-y-6">
             {/* Content Section */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label className="font-semibold text-base text-gray-800">Content</Label>
-                <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
-                  <Type className="w-3 h-3 text-blue-600" />
-                </div>
+              <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1.5 rounded-full">
+                <Type className="w-4 h-4" />
+                <span className="text-sm font-semibold">Content</span>
               </div>
               
               <div className="space-y-3">
