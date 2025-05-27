@@ -2662,15 +2662,50 @@ export default function EmailBuilderPage() {
                       <Eye className="h-4 w-4 mr-2" />
                       Open in New Window
                     </Button>
-                    <Button onClick={() => {
-                      const htmlContent = generateEmailHTML();
-                      const blob = new Blob([htmlContent], { type: 'text/html' });
-                      const url = URL.createObjectURL(blob);
-                      const a = document.createElement('a');
-                      a.href = url;
-                      a.download = `email-kavak-${selectedTemplate}.html`;
-                      a.click();
-                      URL.revokeObjectURL(url);
+                    <Button onClick={async () => {
+                      try {
+                        // Use the same backend renderer for consistent output
+                        const response = await fetch('/api/email/generate-html', {
+                          method: 'POST',
+                          body: JSON.stringify({
+                            subject: emailContent.subject,
+                            header: emailContent.header,
+                            body: emailContent.body,
+                            cta: emailContent.cta,
+                            templateType: selectedTemplate,
+                            components: emailComponents
+                          }),
+                          headers: {
+                            'Content-Type': 'application/json',
+                          },
+                        });
+
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                          const blob = new Blob([data.html], { type: 'text/html' });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = `email-kavak-${selectedTemplate}.html`;
+                          a.click();
+                          URL.revokeObjectURL(url);
+                          
+                          toast({
+                            title: "HTML descargado",
+                            description: "El archivo HTML ha sido descargado exitosamente.",
+                          });
+                        } else {
+                          throw new Error(data.error || 'Error al generar HTML');
+                        }
+                      } catch (error) {
+                        console.error('Error downloading HTML:', error);
+                        toast({
+                          title: "Error al descargar",
+                          description: "No se pudo generar el archivo HTML.",
+                          variant: "destructive",
+                        });
+                      }
                     }}>
                       <Download className="h-4 w-4 mr-2" />
                       Download HTML

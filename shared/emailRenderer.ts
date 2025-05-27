@@ -32,14 +32,28 @@ function sanitizeContent(content: string): string {
   });
 }
 
-// Render individual email component to HTML
+// Render individual email component to HTML - matches frontend builder exactly
 function renderComponent(component: EmailComponent): string {
   const styles = { ...component.styles };
   
   switch (component.type) {
     case 'text':
       const textContent = sanitizeContent(component.content.text || '');
-      return `<div style="${convertStylesToString(styles)}">${textContent}</div>`;
+      // Match frontend: reset margins/padding, then apply component styles
+      const textStyles = {
+        margin: '0',
+        padding: '0',
+        paddingTop: styles.paddingTop || '0px',
+        paddingRight: styles.paddingRight || '0px', 
+        paddingBottom: styles.paddingBottom || '0px',
+        paddingLeft: styles.paddingLeft || '0px',
+        marginTop: styles.marginTop || '0px',
+        marginRight: styles.marginRight || '0px',
+        marginBottom: styles.marginBottom || '0px',
+        marginLeft: styles.marginLeft || '0px',
+        ...styles
+      };
+      return `<div style="${convertStylesToString(textStyles)}">${textContent}</div>`;
       
     case 'image':
       if (!component.content.src) {
@@ -49,30 +63,66 @@ function renderComponent(component: EmailComponent): string {
           minHeight: '100px',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
-          padding: '20px'
+          justifyContent: 'center'
         })}">
           <span style="color: #999; font-size: 14px;">Imagen no disponible</span>
         </div>`;
       }
       
       const alt = sanitizeContent(component.content.alt || '');
-      return `<img src="${component.content.src}" alt="${alt}" style="${convertStylesToString({
-        ...styles,
-        maxWidth: '100%',
-        height: 'auto'
-      })}" />`;
+      // Match frontend: use flexbox for alignment control
+      const imageAlignment = 
+        styles.textAlign === 'left' ? 'flex-start' :
+        styles.textAlign === 'right' ? 'flex-end' : 'center';
+      
+      return `<div style="${convertStylesToString({
+        display: 'flex',
+        justifyContent: imageAlignment,
+        margin: '0',
+        padding: '0',
+        paddingTop: styles.paddingTop || '0px',
+        paddingRight: styles.paddingRight || '0px',
+        paddingBottom: styles.paddingBottom || '0px', 
+        paddingLeft: styles.paddingLeft || '0px',
+        marginTop: styles.marginTop || '0px',
+        marginRight: styles.marginRight || '0px',
+        marginBottom: styles.marginBottom || '0px',
+        marginLeft: styles.marginLeft || '0px'
+      })}">
+        <img src="${component.content.src}" alt="${alt}" style="${convertStylesToString({
+          maxWidth: styles.maxWidth || '100%',
+          width: styles.width || 'auto',
+          height: styles.height || 'auto',
+          border: styles.border || 'none',
+          borderRadius: styles.borderRadius || '0px'
+        })}" />
+      </div>`;
       
     case 'button':
       const buttonText = sanitizeContent(component.content.text || 'Click aquí');
       const href = component.content.href || '#';
-      return `<div style="text-align: center; padding: 10px;">
+      // Match frontend: use flexbox for button alignment
+      const buttonAlignment = 
+        styles.textAlign === 'left' ? 'flex-start' :
+        styles.textAlign === 'right' ? 'flex-end' : 'center';
+      
+      return `<div style="${convertStylesToString({
+        display: 'flex',
+        justifyContent: buttonAlignment,
+        margin: '0',
+        padding: '0',
+        paddingTop: styles.paddingTop || '0px',
+        paddingRight: styles.paddingRight || '0px',
+        paddingBottom: styles.paddingBottom || '0px',
+        paddingLeft: styles.paddingLeft || '0px',
+        marginTop: styles.marginTop || '0px', 
+        marginRight: styles.marginRight || '0px',
+        marginBottom: styles.marginBottom || '0px',
+        marginLeft: styles.marginLeft || '0px'
+      })}">
         <a href="${href}" style="${convertStylesToString({
           display: 'inline-block',
           textDecoration: 'none',
-          borderRadius: '8px',
-          fontWeight: 'bold',
-          transition: 'transform 0.2s ease',
           ...styles
         })}">${buttonText}</a>
       </div>`;
@@ -110,132 +160,33 @@ export function generateEmailHTML(options: EmailRenderOptions): string {
     includeKavakFooter = true
   } = options;
 
-  // Render all components with table-based structure for better email client support
+  // Render all components directly without extra table padding to match frontend
   const componentsHTML = components.map(component => {
-    const renderedComponent = renderComponent(component);
-    // Wrap each component in a table row for better compatibility
-    return `
-    <tr>
-        <td style="padding: 10px 0;">
-            ${renderedComponent}
-        </td>
-    </tr>`;
+    return renderComponent(component);
   }).join('\n');
 
-  // Enhanced email-compatible HTML with MSO conditionals and table structure
-  return `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+  // Use same structure as frontend builder for pixel-perfect matching
+  return `
+<!DOCTYPE html>
+<html>
 <head>
-    <!--[if gte mso 9]>
-    <xml>
-        <o:OfficeDocumentSettings>
-            <o:AllowPNG/>
-            <o:PixelsPerInch>96</o:PixelsPerInch>
-        </o:OfficeDocumentSettings>
-    </xml>
-    <![endif]-->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>${sanitizeContent(subject)}</title>
-    <style type="text/css">
-        /* Email client reset */
-        body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
-        table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
-        img { -ms-interpolation-mode: bicubic; border: 0; outline: none; max-width: 100%; height: auto; }
-        
-        /* Outlook specific */
-        .ReadMsgBody { width: 100%; }
-        .ExternalClass { width: 100%; }
-        .ExternalClass, .ExternalClass p, .ExternalClass span, .ExternalClass font, .ExternalClass td, .ExternalClass div { 
-            line-height: 100%; 
-        }
-        
-        /* Gmail specific */
-        u + .body .gmail-fix { display: none; }
-        
-        /* Responsive design */
-        @media only screen and (max-width: 600px) {
-            .container { width: 100% !important; max-width: 600px !important; }
-            .content { padding: 20px !important; }
-            .mobile-center { text-align: center !important; }
-            .mobile-hide { display: none !important; }
-        }
-        
-        /* Dark mode support */
-        @media (prefers-color-scheme: dark) {
-            .dark-mode-bg { background-color: #1a1a1a !important; }
-            .dark-mode-text { color: #ffffff !important; }
-        }
-    </style>
-    <!--[if mso]>
-    <style type="text/css">
-        .fallback-font { font-family: Arial, sans-serif !important; }
-    </style>
-    <![endif]-->
 </head>
-<body style="margin: 0; padding: 0; font-family: ${globalStyles.fontFamily}; background-color: ${globalStyles.backgroundColor}; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;" class="body">
-    <div style="display: none; max-height: 0; overflow: hidden;">
-        Email CreAItor - ${sanitizeContent(subject)}
+<body style="margin: 0; padding: 0; font-family: 'Roboto', 'Helvetica', Arial, sans-serif; background-color: #f5f5f5;">
+    <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+        ${componentsHTML}
+        ${includeKavakFooter ? `
+        <div style="padding: 30px 20px; text-align: center; color: #666666; font-size: 14px; background-color: #f8f9fa; border-top: 1px solid #e9ecef;">
+            <p style="margin: 5px 0;"><strong>KAVAK</strong> - Tu experiencia automotriz</p>
+            <p style="margin: 5px 0;">© ${new Date().getFullYear()} KAVAK. Todos los derechos reservados.</p>
+            <p style="font-size: 12px; color: #999; margin: 5px 0;">
+                Este email fue generado con Email CreAItor
+            </p>
+        </div>
+        ` : ''}
     </div>
-    <div style="display: none; max-height: 0; overflow: hidden;">
-        &#8204;&nbsp;&#8204;&nbsp;&#8204;&nbsp;&#8204;&nbsp;&#8204;&nbsp;&#8204;&nbsp;&#8204;&nbsp;&#8204;&nbsp;&#8204;&nbsp;&#8204;&nbsp;&#8204;&nbsp;&#8204;&nbsp;&#8204;&nbsp;
-    </div>
-    
-    <!-- Main wrapper table -->
-    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: ${globalStyles.backgroundColor}; min-height: 100vh;">
-        <tr>
-            <td align="center" style="padding: 20px 0;" valign="top">
-                <!-- Container table with MSO conditional width -->
-                <!--[if mso]>
-                <table border="0" cellpadding="0" cellspacing="0" width="600">
-                <tr>
-                <td>
-                <![endif]-->
-                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: ${BRAND_STYLES.colors.white};" class="container">
-                    <!-- Content table -->
-                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
-                        ${componentsHTML}
-                        ${includeKavakFooter ? `
-                        <tr>
-                            <td style="background-color: ${BRAND_STYLES.colors.footerBg}; padding: 30px 20px; text-align: center; border-top: 1px solid #e9ecef;">
-                                <table border="0" cellpadding="0" cellspacing="0" width="100%">
-                                    <tr>
-                                        <td style="text-align: center; padding: 5px 0;">
-                                            <p style="margin: 0; font-size: 14px; color: ${BRAND_STYLES.colors.gray}; font-family: ${globalStyles.fontFamily};">
-                                                <strong>KAVAK</strong> - Tu experiencia automotriz
-                                            </p>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td style="text-align: center; padding: 5px 0;">
-                                            <p style="margin: 0; font-size: 14px; color: ${BRAND_STYLES.colors.gray}; font-family: ${globalStyles.fontFamily};">
-                                                © ${new Date().getFullYear()} KAVAK. Todos los derechos reservados.
-                                            </p>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td style="text-align: center; padding: 5px 0;">
-                                            <p style="margin: 0; font-size: 12px; color: #999; font-family: ${globalStyles.fontFamily};">
-                                                Este email fue generado con Email CreAItor
-                                            </p>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </td>
-                        </tr>
-                        ` : ''}
-                    </table>
-                </table>
-                <!--[if mso]>
-                </td>
-                </tr>
-                </table>
-                <![endif]-->
-            </td>
-        </tr>
-    </table>
 </body>
 </html>`;
 }
