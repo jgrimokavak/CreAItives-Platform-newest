@@ -2638,7 +2638,22 @@ export default function EmailBuilderPage() {
                 <Card>
                   <CardContent className="p-8">
                     <div className="max-w-2xl mx-auto bg-white border rounded-lg overflow-hidden shadow-lg">
-                      <div dangerouslySetInnerHTML={{ __html: generateEmailHTML() }} />
+                      {/* Live preview using the same components as builder */}
+                      <div className="w-full max-w-[600px] bg-white mx-auto">
+                        <div className="p-4 border-b bg-gray-50">
+                          <div className="font-semibold">{emailContent.subject}</div>
+                        </div>
+                        {emailComponents.map((component) => (
+                          <div key={component.id}>
+                            {renderEmailComponent(component)}
+                          </div>
+                        ))}
+                        <div className="p-8 text-center text-gray-600 text-sm bg-gray-50 border-t">
+                          <p className="mb-1"><strong>KAVAK</strong> - Tu experiencia automotriz</p>
+                          <p className="mb-1">© {new Date().getFullYear()} KAVAK. Todos los derechos reservados.</p>
+                          <p className="text-xs text-gray-500">Este email fue generado con Email CreAItor</p>
+                        </div>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
