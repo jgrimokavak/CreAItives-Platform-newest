@@ -507,39 +507,127 @@ export default function EmailBuilderPage() {
         </Button>
 
         {/* Component content */}
-        <div className="p-4">
+        <div className="overflow-hidden" style={{ margin: 0, padding: 0 }}>
           {renderEmailComponent(component)}
         </div>
       </div>
     );
   };
 
+  // Helper function to clean and apply styles, ensuring zero values are respected
+  const cleanStyles = (styles: Record<string, any>) => {
+    const cleaned: Record<string, any> = {};
+    Object.entries(styles).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        cleaned[key] = value;
+      }
+    });
+    return cleaned;
+  };
+
   const renderEmailComponent = (component: EmailComponent) => {
+    const componentStyles = cleanStyles(component.styles);
+    
     switch (component.type) {
       case 'text':
-        return <div style={component.styles}>{component.content.text}</div>;
+        return (
+          <div 
+            style={{
+              ...componentStyles,
+              margin: 0, // Reset default margin
+              padding: 0, // Reset default padding
+              // Apply component-specific spacing
+              paddingTop: componentStyles.paddingTop || '0px',
+              paddingRight: componentStyles.paddingRight || '0px',
+              paddingBottom: componentStyles.paddingBottom || '0px',
+              paddingLeft: componentStyles.paddingLeft || '0px',
+              marginTop: componentStyles.marginTop || '0px',
+              marginRight: componentStyles.marginRight || '0px',
+              marginBottom: componentStyles.marginBottom || '0px',
+              marginLeft: componentStyles.marginLeft || '0px',
+            }}
+          >
+            {component.content.text}
+          </div>
+        );
       case 'image':
         return component.content.src ? (
           <img 
             src={component.content.src} 
             alt={component.content.alt} 
-            style={{ ...component.styles, maxWidth: '100%' }}
+            style={{ 
+              ...componentStyles, 
+              maxWidth: '100%',
+              margin: 0,
+              padding: 0,
+              paddingTop: componentStyles.paddingTop || '0px',
+              paddingRight: componentStyles.paddingRight || '0px',
+              paddingBottom: componentStyles.paddingBottom || '0px',
+              paddingLeft: componentStyles.paddingLeft || '0px',
+              marginTop: componentStyles.marginTop || '0px',
+              marginRight: componentStyles.marginRight || '0px',
+              marginBottom: componentStyles.marginBottom || '0px',
+              marginLeft: componentStyles.marginLeft || '0px',
+            }}
           />
         ) : (
-          <div style={{ ...component.styles, border: '2px dashed #ccc', minHeight: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ 
+            ...componentStyles, 
+            border: '2px dashed #ccc', 
+            minHeight: '100px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            margin: 0,
+            padding: 0,
+            paddingTop: componentStyles.paddingTop || '0px',
+            paddingRight: componentStyles.paddingRight || '0px',
+            paddingBottom: componentStyles.paddingBottom || '0px',
+            paddingLeft: componentStyles.paddingLeft || '0px',
+            marginTop: componentStyles.marginTop || '0px',
+            marginRight: componentStyles.marginRight || '0px',
+            marginBottom: componentStyles.marginBottom || '0px',
+            marginLeft: componentStyles.marginLeft || '0px',
+          }}>
             <span className="text-gray-500">Click para agregar imagen</span>
           </div>
         );
       case 'button':
         return (
-          <div style={{ textAlign: 'center', padding: '10px' }}>
-            <a href={component.content.href} style={component.styles}>
+          <div style={{ 
+            textAlign: componentStyles.textAlign || 'center',
+            margin: 0,
+            padding: 0,
+            paddingTop: componentStyles.paddingTop || '0px',
+            paddingRight: componentStyles.paddingRight || '0px',
+            paddingBottom: componentStyles.paddingBottom || '0px',
+            paddingLeft: componentStyles.paddingLeft || '0px',
+            marginTop: componentStyles.marginTop || '0px',
+            marginRight: componentStyles.marginRight || '0px',
+            marginBottom: componentStyles.marginBottom || '0px',
+            marginLeft: componentStyles.marginLeft || '0px',
+          }}>
+            <a href={component.content.href} style={componentStyles}>
               {component.content.text}
             </a>
           </div>
         );
       case 'spacer':
-        return <div style={component.styles}></div>;
+        return (
+          <div style={{
+            ...componentStyles,
+            margin: 0,
+            padding: 0,
+            paddingTop: componentStyles.paddingTop || '0px',
+            paddingRight: componentStyles.paddingRight || '0px',
+            paddingBottom: componentStyles.paddingBottom || '0px',
+            paddingLeft: componentStyles.paddingLeft || '0px',
+            marginTop: componentStyles.marginTop || '0px',
+            marginRight: componentStyles.marginRight || '0px',
+            marginBottom: componentStyles.marginBottom || '0px',
+            marginLeft: componentStyles.marginLeft || '0px',
+          }}></div>
+        );
       default:
         return null;
     }
@@ -555,92 +643,102 @@ export default function EmailBuilderPage() {
       
       <div className="space-y-4">
         {/* Padding Controls */}
-        <div className="space-y-3">
-          <Label className="text-xs text-gray-600 uppercase tracking-wide">Padding interno</Label>
-          <div className="grid grid-cols-4 gap-2">
-            {['Top', 'Right', 'Bottom', 'Left'].map((dir, idx) => {
-              const key = `padding${dir}`;
+        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+          <div className="flex items-center justify-between mb-3">
+            <Label className="text-sm font-semibold text-gray-700">PADDING INTERNO</Label>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => updateStyles({ 
+                paddingTop: '0px', 
+                paddingRight: '0px', 
+                paddingBottom: '0px', 
+                paddingLeft: '0px' 
+              })}
+              className="h-6 px-2 text-xs text-gray-500 hover:text-gray-700"
+            >
+              Resetear todo
+            </Button>
+          </div>
+          
+          <div className="space-y-3">
+            {[
+              { key: 'paddingTop', label: 'Superior (T)', dir: 'Top' },
+              { key: 'paddingRight', label: 'Derecho (R)', dir: 'Right' },
+              { key: 'paddingBottom', label: 'Inferior (B)', dir: 'Bottom' },
+              { key: 'paddingLeft', label: 'Izquierdo (L)', dir: 'Left' }
+            ].map(({ key, label, dir }) => {
               const currentValue = component.styles[key];
               const displayValue = currentValue !== undefined ? stripPx(currentValue) : stripPx(defaultPadding);
               
               return (
-                <Popover key={key}>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="h-9 text-xs flex flex-col">
-                      <span className="text-[10px] text-gray-400">{dir[0]}</span>
-                      <span>{displayValue}</span>
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-56">
-                    <div className="space-y-2">
-                      <Label className="text-sm">Padding {dir}</Label>
-                      <Slider
-                        value={[parseInt(displayValue)]}
-                        onValueChange={(value) => updateStyles({ [key]: `${value[0]}px` })}
-                        max={100}
-                        min={0}
-                        step={1}
-                      />
-                      <div className="text-center text-xs text-gray-500">
-                        {displayValue}px
-                      </div>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => updateStyles({ [key]: '0px' })}
-                        className="w-full h-7 text-xs"
-                      >
-                        Resetear a 0
-                      </Button>
-                    </div>
-                  </PopoverContent>
-                </Popover>
+                <div key={key} className="flex items-center space-x-3">
+                  <Label className="text-xs text-gray-600 w-20 text-left">{label}</Label>
+                  <div className="flex-1">
+                    <Slider
+                      value={[parseInt(displayValue)]}
+                      onValueChange={(value) => updateStyles({ [key]: `${value[0]}px` })}
+                      max={100}
+                      min={0}
+                      step={1}
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="w-12 text-right">
+                    <span className="text-xs font-mono text-gray-700">{displayValue}px</span>
+                  </div>
+                </div>
               );
             })}
           </div>
         </div>
 
         {/* Margin Controls */}
-        <div className="space-y-3">
-          <Label className="text-xs text-gray-600 uppercase tracking-wide">Margen externo</Label>
-          <div className="grid grid-cols-4 gap-2">
-            {['Top', 'Right', 'Bottom', 'Left'].map((dir) => {
-              const key = `margin${dir}`;
+        <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+          <div className="flex items-center justify-between mb-3">
+            <Label className="text-sm font-semibold text-blue-700">MARGEN EXTERNO</Label>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => updateStyles({ 
+                marginTop: '0px', 
+                marginRight: '0px', 
+                marginBottom: '0px', 
+                marginLeft: '0px' 
+              })}
+              className="h-6 px-2 text-xs text-blue-500 hover:text-blue-700"
+            >
+              Resetear todo
+            </Button>
+          </div>
+          
+          <div className="space-y-3">
+            {[
+              { key: 'marginTop', label: 'Superior (T)', dir: 'Top' },
+              { key: 'marginRight', label: 'Derecho (R)', dir: 'Right' },
+              { key: 'marginBottom', label: 'Inferior (B)', dir: 'Bottom' },
+              { key: 'marginLeft', label: 'Izquierdo (L)', dir: 'Left' }
+            ].map(({ key, label, dir }) => {
               const currentValue = component.styles[key];
               const displayValue = currentValue !== undefined ? stripPx(currentValue) : stripPx(defaultMargin);
               
               return (
-                <Popover key={key}>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="h-9 text-xs flex flex-col">
-                      <span className="text-[10px] text-gray-400">{dir[0]}</span>
-                      <span>{displayValue}</span>
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-56">
-                    <div className="space-y-2">
-                      <Label className="text-sm">Margin {dir}</Label>
-                      <Slider
-                        value={[parseInt(displayValue)]}
-                        onValueChange={(value) => updateStyles({ [key]: `${value[0]}px` })}
-                        max={100}
-                        min={0}
-                        step={1}
-                      />
-                      <div className="text-center text-xs text-gray-500">
-                        {displayValue}px
-                      </div>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => updateStyles({ [key]: '0px' })}
-                        className="w-full h-7 text-xs"
-                      >
-                        Resetear a 0
-                      </Button>
-                    </div>
-                  </PopoverContent>
-                </Popover>
+                <div key={key} className="flex items-center space-x-3">
+                  <Label className="text-xs text-gray-600 w-20 text-left">{label}</Label>
+                  <div className="flex-1">
+                    <Slider
+                      value={[parseInt(displayValue)]}
+                      onValueChange={(value) => updateStyles({ [key]: `${value[0]}px` })}
+                      max={100}
+                      min={0}
+                      step={1}
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="w-12 text-right">
+                    <span className="text-xs font-mono text-gray-700">{displayValue}px</span>
+                  </div>
+                </div>
               );
             })}
           </div>
