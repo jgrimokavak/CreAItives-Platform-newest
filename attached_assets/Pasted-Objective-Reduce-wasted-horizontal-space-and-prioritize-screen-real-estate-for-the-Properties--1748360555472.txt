@@ -1,0 +1,49 @@
+Objective:  
+Reduce wasted horizontal space and prioritize screen real estate for the **Properties panel**, making it easier to use on large screens without compromising content readability.
+
+---
+
+1. Properties Panel Prioritization
+- Increase the **width** of the Properties panel to approx **30–35%** of the screen on large breakpoints (≥1280px).
+- This panel contains the most controls and benefits from more space—give it clear visual dominance when editing.
+
+---
+
+2. Center Panel Optimization (Email Builder)
+- The **Email Builder** panel should adapt to the content (email) and **not stretch** wider than **max-width: 600px**.
+- Keep the email preview **centered** in its panel using flexbox.
+- The column containing the Email Builder can be flexible, but the actual canvas inside it must not exceed 600px.
+
+---
+
+3. Tools Panel Sizing
+- Set the **Tools** panel width to a fixed or max of **20%** on large screens.
+- Prevent it from shrinking too much on smaller breakpoints, but it doesn’t need to compete with Properties or Builder space.
+
+---
+
+4. Remove Excess Gaps
+- Audit `gap`, `px`, and `space-x-*` utilities and **remove any unnecessary padding or margins** around the builder area.
+- Eliminate “empty buffer zones” between columns unless essential for visual clarity.
+
+---
+
+5. Visual Anchoring
+- Keep all columns vertically aligned using consistent flex layouts.
+- Ensure header, tools, and properties panel align cleanly from top to bottom.
+
+---
+
+Testing:
+✔ Properties panel feels roomy and usable on large screens.  
+✔ Email preview is centered and capped at 600px.  
+✔ Tools panel remains functional without dominating space.  
+✔ No horizontal space is wasted across 1440px+ widths.  
+✔ Layout adapts cleanly down to tablet breakpoint without overflow.
+
+---
+
+Constraints:
+- Maintain mobile responsiveness  
+- Don’t hardcode column widths—use `%` or utility classes (e.g. `basis-1/4`, `xl:w-[420px]`)  
+- Layout must scale fluidly between breakpoints

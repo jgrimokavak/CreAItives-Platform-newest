@@ -2306,9 +2306,9 @@ export default function EmailBuilderPage() {
           {/* Builder Tab */}
           <TabsContent value="builder" className="mt-6">
             {selectedTemplate && (
-              <div className="grid grid-cols-12 gap-6" style={{ height: 'calc(100vh - 300px)' }}>
+              <div className="flex gap-3" style={{ height: 'calc(100vh - 300px)' }}>
                 {/* Components Sidebar */}
-                <div className="col-span-3">
+                <div className="w-1/5 xl:w-[20%] flex-shrink-0">
                   <Card className="h-full flex flex-col">
                     <CardHeader className="flex-shrink-0">
                       <CardTitle className="text-lg">Tools</CardTitle>
@@ -2383,7 +2383,7 @@ export default function EmailBuilderPage() {
                 </div>
 
                 {/* Email Builder Canvas */}
-                <div className="col-span-6">
+                <div className="flex-1">
                   <Card className="h-full flex flex-col">
                     <CardHeader className="flex-shrink-0">
                       <div className="flex items-center justify-between">
@@ -2397,8 +2397,8 @@ export default function EmailBuilderPage() {
                       </div>
                     </CardHeader>
                     <CardContent className="p-0 flex-1 flex flex-col">
-                      <div className="flex-1 overflow-y-auto bg-gray-100 p-4">
-                        <div className="max-w-[600px] mx-auto bg-white rounded-lg shadow-sm border">
+                      <div className="flex-1 overflow-y-auto bg-gray-100 p-4 flex justify-center">
+                        <div className="w-full max-w-[600px] bg-white rounded-lg shadow-sm border">
                           {/* Email Subject */}
                           <div className="p-4 border-b bg-gray-50">
                             <Input
@@ -2451,15 +2451,15 @@ export default function EmailBuilderPage() {
                 </div>
 
                 {/* Properties Panel */}
-                <div className="col-span-3">
+                <div className="w-1/3 xl:w-[35%] flex-shrink-0">
                   <Card className="h-full">
                     <CardHeader className="bg-white border-b sticky top-0 z-10">
                       <CardTitle className="text-lg">Properties</CardTitle>
                     </CardHeader>
                     <div className="flex-1 overflow-y-auto" style={{ height: 'calc(100vh - 380px)' }}>
-                      <CardContent className="p-6">
+                      <CardContent className="p-4">
                         {selectedComponent ? (
-                          <div className="space-y-6">
+                          <div className="space-y-4">
                             {renderComponentProperties(emailComponents.find(c => c.id === selectedComponent)!)}
                           </div>
                         ) : (
