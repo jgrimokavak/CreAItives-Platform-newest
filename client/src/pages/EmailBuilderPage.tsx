@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Mail, Download, Eye, Sparkles, FileText, Gift, Newspaper, Loader2, Plus, Trash2, Image, Upload, Save, Sliders, GripVertical } from 'lucide-react';
+import { Mail, Download, Eye, Sparkles, FileText, Gift, Newspaper, Loader2, Plus, Trash2, Image, Upload, Save, Sliders, GripVertical, Maximize, AlignCenter, AlignLeft, AlignRight, Square, Link, Type, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery } from '@tanstack/react-query';
@@ -83,10 +83,10 @@ interface EmailComponent {
 }
 
 const componentTypes = [
-  { type: 'text', name: 'Texto', icon: <FileText className="h-4 w-4" />, description: 'Párrafo de texto' },
-  { type: 'image', name: 'Imagen', icon: <Image className="h-4 w-4" />, description: 'Imagen o logo' },
-  { type: 'button', name: 'Botón', icon: <Mail className="h-4 w-4" />, description: 'Botón de acción' },
-  { type: 'spacer', name: 'Espaciador', icon: <Plus className="h-4 w-4" />, description: 'Espacio en blanco' }
+  { type: 'text', name: 'Text', icon: <FileText className="h-4 w-4" />, description: 'Text paragraph' },
+  { type: 'image', name: 'Image', icon: <Image className="h-4 w-4" />, description: 'Image or logo' },
+  { type: 'button', name: 'Button', icon: <Mail className="h-4 w-4" />, description: 'Action button' },
+  { type: 'spacer', name: 'Spacer', icon: <Plus className="h-4 w-4" />, description: 'Blank space' }
 ];
 
 export default function EmailBuilderPage() {
@@ -1132,23 +1132,30 @@ export default function EmailBuilderPage() {
 
       case 'image':
         return (
-          <div className="h-full flex flex-col space-y-4">
-            {/* Image Source */}
-            <div className="space-y-3">
-              <Label className="font-medium text-sm">Image Source</Label>
-              <div className="space-y-2">
+          <div className="h-full flex flex-col space-y-6">
+            {/* Image Source Section */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="font-semibold text-base text-gray-800">Image Source</Label>
+                <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+                  <Image className="w-3 h-3 text-blue-600" />
+                </div>
+              </div>
+              
+              <div className="space-y-3">
                 <Input
                   value={component.content.src || ''}
                   onChange={(e) => updateContent({ src: e.target.value })}
-                  placeholder="https://..."
-                  className="h-9"
+                  placeholder="Paste image URL here..."
+                  className="h-10 text-sm"
                 />
+                
                 <div className="grid grid-cols-3 gap-2">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setShowImageGallery(true)}
-                    className="h-9 text-xs"
+                    className="h-9 text-xs border-dashed"
                   >
                     <Image className="h-3 w-3 mr-1" />
                     Gallery
@@ -1156,7 +1163,7 @@ export default function EmailBuilderPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-9 text-xs"
+                    className="h-9 text-xs border-dashed"
                   >
                     <Upload className="h-3 w-3 mr-1" />
                     Upload
@@ -1164,105 +1171,233 @@ export default function EmailBuilderPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-9 text-xs"
+                    className="h-9 text-xs border-dashed"
                   >
                     <Sparkles className="h-3 w-3 mr-1" />
                     Generate
                   </Button>
                 </div>
-              </div>
-            </div>
-
-            {/* Alt Text */}
-            <div className="space-y-2">
-              <Label className="font-medium text-sm">Properties</Label>
-              <div className="space-y-2">
-                <Label className="text-xs text-gray-600">Alt text</Label>
-                <Input
-                  value={component.content.alt || ''}
-                  onChange={(e) => updateContent({ alt: e.target.value })}
-                  placeholder="Image description"
-                  className="h-9"
-                />
-              </div>
-            </div>
-
-            {/* Dimensions */}
-            <div className="space-y-3">
-              <Label className="font-medium text-sm">Dimensions</Label>
-              <div className="grid grid-cols-2 gap-3">
+                
                 <div className="space-y-2">
-                  <Label className="text-xs text-gray-600">Width</Label>
+                  <Label className="text-xs text-gray-600 uppercase tracking-wide">Alt text (accessibility)</Label>
                   <Input
-                    value={component.styles.width || '100%'}
-                    onChange={(e) => updateStyles({ width: e.target.value })}
-                    placeholder="100%"
-                    className="h-9"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs text-gray-600">Height</Label>
-                  <Input
-                    value={component.styles.height || 'auto'}
-                    onChange={(e) => updateStyles({ height: e.target.value })}
-                    placeholder="auto"
-                    className="h-9"
+                    value={component.content.alt || ''}
+                    onChange={(e) => updateContent({ alt: e.target.value })}
+                    placeholder="Describe the image..."
+                    className="h-9 text-sm"
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label className="text-xs text-gray-600">Object fit</Label>
-                  <Select 
-                    value={component.styles.objectFit || 'cover'} 
-                    onValueChange={(value) => updateStyles({ objectFit: value })}
-                  >
-                    <SelectTrigger className="h-9 w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="contain">Contain</SelectItem>
-                      <SelectItem value="cover">Cover</SelectItem>
-                      <SelectItem value="fill">Fill</SelectItem>
-                      <SelectItem value="none">None</SelectItem>
-                    </SelectContent>
-                  </Select>
+            </div>
+
+            {/* Size & Dimensions Section */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="font-semibold text-base text-gray-800">Size & Dimensions</Label>
+                <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
+                  <Maximize className="w-3 h-3 text-green-600" />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-xs text-gray-600">Alignment</Label>
-                  <Select 
-                    value={component.styles.textAlign || 'center'} 
-                    onValueChange={(value) => updateStyles({ textAlign: value })}
-                  >
-                    <SelectTrigger className="h-9 w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="left">Left</SelectItem>
-                      <SelectItem value="center">Center</SelectItem>
-                      <SelectItem value="right">Right</SelectItem>
-                    </SelectContent>
-                  </Select>
+              </div>
+
+              {/* Auto Size Toggle */}
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                <div className="flex flex-col">
+                  <Label className="text-sm font-medium">Auto Size</Label>
+                  <span className="text-xs text-gray-500">Let image use its natural dimensions</span>
                 </div>
+                <Button
+                  variant={component.styles.autoSize === 'true' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => updateStyles({ 
+                    autoSize: component.styles.autoSize === 'true' ? 'false' : 'true',
+                    width: component.styles.autoSize === 'true' ? '400px' : 'auto',
+                    height: component.styles.autoSize === 'true' ? '300px' : 'auto'
+                  })}
+                  className="h-8"
+                >
+                  {component.styles.autoSize === 'true' ? 'ON' : 'OFF'}
+                </Button>
+              </div>
+
+              {/* Width Control */}
+              {component.styles.autoSize !== 'true' && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium">Width</Label>
+                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                      {stripPx(component.styles.width || '400px')}px
+                    </span>
+                  </div>
+                  <Slider
+                    value={[parseInt(stripPx(component.styles.width || '400px'))]}
+                    onValueChange={(value) => updateStyles({ width: `${value[0]}px` })}
+                    max={800}
+                    min={50}
+                    step={10}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-gray-400">
+                    <span>50px</span>
+                    <span>800px</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Height Control */}
+              {component.styles.autoSize !== 'true' && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium">Height</Label>
+                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                      {stripPx(component.styles.height || '300px')}px
+                    </span>
+                  </div>
+                  <Slider
+                    value={[parseInt(stripPx(component.styles.height || '300px'))]}
+                    onValueChange={(value) => updateStyles({ height: `${value[0]}px` })}
+                    max={600}
+                    min={50}
+                    step={10}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-gray-400">
+                    <span>50px</span>
+                    <span>600px</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Alignment Section */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="font-semibold text-base text-gray-800">Alignment</Label>
+                <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center">
+                  <AlignCenter className="w-3 h-3 text-purple-600" />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { value: 'left', label: 'Left', icon: <AlignLeft className="w-4 h-4" /> },
+                  { value: 'center', label: 'Center', icon: <AlignCenter className="w-4 h-4" /> },
+                  { value: 'right', label: 'Right', icon: <AlignRight className="w-4 h-4" /> }
+                ].map((align) => (
+                  <Button
+                    key={align.value}
+                    variant={component.styles.textAlign === align.value ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => updateStyles({ textAlign: align.value })}
+                    className="h-10 flex flex-col items-center justify-center gap-1"
+                  >
+                    {align.icon}
+                    <span className="text-xs">{align.label}</span>
+                  </Button>
+                ))}
               </div>
             </div>
 
-            {/* Link */}
-            <div className="space-y-2">
-              <Label className="text-xs text-gray-600">Link (optional)</Label>
+            {/* Link Section */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="font-semibold text-base text-gray-800">Link (Optional)</Label>
+                <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center">
+                  <Link className="w-3 h-3 text-orange-600" />
+                </div>
+              </div>
+              
               <Input
                 value={component.content.link || ''}
                 onChange={(e) => updateContent({ link: e.target.value })}
-                placeholder="https://..."
-                className="h-9"
+                placeholder="https://example.com"
+                className="h-10 text-sm"
               />
+              <p className="text-xs text-gray-500">Make the image clickable by adding a link</p>
             </div>
 
-            {/* Spacing */}
-            {renderSpacingControls(component, updateStyles, '10px', '0px')}
+            {/* Borders Section */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="font-semibold text-base text-gray-800">Borders</Label>
+                <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center">
+                  <Square className="w-3 h-3 text-indigo-600" />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Border Color</Label>
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      type="color"
+                      value={component.styles.borderColor || '#e5e7eb'}
+                      onChange={(e) => updateStyles({ borderColor: e.target.value })}
+                      className="w-12 h-8 p-1 rounded border"
+                    />
+                    <span className="text-xs text-gray-600 flex-1">Border</span>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Border Width</Label>
+                  <div className="space-y-2">
+                    <Slider
+                      value={[parseInt(stripPx(component.styles.borderWidth || '0px'))]}
+                      onValueChange={(value) => updateStyles({ 
+                        borderWidth: `${value[0]}px`,
+                        borderStyle: value[0] > 0 ? 'solid' : 'none'
+                      })}
+                      max={10}
+                      min={0}
+                      step={1}
+                      className="w-full"
+                    />
+                    <div className="text-center text-xs text-gray-500">
+                      {stripPx(component.styles.borderWidth || '0px')}px
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-            {/* Layout */}
-            {renderLayoutControls(component, updateStyles)}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Border Radius</Label>
+                  <div className="space-y-2">
+                    <Slider
+                      value={[parseInt(stripPx(component.styles.borderRadius || '0px'))]}
+                      onValueChange={(value) => updateStyles({ borderRadius: `${value[0]}px` })}
+                      max={50}
+                      min={0}
+                      step={1}
+                      className="w-full"
+                    />
+                    <div className="text-center text-xs text-gray-500">
+                      {stripPx(component.styles.borderRadius || '0px')}px
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Transparency</Label>
+                  <div className="space-y-2">
+                    <Slider
+                      value={[parseFloat(component.styles.opacity || '1') * 100]}
+                      onValueChange={(value) => updateStyles({ opacity: (value[0] / 100).toString() })}
+                      max={100}
+                      min={0}
+                      step={5}
+                      className="w-full"
+                    />
+                    <div className="text-center text-xs text-gray-500">
+                      {Math.round(parseFloat(component.styles.opacity || '1') * 100)}%
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Spacing Section */}
+            {renderSpacingControls(component, updateStyles, '10px', '0px')}
           </div>
         );
 
