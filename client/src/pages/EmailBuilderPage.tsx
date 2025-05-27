@@ -1441,7 +1441,7 @@ export default function EmailBuilderPage() {
             <div className="space-y-3">
               <Label className="font-medium text-sm">Layout</Label>
               <div className="space-y-2">
-                <Label className="text-xs text-gray-600">Alineación</Label>
+                <Label className="text-xs text-gray-600">Alignment</Label>
                 <Select 
                   value={component.styles.textAlign || 'center'} 
                   onValueChange={(value) => updateStyles({ textAlign: value })}
@@ -1450,9 +1450,9 @@ export default function EmailBuilderPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="left">Izquierda</SelectItem>
-                    <SelectItem value="center">Centro</SelectItem>
-                    <SelectItem value="right">Derecha</SelectItem>
+                    <SelectItem value="left">Left</SelectItem>
+                    <SelectItem value="center">Center</SelectItem>
+                    <SelectItem value="right">Right</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1480,9 +1480,9 @@ export default function EmailBuilderPage() {
           <div className="h-full flex flex-col space-y-4">
             {/* Height */}
             <div className="space-y-3">
-              <Label className="font-medium text-sm">Propiedades</Label>
+              <Label className="font-medium text-sm">Properties</Label>
               <div className="space-y-2">
-                <Label className="text-xs text-gray-600">Altura del espaciador</Label>
+                <Label className="text-xs text-gray-600">Spacer height</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="outline" className="w-full h-9 justify-between">
@@ -1492,7 +1492,7 @@ export default function EmailBuilderPage() {
                   </PopoverTrigger>
                   <PopoverContent className="w-64">
                     <div className="space-y-3">
-                      <Label className="text-sm font-medium">Altura del espaciador</Label>
+                      <Label className="text-sm font-medium">Spacer height</Label>
                       <Slider
                         value={[parseInt(stripPx(component.styles.height || '20px'))]}
                         onValueChange={(value) => updateStyles({ height: `${value[0]}px` })}
@@ -1514,9 +1514,9 @@ export default function EmailBuilderPage() {
 
             {/* Colors */}
             <div className="space-y-3">
-              <Label className="font-medium text-sm">Colores</Label>
+              <Label className="font-medium text-sm">Colors</Label>
               <div className="space-y-2">
-                <Label className="text-xs text-gray-600">Color de fondo (opcional)</Label>
+                <Label className="text-xs text-gray-600">Background color (optional)</Label>
                 <div className="flex items-center space-x-2">
                   <Input
                     type="color"
@@ -1524,14 +1524,14 @@ export default function EmailBuilderPage() {
                     onChange={(e) => updateStyles({ backgroundColor: e.target.value })}
                     className="w-12 h-8 p-1"
                   />
-                  <span className="text-xs">Fondo</span>
+                  <span className="text-xs">Background</span>
                 </div>
               </div>
             </div>
 
             {/* Spacing (Simplified for spacer) */}
             <div className="space-y-3">
-              <Label className="font-medium text-sm">Espaciado</Label>
+              <Label className="font-medium text-sm">Spacing</Label>
               <div className="space-y-3">
                 <div className="space-y-2">
                   <Label className="text-xs text-gray-600">Margin</Label>
@@ -1670,21 +1670,21 @@ export default function EmailBuilderPage() {
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Email CreAItor</h1>
-          <p className="text-gray-600">Crea emails profesionales para KAVAK con inteligencia artificial</p>
+          <p className="text-gray-600">Create professional emails for KAVAK with artificial intelligence</p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="templates">1. Plantillas</TabsTrigger>
-            <TabsTrigger value="builder" disabled={!selectedTemplate}>2. Constructor</TabsTrigger>
-            <TabsTrigger value="preview" disabled={!selectedTemplate}>3. Vista Previa</TabsTrigger>
+            <TabsTrigger value="templates">1. Templates</TabsTrigger>
+            <TabsTrigger value="builder" disabled={!selectedTemplate}>2. Builder</TabsTrigger>
+            <TabsTrigger value="preview" disabled={!selectedTemplate}>3. Preview</TabsTrigger>
           </TabsList>
 
           {/* Templates Tab */}
           <TabsContent value="templates" className="mt-6">
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Selecciona una Plantilla</h2>
-              <p className="text-gray-600">Comienza eligiendo una plantilla para tu email de KAVAK</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Select a Template</h2>
+              <p className="text-gray-600">Start by choosing a template for your KAVAK email</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
               {emailTemplates.map((template) => (
@@ -1714,7 +1714,7 @@ export default function EmailBuilderPage() {
                     {selectedTemplate === template.id && (
                       <div className="text-center">
                         <Button size="sm" onClick={() => setActiveTab('builder')}>
-                          Continuar →
+                          Continue →
                         </Button>
                       </div>
                     )}
@@ -1732,21 +1732,21 @@ export default function EmailBuilderPage() {
                 <div className="col-span-3">
                   <Card className="h-full">
                     <CardHeader>
-                      <CardTitle className="text-lg">Herramientas</CardTitle>
+                      <CardTitle className="text-lg">Tools</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-6">
                       {/* AI Generation */}
                       <div className="space-y-3 pb-4 border-b">
-                        <Label className="font-semibold">Generación con IA</Label>
+                        <Label className="font-semibold">AI Generation</Label>
                         <Select value={tone} onValueChange={(value: any) => setTone(value)}>
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="friendly">Amigable</SelectItem>
-                            <SelectItem value="professional">Profesional</SelectItem>
-                            <SelectItem value="urgent">Urgente</SelectItem>
-                            <SelectItem value="promotional">Promocional</SelectItem>
+                            <SelectItem value="friendly">Friendly</SelectItem>
+                            <SelectItem value="professional">Professional</SelectItem>
+                            <SelectItem value="urgent">Urgent</SelectItem>
+                            <SelectItem value="promotional">Promotional</SelectItem>
                           </SelectContent>
                         </Select>
                         <Button 
@@ -1759,13 +1759,13 @@ export default function EmailBuilderPage() {
                           ) : (
                             <Sparkles className="h-4 w-4 mr-2" />
                           )}
-                          Generar Contenido
+                          Generate Content
                         </Button>
                       </div>
 
                       {/* Component Library */}
                       <div className="space-y-3">
-                        <Label className="font-semibold">Agregar Componentes</Label>
+                        <Label className="font-semibold">Add Components</Label>
                         <div className="space-y-2">
                           {componentTypes.map((componentType) => (
                             <Button
@@ -1783,11 +1783,11 @@ export default function EmailBuilderPage() {
 
                       {/* Template Saving */}
                       <div className="space-y-3 pt-4 border-t">
-                        <Label className="font-semibold">Guardar Plantilla</Label>
+                        <Label className="font-semibold">Save Template</Label>
                         <Input
                           value={templateName}
                           onChange={(e) => setTemplateName(e.target.value)}
-                          placeholder="Nombre de la plantilla"
+                          placeholder="Template name"
                         />
                         <Button 
                           className="w-full" 
@@ -1796,7 +1796,7 @@ export default function EmailBuilderPage() {
                           variant="secondary"
                         >
                           <Save className="h-4 w-4 mr-2" />
-                          Guardar
+                          Save
                         </Button>
                       </div>
                     </CardContent>
@@ -1808,12 +1808,12 @@ export default function EmailBuilderPage() {
                   <Card className="h-full">
                     <CardHeader>
                       <div className="flex items-center justify-between">
-                        <CardTitle>Constructor de Email</CardTitle>
+                        <CardTitle>Email Builder</CardTitle>
                         <Button 
                           onClick={() => setActiveTab('preview')}
                           size="sm"
                         >
-                          Vista Previa →
+                          Preview →
                         </Button>
                       </div>
                     </CardHeader>
@@ -1825,7 +1825,7 @@ export default function EmailBuilderPage() {
                             <Input
                               value={emailContent.subject}
                               onChange={(e) => setEmailContent(prev => ({ ...prev, subject: e.target.value }))}
-                              placeholder="Asunto del email"
+                              placeholder="Email subject"
                               className="font-semibold bg-white"
                             />
                           </div>
