@@ -1835,8 +1835,8 @@ export default function EmailBuilderPage() {
                             {emailComponents.length === 0 ? (
                               <div className="text-center py-8 text-gray-500">
                                 <Mail className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                                <p>Agrega componentes para comenzar a construir tu email</p>
-                                <p className="text-sm mt-2">🚀 Arrastra y suelta para reordenar</p>
+                                <p>Add components to start building your email</p>
+                                <p className="text-sm mt-2">🚀 Drag and drop to reorder</p>
                               </div>
                             ) : (
                               <DndContext 
@@ -1875,7 +1875,7 @@ export default function EmailBuilderPage() {
                 <div className="col-span-3">
                   <Card className="h-full">
                     <CardHeader>
-                      <CardTitle className="text-lg">Propiedades</CardTitle>
+                      <CardTitle className="text-lg">Properties</CardTitle>
                     </CardHeader>
                     <CardContent>
                       {selectedComponent ? (
@@ -1883,7 +1883,7 @@ export default function EmailBuilderPage() {
                           {renderComponentProperties(emailComponents.find(c => c.id === selectedComponent)!)}
                         </div>
                       ) : (
-                        <p className="text-gray-500 text-sm">Selecciona un componente para editarlo</p>
+                        <p className="text-gray-500 text-sm">Select a component to edit it</p>
                       )}
                     </CardContent>
                   </Card>
@@ -1897,11 +1897,11 @@ export default function EmailBuilderPage() {
             {selectedTemplate && (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-semibold">Vista Previa Final</h3>
+                  <h3 className="text-xl font-semibold">Final Preview</h3>
                   <div className="flex space-x-3">
                     <Button onClick={handlePreviewEmail} variant="outline">
                       <Eye className="h-4 w-4 mr-2" />
-                      Abrir en Nueva Ventana
+                      Open in New Window
                     </Button>
                     <Button onClick={() => {
                       const htmlContent = generateEmailHTML();
@@ -1914,7 +1914,7 @@ export default function EmailBuilderPage() {
                       URL.revokeObjectURL(url);
                     }}>
                       <Download className="h-4 w-4 mr-2" />
-                      Descargar HTML
+                      Download HTML
                     </Button>
                   </div>
                 </div>
@@ -1936,12 +1936,12 @@ export default function EmailBuilderPage() {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Seleccionar Imagen de la Galería</h3>
+                <h3 className="text-lg font-semibold">Select Image from Gallery</h3>
                 <Button
                   variant="outline"
                   onClick={() => setShowImageGallery(false)}
                 >
-                  Cerrar
+                  Close
                 </Button>
               </div>
               
@@ -1959,13 +1959,13 @@ export default function EmailBuilderPage() {
                     />
                     <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all flex items-center justify-center">
                       <Button className="opacity-0 group-hover:opacity-100 transition-opacity">
-                        Seleccionar
+                        Select
                       </Button>
                     </div>
                   </div>
                 )) || (
                   <div className="col-span-full text-center py-8">
-                    <p className="text-gray-500">No hay imágenes en la galería</p>
+                    <p className="text-gray-500">No images in gallery</p>
                   </div>
                 )}
               </div>
