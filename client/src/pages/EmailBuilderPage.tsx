@@ -2245,8 +2245,8 @@ export default function EmailBuilderPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gray-50 p-6 xl:p-8">
+      <div className="max-w-[1600px] mx-auto xl:gap-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Email CreAItor</h1>
           <p className="text-gray-600">Create professional emails for KAVAK with artificial intelligence</p>
@@ -2306,14 +2306,14 @@ export default function EmailBuilderPage() {
           {/* Builder Tab */}
           <TabsContent value="builder" className="mt-6">
             {selectedTemplate && (
-              <div className="grid grid-cols-12 gap-6" style={{ height: 'calc(100vh - 300px)' }}>
+              <div className="grid grid-cols-12 gap-6 xl:gap-8" style={{ height: 'calc(100vh - 300px)' }}>
                 {/* Components Sidebar */}
-                <div className="col-span-3">
-                  <Card className="h-full">
-                    <CardHeader>
-                      <CardTitle className="text-lg">Tools</CardTitle>
+                <div className="col-span-3 xl:col-span-2">
+                  <Card className="h-full flex flex-col">
+                    <CardHeader className="flex-shrink-0">
+                      <CardTitle className="text-lg xl:text-xl">Tools</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-6">
+                    <CardContent className="flex-1 overflow-y-auto space-y-6 xl:space-y-8">
                       {/* AI Generation */}
                       <div className="space-y-3 pb-4 border-b">
                         <Label className="font-semibold">AI Generation</Label>
@@ -2329,7 +2329,7 @@ export default function EmailBuilderPage() {
                           </SelectContent>
                         </Select>
                         <Button 
-                          className="w-full" 
+                          className="w-full xl:py-3 xl:text-base" 
                           onClick={handleGenerateContent}
                           disabled={isGenerating}
                         >
@@ -2350,7 +2350,7 @@ export default function EmailBuilderPage() {
                             <Button
                               key={componentType.type}
                               variant="outline"
-                              className="w-full justify-start"
+                              className="w-full justify-start xl:py-3 xl:text-base"
                               onClick={() => addComponent(componentType.type)}
                             >
                               {componentType.icon}
@@ -2383,22 +2383,23 @@ export default function EmailBuilderPage() {
                 </div>
 
                 {/* Email Builder Canvas */}
-                <div className="col-span-6">
-                  <Card className="h-full">
-                    <CardHeader>
+                <div className="col-span-6 xl:col-span-7">
+                  <Card className="h-full flex flex-col">
+                    <CardHeader className="flex-shrink-0">
                       <div className="flex items-center justify-between">
-                        <CardTitle>Email Builder</CardTitle>
+                        <CardTitle className="text-lg xl:text-xl">Email Builder</CardTitle>
                         <Button 
                           onClick={() => setActiveTab('preview')}
                           size="sm"
+                          className="xl:px-6"
                         >
                           Preview →
                         </Button>
                       </div>
                     </CardHeader>
-                    <CardContent className="p-0">
-                      <div className="h-full overflow-y-auto bg-gray-100 p-4">
-                        <div className="max-w-lg mx-auto bg-white rounded-lg shadow-sm border">
+                    <CardContent className="p-0 flex-1 flex flex-col">
+                      <div className="flex-1 overflow-y-auto bg-gray-100 p-4 xl:p-6">
+                        <div className="max-w-lg xl:max-w-xl mx-auto bg-white rounded-lg shadow-sm border">
                           {/* Email Subject */}
                           <div className="p-4 border-b bg-gray-50">
                             <Input
@@ -2451,18 +2452,18 @@ export default function EmailBuilderPage() {
                 </div>
 
                 {/* Properties Panel */}
-                <div className="col-span-3">
-                  <Card className="h-full">
-                    <CardHeader>
-                      <CardTitle className="text-lg">Properties</CardTitle>
+                <div className="col-span-3 xl:col-span-3">
+                  <Card className="h-full flex flex-col">
+                    <CardHeader className="flex-shrink-0">
+                      <CardTitle className="text-lg xl:text-xl">Properties</CardTitle>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="flex-1 overflow-y-auto">
                       {selectedComponent ? (
-                        <div className="space-y-4">
+                        <div className="space-y-4 xl:space-y-6">
                           {renderComponentProperties(emailComponents.find(c => c.id === selectedComponent)!)}
                         </div>
                       ) : (
-                        <p className="text-gray-500 text-sm">Select a component to edit it</p>
+                        <p className="text-gray-500 text-sm xl:text-base">Select a component to edit it</p>
                       )}
                     </CardContent>
                   </Card>

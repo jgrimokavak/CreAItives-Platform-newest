@@ -1,0 +1,62 @@
+Objective:  
+Improve overall layout responsiveness and usability across screen sizes by:
+1) Enabling independent scroll behavior in the properties panel  
+2) Ensuring full-height responsiveness  
+3) Expanding and optimizing layout on large screens for better use of horizontal space
+
+---
+
+PART 1 — Properties Panel Scroll & Responsiveness
+
+1. Independent Scrolling  
+- The **Properties panel** must scroll independently from the canvas/preview panel.
+- Add a vertical scrollbar to the properties panel container.
+- Ensure scrolling the property controls does **not** affect the preview panel.
+
+2. Full-Height Panel  
+- Set the Properties panel container height to `100vh` (full viewport height).
+- Ensure it adjusts fluidly to different screen sizes with no clipping or overflow.
+
+3. Mobile/Tablet Behavior  
+- Layout must degrade gracefully on smaller screens (responsive fallback required).
+- The scroll behavior and full-height constraint must remain functional across breakpoints.
+
+---
+
+PART 2 — Layout Expansion for Larger Screens
+
+1. Expand Max Width  
+- Increase the `max-width` of the main layout container (`builderWrapper`, `mainLayout`, etc.) to `1440px` or `1600px`.
+- Use `margin: 0 auto` to center the layout on widescreens.
+
+2. Internal Column Widths  
+- Redistribute column widths:
+  • `Email Builder` center panel: expand to 50–60% width  
+  • `Properties` and `Tools` side panels: expand to ~20–25% each, if space allows
+
+3. Add Horizontal Padding / Gaps  
+- On screens `min-width: 1280px`, add:
+  • `gap: 24px` between layout columns  
+  • `padding-inline: 32px` to prevent edge hugging
+
+4. Responsive Breakpoints  
+- Use `@media (min-width: 1280px)`:
+  • Slightly increase font sizes, slider widths, button paddings  
+  • Optimize UI density for large monitors without stretching content too far
+
+---
+
+Testing:
+✔ Properties panel scrolls independently with no layout shifts  
+✔ Panel always fits the full viewport height (no clipping)  
+✔ Layout feels balanced on 1440px and 1920px screens  
+✔ No element exceeds readability bounds  
+✔ Responsive behavior is preserved down to mobile
+
+---
+
+Reminders & Constraints:
+- Do NOT break tablet or mobile layouts  
+- Fixed-position UI (nav, sidebar) must remain visually anchored  
+- Keep spacing, max-width rules consistent across all app sections  
+- Use fluid units and avoid hardcoded pixel widths where possible
