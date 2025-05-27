@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Mail, Download, Eye, Sparkles, FileText, Gift, Newspaper, Loader2, Plus, Trash2, Image, Upload, Save, Sliders, GripVertical, Maximize, AlignCenter, AlignLeft, AlignRight, Square, Link, Type, Minus } from 'lucide-react';
+import { Mail, Download, Eye, Sparkles, FileText, Gift, Newspaper, Loader2, Plus, Trash2, Image, Upload, Save, Sliders, GripVertical, Maximize, AlignCenter, AlignLeft, AlignRight, Square, Link, Type, Minus, Settings, Palette, Link2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery } from '@tanstack/react-query';
@@ -1587,11 +1587,9 @@ export default function EmailBuilderPage() {
 
             {/* Link Section */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label className="font-semibold text-base text-gray-800">Link (Optional)</Label>
-                <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center">
-                  <Link className="w-3 h-3 text-orange-600" />
-                </div>
+              <div className="inline-flex items-center gap-2 bg-orange-100 text-orange-800 px-3 py-1.5 rounded-full">
+                <Link className="w-4 h-4" />
+                <span className="text-sm font-semibold">Link (Optional)</span>
               </div>
               
               <Input
