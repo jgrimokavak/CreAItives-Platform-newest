@@ -2514,18 +2514,19 @@ export default function EmailBuilderPage() {
         {/* Image Gallery Modal */}
         {showImageGallery && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Select Image from Gallery</h3>
+            <div className="bg-white rounded-lg p-6 xl:p-8 max-w-6xl xl:max-w-7xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-4 xl:mb-6">
+                <h3 className="text-lg xl:text-xl font-semibold">Select Image from Gallery</h3>
                 <Button
                   variant="outline"
                   onClick={() => setShowImageGallery(false)}
+                  className="xl:px-6"
                 >
                   Close
                 </Button>
               </div>
               
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-4 xl:gap-6">
                 {galleryImages?.items?.map((image: any) => (
                   <div
                     key={image.id}
