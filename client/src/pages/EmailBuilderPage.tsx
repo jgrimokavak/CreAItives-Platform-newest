@@ -1734,11 +1734,9 @@ export default function EmailBuilderPage() {
 
             {/* Typography Section */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label className="font-semibold text-base text-gray-800">Typography</Label>
-                <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
-                  <Type className="w-3 h-3 text-green-600" />
-                </div>
+              <div className="inline-flex items-center gap-2 bg-green-100 text-green-800 px-3 py-1.5 rounded-full">
+                <Type className="w-4 h-4" />
+                <span className="text-sm font-semibold">Typography</span>
               </div>
               
               {/* Font Family */}
@@ -1817,11 +1815,9 @@ export default function EmailBuilderPage() {
 
             {/* Size & Layout Section */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label className="font-semibold text-base text-gray-800">Size & Layout</Label>
-                <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center">
-                  <Maximize className="w-3 h-3 text-indigo-600" />
-                </div>
+              <div className="inline-flex items-center gap-2 bg-indigo-100 text-indigo-800 px-3 py-1.5 rounded-full">
+                <Maximize className="w-4 h-4" />
+                <span className="text-sm font-semibold">Size & Layout</span>
               </div>
               
               {/* Width & Height */}
