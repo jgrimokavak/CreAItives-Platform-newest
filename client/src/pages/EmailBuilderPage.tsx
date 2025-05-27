@@ -614,7 +614,10 @@ export default function EmailBuilderPage() {
       case 'button':
         return (
           <div style={{ 
-            textAlign: componentStyles.textAlign || 'center',
+            display: 'flex',
+            justifyContent: 
+              componentStyles.textAlign === 'left' ? 'flex-start' :
+              componentStyles.textAlign === 'right' ? 'flex-end' : 'center',
             margin: 0,
             padding: 0,
             paddingTop: componentStyles.paddingTop || '0px',
@@ -626,8 +629,30 @@ export default function EmailBuilderPage() {
             marginBottom: componentStyles.marginBottom || '0px',
             marginLeft: componentStyles.marginLeft || '0px',
           }}>
-            <a href={component.content.href} style={componentStyles}>
-              {component.content.text}
+            <a 
+              href={component.content.href || '#'} 
+              style={{ 
+                textDecoration: 'none',
+                display: 'inline-block',
+                padding: '12px 24px',
+                borderRadius: componentStyles.borderRadius || '4px',
+                color: componentStyles.color || '#ffffff',
+                backgroundColor: componentStyles.backgroundColor || '#1553ec',
+                fontFamily: componentStyles.fontFamily || 'Helvetica, sans-serif',
+                fontSize: componentStyles.fontSize || '16px',
+                fontWeight: componentStyles.fontWeight || 'bold',
+                width: componentStyles.width || 'auto',
+                height: componentStyles.height || '40px',
+                textAlign: 'center',
+                lineHeight: componentStyles.height ? `${Math.max(parseInt(stripPx(componentStyles.height)) - 24, 16)}px` : 'normal',
+                borderWidth: componentStyles.borderWidth || '0px',
+                borderStyle: componentStyles.borderWidth && parseInt(stripPx(componentStyles.borderWidth)) > 0 ? 'solid' : 'none',
+                borderColor: componentStyles.borderColor || '#1553ec',
+                boxSizing: 'border-box',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              {component.content.text || 'Button'}
             </a>
           </div>
         );
@@ -1669,39 +1694,58 @@ export default function EmailBuilderPage() {
 
       case 'button':
         return (
-          <div className="h-full flex flex-col space-y-4">
-            {/* Content */}
-            <div className="space-y-3">
-              <Label className="font-medium text-sm">Content</Label>
-              <div className="space-y-2">
-                <Label className="text-xs text-gray-600">Button text</Label>
-                <Input
-                  value={component.content.text || ''}
-                  onChange={(e) => updateContent({ text: e.target.value })}
-                  placeholder="Button text"
-                  className="h-9"
-                />
-                <Label className="text-xs text-gray-600">Link</Label>
-                <Input
-                  value={component.content.href || ''}
-                  onChange={(e) => updateContent({ href: e.target.value })}
-                  placeholder="https://..."
-                  className="h-9"
-                />
+          <div className="h-full flex flex-col space-y-6">
+            {/* General Section */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="font-semibold text-base text-gray-800">General</Label>
+                <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+                  <Type className="w-3 h-3 text-blue-600" />
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Button Text</Label>
+                  <Input
+                    value={component.content.text || ''}
+                    onChange={(e) => updateContent({ text: e.target.value })}
+                    placeholder="Enter button text..."
+                    className="h-10"
+                  />
+                  <p className="text-xs text-gray-500">The text that appears on the button</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Link URL</Label>
+                  <Input
+                    value={component.content.href || ''}
+                    onChange={(e) => updateContent({ href: e.target.value })}
+                    placeholder="https://example.com"
+                    className="h-10"
+                  />
+                  <p className="text-xs text-gray-500">Where the button links when clicked</p>
+                </div>
               </div>
             </div>
 
-            {/* Typography (Button-specific) */}
-            <div className="space-y-3">
-              <Label className="font-medium text-sm">Typography</Label>
+            {/* Typography Section */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="font-semibold text-base text-gray-800">Typography</Label>
+                <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
+                  <Type className="w-3 h-3 text-green-600" />
+                </div>
+              </div>
               
+              {/* Font Family */}
               <div className="space-y-2">
-                <Label className="text-xs text-gray-600">Font</Label>
+                <Label className="text-sm font-medium">Font Family</Label>
                 <Select 
                   value={component.styles.fontFamily || 'Helvetica, sans-serif'} 
                   onValueChange={(value) => updateStyles({ fontFamily: value })}
                 >
-                  <SelectTrigger className="h-9 w-full">
+                  <SelectTrigger className="h-10 w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1711,44 +1755,36 @@ export default function EmailBuilderPage() {
                 </Select>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label className="text-xs text-gray-600">Size</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full h-9 justify-between">
-                        {stripPx(component.styles.fontSize || '16px')}px
-                        <Sliders className="h-4 w-4" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-64">
-                      <div className="space-y-3">
-                        <Label className="text-sm font-medium">Font size</Label>
-                        <Slider
-                          value={[parseInt(stripPx(component.styles.fontSize || '16px'))]}
-                          onValueChange={(value) => updateStyles({ fontSize: `${value[0]}px` })}
-                          max={48}
-                          min={8}
-                          step={1}
-                          className="w-full"
-                        />
-                        <div className="flex justify-between text-xs text-gray-500">
-                          <span>8px</span>
-                          <span>{stripPx(component.styles.fontSize || '16px')}px</span>
-                          <span>48px</span>
-                        </div>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+              {/* Font Size & Weight */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium">Font Size</Label>
+                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                      {stripPx(component.styles.fontSize || '16px')}px
+                    </span>
+                  </div>
+                  <Slider
+                    value={[parseInt(stripPx(component.styles.fontSize || '16px'))]}
+                    onValueChange={(value) => updateStyles({ fontSize: `${value[0]}px` })}
+                    max={32}
+                    min={10}
+                    step={1}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-gray-400">
+                    <span>10px</span>
+                    <span>32px</span>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-xs text-gray-600">Weight</Label>
+                  <Label className="text-sm font-medium">Font Weight</Label>
                   <Select 
                     value={component.styles.fontWeight || 'bold'} 
                     onValueChange={(value) => updateStyles({ fontWeight: value })}
                   >
-                    <SelectTrigger className="h-9 w-full">
+                    <SelectTrigger className="h-10 w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -1760,119 +1796,189 @@ export default function EmailBuilderPage() {
                   </Select>
                 </div>
               </div>
-            </div>
 
-            {/* Colors (Button-specific) */}
-            <div className="space-y-3">
-              <Label className="font-medium text-sm">Colors</Label>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label className="text-xs text-gray-600">Text color</Label>
-                  <div className="flex items-center space-x-2">
-                    <Input
-                      type="color"
-                      value={component.styles.color || '#ffffff'}
-                      onChange={(e) => updateStyles({ color: e.target.value })}
-                      className="w-12 h-8 p-1"
-                    />
-                    <span className="text-xs">Text</span>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs text-gray-600">Background</Label>
-                  <div className="flex items-center space-x-2">
-                    <Input
-                      type="color"
-                      value={component.styles.backgroundColor || '#1553ec'}
-                      onChange={(e) => updateStyles({ backgroundColor: e.target.value })}
-                      className="w-12 h-8 p-1"
-                    />
-                    <span className="text-xs">Background</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Border */}
-            <div className="space-y-3">
-              <Label className="font-medium text-sm">Border</Label>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label className="text-xs text-gray-600">Color</Label>
+              {/* Text Color */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Text Color</Label>
+                <div className="flex items-center space-x-2">
                   <Input
                     type="color"
-                    value={component.styles.borderColor || '#1553ec'}
-                    onChange={(e) => updateStyles({ borderColor: e.target.value })}
-                    className="w-12 h-8 p-1"
+                    value={component.styles.color || '#ffffff'}
+                    onChange={(e) => updateStyles({ color: e.target.value })}
+                    className="w-12 h-10 p-1 rounded border"
                   />
+                  <span className="text-xs text-gray-600 flex-1">Button text color</span>
                 </div>
+              </div>
+            </div>
+
+            {/* Size & Layout Section */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="font-semibold text-base text-gray-800">Size & Layout</Label>
+                <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center">
+                  <Maximize className="w-3 h-3 text-indigo-600" />
+                </div>
+              </div>
+              
+              {/* Width & Height */}
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-xs text-gray-600">Width</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full h-9 justify-between">
-                        {stripPx(component.styles.borderWidth || '0px')}px
-                        <Sliders className="h-4 w-4" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-56">
-                      <div className="space-y-2">
-                        <Label className="text-sm">Border width</Label>
-                        <Slider
-                          value={[parseInt(stripPx(component.styles.borderWidth || '0px'))]}
-                          onValueChange={(value) => updateStyles({ borderWidth: `${value[0]}px` })}
-                          max={10}
-                          min={0}
-                          step={1}
-                        />
-                        <div className="text-center text-xs text-gray-500">
-                          {stripPx(component.styles.borderWidth || '0px')}px
-                        </div>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+                  <Label className="text-sm font-medium">Width</Label>
+                  <Select 
+                    value={component.styles.width || 'auto'} 
+                    onValueChange={(value) => updateStyles({ width: value })}
+                  >
+                    <SelectTrigger className="h-10 w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="auto">Auto</SelectItem>
+                      <SelectItem value="100%">Full Width</SelectItem>
+                      <SelectItem value="200px">200px</SelectItem>
+                      <SelectItem value="250px">250px</SelectItem>
+                      <SelectItem value="300px">300px</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium">Height</Label>
+                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                      {stripPx(component.styles.height || '40px')}px
+                    </span>
+                  </div>
+                  <Slider
+                    value={[parseInt(stripPx(component.styles.height || '40px'))]}
+                    onValueChange={(value) => updateStyles({ height: `${value[0]}px` })}
+                    max={80}
+                    min={30}
+                    step={2}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-gray-400">
+                    <span>30px</span>
+                    <span>80px</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Alignment */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Alignment</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { value: 'left', label: 'Left', icon: <AlignLeft className="w-4 h-4" /> },
+                    { value: 'center', label: 'Center', icon: <AlignCenter className="w-4 h-4" /> },
+                    { value: 'right', label: 'Right', icon: <AlignRight className="w-4 h-4" /> }
+                  ].map((align) => (
+                    <Button
+                      key={align.value}
+                      variant={component.styles.textAlign === align.value ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => updateStyles({ textAlign: align.value })}
+                      className="h-10 flex flex-col items-center justify-center gap-1"
+                    >
+                      {align.icon}
+                      <span className="text-xs">{align.label}</span>
+                    </Button>
+                  ))}
                 </div>
               </div>
             </div>
 
-            {/* Spacing */}
-            {renderSpacingControls(component, updateStyles, '12px', '10px')}
-
-            {/* Layout */}
-            <div className="space-y-3">
-              <Label className="font-medium text-sm">Layout</Label>
-              <div className="space-y-2">
-                <Label className="text-xs text-gray-600">Alignment</Label>
-                <Select 
-                  value={component.styles.textAlign || 'center'} 
-                  onValueChange={(value) => updateStyles({ textAlign: value })}
-                >
-                  <SelectTrigger className="h-9 w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="left">Left</SelectItem>
-                    <SelectItem value="center">Center</SelectItem>
-                    <SelectItem value="right">Right</SelectItem>
-                  </SelectContent>
-                </Select>
+            {/* Styling Section */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="font-semibold text-base text-gray-800">Styling</Label>
+                <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center">
+                  <Square className="w-3 h-3 text-purple-600" />
+                </div>
               </div>
+              
+              {/* Background Color */}
               <div className="space-y-2">
-                <Label className="text-xs text-gray-600">Display</Label>
-                <Select 
-                  value={component.styles.display || 'inline-block'} 
-                  onValueChange={(value) => updateStyles({ display: value })}
-                >
-                  <SelectTrigger className="h-9 w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="inline-block">Inline-block</SelectItem>
-                    <SelectItem value="block">Block</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label className="text-sm font-medium">Background Color</Label>
+                <div className="flex items-center space-x-2">
+                  <Input
+                    type="color"
+                    value={component.styles.backgroundColor || '#1553ec'}
+                    onChange={(e) => updateStyles({ backgroundColor: e.target.value })}
+                    className="w-12 h-10 p-1 rounded border"
+                  />
+                  <span className="text-xs text-gray-600 flex-1">Button background color</span>
+                </div>
+              </div>
+
+              {/* Border Radius */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">Border Radius</Label>
+                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                    {stripPx(component.styles.borderRadius || '4px')}px
+                  </span>
+                </div>
+                <Slider
+                  value={[parseInt(stripPx(component.styles.borderRadius || '4px'))]}
+                  onValueChange={(value) => updateStyles({ borderRadius: `${value[0]}px` })}
+                  max={64}
+                  min={0}
+                  step={1}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-xs text-gray-400">
+                  <span>0px</span>
+                  <span>64px</span>
+                </div>
+              </div>
+
+              {/* Border */}
+              <div className="space-y-4">
+                <Label className="text-sm font-medium">Border</Label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium">Border Color</Label>
+                    <div className="flex items-center space-x-2">
+                      <Input
+                        type="color"
+                        value={component.styles.borderColor || '#1553ec'}
+                        onChange={(e) => updateStyles({ borderColor: e.target.value })}
+                        className="w-12 h-10 p-1 rounded border"
+                      />
+                      <span className="text-xs text-gray-600 flex-1">Border</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-medium">Border Width</Label>
+                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                        {stripPx(component.styles.borderWidth || '0px')}px
+                      </span>
+                    </div>
+                    <Slider
+                      value={[parseInt(stripPx(component.styles.borderWidth || '0px'))]}
+                      onValueChange={(value) => updateStyles({ 
+                        borderWidth: `${value[0]}px`,
+                        borderStyle: value[0] > 0 ? 'solid' : 'none'
+                      })}
+                      max={10}
+                      min={0}
+                      step={1}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-xs text-gray-400">
+                      <span>0px</span>
+                      <span>10px</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
+
+            {/* Spacing Section */}
+            {renderSpacingControls(component, updateStyles, '12px', '10px')}
           </div>
         );
 
