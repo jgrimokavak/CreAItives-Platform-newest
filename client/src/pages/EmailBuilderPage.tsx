@@ -2463,7 +2463,7 @@ export default function EmailBuilderPage() {
           </TabsContent>
 
           {/* Builder Tab */}
-          <TabsContent value="builder" className="mt-6">
+          <TabsContent value="builder" forceMount className="mt-6">
             {selectedTemplate && (
               <div className="flex gap-3" style={{ height: 'calc(100vh - 300px)' }}>
                 {/* Components Sidebar */}
