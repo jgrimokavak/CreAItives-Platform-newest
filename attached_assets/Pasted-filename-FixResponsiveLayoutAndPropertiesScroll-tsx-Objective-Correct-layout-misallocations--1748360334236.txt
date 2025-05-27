@@ -1,0 +1,48 @@
+filename: FixResponsiveLayoutAndPropertiesScroll.tsx
+
+Objective:  
+Correct layout misallocations from the last implementation. The current setup is wasting horizontal space and the Properties panel still doesn’t scroll independently.
+
+---
+
+1. Properties Panel Scroll — NOT WORKING  
+- The Properties panel still doesn’t scroll independently.
+- Fix this by:
+  • Setting the panel container to `overflow-y-auto`  
+  • Wrapping it in a parent with `height: 100vh` or `calc(100vh - headerHeight)`  
+  • Ensuring the internal content can scroll while the top stays anchored  
+- Validate it scrolls independently from the preview panel on all breakpoints.
+
+---
+
+2. Layout Allocation — Adjust Column Priorities
+- The Tools column is too narrow, and the Email Builder column is too wide, wasting screen real estate.  
+- Correct column distribution:
+  • `Tools panel`: ~20% width  
+  • `Email Builder`: Fixed at **max-width: 600px** centered — the email content shouldn’t stretch  
+  • `Properties panel`: ~25–30% width — use extra space to make it more usable
+
+- Remove any hard-coded `col-span-*` that forces the Email Builder to stretch unnecessarily.
+- Center the email preview inside the Email Builder panel — allow the containing column to be flexible, but the actual email canvas should remain 600px max.
+
+---
+
+3. Gap & Alignment
+- Maintain horizontal padding (`gap-8`, `px-8`, etc.) only where it improves readability.
+- Do not let empty whitespace dominate visual layout on large screens.
+
+---
+
+Testing:
+✔ Properties panel scrolls independently from the rest  
+✔ Email canvas is always centered and max 600px wide  
+✔ Properties panel is easier to use on large screens  
+✔ Tools panel remains functional and readable  
+✔ No space is wasted or misallocated across 1440–1920px widths
+
+---
+
+Constraints:
+- Maintain full mobile responsiveness  
+- Don’t hardcode pixel values outside the email canvas  
+- Respect content density, don't introduce excessive whitespace
