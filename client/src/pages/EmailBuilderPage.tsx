@@ -128,10 +128,18 @@ export default function EmailBuilderPage() {
 
   // Helper function to capture live builder HTML with computed styles
   const getBuilderHtml = () => {
-    if (!builderRef.current) return '';
+    console.log('getBuilderHtml called');
+    console.log('builderRef.current:', builderRef.current);
+    
+    if (!builderRef.current) {
+      console.log('builderRef.current is null, returning empty string');
+      return '';
+    }
     
     // Capture the actual HTML structure from the builder
     const html = builderRef.current.outerHTML;
+    console.log('Captured HTML length:', html.length);
+    console.log('HTML preview:', html.substring(0, 200) + '...');
     
     return `<!DOCTYPE html>
 <html>
