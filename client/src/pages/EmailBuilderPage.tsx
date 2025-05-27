@@ -126,120 +126,68 @@ export default function EmailBuilderPage() {
     return isNaN(num) ? '0px' : `${num}px`;
   };
 
-  // Helper function to generate clean HTML that matches the preview exactly
+  // Simple helper function to generate clean HTML from email components
   const getBuilderHtml = () => {
     console.log('getBuilderHtml called');
-    console.log('emailComponents:', emailComponents);
     
-    // Generate clean HTML that matches the preview section exactly
-    const componentsHTML = emailComponents.map((component, index) => {
-      console.log(`Processing component ${index}:`, component);
-      
+    // Generate clean HTML directly from components data
+    const componentsHTML = emailComponents.map((component) => {
       const styles = component.styles || {};
       const content = component.content || {};
       
+      // Convert camelCase to kebab-case for CSS
+      const styleString = Object.entries(styles)
+        .map(([key, value]) => `${key.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value}`)
+        .join('; ');
+      
       switch (component.type) {
         case 'text':
-          return `<div style="${Object.entries(styles).map(([k, v]) => `${k.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${v}`).join('; ')}">${content.text || ''}</div>`;
+          return `<div style="${styleString}">${content.text || ''}</div>`;
         
         case 'image':
           if (!content.src) return '';
-          const imgAlignment = styles.textAlign === 'left' ? 'flex-start' : styles.textAlign === 'right' ? 'flex-end' : 'center';
-          return `<div style="display: flex; justify-content: ${imgAlignment}; ${Object.entries(styles).map(([k, v]) => k !== 'textAlign' ? `${k.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${v}` : '').filter(Boolean).join('; ')}">
-            <img src="${content.src}" alt="${content.alt || ''}" style="max-width: 100%; height: auto;" />
+          return `<div style="${styleString}">
+            <img src="${content.src}" alt="${content.alt || ''}" style="max-width: 100%; height: auto; display: block;" />
           </div>`;
         
         case 'button':
-          const btnAlignment = styles.textAlign === 'left' ? 'flex-start' : styles.textAlign === 'right' ? 'flex-end' : 'center';
-          return `<div style="display: flex; justify-content: ${btnAlignment}; margin: 0; padding: ${styles.paddingTop || '0px'} ${styles.paddingRight || '0px'} ${styles.paddingBottom || '0px'} ${styles.paddingLeft || '0px'};">
-            <a href="${content.href || '#'}" style="${Object.entries(styles).filter(([k]) => !k.includes('padding') && k !== 'textAlign').map(([k, v]) => `${k.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${v}`).join('; ')}">${content.text || 'Click here'}</a>
+          return `<div style="${styleString}">
+            <a href="${content.href || '#'}" style="display: inline-block; text-decoration: none;">${content.text || 'Click here'}</a>
           </div>`;
         
         case 'spacer':
-          return `<div style="${Object.entries(styles).map(([k, v]) => `${k.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${v}`).join('; ')}"></div>`;
+          return `<div style="${styleString}"></div>`;
         
         default:
           return '';
       }
     }).join('\n');
     
-    console.log('Generated components HTML length:', componentsHTML.length);
-    
+    // Return complete HTML document
     return `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${emailContent.subject}</title>
+  <title>${emailContent.subject || 'Email Template'}</title>
   <style>
-    * { box-sizing: border-box; }
-    body { margin: 0; padding: 0; font-family: 'Roboto', 'Helvetica', Arial, sans-serif; background-color: #f5f5f5; }
-    
-    /* Email builder component styles */
-    .w-full { width: 100%; }
-    .max-w-\\[600px\\] { max-width: 600px; }
-    .bg-white { background-color: #ffffff; }
-    .rounded-lg { border-radius: 0.5rem; }
-    .shadow-sm { box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); }
-    .border { border-width: 1px; border-color: #e5e7eb; }
-    .p-4 { padding: 1rem; }
-    .border-b { border-bottom-width: 1px; }
-    .bg-gray-50 { background-color: #f9fafb; }
-    .font-semibold { font-weight: 600; }
-    .space-y-1 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.25rem; }
-    .group { /* group styles */ }
-    .relative { position: relative; }
-    .border-2 { border-width: 2px; }
-    .border-transparent { border-color: transparent; }
-    .hover\\:border-blue-200:hover { border-color: #dbeafe; }
-    .transition-all { transition-property: all; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
-    .border-blue-500 { border-color: #3b82f6; }
-    .bg-blue-50\\/30 { background-color: rgb(239 246 255 / 0.3); }
-    .absolute { position: absolute; }
-    .left-2 { left: 0.5rem; }
-    .top-2 { top: 0.5rem; }
-    .opacity-0 { opacity: 0; }
-    .group-hover\\:opacity-100:hover { opacity: 1; }
-    .transition-opacity { transition-property: opacity; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
-    .cursor-grab { cursor: grab; }
-    .active\\:cursor-grabbing:active { cursor: grabbing; }
-    .z-10 { z-index: 10; }
-    .rounded { border-radius: 0.25rem; }
-    .p-1 { padding: 0.25rem; }
-    .shadow-sm { box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); }
-    .right-2 { right: 0.5rem; }
-    .h-6 { height: 1.5rem; }
-    .w-6 { width: 1.5rem; }
-    .p-0 { padding: 0px; }
-    .h-3 { height: 0.75rem; }
-    .w-3 { width: 0.75rem; }
-    .overflow-hidden { overflow: hidden; }
-    .m-0 { margin: 0px; }
-    .text-center { text-align: center; }
-    .py-8 { padding-top: 2rem; padding-bottom: 2rem; }
-    .text-gray-500 { color: #6b7280; }
-    .h-12 { height: 3rem; }
-    .w-12 { width: 3rem; }
-    .mx-auto { margin-left: auto; margin-right: auto; }
-    .mb-4 { margin-bottom: 1rem; }
-    .text-gray-300 { color: #d1d5db; }
-    .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
-    .mt-2 { margin-top: 0.5rem; }
-    .h-4 { height: 1rem; }
-    .w-4 { width: 1rem; }
-    .text-gray-500 { color: #6b7280; }
-    
-    /* Override any conflicting styles to match builder exactly */
-    .w-full.max-w-\\[600px\\].bg-white.rounded-lg.shadow-sm.border {
-      max-width: 600px;
-      margin: 0 auto;
-      background-color: #ffffff;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      border-radius: 0.5rem;
-      border: 1px solid #e5e7eb;
-    }
+    body { margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5; }
+    .email-container { max-width: 600px; margin: 0 auto; background-color: #ffffff; }
   </style>
 </head>
+<body>
+  <div class="email-container">
+    ${componentsHTML}
+  </div>
+  
+  <div style="max-width: 600px; margin: 20px auto 0; padding: 20px; text-align: center; color: #666666; font-size: 12px; background-color: #f8f9fa;">
+    <p style="margin: 0 0 5px 0;"><strong>KAVAK</strong> - Tu experiencia automotriz</p>
+    <p style="margin: 0 0 5px 0;">© ${new Date().getFullYear()} KAVAK. Todos los derechos reservados.</p>
+    <p style="margin: 0; font-size: 10px; color: #999;">Este email fue generado con Email CreAItor</p>
+  </div>
+</body>
+</html>`;
+  };
 <body>
   <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
     ${componentsHTML}

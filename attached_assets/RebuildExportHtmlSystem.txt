@@ -1,0 +1,77 @@
+
+The “Download HTML” functionality is now generating a file, but the visual result is still incorrect. The downloaded HTML looks very different from what’s shown in the Email Builder and in the Preview section.
+
+What I need is a fully working, bulletproof system where the exported HTML exactly matches the builder canvas — pixel for pixel.
+
+Please slow down and think through this step by step. I want you to rebuild the HTML export logic from the ground up to guarantee 100% fidelity.
+
+---
+
+🎯 Your Goal:
+Create a download system that exports an HTML file which:
+- Uses the exact same DOM structure and styles as the live builder
+- Embeds all necessary CSS inline (no Tailwind classes or external stylesheets)
+- Produces output that renders identically in Chrome, Gmail, Outlook, etc.
+
+---
+
+🧠 Rebuild It From Scratch — Step-by-Step Plan:
+
+1. Capture the Real DOM  
+   - Use a React `ref` (`builderRef`) to target the container that holds the full email layout (inside the builder canvas).
+   - Confirm this `ref` is bound to the correct parent (not a wrapper div or empty container).
+
+2. Serialize the Full DOM  
+   - Extract the HTML with `builderRef.current.outerHTML`.
+
+3. Extract Computed Styles
+   - Use `window.getComputedStyle()` or a tool like `juice` to:
+     • Collect all computed styles from each element in the builder  
+     • Inline them into each element directly
+
+   OR
+
+   - If using Tailwind, pre-process the DOM:
+     • Convert all class-based styles to inline styles manually  
+     • Strip class names after conversion to clean up
+
+4. Assemble a Full HTML Document
+   - Wrap the email body in a complete HTML shell:
+
+   ```html
+   <!DOCTYPE html>
+   <html>
+     <head>
+       <meta charset="utf-8" />
+       <meta name="viewport" content="width=device-width, initial-scale=1" />
+       <title>My Email</title>
+       <style>
+         /* Optional: shared inline-safe styles if not using juice */
+       </style>
+     </head>
+     <body>
+       <!-- Your inlined email content here -->
+     </body>
+   </html>
+   ```
+
+5. Download It Cleanly
+   - Create a Blob from the final HTML string
+   - Trigger a download using a temporary <a> element
+
+---
+
+🧪 Testing Checklist:
+- The downloaded HTML file should look exactly like the builder canvas when opened in any browser.
+- It must also render consistently in Gmail, Outlook, and Apple Mail.
+- Borders, spacing, layout, buttons, fonts — everything must match.
+- No Tailwind classes or missing styles in the HTML output.
+
+---
+
+📌 Constraints:
+- Do not rely on external stylesheets.
+- Do not include Tailwind class names in exported HTML.
+- Use only inline styles for maximum email client compatibility.
+
+Build this with precision. The export must match the builder, always.
