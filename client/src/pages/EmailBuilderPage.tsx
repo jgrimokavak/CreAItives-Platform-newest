@@ -1352,11 +1352,9 @@ export default function EmailBuilderPage() {
 
             {/* Colors Section */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label className="font-semibold text-base text-gray-800">Colors</Label>
-                <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center">
-                  <Square className="w-3 h-3 text-purple-600" />
-                </div>
+              <div className="inline-flex items-center gap-2 bg-red-100 text-red-800 px-3 py-1.5 rounded-full">
+                <Palette className="w-4 h-4" />
+                <span className="text-sm font-semibold">Colors</span>
               </div>
               
               <div className="grid grid-cols-2 gap-4">
@@ -2032,97 +2030,218 @@ export default function EmailBuilderPage() {
 
       case 'spacer':
         return (
-          <div className="h-full flex flex-col space-y-4">
-            {/* Height */}
-            <div className="space-y-3">
-              <Label className="font-medium text-sm">Properties</Label>
-              <div className="space-y-2">
-                <Label className="text-xs text-gray-600">Spacer height</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full h-9 justify-between">
-                      {stripPx(component.styles.height || '20px')}px
-                      <Sliders className="h-4 w-4" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-64">
-                    <div className="space-y-3">
-                      <Label className="text-sm font-medium">Spacer height</Label>
-                      <Slider
-                        value={[parseInt(stripPx(component.styles.height || '20px'))]}
-                        onValueChange={(value) => updateStyles({ height: `${value[0]}px` })}
-                        max={200}
-                        min={5}
-                        step={5}
-                        className="w-full"
-                      />
-                      <div className="flex justify-between text-xs text-gray-500">
-                        <span>5px</span>
-                        <span>{stripPx(component.styles.height || '20px')}px</span>
-                        <span>200px</span>
-                      </div>
+          <div className="h-full flex flex-col space-y-6">
+            {/* Size & Layout */}
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-2 bg-green-100 text-green-800 px-3 py-1.5 rounded-full">
+                <Maximize className="w-4 h-4" />
+                <span className="text-sm font-semibold">Size & Layout</span>
+              </div>
+              
+              {/* Height Control */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">Height</Label>
+                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                    {stripPx(component.styles.height || '20px')}px
+                  </span>
+                </div>
+                <Slider
+                  value={[parseInt(stripPx(component.styles.height || '20px'))]}
+                  onValueChange={(value) => updateStyles({ height: `${value[0]}px` })}
+                  max={200}
+                  min={5}
+                  step={5}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-xs text-gray-400">
+                  <span>5px</span>
+                  <span>200px</span>
+                </div>
+                <p className="text-xs text-gray-500">Controls the vertical space this component creates</p>
+              </div>
+
+              {/* Width Control */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">Width</Label>
+                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                    {component.styles.width === '100%' ? 'Full' : stripPx(component.styles.width || '100%')}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant={component.styles.width === '100%' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => updateStyles({ width: '100%' })}
+                    className="flex-1 h-9"
+                  >
+                    Full Width
+                  </Button>
+                  <Button
+                    variant={component.styles.width !== '100%' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => updateStyles({ width: '300px' })}
+                    className="flex-1 h-9"
+                  >
+                    Custom
+                  </Button>
+                </div>
+                {component.styles.width !== '100%' && (
+                  <div className="space-y-2">
+                    <Slider
+                      value={[parseInt(stripPx(component.styles.width || '300px'))]}
+                      onValueChange={(value) => updateStyles({ width: `${value[0]}px` })}
+                      max={600}
+                      min={50}
+                      step={10}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-xs text-gray-400">
+                      <span>50px</span>
+                      <span>600px</span>
                     </div>
-                  </PopoverContent>
-                </Popover>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Colors */}
-            <div className="space-y-3">
-              <Label className="font-medium text-sm">Colors</Label>
+            {/* Appearance */}
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-2 bg-purple-100 text-purple-800 px-3 py-1.5 rounded-full">
+                <Palette className="w-4 h-4" />
+                <span className="text-sm font-semibold">Appearance</span>
+              </div>
+              
+              {/* Background Color */}
               <div className="space-y-2">
-                <Label className="text-xs text-gray-600">Background color (optional)</Label>
+                <Label className="text-sm font-medium">Background Color</Label>
                 <div className="flex items-center space-x-2">
                   <Input
                     type="color"
                     value={component.styles.backgroundColor || '#ffffff'}
                     onChange={(e) => updateStyles({ backgroundColor: e.target.value })}
-                    className="w-12 h-8 p-1"
+                    className="w-12 h-10 p-1 rounded border"
                   />
-                  <span className="text-xs">Background</span>
+                  <span className="text-xs text-gray-600 flex-1">Make spacer visible with background</span>
+                </div>
+              </div>
+
+              {/* Transparency */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">Transparency</Label>
+                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                    {Math.round((parseFloat(component.styles.opacity || '1') * 100))}%
+                  </span>
+                </div>
+                <Slider
+                  value={[Math.round((parseFloat(component.styles.opacity || '1') * 100))]}
+                  onValueChange={(value) => updateStyles({ opacity: (value[0] / 100).toString() })}
+                  max={100}
+                  min={0}
+                  step={5}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-xs text-gray-400">
+                  <span>0%</span>
+                  <span>100%</span>
                 </div>
               </div>
             </div>
 
-            {/* Spacing (Simplified for spacer) */}
-            <div className="space-y-3">
-              <Label className="font-medium text-sm">Spacing</Label>
-              <div className="space-y-3">
+            {/* Borders */}
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-2 bg-indigo-100 text-indigo-800 px-3 py-1.5 rounded-full">
+                <Square className="w-4 h-4" />
+                <span className="text-sm font-semibold">Borders</span>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-xs text-gray-600">Margin</Label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {['Top', 'Bottom'].map((dir) => {
-                      const key = `margin${dir}`;
-                      const defaultVal = '0px';
-                      return (
-                        <Popover key={key}>
-                          <PopoverTrigger asChild>
-                            <Button variant="outline" className="h-9 text-xs">
-                              {dir[0]}: {stripPx(component.styles[key] || defaultVal)}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-56">
-                            <div className="space-y-2">
-                              <Label className="text-sm">Margin {dir}</Label>
-                              <Slider
-                                value={[parseInt(stripPx(component.styles[key] || defaultVal))]}
-                                onValueChange={(value) => updateStyles({ [key]: `${value[0]}px` })}
-                                max={100}
-                                min={0}
-                                step={1}
-                              />
-                              <div className="text-center text-xs text-gray-500">
-                                {stripPx(component.styles[key] || defaultVal)}px
-                              </div>
-                            </div>
-                          </PopoverContent>
-                        </Popover>
-                      );
-                    })}
+                  <Label className="text-sm font-medium">Border Color</Label>
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      type="color"
+                      value={component.styles.borderColor || '#e5e7eb'}
+                      onChange={(e) => updateStyles({ borderColor: e.target.value })}
+                      className="w-12 h-8 p-1 rounded border"
+                    />
+                    <span className="text-xs text-gray-600 flex-1">Border</span>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Border Width</Label>
+                  <div className="space-y-2">
+                    <Slider
+                      value={[parseInt(stripPx(component.styles.borderWidth || '0px'))]}
+                      onValueChange={(value) => updateStyles({ 
+                        borderWidth: `${value[0]}px`,
+                        borderStyle: value[0] > 0 ? 'solid' : 'none'
+                      })}
+                      max={10}
+                      min={0}
+                      step={1}
+                      className="w-full"
+                    />
+                    <div className="text-center text-xs text-gray-500">
+                      {stripPx(component.styles.borderWidth || '0px')}px
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Border Radius</Label>
+                <div className="space-y-2">
+                  <Slider
+                    value={[parseInt(stripPx(component.styles.borderRadius || '0px'))]}
+                    onValueChange={(value) => updateStyles({ borderRadius: `${value[0]}px` })}
+                    max={50}
+                    min={0}
+                    step={1}
+                    className="w-full"
+                  />
+                  <div className="text-center text-xs text-gray-500">
+                    {stripPx(component.styles.borderRadius || '0px')}px
                   </div>
                 </div>
               </div>
             </div>
+
+            {/* Alignment */}
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-2 bg-orange-100 text-orange-800 px-3 py-1.5 rounded-full">
+                <AlignCenter className="w-4 h-4" />
+                <span className="text-sm font-semibold">Alignment</span>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { value: 'left', label: 'Left', icon: <AlignLeft className="w-4 h-4" /> },
+                  { value: 'center', label: 'Center', icon: <AlignCenter className="w-4 h-4" /> },
+                  { value: 'right', label: 'Right', icon: <AlignRight className="w-4 h-4" /> }
+                ].map((align) => (
+                  <Button
+                    key={align.value}
+                    variant={component.styles.textAlign === align.value ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => updateStyles({ textAlign: align.value })}
+                    className="h-10 flex flex-col items-center justify-center gap-1"
+                  >
+                    {align.icon}
+                    <span className="text-xs">{align.label}</span>
+                  </Button>
+                ))}
+              </div>
+              <p className="text-xs text-gray-500">
+                Controls how the spacer is positioned within its container
+              </p>
+            </div>
+
+            {/* Spacing Controls */}
+            {renderSpacingControls(component, updateStyles, '0px', '0px')}
           </div>
         );
       default:
