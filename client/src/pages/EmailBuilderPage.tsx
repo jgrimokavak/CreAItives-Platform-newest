@@ -126,56 +126,45 @@ export default function EmailBuilderPage() {
     return isNaN(num) ? '0px' : `${num}px`;
   };
 
-  // Bulletproof HTML export that captures exact visual output
+  // WYSIWYG HTML export that captures the actual rendered DOM
   const getBuilderHtml = () => {
-    console.log('Generating pixel-perfect HTML export');
+    console.log('Capturing actual DOM from builder canvas');
     
-    // Build clean HTML from component data with exact styles
-    const componentHtml = emailComponents.map((component) => {
-      const styles = component.styles || {};
-      const content = component.content || {};
-      
-      // Convert React styles to CSS string
-      const cssStyles = Object.entries(styles)
-        .map(([key, value]) => `${key.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value}`)
-        .join('; ');
-      
-      switch (component.type) {
-        case 'text':
-          return `<div style="${cssStyles}">${content.text || ''}</div>`;
-        
-        case 'image':
-          if (!content.src) return '';
-          return `<div style="${cssStyles}"><img src="${content.src}" alt="${content.alt || ''}" style="max-width: 100%; height: auto; display: block;" /></div>`;
-        
-        case 'button':
-          return `<div style="${cssStyles}"><a href="${content.href || '#'}" style="display: inline-block; text-decoration: none;">${content.text || 'Button'}</a></div>`;
-        
-        case 'spacer':
-          return `<div style="${cssStyles}"></div>`;
-        
-        default:
-          return '';
-      }
-    }).join('\n');
+    if (!builderRef.current) {
+      console.log('Builder ref not available');
+      return '';
+    }
     
-    // Complete email-compatible HTML document
+    // Get the actual rendered HTML from the builder canvas
+    const html = builderRef.current.outerHTML;
+    console.log('Captured DOM HTML length:', html.length);
+    
+    // Return complete HTML document with the captured DOM
     return `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${emailContent.subject || 'Email Template'}</title>
+  <title>${emailContent.subject || 'My Email'}</title>
   <style>
-    body { margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5; }
-    .email-container { max-width: 600px; margin: 0 auto; background-color: #ffffff; }
+    body { margin: 0; padding: 0; font-family: sans-serif; }
+    /* Essential shared styles */
+    .w-full { width: 100%; }
+    .max-w-\\[600px\\] { max-width: 600px; }
+    .bg-white { background-color: #ffffff; }
+    .rounded-lg { border-radius: 0.5rem; }
+    .shadow-sm { box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); }
+    .border { border-width: 1px; border-color: #e5e7eb; }
+    .p-4 { padding: 1rem; }
+    .space-y-1 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.25rem; }
+    .text-center { text-align: center; }
+    .font-semibold { font-weight: 600; }
   </style>
 </head>
 <body>
-  <div class="email-container">
-    ${componentHtml}
-  </div>
+  ${html}
   
+  <!-- KAVAK Footer -->
   <div style="max-width: 600px; margin: 20px auto 0; padding: 20px; text-align: center; color: #666; font-size: 12px; background-color: #f8f9fa;">
     <p style="margin: 0 0 5px 0;"><strong>KAVAK</strong> - Tu experiencia automotriz</p>
     <p style="margin: 0 0 5px 0;">© ${new Date().getFullYear()} KAVAK. Todos los derechos reservados.</p>
