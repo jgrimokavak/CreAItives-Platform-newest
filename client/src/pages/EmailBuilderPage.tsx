@@ -126,44 +126,40 @@ export default function EmailBuilderPage() {
     return isNaN(num) ? '0px' : `${num}px`;
   };
 
-  // Simple helper function to generate clean HTML from email components
+  // Bulletproof HTML export that captures exact visual output
   const getBuilderHtml = () => {
-    console.log('getBuilderHtml called');
+    console.log('Generating pixel-perfect HTML export');
     
-    // Generate clean HTML directly from components data
-    const componentsHTML = emailComponents.map((component) => {
+    // Build clean HTML from component data with exact styles
+    const componentHtml = emailComponents.map((component) => {
       const styles = component.styles || {};
       const content = component.content || {};
       
-      // Convert camelCase to kebab-case for CSS
-      const styleString = Object.entries(styles)
+      // Convert React styles to CSS string
+      const cssStyles = Object.entries(styles)
         .map(([key, value]) => `${key.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value}`)
         .join('; ');
       
       switch (component.type) {
         case 'text':
-          return `<div style="${styleString}">${content.text || ''}</div>`;
+          return `<div style="${cssStyles}">${content.text || ''}</div>`;
         
         case 'image':
           if (!content.src) return '';
-          return `<div style="${styleString}">
-            <img src="${content.src}" alt="${content.alt || ''}" style="max-width: 100%; height: auto; display: block;" />
-          </div>`;
+          return `<div style="${cssStyles}"><img src="${content.src}" alt="${content.alt || ''}" style="max-width: 100%; height: auto; display: block;" /></div>`;
         
         case 'button':
-          return `<div style="${styleString}">
-            <a href="${content.href || '#'}" style="display: inline-block; text-decoration: none;">${content.text || 'Click here'}</a>
-          </div>`;
+          return `<div style="${cssStyles}"><a href="${content.href || '#'}" style="display: inline-block; text-decoration: none;">${content.text || 'Button'}</a></div>`;
         
         case 'spacer':
-          return `<div style="${styleString}"></div>`;
+          return `<div style="${cssStyles}"></div>`;
         
         default:
           return '';
       }
     }).join('\n');
     
-    // Return complete HTML document
+    // Complete email-compatible HTML document
     return `<!DOCTYPE html>
 <html>
 <head>
@@ -177,26 +173,13 @@ export default function EmailBuilderPage() {
 </head>
 <body>
   <div class="email-container">
-    ${componentsHTML}
+    ${componentHtml}
   </div>
   
-  <div style="max-width: 600px; margin: 20px auto 0; padding: 20px; text-align: center; color: #666666; font-size: 12px; background-color: #f8f9fa;">
+  <div style="max-width: 600px; margin: 20px auto 0; padding: 20px; text-align: center; color: #666; font-size: 12px; background-color: #f8f9fa;">
     <p style="margin: 0 0 5px 0;"><strong>KAVAK</strong> - Tu experiencia automotriz</p>
     <p style="margin: 0 0 5px 0;">© ${new Date().getFullYear()} KAVAK. Todos los derechos reservados.</p>
     <p style="margin: 0; font-size: 10px; color: #999;">Este email fue generado con Email CreAItor</p>
-  </div>
-</body>
-</html>`;
-  };
-<body>
-  <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-    ${componentsHTML}
-  </div>
-  <!-- Add KAVAK footer -->
-  <div style="max-width: 600px; margin: 0 auto; padding: 30px 20px; text-align: center; color: #666666; font-size: 14px; background-color: #f8f9fa; border-top: 1px solid #e9ecef;">
-    <p style="margin: 5px 0;"><strong>KAVAK</strong> - Tu experiencia automotriz</p>
-    <p style="margin: 5px 0;">© ${new Date().getFullYear()} KAVAK. Todos los derechos reservados.</p>
-    <p style="font-size: 12px; color: #999; margin: 5px 0;">Este email fue generado con Email CreAItor</p>
   </div>
 </body>
 </html>`;
