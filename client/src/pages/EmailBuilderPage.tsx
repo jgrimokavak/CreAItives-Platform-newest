@@ -654,17 +654,19 @@ export default function EmailBuilderPage() {
 
   // Unified property components for consistency
   const renderSpacingControls = (component: EmailComponent, updateStyles: (updates: any) => void, defaultPadding = '15px', defaultMargin = '0px') => (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <Label className="font-medium text-sm">Spacing</Label>
-        <div className="text-xs text-gray-500">Margins and padding</div>
+        <Label className="font-semibold text-base text-gray-800">Spacing</Label>
+        <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center">
+          <Square className="w-3 h-3 text-orange-600" />
+        </div>
       </div>
       
-      <div className="space-y-4">
+      <div className="space-y-6">
         {/* Padding Controls */}
-        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-          <div className="flex items-center justify-between mb-3">
-            <Label className="text-sm font-semibold text-gray-700">INTERNAL PADDING</Label>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium">Internal Padding</Label>
             <Button 
               variant="ghost" 
               size="sm" 
@@ -680,31 +682,35 @@ export default function EmailBuilderPage() {
             </Button>
           </div>
           
-          <div className="space-y-3">
+          <div className="space-y-4">
             {[
-              { key: 'paddingTop', label: 'Top (T)', dir: 'Top' },
-              { key: 'paddingRight', label: 'Right (R)', dir: 'Right' },
-              { key: 'paddingBottom', label: 'Bottom (B)', dir: 'Bottom' },
-              { key: 'paddingLeft', label: 'Left (L)', dir: 'Left' }
-            ].map(({ key, label, dir }) => {
+              { key: 'paddingTop', label: 'Top' },
+              { key: 'paddingRight', label: 'Right' },
+              { key: 'paddingBottom', label: 'Bottom' },
+              { key: 'paddingLeft', label: 'Left' }
+            ].map(({ key, label }) => {
               const currentValue = component.styles[key];
               const displayValue = currentValue !== undefined ? stripPx(currentValue) : stripPx(defaultPadding);
               
               return (
-                <div key={key} className="flex items-center space-x-3">
-                  <Label className="text-xs text-gray-600 w-20 text-left">{label}</Label>
-                  <div className="flex-1">
-                    <Slider
-                      value={[parseInt(displayValue)]}
-                      onValueChange={(value) => updateStyles({ [key]: `${value[0]}px` })}
-                      max={100}
-                      min={0}
-                      step={1}
-                      className="w-full"
-                    />
+                <div key={key} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium">{label}</Label>
+                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                      {displayValue}px
+                    </span>
                   </div>
-                  <div className="w-12 text-right">
-                    <span className="text-xs font-mono text-gray-700">{displayValue}px</span>
+                  <Slider
+                    value={[parseInt(displayValue)]}
+                    onValueChange={(value) => updateStyles({ [key]: `${value[0]}px` })}
+                    max={100}
+                    min={0}
+                    step={1}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-gray-400">
+                    <span>0px</span>
+                    <span>100px</span>
                   </div>
                 </div>
               );
@@ -713,9 +719,9 @@ export default function EmailBuilderPage() {
         </div>
 
         {/* Margin Controls */}
-        <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-          <div className="flex items-center justify-between mb-3">
-            <Label className="text-sm font-semibold text-blue-700">EXTERNAL MARGIN</Label>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium">External Margin</Label>
             <Button 
               variant="ghost" 
               size="sm" 
@@ -725,37 +731,41 @@ export default function EmailBuilderPage() {
                 marginBottom: '0px', 
                 marginLeft: '0px' 
               })}
-              className="h-6 px-2 text-xs text-blue-500 hover:text-blue-700"
+              className="h-6 px-2 text-xs text-gray-500 hover:text-gray-700"
             >
               Reset all
             </Button>
           </div>
           
-          <div className="space-y-3">
+          <div className="space-y-4">
             {[
-              { key: 'marginTop', label: 'Top (T)', dir: 'Top' },
-              { key: 'marginRight', label: 'Right (R)', dir: 'Right' },
-              { key: 'marginBottom', label: 'Bottom (B)', dir: 'Bottom' },
-              { key: 'marginLeft', label: 'Left (L)', dir: 'Left' }
-            ].map(({ key, label, dir }) => {
+              { key: 'marginTop', label: 'Top' },
+              { key: 'marginRight', label: 'Right' },
+              { key: 'marginBottom', label: 'Bottom' },
+              { key: 'marginLeft', label: 'Left' }
+            ].map(({ key, label }) => {
               const currentValue = component.styles[key];
               const displayValue = currentValue !== undefined ? stripPx(currentValue) : stripPx(defaultMargin);
               
               return (
-                <div key={key} className="flex items-center space-x-3">
-                  <Label className="text-xs text-gray-600 w-20 text-left">{label}</Label>
-                  <div className="flex-1">
-                    <Slider
-                      value={[parseInt(displayValue)]}
-                      onValueChange={(value) => updateStyles({ [key]: `${value[0]}px` })}
-                      max={100}
-                      min={0}
-                      step={1}
-                      className="w-full"
-                    />
+                <div key={key} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium">{label}</Label>
+                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                      {displayValue}px
+                    </span>
                   </div>
-                  <div className="w-12 text-right">
-                    <span className="text-xs font-mono text-gray-700">{displayValue}px</span>
+                  <Slider
+                    value={[parseInt(displayValue)]}
+                    onValueChange={(value) => updateStyles({ [key]: `${value[0]}px` })}
+                    max={100}
+                    min={0}
+                    step={1}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-gray-400">
+                    <span>0px</span>
+                    <span>100px</span>
                   </div>
                 </div>
               );
@@ -1264,51 +1274,50 @@ export default function EmailBuilderPage() {
                 </div>
               </div>
 
-              {/* Line Height & Alignment */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm font-medium">Line Height</Label>
-                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                      {component.styles.lineHeight || '1.6'}
-                    </span>
-                  </div>
-                  <Slider
-                    value={[parseFloat(component.styles.lineHeight || '1.6')]}
-                    onValueChange={(value) => updateStyles({ lineHeight: value[0].toString() })}
-                    max={3}
-                    min={0.8}
-                    step={0.1}
-                    className="w-full"
-                  />
-                  <div className="flex justify-between text-xs text-gray-400">
-                    <span>0.8</span>
-                    <span>3.0</span>
-                  </div>
+              {/* Line Height */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">Line Height</Label>
+                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                    {component.styles.lineHeight || '1.6'}
+                  </span>
                 </div>
+                <Slider
+                  value={[parseFloat(component.styles.lineHeight || '1.6')]}
+                  onValueChange={(value) => updateStyles({ lineHeight: value[0].toString() })}
+                  max={3}
+                  min={0.8}
+                  step={0.1}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-xs text-gray-400">
+                  <span>0.8</span>
+                  <span>3.0</span>
+                </div>
+              </div>
 
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Text Alignment</Label>
-                  <div className="grid grid-cols-2 gap-1">
-                    {[
-                      { value: 'left', label: 'Left', icon: <AlignLeft className="w-3 h-3" /> },
-                      { value: 'center', label: 'Center', icon: <AlignCenter className="w-3 h-3" /> },
-                      { value: 'right', label: 'Right', icon: <AlignRight className="w-3 h-3" /> },
-                      { value: 'justify', label: 'Justify', icon: <AlignCenter className="w-3 h-3" /> }
-                    ].map((align) => (
-                      <Button
-                        key={align.value}
-                        variant={component.styles.textAlign === align.value ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => updateStyles({ textAlign: align.value })}
-                        className="h-8 flex items-center justify-center gap-1 text-xs"
-                        title={align.label}
-                      >
-                        {align.icon}
-                        {align.label}
-                      </Button>
-                    ))}
-                  </div>
+              {/* Text Alignment */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Text Alignment</Label>
+                <div className="grid grid-cols-2 gap-1">
+                  {[
+                    { value: 'left', label: 'Left', icon: <AlignLeft className="w-3 h-3" /> },
+                    { value: 'center', label: 'Center', icon: <AlignCenter className="w-3 h-3" /> },
+                    { value: 'right', label: 'Right', icon: <AlignRight className="w-3 h-3" /> },
+                    { value: 'justify', label: 'Justify', icon: <AlignCenter className="w-3 h-3" /> }
+                  ].map((align) => (
+                    <Button
+                      key={align.value}
+                      variant={component.styles.textAlign === align.value ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => updateStyles({ textAlign: align.value })}
+                      className="h-8 flex items-center justify-center gap-1 text-xs"
+                      title={align.label}
+                    >
+                      {align.icon}
+                      {align.label}
+                    </Button>
+                  ))}
                 </div>
               </div>
             </div>
