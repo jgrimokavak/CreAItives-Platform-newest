@@ -1935,11 +1935,9 @@ export default function EmailBuilderPage() {
 
             {/* Styling Section */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label className="font-semibold text-base text-gray-800">Styling</Label>
-                <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center">
-                  <Square className="w-3 h-3 text-purple-600" />
-                </div>
+              <div className="inline-flex items-center gap-2 bg-purple-100 text-purple-800 px-3 py-1.5 rounded-full">
+                <Square className="w-4 h-4" />
+                <span className="text-sm font-semibold">Styling</span>
               </div>
               
               {/* Background Color & Transparency */}
