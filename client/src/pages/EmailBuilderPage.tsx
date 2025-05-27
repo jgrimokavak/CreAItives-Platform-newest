@@ -2049,14 +2049,14 @@ export default function EmailBuilderPage() {
                 <Slider
                   value={[parseInt(stripPx(component.styles.height || '20px'))]}
                   onValueChange={(value) => updateStyles({ height: `${value[0]}px` })}
-                  max={200}
-                  min={5}
-                  step={5}
+                  max={500}
+                  min={1}
+                  step={1}
                   className="w-full"
                 />
                 <div className="flex justify-between text-xs text-gray-400">
-                  <span>5px</span>
-                  <span>200px</span>
+                  <span>1px</span>
+                  <span>500px</span>
                 </div>
                 <p className="text-xs text-gray-500">Controls the vertical space this component creates</p>
               </div>
@@ -2073,7 +2073,11 @@ export default function EmailBuilderPage() {
                   <Button
                     variant={component.styles.width === '100%' ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => updateStyles({ width: '100%' })}
+                    onClick={() => updateStyles({ 
+                      width: '100%',
+                      marginLeft: 'auto',
+                      marginRight: 'auto'
+                    })}
                     className="flex-1 h-9"
                   >
                     Full Width
@@ -2081,7 +2085,19 @@ export default function EmailBuilderPage() {
                   <Button
                     variant={component.styles.width !== '100%' ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => updateStyles({ width: '300px' })}
+                    onClick={() => {
+                      const alignment = component.styles.textAlign || 'center';
+                      const marginSettings = alignment === 'left' 
+                        ? { marginLeft: '0', marginRight: 'auto' }
+                        : alignment === 'right'
+                        ? { marginLeft: 'auto', marginRight: '0' }
+                        : { marginLeft: 'auto', marginRight: 'auto' };
+                      
+                      updateStyles({ 
+                        width: '300px',
+                        ...marginSettings
+                      });
+                    }}
                     className="flex-1 h-9"
                   >
                     Custom
@@ -2227,7 +2243,28 @@ export default function EmailBuilderPage() {
                     key={align.value}
                     variant={component.styles.textAlign === align.value ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => updateStyles({ textAlign: align.value })}
+                    onClick={() => {
+                      if (component.styles.width === '100%') {
+                        // Full width - only update textAlign, keep margins as auto
+                        updateStyles({ 
+                          textAlign: align.value,
+                          marginLeft: 'auto',
+                          marginRight: 'auto'
+                        });
+                      } else {
+                        // Custom width - apply proper alignment margins
+                        const marginSettings = align.value === 'left' 
+                          ? { marginLeft: '0', marginRight: 'auto' }
+                          : align.value === 'right'
+                          ? { marginLeft: 'auto', marginRight: '0' }
+                          : { marginLeft: 'auto', marginRight: 'auto' };
+                        
+                        updateStyles({ 
+                          textAlign: align.value,
+                          ...marginSettings
+                        });
+                      }
+                    }}
                     className="h-10 flex flex-col items-center justify-center gap-1"
                   >
                     {align.icon}
@@ -2236,12 +2273,57 @@ export default function EmailBuilderPage() {
                 ))}
               </div>
               <p className="text-xs text-gray-500">
-                Controls how the spacer is positioned within its container
+                {component.styles.width === '100%' 
+                  ? 'Alignment disabled for full width spacers' 
+                  : 'Controls how the spacer is positioned within its container'}
               </p>
             </div>
 
-            {/* Spacing Controls */}
-            {renderSpacingControls(component, updateStyles, '0px', '0px')}
+            {/* Margin Controls Only */}
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-2 bg-yellow-100 text-yellow-800 px-3 py-1.5 rounded-full">
+                <Sliders className="w-4 h-4" />
+                <span className="text-sm font-semibold">Margin</span>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
+                {['Top', 'Right', 'Bottom', 'Left'].map((dir) => {
+                  const key = `margin${dir}`;
+                  const defaultVal = '0px';
+                  return (
+                    <Popover key={key}>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="h-9 text-xs justify-between">
+                          {dir}: {stripPx(component.styles[key] || defaultVal)}px
+                          <Sliders className="h-3 w-3" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-64">
+                        <div className="space-y-3">
+                          <Label className="text-sm font-medium">Margin {dir}</Label>
+                          <Slider
+                            value={[parseInt(stripPx(component.styles[key] || defaultVal))]}
+                            onValueChange={(value) => updateStyles({ [key]: `${value[0]}px` })}
+                            max={100}
+                            min={0}
+                            step={1}
+                            className="w-full"
+                          />
+                          <div className="flex justify-between text-xs text-gray-500">
+                            <span>0px</span>
+                            <span>{stripPx(component.styles[key] || defaultVal)}px</span>
+                            <span>100px</span>
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-gray-500">
+                External spacing around the spacer element
+              </p>
+            </div>
           </div>
         );
       default:
