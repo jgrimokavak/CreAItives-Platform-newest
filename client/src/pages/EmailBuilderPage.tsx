@@ -2388,7 +2388,8 @@ export default function EmailBuilderPage() {
           header: emailContent.header,
           body: emailContent.body,
           cta: emailContent.cta,
-          templateType: selectedTemplate
+          templateType: selectedTemplate,
+          components: emailComponents
         }),
         headers: {
           'Content-Type': 'application/json',
