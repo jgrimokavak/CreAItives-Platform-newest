@@ -1878,10 +1878,10 @@ export default function EmailBuilderPage() {
                       max={600}
                       min={100}
                       step={10}
-                      className="w-full"
+                      className="w-full xl:h-6"
                       disabled={component.styles.width === 'auto' || component.styles.width === '100%'}
                     />
-                    <div className="flex justify-between text-xs text-gray-400">
+                    <div className="flex justify-between text-xs xl:text-sm text-gray-400">
                       <span>100px</span>
                       <span>600px</span>
                     </div>
@@ -1974,9 +1974,9 @@ export default function EmailBuilderPage() {
                     max={100}
                     min={0}
                     step={5}
-                    className="w-full"
+                    className="w-full xl:h-6"
                   />
-                  <div className="flex justify-between text-xs text-gray-400">
+                  <div className="flex justify-between text-xs xl:text-sm text-gray-400">
                     <span>0%</span>
                     <span>100%</span>
                   </div>
@@ -2265,7 +2265,7 @@ export default function EmailBuilderPage() {
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Select a Template</h2>
               <p className="text-gray-600">Start by choosing a template for your KAVAK email</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 xl:gap-8 max-w-6xl xl:max-w-7xl mx-auto">
               {emailTemplates.map((template) => (
                 <Card 
                   key={template.id}
@@ -2369,7 +2369,7 @@ export default function EmailBuilderPage() {
                           placeholder="Template name"
                         />
                         <Button 
-                          className="w-full" 
+                          className="w-full xl:py-3 xl:text-base" 
                           onClick={saveTemplate}
                           disabled={!templateName.trim()}
                           variant="secondary"
