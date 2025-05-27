@@ -620,10 +620,7 @@ export default function EmailBuilderPage() {
               componentStyles.textAlign === 'right' ? 'flex-end' : 'center',
             margin: 0,
             padding: 0,
-            paddingTop: componentStyles.paddingTop || '0px',
-            paddingRight: componentStyles.paddingRight || '0px',
-            paddingBottom: componentStyles.paddingBottom || '0px',
-            paddingLeft: componentStyles.paddingLeft || '0px',
+            // External margin - space OUTSIDE the button container
             marginTop: componentStyles.marginTop || '0px',
             marginRight: componentStyles.marginRight || '0px',
             marginBottom: componentStyles.marginBottom || '0px',
@@ -633,8 +630,14 @@ export default function EmailBuilderPage() {
               href={component.content.href || '#'} 
               style={{ 
                 textDecoration: 'none',
-                display: 'inline-block',
-                padding: '12px 24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                // Internal padding - space INSIDE the button around the text
+                paddingTop: componentStyles.paddingTop || '12px',
+                paddingRight: componentStyles.paddingRight || '24px',
+                paddingBottom: componentStyles.paddingBottom || '12px',
+                paddingLeft: componentStyles.paddingLeft || '24px',
                 borderRadius: componentStyles.borderRadius || '4px',
                 color: componentStyles.color || '#ffffff',
                 backgroundColor: componentStyles.backgroundColor || '#1553ec',
@@ -643,13 +646,16 @@ export default function EmailBuilderPage() {
                 fontWeight: componentStyles.fontWeight || 'bold',
                 width: componentStyles.width || 'auto',
                 height: componentStyles.height || '40px',
-                textAlign: 'center',
-                lineHeight: componentStyles.height ? `${Math.max(parseInt(stripPx(componentStyles.height)) - 24, 16)}px` : 'normal',
                 borderWidth: componentStyles.borderWidth || '0px',
                 borderStyle: componentStyles.borderWidth && parseInt(stripPx(componentStyles.borderWidth)) > 0 ? 'solid' : 'none',
                 borderColor: componentStyles.borderColor || '#1553ec',
                 boxSizing: 'border-box',
-                transition: 'all 0.2s ease'
+                transition: 'all 0.2s ease',
+                // Ensure text is always centered
+                textAlign: 'center',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
               }}
             >
               {component.content.text || 'Button'}
@@ -1823,23 +1829,51 @@ export default function EmailBuilderPage() {
               
               {/* Width & Height */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Width</Label>
-                  <Select 
-                    value={component.styles.width || 'auto'} 
-                    onValueChange={(value) => updateStyles({ width: value })}
-                  >
-                    <SelectTrigger className="h-10 w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="auto">Auto</SelectItem>
-                      <SelectItem value="100%">Full Width</SelectItem>
-                      <SelectItem value="200px">200px</SelectItem>
-                      <SelectItem value="250px">250px</SelectItem>
-                      <SelectItem value="300px">300px</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium">Width</Label>
+                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                      {component.styles.width === 'auto' ? 'Auto' : 
+                       component.styles.width === '100%' ? 'Full' : 
+                       stripPx(component.styles.width || '200px') + 'px'}
+                    </span>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <Button
+                        variant={component.styles.width === 'auto' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => updateStyles({ width: 'auto' })}
+                        className="h-8 text-xs flex-1"
+                      >
+                        Auto
+                      </Button>
+                      <Button
+                        variant={component.styles.width === '100%' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => updateStyles({ width: '100%' })}
+                        className="h-8 text-xs flex-1"
+                      >
+                        Full
+                      </Button>
+                    </div>
+                    {component.styles.width !== 'auto' && component.styles.width !== '100%' && (
+                      <>
+                        <Slider
+                          value={[parseInt(stripPx(component.styles.width || '200px'))]}
+                          onValueChange={(value) => updateStyles({ width: `${value[0]}px` })}
+                          max={400}
+                          min={100}
+                          step={10}
+                          className="w-full"
+                        />
+                        <div className="flex justify-between text-xs text-gray-400">
+                          <span>100px</span>
+                          <span>400px</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
 
                 <div className="space-y-3">
@@ -1865,7 +1899,7 @@ export default function EmailBuilderPage() {
               </div>
 
               {/* Alignment */}
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label className="text-sm font-medium">Alignment</Label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
@@ -1885,6 +1919,9 @@ export default function EmailBuilderPage() {
                     </Button>
                   ))}
                 </div>
+                <p className="text-xs text-gray-500">
+                  Controls how the button is positioned within its container (text stays centered inside button)
+                </p>
               </div>
             </div>
 

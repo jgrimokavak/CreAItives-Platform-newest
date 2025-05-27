@@ -1,0 +1,45 @@
+Objective:  
+Refine the behavior and layout logic of the **Button component**, focusing on text alignment, spacing behavior, and control consistency.
+
+---
+
+1. Text Centering
+- The button label text must always remain **perfectly centered horizontally and vertically** within the button, regardless of Width or Height values.
+- This centering must be preserved when the user adjusts size, padding, or alignment settings.
+
+---
+
+2. Alignment Toggles
+- The **alignment toggles** should control the horizontal positioning of the **entire button component** within its parent container (Left / Center / Right).
+- These should NOT affect the position of the text inside the button—**text must always remain centered within the button itself.**
+
+---
+
+3. Width & Height Controls
+- Replace any input fields with **sliders** for both Width and Height.
+- Use consistent min/max ranges and styles as in the Image component.
+
+---
+
+4. Padding vs Margin Behavior
+- **Internal Padding**: Should only affect the space between the text and the button's inner edges (top, bottom, left, right).
+  • Padding should **not** add space outside the button or shift its position.
+- **External Margin**: This should exclusively control the spacing between the button and surrounding elements.
+  • Margin = outside space. Padding = inside space.
+- Fix current bug where padding is improperly affecting the outside of the button.
+
+---
+
+Testing:
+✔ Text remains centered in all scenarios.  
+✔ Alignment toggles move the button, not the text.  
+✔ Width and height can be adjusted via sliders smoothly.  
+✔ Padding and margin behave correctly and independently.  
+✔ Button renders cleanly and behaves as expected in real-time canvas preview.
+
+---
+
+Constraints:
+- Do not break alignment behavior used across other components.
+- Preserve consistent styling across all controls (sliders, toggles, spacing).
+- Final output must follow the same logic model used for the Image component spacing system.
