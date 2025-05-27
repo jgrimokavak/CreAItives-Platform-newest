@@ -569,15 +569,17 @@ export default function EmailBuilderPage() {
               src={component.content.src} 
               alt={component.content.alt} 
               style={{ 
+                // When Auto Size is ON: use natural dimensions
                 width: componentStyles.autoSize === 'true' ? 'auto' : (componentStyles.width || '400px'),
                 height: componentStyles.autoSize === 'true' ? 'auto' : (componentStyles.height || '300px'),
-                objectFit: componentStyles.objectFit || 'cover',
+                // Object Fit only applies when Auto Size is OFF
+                objectFit: componentStyles.autoSize === 'true' ? 'none' : (componentStyles.objectFit || 'cover'),
                 borderRadius: componentStyles.borderRadius || '0px',
                 borderWidth: componentStyles.borderWidth || '0px',
                 borderStyle: componentStyles.borderWidth && parseInt(stripPx(componentStyles.borderWidth)) > 0 ? 'solid' : 'none',
                 borderColor: componentStyles.borderColor || '#e5e7eb',
                 opacity: componentStyles.opacity || '1',
-                maxWidth: '100%',
+                maxWidth: componentStyles.autoSize === 'true' ? '100%' : 'none',
                 display: 'block'
               }}
             />
@@ -1422,15 +1424,13 @@ export default function EmailBuilderPage() {
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
                 <div className="flex flex-col">
                   <Label className="text-sm font-medium">Auto Size</Label>
-                  <span className="text-xs text-gray-500">Let image use its natural dimensions</span>
+                  <span className="text-xs text-gray-500">Use image's natural dimensions</span>
                 </div>
                 <Button
                   variant={component.styles.autoSize === 'true' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => updateStyles({ 
-                    autoSize: component.styles.autoSize === 'true' ? 'false' : 'true',
-                    width: component.styles.autoSize === 'true' ? '400px' : 'auto',
-                    height: component.styles.autoSize === 'true' ? '300px' : 'auto'
+                    autoSize: component.styles.autoSize === 'true' ? 'false' : 'true'
                   })}
                   className="h-8"
                 >
@@ -1438,75 +1438,83 @@ export default function EmailBuilderPage() {
                 </Button>
               </div>
 
-              {/* Width Control */}
-              {component.styles.autoSize !== 'true' && (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm font-medium">Width</Label>
-                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                      {stripPx(component.styles.width || '400px')}px
-                    </span>
-                  </div>
-                  <Slider
-                    value={[parseInt(stripPx(component.styles.width || '400px'))]}
-                    onValueChange={(value) => updateStyles({ width: `${value[0]}px` })}
-                    max={800}
-                    min={50}
-                    step={10}
-                    className="w-full"
-                  />
-                  <div className="flex justify-between text-xs text-gray-400">
-                    <span>50px</span>
-                    <span>800px</span>
-                  </div>
+              {/* Width Control - Only when Auto Size is OFF */}
+              <div className={`space-y-3 ${component.styles.autoSize === 'true' ? 'opacity-50 pointer-events-none' : ''}`}>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">Width</Label>
+                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                    {component.styles.autoSize === 'true' ? 'Auto' : `${stripPx(component.styles.width || '400px')}px`}
+                  </span>
                 </div>
-              )}
+                <Slider
+                  value={[parseInt(stripPx(component.styles.width || '400px'))]}
+                  onValueChange={(value) => updateStyles({ width: `${value[0]}px` })}
+                  max={800}
+                  min={50}
+                  step={10}
+                  className="w-full"
+                  disabled={component.styles.autoSize === 'true'}
+                />
+                <div className="flex justify-between text-xs text-gray-400">
+                  <span>50px</span>
+                  <span>800px</span>
+                </div>
+                {component.styles.autoSize === 'true' && (
+                  <p className="text-xs text-yellow-600">Disabled when Auto Size is ON</p>
+                )}
+              </div>
 
-              {/* Height Control */}
-              {component.styles.autoSize !== 'true' && (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm font-medium">Height</Label>
-                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                      {stripPx(component.styles.height || '300px')}px
-                    </span>
-                  </div>
-                  <Slider
-                    value={[parseInt(stripPx(component.styles.height || '300px'))]}
-                    onValueChange={(value) => updateStyles({ height: `${value[0]}px` })}
-                    max={600}
-                    min={50}
-                    step={10}
-                    className="w-full"
-                  />
-                  <div className="flex justify-between text-xs text-gray-400">
-                    <span>50px</span>
-                    <span>600px</span>
-                  </div>
+              {/* Height Control - Only when Auto Size is OFF */}
+              <div className={`space-y-3 ${component.styles.autoSize === 'true' ? 'opacity-50 pointer-events-none' : ''}`}>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">Height</Label>
+                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                    {component.styles.autoSize === 'true' ? 'Auto' : `${stripPx(component.styles.height || '300px')}px`}
+                  </span>
                 </div>
-              )}
+                <Slider
+                  value={[parseInt(stripPx(component.styles.height || '300px'))]}
+                  onValueChange={(value) => updateStyles({ height: `${value[0]}px` })}
+                  max={600}
+                  min={50}
+                  step={10}
+                  className="w-full"
+                  disabled={component.styles.autoSize === 'true'}
+                />
+                <div className="flex justify-between text-xs text-gray-400">
+                  <span>50px</span>
+                  <span>600px</span>
+                </div>
+                {component.styles.autoSize === 'true' && (
+                  <p className="text-xs text-yellow-600">Disabled when Auto Size is ON</p>
+                )}
+              </div>
 
-              {/* Object Fit Control */}
-              {component.styles.autoSize !== 'true' && (
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">Object Fit</Label>
-                  <Select 
-                    value={component.styles.objectFit || 'cover'} 
-                    onValueChange={(value) => updateStyles({ objectFit: value })}
-                  >
-                    <SelectTrigger className="h-10 w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="contain">Contain - Fit entire image</SelectItem>
-                      <SelectItem value="cover">Cover - Fill area, crop if needed</SelectItem>
-                      <SelectItem value="fill">Fill - Stretch to fit</SelectItem>
-                      <SelectItem value="none">None - Original size</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-gray-500">How the image should fit within its dimensions</p>
-                </div>
-              )}
+              {/* Object Fit Control - Only when Auto Size is OFF */}
+              <div className={`space-y-3 ${component.styles.autoSize === 'true' ? 'opacity-50 pointer-events-none' : ''}`}>
+                <Label className="text-sm font-medium">Object Fit</Label>
+                <Select 
+                  value={component.styles.objectFit || 'cover'} 
+                  onValueChange={(value) => updateStyles({ objectFit: value })}
+                  disabled={component.styles.autoSize === 'true'}
+                >
+                  <SelectTrigger className="h-10 w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="contain">Contain - Fit entire image</SelectItem>
+                    <SelectItem value="cover">Cover - Fill area, crop if needed</SelectItem>
+                    <SelectItem value="fill">Fill - Stretch to fit</SelectItem>
+                    <SelectItem value="none">None - Original size</SelectItem>
+                    <SelectItem value="scale-down">Scale-down - Smaller of none/contain</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500">
+                  {component.styles.autoSize === 'true' 
+                    ? 'Ignored when Auto Size is ON' 
+                    : 'How the image fills the bounding box'}
+                </p>
+              </div>
             </div>
 
             {/* Alignment Section */}
@@ -1536,6 +1544,9 @@ export default function EmailBuilderPage() {
                   </Button>
                 ))}
               </div>
+              <p className="text-xs text-gray-500">
+                Controls how the image box is positioned within its container (always active)
+              </p>
             </div>
 
             {/* Link Section */}

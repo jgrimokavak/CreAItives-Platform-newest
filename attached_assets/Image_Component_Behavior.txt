@@ -1,0 +1,70 @@
+
+Image Component – Behavior Logic Summary
+========================================
+
+This document outlines how the following image property controls interact and affect each other:
+- Auto Size
+- Width / Height
+- Object Fit
+- Alignment
+
+------------------------------------------------------------
+1. AUTO SIZE (Toggle)
+------------------------------------------------------------
+- When ON:
+  • Image uses its intrinsic (natural) dimensions.
+  • Width/Height sliders are DISABLED.
+  • Object Fit is IGNORED.
+  • Alignment still applies (see section 4).
+
+- When OFF:
+  • Image uses custom Width and Height values.
+  • Object Fit determines how the image is rendered within that bounding box.
+  • Alignment still applies (see section 4).
+
+------------------------------------------------------------
+2. WIDTH / HEIGHT (Sliders)
+------------------------------------------------------------
+- Only editable when Auto Size is OFF.
+- Define the bounding box dimensions of the image component (e.g. 260px × 220px).
+- Independent of the image's actual resolution or aspect ratio.
+
+------------------------------------------------------------
+3. OBJECT FIT (Dropdown)
+------------------------------------------------------------
+Only relevant when Auto Size is OFF. Determines how the actual image is displayed inside the bounding box.
+
+| Mode        | Behavior                                                                  |
+|-------------|---------------------------------------------------------------------------|
+| Contain     | Entire image fits inside the box; preserves aspect ratio; may letterbox. |
+| Cover       | Image fills the box; preserves aspect ratio; may crop overflow.          |
+| Fill        | Image stretches to exactly match box; ignores aspect ratio (may distort).|
+| None        | Image displays at its natural size, clipped if too big.                  |
+| Scale-down  | Chooses the smaller of 'none' or 'contain'.                              |
+
+------------------------------------------------------------
+4. ALIGNMENT (Left, Center, Right)
+------------------------------------------------------------
+- Always active, regardless of Auto Size toggle.
+- Controls how the entire image BOX (not content) is positioned within the parent container.
+
+| Alignment | Behavior When Auto Size = ON                        | Behavior When Auto Size = OFF                        |
+|-----------|-----------------------------------------------------|------------------------------------------------------|
+| Left      | Natural-size image aligns to left of parent         | Sized box aligns left in parent                      |
+| Center    | Natural-size image is horizontally centered         | Sized box is horizontally centered in parent         |
+| Right     | Natural-size image aligns to right of parent        | Sized box aligns right in parent                     |
+
+NOTES:
+- The image is treated as a block inside its container (e.g. row, column, layout cell).
+- Alignment affects layout positioning ONLY; not image scaling or cropping.
+
+------------------------------------------------------------
+5. INTERACTION SUMMARY
+------------------------------------------------------------
+
+| Control        | Affects                    | Depends On           | Notes                          |
+|----------------|----------------------------|----------------------|--------------------------------|
+| Auto Size      | Width, Height, Object Fit  | —                    | Highest priority setting       |
+| Width/Height   | Bounding box size          | Auto Size = OFF      | Sets the rendered box size     |
+| Object Fit     | Internal image scaling     | Auto Size = OFF      | Defines image fill behavior    |
+| Alignment      | Box layout position        | Always active        | Layout-level control           |
