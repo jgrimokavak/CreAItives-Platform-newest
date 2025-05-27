@@ -126,20 +126,44 @@ export default function EmailBuilderPage() {
     return isNaN(num) ? '0px' : `${num}px`;
   };
 
-  // Helper function to capture live builder HTML with computed styles
+  // Helper function to generate clean HTML that matches the preview exactly
   const getBuilderHtml = () => {
     console.log('getBuilderHtml called');
-    console.log('builderRef.current:', builderRef.current);
+    console.log('emailComponents:', emailComponents);
     
-    if (!builderRef.current) {
-      console.log('builderRef.current is null, returning empty string');
-      return '';
-    }
+    // Generate clean HTML that matches the preview section exactly
+    const componentsHTML = emailComponents.map((component, index) => {
+      console.log(`Processing component ${index}:`, component);
+      
+      const styles = component.styles || {};
+      const content = component.content || {};
+      
+      switch (component.type) {
+        case 'text':
+          return `<div style="${Object.entries(styles).map(([k, v]) => `${k.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${v}`).join('; ')}">${content.text || ''}</div>`;
+        
+        case 'image':
+          if (!content.src) return '';
+          const imgAlignment = styles.textAlign === 'left' ? 'flex-start' : styles.textAlign === 'right' ? 'flex-end' : 'center';
+          return `<div style="display: flex; justify-content: ${imgAlignment}; ${Object.entries(styles).map(([k, v]) => k !== 'textAlign' ? `${k.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${v}` : '').filter(Boolean).join('; ')}">
+            <img src="${content.src}" alt="${content.alt || ''}" style="max-width: 100%; height: auto;" />
+          </div>`;
+        
+        case 'button':
+          const btnAlignment = styles.textAlign === 'left' ? 'flex-start' : styles.textAlign === 'right' ? 'flex-end' : 'center';
+          return `<div style="display: flex; justify-content: ${btnAlignment}; margin: 0; padding: ${styles.paddingTop || '0px'} ${styles.paddingRight || '0px'} ${styles.paddingBottom || '0px'} ${styles.paddingLeft || '0px'};">
+            <a href="${content.href || '#'}" style="${Object.entries(styles).filter(([k]) => !k.includes('padding') && k !== 'textAlign').map(([k, v]) => `${k.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${v}`).join('; ')}">${content.text || 'Click here'}</a>
+          </div>`;
+        
+        case 'spacer':
+          return `<div style="${Object.entries(styles).map(([k, v]) => `${k.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${v}`).join('; ')}"></div>`;
+        
+        default:
+          return '';
+      }
+    }).join('\n');
     
-    // Capture the actual HTML structure from the builder
-    const html = builderRef.current.outerHTML;
-    console.log('Captured HTML length:', html.length);
-    console.log('HTML preview:', html.substring(0, 200) + '...');
+    console.log('Generated components HTML length:', componentsHTML.length);
     
     return `<!DOCTYPE html>
 <html>
