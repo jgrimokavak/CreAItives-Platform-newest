@@ -552,24 +552,36 @@ export default function EmailBuilderPage() {
         );
       case 'image':
         return component.content.src ? (
-          <img 
-            src={component.content.src} 
-            alt={component.content.alt} 
-            style={{ 
-              ...componentStyles, 
-              maxWidth: '100%',
-              margin: 0,
-              padding: 0,
-              paddingTop: componentStyles.paddingTop || '0px',
-              paddingRight: componentStyles.paddingRight || '0px',
-              paddingBottom: componentStyles.paddingBottom || '0px',
-              paddingLeft: componentStyles.paddingLeft || '0px',
-              marginTop: componentStyles.marginTop || '0px',
-              marginRight: componentStyles.marginRight || '0px',
-              marginBottom: componentStyles.marginBottom || '0px',
-              marginLeft: componentStyles.marginLeft || '0px',
-            }}
-          />
+          <div style={{
+            textAlign: componentStyles.textAlign || 'center',
+            margin: 0,
+            padding: 0,
+            paddingTop: componentStyles.paddingTop || '0px',
+            paddingRight: componentStyles.paddingRight || '0px',
+            paddingBottom: componentStyles.paddingBottom || '0px',
+            paddingLeft: componentStyles.paddingLeft || '0px',
+            marginTop: componentStyles.marginTop || '0px',
+            marginRight: componentStyles.marginRight || '0px',
+            marginBottom: componentStyles.marginBottom || '0px',
+            marginLeft: componentStyles.marginLeft || '0px',
+          }}>
+            <img 
+              src={component.content.src} 
+              alt={component.content.alt} 
+              style={{ 
+                width: componentStyles.autoSize === 'true' ? 'auto' : (componentStyles.width || '400px'),
+                height: componentStyles.autoSize === 'true' ? 'auto' : (componentStyles.height || '300px'),
+                objectFit: componentStyles.objectFit || 'cover',
+                borderRadius: componentStyles.borderRadius || '0px',
+                borderWidth: componentStyles.borderWidth || '0px',
+                borderStyle: componentStyles.borderWidth && parseInt(stripPx(componentStyles.borderWidth)) > 0 ? 'solid' : 'none',
+                borderColor: componentStyles.borderColor || '#e5e7eb',
+                opacity: componentStyles.opacity || '1',
+                maxWidth: '100%',
+                display: 'block'
+              }}
+            />
+          </div>
         ) : (
           <div style={{ 
             ...componentStyles, 
@@ -1103,30 +1115,237 @@ export default function EmailBuilderPage() {
     switch (component.type) {
       case 'text':
         return (
-          <div className="h-full flex flex-col space-y-4">
-            {/* Content */}
-            <div className="space-y-2">
-              <Label className="font-medium text-sm">Content</Label>
-              <Textarea
-                value={component.content.text || ''}
-                onChange={(e) => updateContent({ text: e.target.value })}
-                rows={3}
-                className="resize-none"
-                placeholder="Enter your text here..."
-              />
+          <div className="h-full flex flex-col space-y-6">
+            {/* Content Section */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="font-semibold text-base text-gray-800">Content</Label>
+                <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+                  <Type className="w-3 h-3 text-blue-600" />
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <Textarea
+                  value={component.content.text || ''}
+                  onChange={(e) => updateContent({ text: e.target.value })}
+                  rows={4}
+                  className="resize-none text-sm"
+                  placeholder="Enter your text content here..."
+                />
+                <p className="text-xs text-gray-500">This is the main text content that will appear in your email</p>
+              </div>
             </div>
 
-            {/* Typography */}
-            {renderTypographyControls(component, updateStyles, true)}
+            {/* Typography Section */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="font-semibold text-base text-gray-800">Typography</Label>
+                <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
+                  <Type className="w-3 h-3 text-green-600" />
+                </div>
+              </div>
+              
+              {/* Font Family */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Font Family</Label>
+                <Select 
+                  value={component.styles.fontFamily || 'Helvetica, sans-serif'} 
+                  onValueChange={(value) => updateStyles({ fontFamily: value })}
+                >
+                  <SelectTrigger className="h-10 w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Helvetica, sans-serif">Helvetica</SelectItem>
+                    <SelectItem value="Roboto, sans-serif">Roboto</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            {/* Colors */}
-            {renderColorControls(component, updateStyles)}
+              {/* Font Size & Weight */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium">Font Size</Label>
+                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                      {stripPx(component.styles.fontSize || '16px')}px
+                    </span>
+                  </div>
+                  <Slider
+                    value={[parseInt(stripPx(component.styles.fontSize || '16px'))]}
+                    onValueChange={(value) => updateStyles({ fontSize: `${value[0]}px` })}
+                    max={72}
+                    min={8}
+                    step={1}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-gray-400">
+                    <span>8px</span>
+                    <span>72px</span>
+                  </div>
+                </div>
 
-            {/* Spacing */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Font Weight</Label>
+                  <Select 
+                    value={component.styles.fontWeight || 'normal'} 
+                    onValueChange={(value) => updateStyles({ fontWeight: value })}
+                  >
+                    <SelectTrigger className="h-10 w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="normal">Normal</SelectItem>
+                      <SelectItem value="bold">Bold</SelectItem>
+                      <SelectItem value="lighter">Lighter</SelectItem>
+                      <SelectItem value="bolder">Bolder</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Text Style Toggles */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Text Styles</Label>
+                <div className="flex gap-2">
+                  <Button
+                    variant={component.styles.fontStyle === 'italic' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => updateStyles({ 
+                      fontStyle: component.styles.fontStyle === 'italic' ? 'normal' : 'italic' 
+                    })}
+                    className="h-10 w-12 font-bold italic"
+                    title="Italic"
+                  >
+                    I
+                  </Button>
+                  <Button
+                    variant={component.styles.textDecoration?.includes('underline') ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => {
+                      const currentDecoration = component.styles.textDecoration || '';
+                      const hasUnderline = currentDecoration.includes('underline');
+                      let newDecoration = currentDecoration.replace('underline', '').trim();
+                      if (!hasUnderline) {
+                        newDecoration = newDecoration ? `${newDecoration} underline` : 'underline';
+                      }
+                      updateStyles({ textDecoration: newDecoration || 'none' });
+                    }}
+                    className="h-10 w-12 font-bold underline"
+                    title="Underline"
+                  >
+                    U
+                  </Button>
+                  <Button
+                    variant={component.styles.textDecoration?.includes('line-through') ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => {
+                      const currentDecoration = component.styles.textDecoration || '';
+                      const hasStrikethrough = currentDecoration.includes('line-through');
+                      let newDecoration = currentDecoration.replace('line-through', '').trim();
+                      if (!hasStrikethrough) {
+                        newDecoration = newDecoration ? `${newDecoration} line-through` : 'line-through';
+                      }
+                      updateStyles({ textDecoration: newDecoration || 'none' });
+                    }}
+                    className="h-10 w-12 font-bold line-through"
+                    title="Strikethrough"
+                  >
+                    S
+                  </Button>
+                </div>
+              </div>
+
+              {/* Line Height & Alignment */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium">Line Height</Label>
+                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                      {component.styles.lineHeight || '1.6'}
+                    </span>
+                  </div>
+                  <Slider
+                    value={[parseFloat(component.styles.lineHeight || '1.6')]}
+                    onValueChange={(value) => updateStyles({ lineHeight: value[0].toString() })}
+                    max={3}
+                    min={0.8}
+                    step={0.1}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-gray-400">
+                    <span>0.8</span>
+                    <span>3.0</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Text Alignment</Label>
+                  <div className="grid grid-cols-2 gap-1">
+                    {[
+                      { value: 'left', label: 'Left', icon: <AlignLeft className="w-3 h-3" /> },
+                      { value: 'center', label: 'Center', icon: <AlignCenter className="w-3 h-3" /> },
+                      { value: 'right', label: 'Right', icon: <AlignRight className="w-3 h-3" /> },
+                      { value: 'justify', label: 'Justify', icon: <AlignCenter className="w-3 h-3" /> }
+                    ].map((align) => (
+                      <Button
+                        key={align.value}
+                        variant={component.styles.textAlign === align.value ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => updateStyles({ textAlign: align.value })}
+                        className="h-8 flex items-center justify-center gap-1 text-xs"
+                        title={align.label}
+                      >
+                        {align.icon}
+                        {align.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Colors Section */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="font-semibold text-base text-gray-800">Colors</Label>
+                <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center">
+                  <Square className="w-3 h-3 text-purple-600" />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Text Color</Label>
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      type="color"
+                      value={component.styles.color || '#000000'}
+                      onChange={(e) => updateStyles({ color: e.target.value })}
+                      className="w-12 h-10 p-1 rounded border"
+                    />
+                    <span className="text-xs text-gray-600 flex-1">Text</span>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Background Color</Label>
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      type="color"
+                      value={component.styles.backgroundColor || '#ffffff'}
+                      onChange={(e) => updateStyles({ backgroundColor: e.target.value })}
+                      className="w-12 h-10 p-1 rounded border"
+                    />
+                    <span className="text-xs text-gray-600 flex-1">Background</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Spacing Section */}
             {renderSpacingControls(component, updateStyles, '15px', '0px')}
-
-            {/* Layout */}
-            {renderLayoutControls(component, updateStyles)}
           </div>
         );
 
@@ -1155,26 +1374,26 @@ export default function EmailBuilderPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => setShowImageGallery(true)}
-                    className="h-9 text-xs border-dashed"
+                    className="h-9 border-dashed hover:bg-blue-50"
+                    title="Select from gallery"
                   >
-                    <Image className="h-3 w-3 mr-1" />
-                    Gallery
+                    <Image className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-9 text-xs border-dashed"
+                    className="h-9 border-dashed hover:bg-green-50"
+                    title="Upload image"
                   >
-                    <Upload className="h-3 w-3 mr-1" />
-                    Upload
+                    <Upload className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-9 text-xs border-dashed"
+                    className="h-9 border-dashed hover:bg-purple-50"
+                    title="Generate with AI"
                   >
-                    <Sparkles className="h-3 w-3 mr-1" />
-                    Generate
+                    <Sparkles className="h-4 w-4" />
                   </Button>
                 </div>
                 
@@ -1264,6 +1483,28 @@ export default function EmailBuilderPage() {
                     <span>50px</span>
                     <span>600px</span>
                   </div>
+                </div>
+              )}
+
+              {/* Object Fit Control */}
+              {component.styles.autoSize !== 'true' && (
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Object Fit</Label>
+                  <Select 
+                    value={component.styles.objectFit || 'cover'} 
+                    onValueChange={(value) => updateStyles({ objectFit: value })}
+                  >
+                    <SelectTrigger className="h-10 w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="contain">Contain - Fit entire image</SelectItem>
+                      <SelectItem value="cover">Cover - Fill area, crop if needed</SelectItem>
+                      <SelectItem value="fill">Fill - Stretch to fit</SelectItem>
+                      <SelectItem value="none">None - Original size</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500">How the image should fit within its dimensions</p>
                 </div>
               )}
             </div>
