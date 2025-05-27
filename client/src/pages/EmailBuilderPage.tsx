@@ -641,6 +641,7 @@ export default function EmailBuilderPage() {
                 borderRadius: componentStyles.borderRadius || '4px',
                 color: componentStyles.color || '#ffffff',
                 backgroundColor: componentStyles.backgroundColor || '#1553ec',
+                opacity: componentStyles.opacity || '1',
                 fontFamily: componentStyles.fontFamily || 'Helvetica, sans-serif',
                 fontSize: componentStyles.fontSize || '16px',
                 fontWeight: componentStyles.fontWeight || 'bold',
@@ -655,7 +656,9 @@ export default function EmailBuilderPage() {
                 textAlign: 'center',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
-                textOverflow: 'ellipsis'
+                textOverflow: 'ellipsis',
+                // Prevent text from shifting when padding changes
+                minHeight: 'fit-content'
               }}
             >
               {component.content.text || 'Button'}
@@ -1838,12 +1841,18 @@ export default function EmailBuilderPage() {
                        stripPx(component.styles.width || '200px') + 'px'}
                     </span>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <div className="flex gap-2">
                       <Button
                         variant={component.styles.width === 'auto' ? 'default' : 'outline'}
                         size="sm"
-                        onClick={() => updateStyles({ width: 'auto' })}
+                        onClick={() => {
+                          if (component.styles.width === 'auto') {
+                            updateStyles({ width: '200px' }); // Return to manual control
+                          } else {
+                            updateStyles({ width: 'auto' });
+                          }
+                        }}
                         className="h-8 text-xs flex-1"
                       >
                         Auto
@@ -1851,28 +1860,31 @@ export default function EmailBuilderPage() {
                       <Button
                         variant={component.styles.width === '100%' ? 'default' : 'outline'}
                         size="sm"
-                        onClick={() => updateStyles({ width: '100%' })}
+                        onClick={() => {
+                          if (component.styles.width === '100%') {
+                            updateStyles({ width: '200px' }); // Return to manual control
+                          } else {
+                            updateStyles({ width: '100%' });
+                          }
+                        }}
                         className="h-8 text-xs flex-1"
                       >
                         Full
                       </Button>
                     </div>
-                    {component.styles.width !== 'auto' && component.styles.width !== '100%' && (
-                      <>
-                        <Slider
-                          value={[parseInt(stripPx(component.styles.width || '200px'))]}
-                          onValueChange={(value) => updateStyles({ width: `${value[0]}px` })}
-                          max={400}
-                          min={100}
-                          step={10}
-                          className="w-full"
-                        />
-                        <div className="flex justify-between text-xs text-gray-400">
-                          <span>100px</span>
-                          <span>400px</span>
-                        </div>
-                      </>
-                    )}
+                    <Slider
+                      value={[parseInt(stripPx(component.styles.width || '200px'))]}
+                      onValueChange={(value) => updateStyles({ width: `${value[0]}px` })}
+                      max={600}
+                      min={100}
+                      step={10}
+                      className="w-full"
+                      disabled={component.styles.width === 'auto' || component.styles.width === '100%'}
+                    />
+                    <div className="flex justify-between text-xs text-gray-400">
+                      <span>100px</span>
+                      <span>600px</span>
+                    </div>
                   </div>
                 </div>
 
@@ -1934,17 +1946,40 @@ export default function EmailBuilderPage() {
                 </div>
               </div>
               
-              {/* Background Color */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Background Color</Label>
-                <div className="flex items-center space-x-2">
-                  <Input
-                    type="color"
-                    value={component.styles.backgroundColor || '#1553ec'}
-                    onChange={(e) => updateStyles({ backgroundColor: e.target.value })}
-                    className="w-12 h-10 p-1 rounded border"
+              {/* Background Color & Transparency */}
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Background Color</Label>
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      type="color"
+                      value={component.styles.backgroundColor || '#1553ec'}
+                      onChange={(e) => updateStyles({ backgroundColor: e.target.value })}
+                      className="w-12 h-10 p-1 rounded border"
+                    />
+                    <span className="text-xs text-gray-600 flex-1">Button background color</span>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium">Background Opacity</Label>
+                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                      {Math.round((parseFloat(component.styles.opacity || '1') * 100))}%
+                    </span>
+                  </div>
+                  <Slider
+                    value={[Math.round((parseFloat(component.styles.opacity || '1') * 100))]}
+                    onValueChange={(value) => updateStyles({ opacity: (value[0] / 100).toString() })}
+                    max={100}
+                    min={0}
+                    step={5}
+                    className="w-full"
                   />
-                  <span className="text-xs text-gray-600 flex-1">Button background color</span>
+                  <div className="flex justify-between text-xs text-gray-400">
+                    <span>0%</span>
+                    <span>100%</span>
+                  </div>
                 </div>
               </div>
 
