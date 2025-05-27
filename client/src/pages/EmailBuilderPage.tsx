@@ -1398,11 +1398,9 @@ export default function EmailBuilderPage() {
           <div className="h-full flex flex-col space-y-6">
             {/* Image Source Section */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label className="font-semibold text-base text-gray-800">Image Source</Label>
-                <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
-                  <Image className="w-3 h-3 text-blue-600" />
-                </div>
+              <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1.5 rounded-full">
+                <Image className="w-4 h-4" />
+                <span className="text-sm font-semibold">Image Source</span>
               </div>
               
               <div className="space-y-3">
@@ -1455,11 +1453,9 @@ export default function EmailBuilderPage() {
 
             {/* Size & Dimensions Section */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label className="font-semibold text-base text-gray-800">Size & Dimensions</Label>
-                <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
-                  <Maximize className="w-3 h-3 text-green-600" />
-                </div>
+              <div className="inline-flex items-center gap-2 bg-green-100 text-green-800 px-3 py-1.5 rounded-full">
+                <Maximize className="w-4 h-4" />
+                <span className="text-sm font-semibold">Size & Dimensions</span>
               </div>
 
               {/* Auto Size Toggle */}
@@ -1561,11 +1557,9 @@ export default function EmailBuilderPage() {
 
             {/* Alignment Section */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label className="font-semibold text-base text-gray-800">Alignment</Label>
-                <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center">
-                  <AlignCenter className="w-3 h-3 text-purple-600" />
-                </div>
+              <div className="inline-flex items-center gap-2 bg-purple-100 text-purple-800 px-3 py-1.5 rounded-full">
+                <AlignCenter className="w-4 h-4" />
+                <span className="text-sm font-semibold">Alignment</span>
               </div>
               
               <div className="grid grid-cols-3 gap-2">
@@ -1611,11 +1605,9 @@ export default function EmailBuilderPage() {
 
             {/* Borders Section */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label className="font-semibold text-base text-gray-800">Borders</Label>
-                <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center">
-                  <Square className="w-3 h-3 text-indigo-600" />
-                </div>
+              <div className="inline-flex items-center gap-2 bg-indigo-100 text-indigo-800 px-3 py-1.5 rounded-full">
+                <Square className="w-4 h-4" />
+                <span className="text-sm font-semibold">Borders</span>
               </div>
               
               <div className="grid grid-cols-2 gap-4">
@@ -1700,11 +1692,9 @@ export default function EmailBuilderPage() {
           <div className="h-full flex flex-col space-y-6">
             {/* General Section */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label className="font-semibold text-base text-gray-800">General</Label>
-                <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
-                  <Type className="w-3 h-3 text-blue-600" />
-                </div>
+              <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1.5 rounded-full">
+                <Settings className="w-4 h-4" />
+                <span className="text-sm font-semibold">General</span>
               </div>
               
               <div className="space-y-4">
