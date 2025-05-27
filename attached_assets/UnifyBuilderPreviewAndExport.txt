@@ -1,0 +1,100 @@
+
+filename: UnifyBuilderPreviewAndExport.tsx
+
+🎯 Goal
+--------
+Eliminate all inconsistencies between the Email Builder, Preview, and Exported HTML. The only valid source of truth for the email layout should be the live React-rendered components shown in the Email Builder canvas.
+
+We no longer want to use backend-based rendering or legacy table-based templates. The HTML seen in the builder **must be exactly what gets previewed and exported.**
+
+---
+
+🛠️ Steps
+--------
+
+1. **Remove backend rendering**
+   - In `client/src/pages/EmailBuilderPage.tsx`, remove all fetch calls to `/api/email/generate-html` from both `handlePreviewEmail` and the Download HTML logic.
+   - These features must no longer rely on:
+     • `server/routes/email-routes.ts`
+     • `shared/emailRenderer.ts`
+     • `generateEmailHTML()` or `generateLegacyEmailHTML()`
+
+2. **Capture the live builder HTML**
+   - Add a `ref` (e.g., `builderRef`) to the main container `<div>` that wraps the email component list in the builder canvas.
+   - Create a helper function:
+
+   ```ts
+   const getBuilderHtml = () => {
+     if (!builderRef.current) return '';
+     const html = builderRef.current.outerHTML;
+     return `<!DOCTYPE html>
+     <html>
+     <head>
+       <meta charset="utf-8" />
+       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+       <title>${emailContent.subject}</title>
+       <style>
+         * { box-sizing: border-box; }
+         body { margin: 0; padding: 0; }
+       </style>
+     </head>
+     <body>${html}</body>
+     </html>`;
+   };
+   ```
+
+   - Optionally, use a library like `juice` to inline CSS styles if targeting legacy email clients.
+
+3. **Rewrite Preview functionality**
+   Replace `handlePreviewEmail` with:
+
+   ```ts
+   const handlePreviewEmail = () => {
+     const html = getBuilderHtml();
+     const win = window.open('', '_blank');
+     if (win) {
+       win.document.write(html);
+       win.document.close();
+     }
+   };
+   ```
+
+4. **Rewrite Export HTML functionality**
+   - Replace the export handler to use `getBuilderHtml()`:
+   ```ts
+   const handleDownloadHtml = () => {
+     const html = getBuilderHtml();
+     const blob = new Blob([html], { type: 'text/html' });
+     const url = URL.createObjectURL(blob);
+     const a = document.createElement('a');
+     a.href = url;
+     a.download = 'email.html';
+     a.click();
+     URL.revokeObjectURL(url);
+   };
+   ```
+
+5. **Cleanup**
+   - Delete:
+     • `generateEmailHTML()` from `EmailBuilderPage.tsx`
+     • `generateEmailHTML` and `generateLegacyEmailHTML` in `shared/emailRenderer.ts`
+     • `/api/email/generate-html` route handler in `server/routes/email-routes.ts`
+   - Remove any unused imports or logic tied to the legacy rendering path.
+
+---
+
+✅ Outcome
+----------
+After this change:
+- What the user sees in the Email Builder is **exactly** what gets previewed and exported.
+- There is **one single rendering path** — the React-rendered builder canvas.
+- No backend HTML generation, no legacy structure conflicts, no divergence in rendering logic.
+
+This guarantees pixel-perfect WYSIWYG fidelity across all channels.
+
+---
+
+📌 Notes
+---------
+- If you rely on Tailwind or external stylesheets, consider inlining styles to ensure email client compatibility.
+- Optionally, add post-processing like `sanitize-html` or `juice` if targeting Outlook or legacy inboxes.

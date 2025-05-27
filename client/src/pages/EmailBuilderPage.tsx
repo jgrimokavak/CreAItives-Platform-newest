@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -105,6 +105,9 @@ export default function EmailBuilderPage() {
   const [showImageGallery, setShowImageGallery] = useState(false);
   const [templateName, setTemplateName] = useState('');
   const { toast } = useToast();
+  
+  // Ref to capture the live builder HTML
+  const builderRef = useRef<HTMLDivElement>(null);
 
   // Fetch images from gallery for image selection
   const { data: galleryImages = [] } = useQuery({
@@ -121,6 +124,25 @@ export default function EmailBuilderPage() {
     if (!value) return '0px';
     const num = parseInt(value);
     return isNaN(num) ? '0px' : `${num}px`;
+  };
+
+  // Helper function to capture live builder HTML
+  const getBuilderHtml = () => {
+    if (!builderRef.current) return '';
+    const html = builderRef.current.outerHTML;
+    return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${emailContent.subject}</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 0; font-family: 'Roboto', 'Helvetica', Arial, sans-serif; background-color: #f5f5f5; }
+  </style>
+</head>
+<body>${html}</body>
+</html>`;
   };
 
   // Drag and drop sensors
@@ -2331,92 +2353,22 @@ export default function EmailBuilderPage() {
     }
   };
 
-  const generateEmailHTML = () => {
-    const template = emailTemplates.find(t => t.id === selectedTemplate);
-    const primaryColor = template?.color || '#1553ec';
-    
-    const componentsHTML = emailComponents.map(component => {
-      const styleString = Object.entries(component.styles)
-        .map(([key, value]) => `${key.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value}`)
-        .join('; ');
 
-      switch (component.type) {
-        case 'text':
-          return `<div style="${styleString}">${component.content.text}</div>`;
-        case 'image':
-          return component.content.src 
-            ? `<div style="text-align: center; padding: 10px;"><img src="${component.content.src}" alt="${component.content.alt}" style="${styleString}" /></div>`
-            : '';
-        case 'button':
-          return `<div style="text-align: center; padding: 10px;"><a href="${component.content.href}" style="${styleString}">${component.content.text}</a></div>`;
-        case 'spacer':
-          return `<div style="${styleString}"></div>`;
-        default:
-          return '';
-      }
-    }).join('');
 
-    return `
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${emailContent.subject}</title>
-</head>
-<body style="margin: 0; padding: 0; font-family: 'Roboto', 'Helvetica', Arial, sans-serif; background-color: #f5f5f5;">
-    <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-        ${componentsHTML}
-        <div style="padding: 30px 20px; text-align: center; color: #666666; font-size: 14px; background-color: #f8f9fa; border-top: 1px solid #e9ecef;">
-            <p style="margin: 5px 0;"><strong>KAVAK</strong> - Tu experiencia automotriz</p>
-            <p style="margin: 5px 0;">© ${new Date().getFullYear()} KAVAK. Todos los derechos reservados.</p>
-            <p style="font-size: 12px; color: #999; margin: 5px 0;">
-                Este email fue generado con Email CreAItor
-            </p>
-        </div>
-    </div>
-</body>
-</html>`;
-  };
-
-  const handlePreviewEmail = async () => {
-    try {
-      const response = await fetch('/api/email/generate-html', {
-        method: 'POST',
-        body: JSON.stringify({
-          subject: emailContent.subject,
-          header: emailContent.header,
-          body: emailContent.body,
-          cta: emailContent.cta,
-          templateType: selectedTemplate,
-          components: emailComponents
-        }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+  const handlePreviewEmail = () => {
+    const html = getBuilderHtml();
+    const win = window.open('', '_blank');
+    if (win) {
+      win.document.write(html);
+      win.document.close();
+      toast({
+        title: "Vista previa generada",
+        description: "Se ha abierto la vista previa del email en una nueva ventana.",
       });
-
-      const data = await response.json();
-
-      if (data.success) {
-        const newWindow = window.open('', '_blank');
-        if (newWindow) {
-          newWindow.document.write(data.html);
-          newWindow.document.close();
-        }
-        
-        toast({
-          title: "Vista previa generada",
-          description: "Se ha abierto la vista previa del email en una nueva ventana.",
-        });
-      } else {
-        throw new Error(data.error || 'Error al generar vista previa');
-      }
-    } catch (error) {
-      console.error('Error generating preview:', error);
+    } else {
       toast({
         title: "Error en vista previa",
-        description: "No se pudo generar la vista previa del email.",
+        description: "No se pudo abrir la ventana de vista previa.",
         variant: "destructive",
       });
     }
@@ -2576,7 +2528,7 @@ export default function EmailBuilderPage() {
                     </CardHeader>
                     <CardContent className="p-0 flex-1 flex flex-col">
                       <div className="flex-1 overflow-y-auto bg-gray-100 p-4 flex justify-center">
-                        <div className="w-full max-w-[600px] bg-white rounded-lg shadow-sm border">
+                        <div ref={builderRef} className="w-full max-w-[600px] bg-white rounded-lg shadow-sm border">
                           {/* Email Subject */}
                           <div className="p-4 border-b bg-gray-50">
                             <Input
@@ -2662,50 +2614,20 @@ export default function EmailBuilderPage() {
                       <Eye className="h-4 w-4 mr-2" />
                       Open in New Window
                     </Button>
-                    <Button onClick={async () => {
-                      try {
-                        // Use the same backend renderer for consistent output
-                        const response = await fetch('/api/email/generate-html', {
-                          method: 'POST',
-                          body: JSON.stringify({
-                            subject: emailContent.subject,
-                            header: emailContent.header,
-                            body: emailContent.body,
-                            cta: emailContent.cta,
-                            templateType: selectedTemplate,
-                            components: emailComponents
-                          }),
-                          headers: {
-                            'Content-Type': 'application/json',
-                          },
-                        });
-
-                        const data = await response.json();
-                        
-                        if (data.success) {
-                          const blob = new Blob([data.html], { type: 'text/html' });
-                          const url = URL.createObjectURL(blob);
-                          const a = document.createElement('a');
-                          a.href = url;
-                          a.download = `email-kavak-${selectedTemplate}.html`;
-                          a.click();
-                          URL.revokeObjectURL(url);
-                          
-                          toast({
-                            title: "HTML descargado",
-                            description: "El archivo HTML ha sido descargado exitosamente.",
-                          });
-                        } else {
-                          throw new Error(data.error || 'Error al generar HTML');
-                        }
-                      } catch (error) {
-                        console.error('Error downloading HTML:', error);
-                        toast({
-                          title: "Error al descargar",
-                          description: "No se pudo generar el archivo HTML.",
-                          variant: "destructive",
-                        });
-                      }
+                    <Button onClick={() => {
+                      const html = getBuilderHtml();
+                      const blob = new Blob([html], { type: 'text/html' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `email-kavak-${selectedTemplate}.html`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                      
+                      toast({
+                        title: "HTML descargado",
+                        description: "El archivo HTML ha sido descargado exitosamente.",
+                      });
                     }}>
                       <Download className="h-4 w-4 mr-2" />
                       Download HTML
