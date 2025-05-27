@@ -1,0 +1,63 @@
+filename: FixImageComponentLogic.ts
+
+Objective:
+Fix the logic for the image component controls in the UI. The current behavior is broken—especially alignment when Auto Size is ON. The image must respond correctly to all combinations of alignment, sizing, and object-fit.
+
+---
+
+1. Auto Size Toggle
+- When ON:
+  • Width and height should be set to "auto" in CSS.
+  • Image should not be wrapped or stretched.
+  • Object-fit should be ignored.
+  • Alignment should still horizontally position the image box (e.g. with flexbox or margin auto).
+- When OFF:
+  • Width and height are set to fixed pixel values.
+  • Object-fit is applied.
+  • Alignment still affects image box position in parent container.
+
+---
+
+2. Width / Height Sliders
+- Only active when Auto Size is OFF.
+- Output fixed CSS width/height (in px).
+- These values define the bounding box of the image.
+
+---
+
+3. Object Fit
+- Only applies when Auto Size is OFF.
+- Set image `object-fit` CSS property accordingly:
+  • "contain" → image fits within box, full visibility, may leave space
+  • "cover" → image fills box, may crop
+  • "fill" → image stretches to box, may distort
+  • "none" → image keeps natural size even if it overflows
+  • "scale-down" → uses smaller of "none" or "contain"
+
+---
+
+4. Alignment (Left, Center, Right)
+- Always active, regardless of Auto Size state.
+- Applies to image's container using CSS layout rules.
+- If inside a flex container:
+  • Use `justify-content: flex-start`, `center`, or `flex-end`
+- If not using flex:
+  • Use `margin-left: auto; margin-right: auto` for center
+  • Use `margin-left: 0` or `margin-right: 0` for left/right
+- Image must visibly move left/center/right inside its parent.
+
+---
+
+Testing:
+✔ Auto Size ON → image uses natural dimensions and aligns correctly.
+✔ Auto Size OFF → image uses custom dimensions and object-fit applies.
+✔ All alignments correctly reposition the image box in its container.
+✔ No overlap, stretch, or misalignment between image and bounding box.
+
+---
+
+Reminders & Constraints:
+- Do NOT apply object-fit when Auto Size is ON.
+- Do NOT disable alignment logic ever.
+- Always bind image box to the alignment target, not just the image content.
+- Use flexbox if needed to center/move image properly.

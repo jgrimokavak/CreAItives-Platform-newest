@@ -553,7 +553,11 @@ export default function EmailBuilderPage() {
       case 'image':
         return component.content.src ? (
           <div style={{
-            textAlign: componentStyles.textAlign || 'center',
+            // Use flexbox for proper alignment control
+            display: 'flex',
+            justifyContent: 
+              componentStyles.textAlign === 'left' ? 'flex-start' :
+              componentStyles.textAlign === 'right' ? 'flex-end' : 'center',
             margin: 0,
             padding: 0,
             paddingTop: componentStyles.paddingTop || '0px',
@@ -569,17 +573,18 @@ export default function EmailBuilderPage() {
               src={component.content.src} 
               alt={component.content.alt} 
               style={{ 
-                // When Auto Size is ON: use natural dimensions
+                // When Auto Size is ON: use natural dimensions, no object-fit
                 width: componentStyles.autoSize === 'true' ? 'auto' : (componentStyles.width || '400px'),
                 height: componentStyles.autoSize === 'true' ? 'auto' : (componentStyles.height || '300px'),
                 // Object Fit only applies when Auto Size is OFF
-                objectFit: componentStyles.autoSize === 'true' ? 'none' : (componentStyles.objectFit || 'cover'),
+                objectFit: componentStyles.autoSize === 'true' ? undefined : (componentStyles.objectFit || 'cover'),
                 borderRadius: componentStyles.borderRadius || '0px',
                 borderWidth: componentStyles.borderWidth || '0px',
                 borderStyle: componentStyles.borderWidth && parseInt(stripPx(componentStyles.borderWidth)) > 0 ? 'solid' : 'none',
                 borderColor: componentStyles.borderColor || '#e5e7eb',
                 opacity: componentStyles.opacity || '1',
-                maxWidth: componentStyles.autoSize === 'true' ? '100%' : 'none',
+                // Only limit max-width when Auto Size is ON to prevent overflow
+                maxWidth: componentStyles.autoSize === 'true' ? '100%' : undefined,
                 display: 'block'
               }}
             />
