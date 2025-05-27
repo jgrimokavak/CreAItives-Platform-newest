@@ -126,10 +126,30 @@ export default function EmailBuilderPage() {
     return isNaN(num) ? '0px' : `${num}px`;
   };
 
-  // Helper function to capture live builder HTML
+  // Helper function to generate clean standalone HTML from builder components
   const getBuilderHtml = () => {
-    if (!builderRef.current) return '';
-    const html = builderRef.current.outerHTML;
+    // Convert React components to clean HTML strings
+    const componentsHTML = emailComponents.map(component => {
+      const styleString = Object.entries(component.styles)
+        .map(([key, value]) => `${key.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value}`)
+        .join('; ');
+
+      switch (component.type) {
+        case 'text':
+          return `<div style="${styleString}">${component.content.text || ''}</div>`;
+        case 'image':
+          return component.content.src 
+            ? `<div style="display: flex; justify-content: ${component.styles.textAlign === 'left' ? 'flex-start' : component.styles.textAlign === 'right' ? 'flex-end' : 'center'}; margin: 0; padding: 0; padding-top: ${component.styles.paddingTop || '0px'}; padding-right: ${component.styles.paddingRight || '0px'}; padding-bottom: ${component.styles.paddingBottom || '0px'}; padding-left: ${component.styles.paddingLeft || '0px'};"><img src="${component.content.src}" alt="${component.content.alt || ''}" style="max-width: ${component.styles.maxWidth || '100%'}; width: ${component.styles.width || 'auto'}; height: ${component.styles.height || 'auto'}; border: ${component.styles.border || 'none'}; border-radius: ${component.styles.borderRadius || '0px'};" /></div>`
+            : '';
+        case 'button':
+          return `<div style="display: flex; justify-content: ${component.styles.textAlign === 'left' ? 'flex-start' : component.styles.textAlign === 'right' ? 'flex-end' : 'center'}; margin: 0; padding: 0; padding-top: ${component.styles.paddingTop || '0px'}; padding-right: ${component.styles.paddingRight || '0px'}; padding-bottom: ${component.styles.paddingBottom || '0px'}; padding-left: ${component.styles.paddingLeft || '0px'};"><a href="${component.content.href || '#'}" style="${styleString}">${component.content.text || 'Click here'}</a></div>`;
+        case 'spacer':
+          return `<div style="${styleString}"></div>`;
+        default:
+          return '';
+      }
+    }).join('\n');
+
     return `<!DOCTYPE html>
 <html>
 <head>
@@ -141,7 +161,16 @@ export default function EmailBuilderPage() {
     body { margin: 0; padding: 0; font-family: 'Roboto', 'Helvetica', Arial, sans-serif; background-color: #f5f5f5; }
   </style>
 </head>
-<body>${html}</body>
+<body>
+  <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+    ${componentsHTML}
+    <div style="padding: 30px 20px; text-align: center; color: #666666; font-size: 14px; background-color: #f8f9fa; border-top: 1px solid #e9ecef;">
+      <p style="margin: 5px 0;"><strong>KAVAK</strong> - Tu experiencia automotriz</p>
+      <p style="margin: 5px 0;">© ${new Date().getFullYear()} KAVAK. Todos los derechos reservados.</p>
+      <p style="font-size: 12px; color: #999; margin: 5px 0;">Este email fue generado con Email CreAItor</p>
+    </div>
+  </div>
+</body>
 </html>`;
   };
 
