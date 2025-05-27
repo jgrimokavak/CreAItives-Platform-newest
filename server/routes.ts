@@ -23,7 +23,7 @@ import modelRoutes, { initializeModels } from "./routes/model-routes";
 import upscaleRoutes from "./routes/upscale-routes";
 import enhancePromptRouter from "./routes/enhancePrompt";
 import promptSuggestionsRouter from "./routes/promptSuggestions";
-import { generateEmailContent, saveEmailTemplate, getEmailTemplates, generateEmailHTML } from "./routes/email-routes";
+import { generateEmailContent, saveEmailTemplate, getEmailTemplates } from "./routes/email-routes";
 import { listMakes, listModels, listBodyStyles, listTrims, flushCarCache, loadCarData, getLastFetchTime, setupCarDataAutoRefresh } from "./carData";
 import axios from "axios";
 import Papa from "papaparse";
@@ -690,7 +690,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Email CreAItor routes
   app.post('/api/email/generate-content', generateEmailContent);
-  app.post('/api/email/generate-html', generateEmailHTML);
   app.post('/api/email/save-template', saveEmailTemplate);
   app.get('/api/email/templates', getEmailTemplates);
   
