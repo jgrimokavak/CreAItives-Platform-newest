@@ -303,7 +303,6 @@ export default function EmailBuilderPage() {
             <table
               style={{
                 borderCollapse: 'separate',
-                width: '100%',
                 lineHeight: '100%'
               }}
               align="center"
@@ -318,10 +317,8 @@ export default function EmailBuilderPage() {
                       border: 'none',
                       borderRadius: component.styles?.borderRadius || '6px',
                       cursor: 'auto',
-                      msoFontSize: '0px',
-                      background: component.styles?.backgroundColor || '#1553ec',
-                      textAlign: 'center'
-                    } as any}
+                      background: component.styles?.backgroundColor || '#1553ec'
+                    }}
                     align="center"
                     valign="middle"
                   >
@@ -339,9 +336,8 @@ export default function EmailBuilderPage() {
                         textDecoration: 'none',
                         textTransform: 'none',
                         padding: '10px 25px',
-                        borderRadius: component.styles?.borderRadius || '6px',
-                        msoFontSize: '0px'
-                      } as any}
+                        borderRadius: component.styles?.borderRadius || '6px'
+                      }}
                       target="_blank"
                     >
                       {component.content.text}
