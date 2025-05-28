@@ -1,26 +1,29 @@
-import { useState, useRef, useEffect, createContext, useContext } from 'react';
+import { useState, useEffect, useRef, createContext } from 'react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
+import { useToast } from '@/hooks/use-toast';
 import { 
-  Mail, Type, Image, MousePointer, Space, Sparkles, 
-  Loader2, Save, Download, Eye, Gift, Settings,
-  GripVertical, Trash2, AlignLeft, AlignCenter, AlignRight,
-  Bold, Italic, Underline
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+  Type, 
+  Image, 
+  MousePointer, 
+  Space, 
+  Trash2, 
+  GripVertical, 
+  Eye, 
+  Download, 
+  Settings,
+  Mail
+} from 'lucide-react';
 
-// Email Component Interface
+// Types for MJML Editor
 interface EmailComponent {
   id: string;
   type: 'text' | 'image' | 'button' | 'spacer';
@@ -28,55 +31,17 @@ interface EmailComponent {
   styles: Record<string, any>;
 }
 
-// Email Content State
 interface EmailContent {
   subject: string;
   components: EmailComponent[];
 }
 
-// Email Templates
-const emailTemplates = [
-  {
-    id: 'kavak-promo',
-    name: 'KAVAK Promocional',
-    description: 'Template promocional para ofertas especiales',
-    icon: <Gift className="h-8 w-8" />,
-    color: '#1553ec',
-    tags: ['promocional', 'ofertas']
-  },
-  {
-    id: 'kavak-welcome',
-    name: 'KAVAK Bienvenida',
-    description: 'Template de bienvenida para nuevos usuarios',
-    icon: <Mail className="h-8 w-8" />,
-    color: '#10b981',
-    tags: ['bienvenida', 'onboarding']
-  },
-  {
-    id: 'kavak-newsletter',
-    name: 'KAVAK Newsletter',
-    description: 'Template para newsletters informativos',
-    icon: <Type className="h-8 w-8" />,
-    color: '#8b5cf6',
-    tags: ['newsletter', 'informativo']
-  }
-];
-
-// Component Types for Tools Panel
-const componentTypes = [
-  { type: 'text', name: 'Text', icon: <Type className="h-4 w-4" /> },
-  { type: 'image', name: 'Image', icon: <Image className="h-4 w-4" /> },
-  { type: 'button', name: 'Button', icon: <MousePointer className="h-4 w-4" /> },
-  { type: 'spacer', name: 'Spacer', icon: <Space className="h-4 w-4" /> }
-];
-
-// Editing Context for conditional rendering
 const EditingContext = createContext(false);
 
 export default function EmailBuilderPage() {
   const { toast } = useToast();
   
-  // State Management - Pure MJML Editor (no templates)
+  // Pure MJML Editor State
   const [emailContent, setEmailContent] = useState<EmailContent>({
     subject: '',
     components: []
@@ -113,38 +78,26 @@ export default function EmailBuilderPage() {
           }),
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          console.log('Generated MJML:', data.mjml);
-          if (data.html) {
-            setMjmlPreviewHtml(data.html);
-          } else {
-            console.warn('No HTML returned from MJML compilation');
-            setMjmlPreviewHtml(`
-              <div style="padding: 40px; text-align: center; color: #dc2626; border: 2px solid #fecaca; background: #fef2f2; border-radius: 8px; margin: 20px;">
-                <h3>Preview Error</h3>
-                <p>Unable to compile email preview. Please check your components.</p>
-              </div>
-            `);
-          }
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        console.log('Generated MJML:', data.mjml);
+        
+        if (data.success && data.html) {
+          setMjmlPreviewHtml(data.html);
         } else {
-          console.error('Failed to compile MJML - server error');
-          setMjmlPreviewHtml(`
-            <div style="padding: 40px; text-align: center; color: #dc2626; border: 2px solid #fecaca; background: #fef2f2; border-radius: 8px; margin: 20px;">
-              <h3>Server Error</h3>
-              <p>Unable to connect to email compilation service.</p>
-            </div>
-          `);
+          console.error('MJML compilation failed:', data.errors);
         }
       } catch (error) {
-        console.error('Error compiling MJML:', error);
+        console.error('Failed to compile MJML:', error);
       }
     };
 
     compileToMjml();
   }, [emailContent, emailComponents]);
-
-  // Pure MJML Editor - no template system
 
   // Component Management
   const addComponent = (type: string) => {
@@ -180,115 +133,108 @@ export default function EmailBuilderPage() {
           fontSize: '16px',
           color: '#000000',
           textAlign: 'left',
-          padding: '15px',
-          margin: '0px'
+          padding: '15px'
         };
       case 'image':
         return {
-          width: '100%',
-          padding: '15px',
-          margin: '0px'
+          width: '600px',
+          padding: '15px'
         };
       case 'button':
         return {
           backgroundColor: '#1553ec',
           color: '#ffffff',
-          padding: '12px 24px',
-          margin: '15px',
+          padding: '15px',
           borderRadius: '6px',
-          textAlign: 'center'
+          textAlign: 'center',
+          margin: '15px'
         };
       case 'spacer':
         return {
-          height: '20px',
-          backgroundColor: 'transparent'
+          height: '20px'
         };
       default:
         return {};
     }
   };
 
-  // Drag and Drop Handler
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-
-    if (over && active.id !== over.id) {
-      setEmailComponents((items) => {
-        const oldIndex = items.findIndex((item) => item.id === active.id);
-        const newIndex = items.findIndex((item) => item.id === over.id);
-
-        return arrayMove(items, oldIndex, newIndex);
-      });
-    }
-  };
-
-  // Component Deletion
-  const deleteComponent = (id: string) => {
+  const removeComponent = (id: string) => {
     setEmailComponents(prev => prev.filter(c => c.id !== id));
     if (selectedComponent === id) {
       setSelectedComponent(null);
     }
   };
 
-  // Component Update
-  const updateComponent = (id: string, updates: Partial<EmailComponent>) => {
-    setEmailComponents(prev => prev.map(c => 
-      c.id === id ? { ...c, ...updates } : c
+  const updateComponent = (id: string, field: string, value: any) => {
+    setEmailComponents(prev => prev.map(comp => 
+      comp.id === id 
+        ? {
+            ...comp,
+            [field]: field === 'content' 
+              ? { ...comp.content, ...value }
+              : field === 'styles'
+              ? { ...comp.styles, ...value }
+              : value
+          }
+        : comp
     ));
+  };
+
+  // Drag and Drop Handler
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (active.id !== over?.id) {
+      setEmailComponents((items) => {
+        const oldIndex = items.findIndex(item => item.id === active.id);
+        const newIndex = items.findIndex(item => item.id === over?.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
   };
 
   // Sortable Component Wrapper
   const SortableEmailComponent = ({ component }: { component: EmailComponent }) => {
-    const isEditing = useContext(EditingContext);
     const {
       attributes,
       listeners,
       setNodeRef,
       transform,
       transition,
-      isDragging,
     } = useSortable({ id: component.id });
 
     const style = {
       transform: CSS.Transform.toString(transform),
       transition,
-      opacity: isDragging ? 0.5 : 1,
     };
 
     return (
       <div
         ref={setNodeRef}
         style={style}
-        className={cn(
-          "relative group",
-          selectedComponent === component.id && "ring-2 ring-blue-500"
-        )}
+        className={`group relative ${selectedComponent === component.id ? 'ring-2 ring-blue-500' : ''}`}
         onClick={() => setSelectedComponent(component.id)}
       >
-        {isEditing && (
-          <div className="absolute top-0 right-0 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button
-              size="sm"
-              variant="destructive"
-              className="h-6 w-6 p-0"
-              onClick={(e) => {
-                e.stopPropagation();
-                deleteComponent(component.id);
-              }}
-            >
-              <Trash2 className="h-3 w-3" />
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-6 w-6 p-0 cursor-grab"
+        <div className="absolute top-2 left-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex gap-1">
+            <button
               {...attributes}
               {...listeners}
+              className="p-1 bg-gray-800 text-white rounded text-xs hover:bg-gray-700"
             >
               <GripVertical className="h-3 w-3" />
-            </Button>
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                removeComponent(component.id);
+              }}
+              className="p-1 bg-red-600 text-white rounded text-xs hover:bg-red-700"
+            >
+              <Trash2 className="h-3 w-3" />
+            </button>
           </div>
-        )}
+        </div>
         {renderEmailComponent(component)}
       </div>
     );
@@ -410,473 +356,378 @@ export default function EmailBuilderPage() {
     }
   };
 
-  // Component Properties Renderer
+  // Component Properties Panel
   const renderComponentProperties = (component: EmailComponent) => {
     if (!component) return null;
 
-    const updateStyles = (updates: any) => {
-      updateComponent(component.id, { styles: { ...component.styles, ...updates } });
-    };
-
-    const updateContent = (updates: any) => {
-      updateComponent(component.id, { content: { ...component.content, ...updates } });
-    };
-
-    return (
-      <div className="space-y-4">
-        <div className="pb-2 border-b">
-          <Label className="font-semibold capitalize">{component.type} Properties</Label>
-        </div>
-
-        {/* Content Properties */}
-        {component.type === 'text' && (
-          <div className="space-y-3">
+    switch (component.type) {
+      case 'text':
+        return (
+          <div className="space-y-4">
             <div>
-              <Label>Text Content</Label>
-              <Textarea
+              <Label htmlFor="text-content">Text Content</Label>
+              <Input
+                id="text-content"
                 value={component.content.text}
-                onChange={(e) => updateContent({ text: e.target.value })}
+                onChange={(e) => updateComponent(component.id, 'content', { text: e.target.value })}
                 placeholder="Enter your text"
-                className="mt-1"
-              />
-            </div>
-          </div>
-        )}
-
-        {component.type === 'image' && (
-          <div className="space-y-3">
-            <div>
-              <Label>Image URL</Label>
-              <Input
-                value={component.content.src}
-                onChange={(e) => updateContent({ src: e.target.value })}
-                placeholder="https://example.com/image.jpg"
-                className="mt-1"
               />
             </div>
             <div>
-              <Label>Alt Text</Label>
-              <Input
-                value={component.content.alt}
-                onChange={(e) => updateContent({ alt: e.target.value })}
-                placeholder="Image description"
-                className="mt-1"
-              />
-            </div>
-          </div>
-        )}
-
-        {component.type === 'button' && (
-          <div className="space-y-3">
-            <div>
-              <Label>Button Text</Label>
-              <Input
-                value={component.content.text}
-                onChange={(e) => updateContent({ text: e.target.value })}
-                placeholder="Click here"
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label>Link URL</Label>
-              <Input
-                value={component.content.href}
-                onChange={(e) => updateContent({ href: e.target.value })}
-                placeholder="https://example.com"
-                className="mt-1"
-              />
-            </div>
-          </div>
-        )}
-
-        {component.type === 'spacer' && (
-          <div>
-            <Label>Height</Label>
-            <Input
-              value={component.styles.height}
-              onChange={(e) => updateStyles({ height: e.target.value })}
-              placeholder="20px"
-              className="mt-1"
-            />
-          </div>
-        )}
-
-        {/* Style Properties */}
-        <div className="pt-2 border-t">
-          <Label className="font-semibold">Styling</Label>
-          
-          {(component.type === 'text' || component.type === 'button') && (
-            <div className="mt-3 space-y-3">
-              <div>
-                <Label>Text Color</Label>
-                <Input
-                  type="color"
-                  value={component.styles.color}
-                  onChange={(e) => updateStyles({ color: e.target.value })}
-                  className="mt-1 h-10"
-                />
-              </div>
-              
-              {component.type === 'text' && (
-                <div>
-                  <Label>Font Size</Label>
-                  <Input
-                    value={component.styles.fontSize}
-                    onChange={(e) => updateStyles({ fontSize: e.target.value })}
-                    placeholder="16px"
-                    className="mt-1"
-                  />
-                </div>
-              )}
-
-              {component.type === 'button' && (
-                <div>
-                  <Label>Background Color</Label>
-                  <Input
-                    type="color"
-                    value={component.styles.backgroundColor}
-                    onChange={(e) => updateStyles({ backgroundColor: e.target.value })}
-                    className="mt-1 h-10"
-                  />
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="mt-3 space-y-3">
-            <div>
-              <Label>Padding</Label>
-              <Input
-                value={component.styles.padding}
-                onChange={(e) => updateStyles({ padding: e.target.value })}
-                placeholder="15px"
-                className="mt-1"
-              />
-            </div>
-            
-            <div>
-              <Label>Margin</Label>
-              <Input
-                value={component.styles.margin}
-                onChange={(e) => updateStyles({ margin: e.target.value })}
-                placeholder="0px"
-                className="mt-1"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Generate Content with AI
-  const handleGenerateContent = async () => {
-    setIsGenerating(true);
-    try {
-      // Mock AI generation for now
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const generatedComponent: EmailComponent = {
-        id: `text-${Date.now()}`,
-        type: 'text',
-        content: { text: `Generated ${tone} content for KAVAK email campaign` },
-        styles: getDefaultStyles('text')
-      };
-      
-      setEmailComponents(prev => [...prev, generatedComponent]);
-      
-      toast({
-        title: "Content Generated",
-        description: "AI-generated content has been added to your email.",
-      });
-    } catch (error) {
-      toast({
-        title: "Generation Failed",
-        description: "Failed to generate content. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  // Save Template
-  const saveTemplate = () => {
-    toast({
-      title: "Template Saved",
-      description: `Template "${templateName}" has been saved successfully.`,
-    });
-    setTemplateName('');
-  };
-
-  // Export Functions
-  const getBuilderHtml = () => {
-    if (!builderRef.current) return '';
-    return builderRef.current.innerHTML;
-  };
-
-  const handlePreviewEmail = () => {
-    const html = mjmlPreviewHtml || getBuilderHtml();
-    const newWindow = window.open('', '_blank');
-    if (newWindow) {
-      newWindow.document.write(html);
-      newWindow.document.close();
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Fixed Tools Panel - Left Side */}
-      <div className="w-80 bg-white border-r border-gray-200 flex-shrink-0 h-screen sticky top-0">
-        <Card className="h-full flex flex-col border-0 rounded-none">
-          <CardHeader className="flex-shrink-0 border-b">
-            <CardTitle className="text-lg">Tools</CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1 overflow-y-auto space-y-6 p-4">
-            {/* Templates Access */}
-            <div className="space-y-3 pb-4 border-b">
-              <Label className="font-semibold">Templates</Label>
-              <Button 
-                className="w-full" 
-                variant="outline"
-                onClick={() => setShowTemplates(true)}
+              <Label htmlFor="text-size">Font Size</Label>
+              <Select 
+                value={component.styles.fontSize} 
+                onValueChange={(value) => updateComponent(component.id, 'styles', { fontSize: value })}
               >
-                <Gift className="h-4 w-4 mr-2" />
-                Choose Template
-              </Button>
-            </div>
-
-            {/* AI Generation */}
-            <div className="space-y-3 pb-4 border-b">
-              <Label className="font-semibold">AI Generation</Label>
-              <Select value={tone} onValueChange={(value: any) => setTone(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="friendly">Friendly</SelectItem>
-                  <SelectItem value="professional">Professional</SelectItem>
-                  <SelectItem value="urgent">Urgent</SelectItem>
-                  <SelectItem value="promotional">Promotional</SelectItem>
+                  <SelectItem value="12px">12px</SelectItem>
+                  <SelectItem value="14px">14px</SelectItem>
+                  <SelectItem value="16px">16px</SelectItem>
+                  <SelectItem value="18px">18px</SelectItem>
+                  <SelectItem value="20px">20px</SelectItem>
+                  <SelectItem value="24px">24px</SelectItem>
                 </SelectContent>
               </Select>
-              <Button 
-                className="w-full" 
-                onClick={handleGenerateContent}
-                disabled={isGenerating}
-              >
-                {isGenerating ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Sparkles className="h-4 w-4 mr-2" />
-                )}
-                Generate Content
-              </Button>
             </div>
-
-            {/* Component Library */}
-            <div className="space-y-3">
-              <Label className="font-semibold">Add Components</Label>
-              <div className="space-y-2">
-                {componentTypes.map((componentType) => (
-                  <Button
-                    key={componentType.type}
-                    variant="outline"
-                    className="w-full justify-start"
-                    onClick={() => addComponent(componentType.type)}
-                    disabled={!selectedTemplate}
-                  >
-                    {componentType.icon}
-                    <span className="ml-2">{componentType.name}</span>
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            {/* Template Saving */}
-            <div className="space-y-3 pt-4 border-t">
-              <Label className="font-semibold">Save Template</Label>
+            <div>
+              <Label htmlFor="text-color">Text Color</Label>
               <Input
-                value={templateName}
-                onChange={(e) => setTemplateName(e.target.value)}
-                placeholder="Template name"
+                id="text-color"
+                type="color"
+                value={component.styles.color}
+                onChange={(e) => updateComponent(component.id, 'styles', { color: e.target.value })}
               />
-              <Button 
-                className="w-full" 
-                onClick={saveTemplate}
-                disabled={!templateName.trim() || !selectedTemplate}
-                variant="secondary"
+            </div>
+            <div>
+              <Label htmlFor="text-align">Text Alignment</Label>
+              <Select 
+                value={component.styles.textAlign} 
+                onValueChange={(value) => updateComponent(component.id, 'styles', { textAlign: value })}
               >
-                <Save className="h-4 w-4 mr-2" />
-                Save
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="left">Left</SelectItem>
+                  <SelectItem value="center">Center</SelectItem>
+                  <SelectItem value="right">Right</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        );
+
+      case 'image':
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="image-src">Image URL</Label>
+              <Input
+                id="image-src"
+                value={component.content.src}
+                onChange={(e) => updateComponent(component.id, 'content', { src: e.target.value })}
+                placeholder="https://example.com/image.jpg"
+              />
+            </div>
+            <div>
+              <Label htmlFor="image-alt">Alt Text</Label>
+              <Input
+                id="image-alt"
+                value={component.content.alt}
+                onChange={(e) => updateComponent(component.id, 'content', { alt: e.target.value })}
+                placeholder="Describe the image"
+              />
+            </div>
+            <div>
+              <Label htmlFor="image-width">Width (px)</Label>
+              <Input
+                id="image-width"
+                value={component.styles.width?.replace('px', '') || '600'}
+                onChange={(e) => updateComponent(component.id, 'styles', { width: e.target.value + 'px' })}
+                placeholder="600"
+              />
+            </div>
+          </div>
+        );
+
+      case 'button':
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="button-text">Button Text</Label>
+              <Input
+                id="button-text"
+                value={component.content.text}
+                onChange={(e) => updateComponent(component.id, 'content', { text: e.target.value })}
+                placeholder="Click here"
+              />
+            </div>
+            <div>
+              <Label htmlFor="button-href">Link URL</Label>
+              <Input
+                id="button-href"
+                value={component.content.href}
+                onChange={(e) => updateComponent(component.id, 'content', { href: e.target.value })}
+                placeholder="https://example.com"
+              />
+            </div>
+            <div>
+              <Label htmlFor="button-bg">Background Color</Label>
+              <Input
+                id="button-bg"
+                type="color"
+                value={component.styles.backgroundColor}
+                onChange={(e) => updateComponent(component.id, 'styles', { backgroundColor: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="button-color">Text Color</Label>
+              <Input
+                id="button-color"
+                type="color"
+                value={component.styles.color}
+                onChange={(e) => updateComponent(component.id, 'styles', { color: e.target.value })}
+              />
+            </div>
+          </div>
+        );
+
+      case 'spacer':
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="spacer-height">Height: {component.styles.height}</Label>
+              <Slider
+                value={[parseInt(component.styles.height?.replace('px', '') || '20')]}
+                onValueChange={(values) => updateComponent(component.id, 'styles', { height: `${values[0]}px` })}
+                max={100}
+                min={5}
+                step={5}
+                className="w-full"
+              />
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  // Helper Functions
+  const handlePreviewEmail = () => {
+    if (mjmlPreviewHtml) {
+      const newWindow = window.open();
+      if (newWindow) {
+        newWindow.document.write(mjmlPreviewHtml);
+        newWindow.document.close();
+      }
+    }
+  };
+
+  const getBuilderHtml = () => {
+    if (builderRef.current) {
+      return builderRef.current.innerHTML;
+    }
+    return '';
+  };
+
+  return (
+    <div className="flex h-screen bg-gray-50">
+      {/* Tools Panel - Left Side */}
+      <div className="w-64 bg-white border-r border-gray-200 flex-shrink-0 h-screen sticky top-0">
+        <Card className="h-full flex flex-col border-0 rounded-none">
+          <CardHeader className="flex-shrink-0 border-b">
+            <CardTitle className="text-lg">Components</CardTitle>
+          </CardHeader>
+          <CardContent className="flex-1 overflow-y-auto p-4">
+            <div className="space-y-3">
+              <Button 
+                onClick={() => addComponent('text')} 
+                variant="outline" 
+                className="w-full justify-start"
+              >
+                <Type className="h-4 w-4 mr-2" />
+                Text
+              </Button>
+              <Button 
+                onClick={() => addComponent('image')} 
+                variant="outline" 
+                className="w-full justify-start"
+              >
+                <Image className="h-4 w-4 mr-2" />
+                Image
+              </Button>
+              <Button 
+                onClick={() => addComponent('button')} 
+                variant="outline" 
+                className="w-full justify-start"
+              >
+                <MousePointer className="h-4 w-4 mr-2" />
+                Button
+              </Button>
+              <Button 
+                onClick={() => addComponent('spacer')} 
+                variant="outline" 
+                className="w-full justify-start"
+              >
+                <Space className="h-4 w-4 mr-2" />
+                Spacer
               </Button>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Central Workspace */}
+      {/* Central Workspace - Pure MJML Editor */}
       <div className="flex-1 min-h-screen">
-        {selectedTemplate ? (
-          /* Email Builder Workspace */
-          <div className="p-6 max-w-4xl mx-auto">
-            {/* Email Builder Section */}
-            <div className="mb-8">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-gray-900">Email Builder</h2>
-                <div className="flex gap-3">
-                  <Button onClick={handlePreviewEmail} variant="outline" size="sm">
-                    <Eye className="h-4 w-4 mr-2" />
-                    Open Preview
-                  </Button>
-                  <Button onClick={() => {
-                    const html = mjmlPreviewHtml || getBuilderHtml();
-                    const blob = new Blob([html], { type: 'text/html' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `email-kavak-${selectedTemplate}.html`;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                    
-                    toast({
-                      title: "HTML descargado",
-                      description: "El archivo HTML ha sido descargado exitosamente.",
-                    });
-                  }} size="sm">
-                    <Download className="h-4 w-4 mr-2" />
-                    Download HTML
-                  </Button>
-                </div>
+        <div className="p-6 max-w-4xl mx-auto">
+          {/* Email Builder Section */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-900">Pure MJML Editor</h2>
+              <div className="flex gap-3">
+                <Button onClick={handlePreviewEmail} variant="outline" size="sm">
+                  <Eye className="h-4 w-4 mr-2" />
+                  Open Preview
+                </Button>
+                <Button onClick={() => {
+                  const html = mjmlPreviewHtml || getBuilderHtml();
+                  const blob = new Blob([html], { type: 'text/html' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `mjml-email.html`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  
+                  toast({
+                    title: "HTML descargado",
+                    description: "El archivo HTML ha sido descargado exitosamente.",
+                  });
+                }} size="sm">
+                  <Download className="h-4 w-4 mr-2" />
+                  Download HTML
+                </Button>
               </div>
+            </div>
 
-              {/* Email Builder Canvas */}
-              <Card className="w-full">
-                <CardContent className="p-0">
-                  <div className="bg-gray-100 p-6 flex justify-center">
-                    <EditingContext.Provider value={true}>
-                      <div ref={builderRef} className="w-full max-w-[600px] bg-white">
-                        {/* Email Subject - Optional */}
-                        {emailContent.subject && (
-                          <div className="p-4 border-b bg-gray-50">
-                            <Input
-                              value={emailContent.subject}
-                              onChange={(e) => setEmailContent(prev => ({ ...prev, subject: e.target.value }))}
-                              placeholder="Email subject"
-                              className="font-semibold bg-white"
-                            />
-                          </div>
-                        )}
-
-                        {/* Pure MJML Canvas - Blank by default */}
-                        <div style={{ fontFamily: 'Arial, sans-serif', backgroundColor: '#ffffff' }}>
-                          {emailComponents.length === 0 ? (
-                            <div className="text-center py-8 text-gray-500 border-2 border-dashed border-gray-300">
-                              <Mail className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                              <p>Blank MJML Canvas</p>
-                              <p className="text-sm mt-2">Add components to start building</p>
-                            </div>
-                          ) : (
-                            <DndContext 
-                              sensors={sensors}
-                              collisionDetection={closestCenter}
-                              onDragEnd={handleDragEnd}
-                            >
-                              <SortableContext 
-                                items={emailComponents.map(c => c.id)}
-                                strategy={verticalListSortingStrategy}
-                              >
-                                <div>
-                                  {emailComponents.map((component) => (
-                                    <SortableEmailComponent 
-                                      key={component.id} 
-                                      component={component} 
-                                    />
-                                  ))}
-                                </div>
-                              </SortableContext>
-                            </DndContext>
-                          )}
+            {/* Email Builder Canvas */}
+            <Card className="w-full">
+              <CardContent className="p-0">
+                <div className="bg-gray-100 p-6 flex justify-center">
+                  <EditingContext.Provider value={true}>
+                    <div ref={builderRef} className="w-full max-w-[600px] bg-white">
+                      {/* Email Subject - Optional */}
+                      {emailContent.subject && (
+                        <div className="p-4 border-b bg-gray-50">
+                          <Input
+                            value={emailContent.subject}
+                            onChange={(e) => setEmailContent(prev => ({ ...prev, subject: e.target.value }))}
+                            placeholder="Email subject"
+                            className="font-semibold bg-white"
+                          />
                         </div>
-                      </div>
-                    </EditingContext.Provider>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                      )}
 
-            {/* Live MJML Preview Section */}
-            <div className="mb-8">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-gray-900">Live MJML Preview</h2>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-xs text-green-600">Real-time compilation</span>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={async () => {
-                      console.log('=== TESTING MJML CLIENT/SERVER COMMUNICATION ===');
-                      try {
-                        const response = await fetch('/api/email/test-mjml');
-                        const data = await response.json();
-                        console.log('Test MJML response:', data);
-                        console.log('Test HTML length:', data.html?.length);
-                        console.log('Test HTML preview:', data.html?.substring(0, 200) + '...');
-                        if (data.html) {
-                          setMjmlPreviewHtml(data.html);
-                          console.log('✅ Test HTML successfully set in preview state');
-                        } else {
-                          console.error('❌ No HTML in test response');
-                        }
-                      } catch (error) {
-                        console.error('❌ Test fetch failed:', error);
-                      }
-                    }}
-                  >
-                    Test MJML
-                  </Button>
-                </div>
-              </div>
-              
-              <Card className="w-full">
-                <CardContent className="p-6">
-                  <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-4">
-                    <p className="text-xs text-blue-700">
-                      ✨ This shows the actual MJML-compiled HTML that will be exported - exactly what your recipients will see
-                    </p>
-                  </div>
-                  <div className="flex justify-center w-full">
-                    <div className="w-full max-w-[600px]">
-                      <div 
-                        className="bg-white border rounded overflow-hidden shadow-lg min-h-[200px]"
-                        dangerouslySetInnerHTML={{ 
-                          __html: mjmlPreviewHtml || '<div style="padding: 40px; text-align: center; color: #9ca3af; font-family: Arial, sans-serif;">Add components above to see your email preview</div>' 
-                        }}
-                      ></div>
+                      {/* Pure MJML Canvas - Blank by default */}
+                      <div style={{ fontFamily: 'Arial, sans-serif', backgroundColor: '#ffffff' }}>
+                        {emailComponents.length === 0 ? (
+                          <div className="text-center py-8 text-gray-500 border-2 border-dashed border-gray-300">
+                            <Mail className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                            <p>Blank MJML Canvas</p>
+                            <p className="text-sm mt-2">Add components to start building</p>
+                          </div>
+                        ) : (
+                          <DndContext 
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragEnd={handleDragEnd}
+                          >
+                            <SortableContext 
+                              items={emailComponents.map(c => c.id)}
+                              strategy={verticalListSortingStrategy}
+                            >
+                              <div>
+                                {emailComponents.map((component) => (
+                                  <SortableEmailComponent 
+                                    key={component.id} 
+                                    component={component} 
+                                  />
+                                ))}
+                              </div>
+                            </SortableContext>
+                          </DndContext>
+                        )}
+                      </div>
                     </div>
+                  </EditingContext.Provider>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Live MJML Preview Section */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-900">Live MJML Preview</h2>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span className="text-xs text-green-600">Real-time compilation</span>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={async () => {
+                    console.log('=== TESTING MJML CLIENT/SERVER COMMUNICATION ===');
+                    try {
+                      const response = await fetch('/api/email/test-mjml');
+                      const data = await response.json();
+                      console.log('Test MJML response:', data);
+                      console.log('Test HTML length:', data.html?.length);
+                      console.log('Test HTML preview:', data.html?.substring(0, 200) + '...');
+                      if (data.html) {
+                        setMjmlPreviewHtml(data.html);
+                        console.log('✅ Test HTML successfully set in preview state');
+                      } else {
+                        console.error('❌ No HTML in test response');
+                      }
+                    } catch (error) {
+                      console.error('❌ Test fetch failed:', error);
+                    }
+                  }}
+                >
+                  Test MJML
+                </Button>
+              </div>
+            </div>
+            
+            <Card className="w-full">
+              <CardContent className="p-6">
+                <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-4">
+                  <p className="text-xs text-blue-700">
+                    ✨ This shows the actual MJML-compiled HTML that will be exported - exactly what your recipients will see
+                  </p>
+                </div>
+                <div className="flex justify-center w-full">
+                  <div className="w-full max-w-[600px]">
+                    <div 
+                      className="bg-white border rounded overflow-hidden shadow-lg min-h-[200px]"
+                      dangerouslySetInnerHTML={{ 
+                        __html: mjmlPreviewHtml || '<div style="padding: 40px; text-align: center; color: #9ca3af; font-family: Arial, sans-serif;">Add components above to see your email preview</div>' 
+                      }}
+                    ></div>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        ) : (
-          /* Template Selection Placeholder */
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <Mail className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Choose a Template</h3>
-              <p className="text-gray-500 mb-4">Select a template from the Tools panel to start building your email</p>
-              <Button onClick={() => setShowTemplates(true)} variant="outline">
-                <Gift className="h-4 w-4 mr-2" />
-                Browse Templates
-              </Button>
-            </div>
-          </div>
-        )}
+        </div>
       </div>
 
-      {/* Fixed Properties Panel - Right Side */}
+      {/* Properties Panel - Right Side */}
       <div className="w-80 bg-white border-l border-gray-200 flex-shrink-0 h-screen sticky top-0">
         <Card className="h-full flex flex-col border-0 rounded-none">
           <CardHeader className="flex-shrink-0 border-b">
@@ -896,62 +747,6 @@ export default function EmailBuilderPage() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Templates Modal */}
-      {showTemplates && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 xl:p-8 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold">Choose Email Template</h3>
-              <Button
-                variant="outline"
-                onClick={() => setShowTemplates(false)}
-              >
-                Close
-              </Button>
-            </div>
-            
-            <div className="text-center mb-8">
-              <p className="text-gray-600">Select a professionally designed template to get started</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {emailTemplates.map((template) => (
-                <Card 
-                  key={template.id} 
-                  className={`cursor-pointer transition-all duration-200 ${
-                    selectedTemplate === template.id ? 'ring-2 ring-blue-500 shadow-lg' : 'hover:shadow-md'
-                  }`}
-                  onClick={() => selectTemplate(template.id)}
-                >
-                  <CardContent className="p-4">
-                    <div className="aspect-[4/3] bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg mb-4 flex items-center justify-center">
-                      <div 
-                        className="w-16 h-16 rounded-full flex items-center justify-center text-white"
-                        style={{ backgroundColor: template.color }}
-                      >
-                        {template.icon}
-                      </div>
-                    </div>
-                    <h3 className="font-semibold text-gray-900 mb-2">{template.name}</h3>
-                    <p className="text-sm text-gray-600 mb-3">{template.description}</p>
-                    <div className="flex flex-wrap gap-1">
-                      {template.tags.map((tag) => (
-                        <span 
-                          key={tag} 
-                          className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
