@@ -200,8 +200,8 @@ export async function compileMjml(req: Request, res: Response) {
     // Convert components to MJML
     const mjmlContent = generateMjmlFromComponents(subject, components || []);
     
-    // Compile MJML to HTML
-    const { html, errors } = mjml2html(mjmlContent, {
+    // Compile MJML to HTML using mjml-browser
+    const { html, errors } = mjml(mjmlContent, {
       validationLevel: 'soft',
       minify: false
     });
