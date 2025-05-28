@@ -2711,9 +2711,11 @@ export default function EmailBuilderPage() {
           {/* Builder Tab */}
           <TabsContent value="builder" forceMount className="mt-6">
             {selectedTemplate && (
-              <div className="flex gap-3" style={{ height: 'calc(100vh - 300px)' }}>
-                {/* Components Sidebar */}
-                <div className="w-1/5 xl:w-[20%] flex-shrink-0">
+              <div className="space-y-6">
+                {/* Three-Column Layout */}
+                <div className="flex gap-4" style={{ height: 'calc(60vh)' }}>
+                  {/* Tools Sidebar */}
+                  <div className="w-1/4 flex-shrink-0">
                   <Card className="h-full flex flex-col">
                     <CardHeader className="flex-shrink-0">
                       <CardTitle className="text-lg">Tools</CardTitle>
@@ -2787,9 +2789,7 @@ export default function EmailBuilderPage() {
                   </Card>
                 </div>
 
-                {/* Email Builder Canvas */}
-                <div className="flex-1 flex gap-3">
-                  {/* Editing Panel */}
+                  {/* Email Builder Canvas */}
                   <div className="flex-1">
                     <Card className="h-full flex flex-col">
                       <CardHeader className="flex-shrink-0">
@@ -2859,44 +2859,13 @@ export default function EmailBuilderPage() {
                   </Card>
                 </div>
 
-                {/* Live MJML Preview Panel */}
-                <div className="w-1/2">
-                  <Card className="h-full flex flex-col">
-                    <CardHeader className="flex-shrink-0">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg">Live MJML Preview</CardTitle>
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          <span className="text-xs text-green-600">Real-time</span>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="p-0 flex-1 flex flex-col">
-                      <div className="flex-1 overflow-y-auto bg-gray-100 p-4">
-                        <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-4">
-                          <p className="text-xs text-blue-700">
-                            ✨ This shows the actual MJML-compiled HTML that will be exported
-                          </p>
-                        </div>
-                        <div 
-                          className="bg-white border rounded overflow-hidden w-full max-w-[600px] mx-auto shadow-sm"
-                          dangerouslySetInnerHTML={{ 
-                            __html: mjmlPreviewHtml || '<div style="padding: 40px; text-align: center; color: #9ca3af;">Add components to see MJML preview</div>' 
-                          }}
-                        ></div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-
-                {/* Properties Panel */}
-                <div className="w-1/3 xl:w-[35%] flex-shrink-0">
+                  {/* Properties Panel */}
+                  <div className="w-1/4 flex-shrink-0">
                   <Card className="h-full">
                     <CardHeader className="bg-white border-b sticky top-0 z-10">
                       <CardTitle className="text-lg">Properties</CardTitle>
                     </CardHeader>
-                    <div className="flex-1 overflow-y-auto" style={{ height: 'calc(100vh - 380px)' }}>
+                    <div className="flex-1 overflow-y-auto">
                       <CardContent className="p-4">
                         {selectedComponent ? (
                           <div className="space-y-4">
@@ -2907,6 +2876,37 @@ export default function EmailBuilderPage() {
                         )}
                       </CardContent>
                     </div>
+                  </Card>
+                </div>
+                </div>
+
+                {/* Full-Width MJML Preview Section */}
+                <div className="w-full">
+                  <Card className="w-full">
+                    <CardHeader className="flex-shrink-0">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">Live MJML Preview</CardTitle>
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span className="text-xs text-green-600">Real-time compilation</span>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-4">
+                        <p className="text-xs text-blue-700">
+                          ✨ This shows the actual MJML-compiled HTML that will be exported - exactly what your recipients will see
+                        </p>
+                      </div>
+                      <div className="flex justify-center">
+                        <div 
+                          className="bg-white border rounded overflow-hidden w-full max-w-[600px] shadow-lg"
+                          dangerouslySetInnerHTML={{ 
+                            __html: mjmlPreviewHtml || '<div style="padding: 40px; text-align: center; color: #9ca3af; font-family: Arial, sans-serif;">Add components above to see your email preview</div>' 
+                          }}
+                        ></div>
+                      </div>
+                    </CardContent>
                   </Card>
                 </div>
               </div>
