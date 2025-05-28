@@ -301,9 +301,9 @@ export default function EmailBuilderPage() {
             textAlign: component.styles?.textAlign || 'center'
           }}>
             <table
-              role="presentation"
               style={{
                 borderCollapse: 'separate',
+                width: '100%',
                 lineHeight: '100%'
               }}
               align="center"
@@ -314,20 +314,21 @@ export default function EmailBuilderPage() {
               <tbody>
                 <tr>
                   <td
-                    role="presentation"
                     style={{
                       border: 'none',
                       borderRadius: component.styles?.borderRadius || '6px',
                       cursor: 'auto',
-                      background: component.styles?.backgroundColor || '#1553ec'
-                    } as React.CSSProperties}
-                    valign="top"
+                      msoFontSize: '0px',
+                      background: component.styles?.backgroundColor || '#1553ec',
+                      textAlign: 'center'
+                    } as any}
+                    align="center"
+                    valign="middle"
                   >
                     <a
                       href={component.content.href || '#'}
                       style={{
                         display: 'inline-block',
-                        width: component.styles?.width || 'auto',
                         background: component.styles?.backgroundColor || '#1553ec',
                         color: component.styles?.color || '#ffffff',
                         fontFamily: 'Arial, sans-serif',
@@ -337,9 +338,10 @@ export default function EmailBuilderPage() {
                         margin: '0',
                         textDecoration: 'none',
                         textTransform: 'none',
-                        padding: component.styles?.padding || '15px',
-                        borderRadius: component.styles?.borderRadius || '6px'
-                      } as React.CSSProperties}
+                        padding: '10px 25px',
+                        borderRadius: component.styles?.borderRadius || '6px',
+                        msoFontSize: '0px'
+                      } as any}
                       target="_blank"
                     >
                       {component.content.text}
