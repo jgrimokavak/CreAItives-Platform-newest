@@ -121,9 +121,25 @@ export default function EmailBuilderPage() {
         if (response.ok) {
           const data = await response.json();
           console.log('Generated MJML:', data.mjml);
-          setMjmlPreviewHtml(data.html);
+          if (data.html) {
+            setMjmlPreviewHtml(data.html);
+          } else {
+            console.warn('No HTML returned from MJML compilation');
+            setMjmlPreviewHtml(`
+              <div style="padding: 40px; text-align: center; color: #dc2626; border: 2px solid #fecaca; background: #fef2f2; border-radius: 8px; margin: 20px;">
+                <h3>Preview Error</h3>
+                <p>Unable to compile email preview. Please check your components.</p>
+              </div>
+            `);
+          }
         } else {
-          console.error('Failed to compile MJML');
+          console.error('Failed to compile MJML - server error');
+          setMjmlPreviewHtml(`
+            <div style="padding: 40px; text-align: center; color: #dc2626; border: 2px solid #fecaca; background: #fef2f2; border-radius: 8px; margin: 20px;">
+              <h3>Server Error</h3>
+              <p>Unable to connect to email compilation service.</p>
+            </div>
+          `);
         }
       } catch (error) {
         console.error('Error compiling MJML:', error);

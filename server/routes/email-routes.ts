@@ -5,8 +5,7 @@ import { emailTemplates, insertEmailTemplateSchema, type EmailTemplate, type Ins
 import { db } from '../db';
 import { eq } from 'drizzle-orm';
 import DOMPurify from 'isomorphic-dompurify';
-// Use mjml-browser for compilation
-const mjml = require('mjml-browser');
+import mjml2html from 'mjml';
 
 // Enhanced validation schemas with sanitization
 const emailContentSchema = z.object({
@@ -196,19 +195,45 @@ export async function getEmailTemplates(req: Request, res: Response) {
 export async function compileMjml(req: Request, res: Response) {
   try {
     const { subject, components } = req.body;
+    console.log('MJML compilation request:', { subject, componentsCount: components?.length || 0 });
     
     // Convert components to MJML
     const mjmlContent = generateMjmlFromComponents(subject, components || []);
+    console.log('Generated MJML:', mjmlContent.substring(0, 200) + '...');
     
-    // Compile MJML to HTML using mjml-browser
-    const { html, errors } = mjml(mjmlContent, {
-      validationLevel: 'soft',
-      minify: false
-    });
-
-    if (errors && errors.length > 0) {
-      console.warn('MJML compilation warnings:', errors);
+    // Try MJML compilation with fallback
+    let html = '';
+    try {
+      const result = mjml2html(mjmlContent, {
+        validationLevel: 'soft',
+        minify: false
+      });
+      html = result.html;
+      
+      if (result.errors && result.errors.length > 0) {
+        console.warn('MJML compilation warnings:', result.errors);
+      }
+    } catch (mjmlError: any) {
+      console.error('MJML compilation failed, using fallback:', mjmlError);
+      // Provide a fallback HTML structure
+      html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>${sanitizeInput(subject || 'KAVAK Email')}</title>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+        </head>
+        <body style="margin: 0; padding: 20px; font-family: Arial, sans-serif; background-color: #f3f4f6;">
+          <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden;">
+            ${generateFallbackHtml(subject, components || [])}
+          </div>
+        </body>
+        </html>
+      `;
     }
+
+    console.log('Compilation successful, HTML length:', html.length);
 
     res.json({
       success: true,
@@ -218,9 +243,27 @@ export async function compileMjml(req: Request, res: Response) {
 
   } catch (error: any) {
     console.error('Error compiling MJML:', error);
-    res.status(500).json({ 
+    
+    // Return error HTML instead of failing completely
+    const errorHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head><title>Email Preview Error</title></head>
+      <body style="padding: 40px; font-family: Arial, sans-serif; text-align: center;">
+        <div style="color: #dc2626; border: 2px solid #fecaca; background: #fef2f2; padding: 20px; border-radius: 8px;">
+          <h3>Email Preview Error</h3>
+          <p>Unable to compile email preview. Please check your components and try again.</p>
+          <small style="color: #6b7280;">Error: ${error.message}</small>
+        </div>
+      </body>
+      </html>
+    `;
+    
+    res.json({ 
+      success: false,
       error: 'Error al compilar MJML',
-      details: error.message 
+      details: error.message,
+      html: errorHtml
     });
   }
 }
@@ -309,5 +352,54 @@ ${components.length === 0 ?
 </mjml>`;
 
   return mjmlStructure;
+}
+
+// Generate fallback HTML when MJML compilation fails
+function generateFallbackHtml(subject: string, components: EmailComponent[]): string {
+  const htmlComponents = components.map(component => {
+    switch (component.type) {
+      case 'text':
+        return `<div style="padding: ${component.styles?.padding || '15px'}; color: ${component.styles?.color || '#000000'}; font-size: ${component.styles?.fontSize || '16px'}; text-align: ${component.styles?.textAlign || 'left'};">
+          ${sanitizeInput(component.content?.text || '')}
+        </div>`;
+        
+      case 'image':
+        if (!component.content?.src) {
+          return `<div style="padding: 20px; text-align: center; color: #9ca3af; background: #f9fafb; border: 1px dashed #d1d5db;">
+            [Image placeholder - Add image URL in properties]
+          </div>`;
+        }
+        return `<div style="padding: ${component.styles?.padding || '15px'}; text-align: center;">
+          <img src="${component.content.src}" alt="${component.content?.alt || ''}" style="max-width: 100%; height: auto;" />
+        </div>`;
+        
+      case 'button':
+        return `<div style="padding: ${component.styles?.margin || '15px'}; text-align: ${component.styles?.textAlign || 'center'};">
+          <a href="${component.content?.href || '#'}" style="display: inline-block; background-color: ${component.styles?.backgroundColor || '#1553ec'}; color: ${component.styles?.color || '#ffffff'}; padding: ${component.styles?.padding || '12px 24px'}; border-radius: ${component.styles?.borderRadius || '6px'}; text-decoration: none;">
+            ${sanitizeInput(component.content?.text || 'Click here')}
+          </a>
+        </div>`;
+        
+      case 'spacer':
+        return `<div style="height: ${component.styles?.height || '20px'};"></div>`;
+        
+      default:
+        return '';
+    }
+  }).join('');
+
+  return `
+    <div style="padding: 20px; border-bottom: 1px solid #e5e7eb;">
+      <h1 style="margin: 0; font-size: 18px; font-weight: bold;">${sanitizeInput(subject || 'KAVAK Email')}</h1>
+      <p style="margin: 5px 0 0 0; color: #6b7280; font-size: 12px;">From: KAVAK &lt;no-reply@kavak.com&gt;</p>
+    </div>
+    ${components.length === 0 ? 
+      '<div style="padding: 40px; text-align: center; color: #9ca3af;">No hay contenido en este email</div>' : 
+      htmlComponents
+    }
+    <div style="padding: 20px; text-align: center; background: #f9fafb; border-top: 1px solid #e5e7eb;">
+      <p style="margin: 0; font-size: 12px; color: #666666;"><strong>KAVAK México</strong><br>Tu plataforma confiable para comprar y vender autos usados</p>
+    </div>
+  `;
 }
 
