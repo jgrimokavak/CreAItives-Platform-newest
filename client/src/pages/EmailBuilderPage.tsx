@@ -770,6 +770,30 @@ export default function EmailBuilderPage() {
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                   <span className="text-xs text-green-600">Real-time compilation</span>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={async () => {
+                      console.log('=== TESTING MJML CLIENT/SERVER COMMUNICATION ===');
+                      try {
+                        const response = await fetch('/api/email/test-mjml');
+                        const data = await response.json();
+                        console.log('Test MJML response:', data);
+                        console.log('Test HTML length:', data.html?.length);
+                        console.log('Test HTML preview:', data.html?.substring(0, 200) + '...');
+                        if (data.html) {
+                          setMjmlPreviewHtml(data.html);
+                          console.log('✅ Test HTML successfully set in preview state');
+                        } else {
+                          console.error('❌ No HTML in test response');
+                        }
+                      } catch (error) {
+                        console.error('❌ Test fetch failed:', error);
+                      }
+                    }}
+                  >
+                    Test MJML
+                  </Button>
                 </div>
               </div>
               

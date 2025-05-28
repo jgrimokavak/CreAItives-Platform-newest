@@ -5,6 +5,9 @@ import { emailTemplates, insertEmailTemplateSchema, type EmailTemplate, type Ins
 import { db } from '../db';
 import { eq } from 'drizzle-orm';
 import DOMPurify from 'isomorphic-dompurify';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+// @ts-ignore
 const mjml2html = require('mjml');
 
 // Enhanced validation schemas with sanitization
