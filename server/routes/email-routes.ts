@@ -273,6 +273,21 @@ export async function compileMjml(req: Request, res: Response) {
 
 // Convert email components to MJML structure
 function generateMjmlFromComponents(subject: string, components: EmailComponent[]): string {
+  // Completely blank when no components
+  if (components.length === 0) {
+    return `
+<mjml>
+  <mj-head>
+    <mj-title>${sanitizeInput(subject || 'Email')}</mj-title>
+    <mj-attributes>
+      <mj-all font-family="Arial, sans-serif" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#ffffff">
+  </mj-body>
+</mjml>`;
+  }
+
   const mjmlComponents = components.map(component => {
     switch (component.type) {
       case 'text':
@@ -280,7 +295,7 @@ function generateMjmlFromComponents(subject: string, components: EmailComponent[
           align="${component.styles?.textAlign || 'left'}"
           color="${component.styles?.color || '#000000'}"
           font-size="${component.styles?.fontSize || '16px'}"
-          padding="${component.styles?.padding || '15px'}"
+          padding="${component.styles?.padding || '10px 25px'}"
           line-height="1.6"
         >
           ${sanitizeInput(component.content?.text || '')}
@@ -288,7 +303,7 @@ function generateMjmlFromComponents(subject: string, components: EmailComponent[
         
       case 'image':
         if (!component.content?.src) {
-          return `        <mj-text align="center" color="#9ca3af" padding="20px">
+          return `        <mj-text align="center" color="#9ca3af" padding="20px" font-size="14px">
             [Image placeholder - Add image URL in properties]
           </mj-text>`;
         }
@@ -296,7 +311,7 @@ function generateMjmlFromComponents(subject: string, components: EmailComponent[
           src="${component.content.src}"
           alt="${component.content?.alt || ''}"
           width="${component.styles?.width || '600px'}"
-          padding="${component.styles?.padding || '15px'}"
+          padding="${component.styles?.padding || '10px 25px'}"
         />`;
         
       case 'button':
@@ -304,7 +319,7 @@ function generateMjmlFromComponents(subject: string, components: EmailComponent[
           background-color="${component.styles?.backgroundColor || '#1553ec'}"
           color="${component.styles?.color || '#ffffff'}"
           border-radius="${component.styles?.borderRadius || '6px'}"
-          padding="${component.styles?.margin || '15px'}"
+          padding="${component.styles?.margin || '10px 25px'}"
           href="${component.content?.href || '#'}"
           align="${component.styles?.textAlign || 'center'}"
         >
@@ -319,32 +334,12 @@ function generateMjmlFromComponents(subject: string, components: EmailComponent[
     }
   }).join('\n');
 
-  // Pure MJML structure - completely blank when no components
-  if (components.length === 0) {
-    const mjmlStructure = `
+  return `
 <mjml>
   <mj-head>
     <mj-title>${sanitizeInput(subject || 'Email')}</mj-title>
     <mj-attributes>
       <mj-all font-family="Arial, sans-serif" />
-      <mj-text font-size="16px" color="#000000" line-height="1.6" />
-      <mj-button background-color="#1553ec" color="#ffffff" border-radius="6px" />
-    </mj-attributes>
-  </mj-head>
-  <mj-body background-color="#ffffff">
-  </mj-body>
-</mjml>`;
-    return mjmlStructure;
-  }
-
-  const mjmlStructure = `
-<mjml>
-  <mj-head>
-    <mj-title>${sanitizeInput(subject || 'Email')}</mj-title>
-    <mj-attributes>
-      <mj-all font-family="Arial, sans-serif" />
-      <mj-text font-size="16px" color="#000000" line-height="1.6" />
-      <mj-button background-color="#1553ec" color="#ffffff" border-radius="6px" />
     </mj-attributes>
   </mj-head>
   <mj-body background-color="#ffffff">
@@ -355,8 +350,6 @@ ${mjmlComponents}
     </mj-section>
   </mj-body>
 </mjml>`;
-
-  return mjmlStructure;
 }
 
 // Generate fallback HTML when MJML compilation fails - clean structure
