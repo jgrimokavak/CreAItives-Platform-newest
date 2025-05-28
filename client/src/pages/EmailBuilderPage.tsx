@@ -2713,7 +2713,7 @@ export default function EmailBuilderPage() {
             {selectedTemplate && (
               <div className="space-y-6">
                 {/* Three-Column Layout */}
-                <div className="flex gap-4" style={{ height: 'calc(60vh)' }}>
+                <div className="flex gap-4 min-h-[500px]">
                   {/* Tools Sidebar */}
                   <div className="w-1/4 flex-shrink-0">
                   <Card className="h-full flex flex-col">
@@ -2791,7 +2791,7 @@ export default function EmailBuilderPage() {
 
                   {/* Email Builder Canvas */}
                   <div className="flex-1">
-                    <Card className="h-full flex flex-col">
+                    <Card className="h-fit min-h-[500px] flex flex-col">
                       <CardHeader className="flex-shrink-0">
                         <div className="flex items-center justify-between">
                           <CardTitle className="text-lg">Email Builder</CardTitle>
@@ -2803,8 +2803,8 @@ export default function EmailBuilderPage() {
                           </Button>
                         </div>
                       </CardHeader>
-                    <CardContent className="p-0 flex-1 flex flex-col">
-                      <div className="flex-1 overflow-y-auto bg-gray-100 p-4 flex justify-center">
+                    <CardContent className="p-0">
+                      <div className="bg-gray-100 p-4 flex justify-center max-h-[500px] overflow-y-auto">
                         <EditingContext.Provider value={true}>
                           <div ref={builderRef} className="w-full max-w-[600px] bg-white rounded-lg shadow-sm border">
                           {/* Email Subject */}
@@ -2861,27 +2861,25 @@ export default function EmailBuilderPage() {
 
                   {/* Properties Panel */}
                   <div className="w-1/4 flex-shrink-0">
-                  <Card className="h-full">
-                    <CardHeader className="bg-white border-b sticky top-0 z-10">
+                  <Card className="h-fit min-h-[500px] max-h-[500px] flex flex-col">
+                    <CardHeader className="flex-shrink-0 bg-white border-b">
                       <CardTitle className="text-lg">Properties</CardTitle>
                     </CardHeader>
-                    <div className="flex-1 overflow-y-auto">
-                      <CardContent className="p-4">
-                        {selectedComponent ? (
-                          <div className="space-y-4">
-                            {renderComponentProperties(emailComponents.find(c => c.id === selectedComponent)!)}
-                          </div>
-                        ) : (
-                          <p className="text-gray-500 text-sm">Select a component to edit it</p>
-                        )}
-                      </CardContent>
-                    </div>
+                    <CardContent className="flex-1 overflow-y-auto p-4">
+                      {selectedComponent ? (
+                        <div className="space-y-4">
+                          {renderComponentProperties(emailComponents.find(c => c.id === selectedComponent)!)}
+                        </div>
+                      ) : (
+                        <p className="text-gray-500 text-sm">Select a component to edit it</p>
+                      )}
+                    </CardContent>
                   </Card>
                 </div>
                 </div>
 
                 {/* Full-Width MJML Preview Section */}
-                <div className="w-full">
+                <div className="w-full mt-8">
                   <Card className="w-full">
                     <CardHeader className="flex-shrink-0">
                       <div className="flex items-center justify-between">
@@ -2898,13 +2896,15 @@ export default function EmailBuilderPage() {
                           ✨ This shows the actual MJML-compiled HTML that will be exported - exactly what your recipients will see
                         </p>
                       </div>
-                      <div className="flex justify-center">
-                        <div 
-                          className="bg-white border rounded overflow-hidden w-full max-w-[600px] shadow-lg"
-                          dangerouslySetInnerHTML={{ 
-                            __html: mjmlPreviewHtml || '<div style="padding: 40px; text-align: center; color: #9ca3af; font-family: Arial, sans-serif;">Add components above to see your email preview</div>' 
-                          }}
-                        ></div>
+                      <div className="flex justify-center w-full">
+                        <div className="w-full max-w-[600px]">
+                          <div 
+                            className="bg-white border rounded overflow-hidden shadow-lg min-h-[200px]"
+                            dangerouslySetInnerHTML={{ 
+                              __html: mjmlPreviewHtml || '<div style="padding: 40px; text-align: center; color: #9ca3af; font-family: Arial, sans-serif;">Add components above to see your email preview</div>' 
+                            }}
+                          ></div>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
