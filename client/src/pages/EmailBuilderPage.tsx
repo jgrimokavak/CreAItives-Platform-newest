@@ -319,9 +319,8 @@ export default function EmailBuilderPage() {
                       border: 'none',
                       borderRadius: component.styles?.borderRadius || '6px',
                       cursor: 'auto',
-                      msoFontSize: '0px',
                       background: component.styles?.backgroundColor || '#1553ec'
-                    }}
+                    } as React.CSSProperties}
                     valign="top"
                   >
                     <a
@@ -338,10 +337,9 @@ export default function EmailBuilderPage() {
                         margin: '0',
                         textDecoration: 'none',
                         textTransform: 'none',
-                        msoFontSize: '0px',
                         padding: component.styles?.padding || '15px',
                         borderRadius: component.styles?.borderRadius || '6px'
-                      }}
+                      } as React.CSSProperties}
                       target="_blank"
                     >
                       {component.content.text}

@@ -223,12 +223,12 @@ export async function compileMjml(req: Request, res: Response) {
         <!DOCTYPE html>
         <html>
         <head>
-          <title>${sanitizeInput(subject || 'KAVAK Email')}</title>
+          <title>${sanitizeInput(subject || 'Email')}</title>
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1">
         </head>
-        <body style="margin: 0; padding: 20px; font-family: Arial, sans-serif; background-color: #f3f4f6;">
-          <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden;">
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #ffffff;">
+          <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
             ${generateFallbackHtml(subject, components || [])}
           </div>
         </body>
@@ -413,20 +413,20 @@ export async function testMjmlCompilation(req: Request, res: Response) {
   console.log('=== MJML TEST ENDPOINT CALLED ===');
   
   try {
-    // Known valid MJML string
+    // Pure test MJML string - no branding
     const testMjmlString = `
 <mjml>
   <mj-head>
-    <mj-title>Test KAVAK Email</mj-title>
+    <mj-title>Test Email</mj-title>
     <mj-attributes>
       <mj-all font-family="Arial, sans-serif" />
     </mj-attributes>
   </mj-head>
-  <mj-body background-color="#f3f4f6">
+  <mj-body background-color="#ffffff">
     <mj-section background-color="#ffffff" padding="20px">
       <mj-column>
         <mj-text align="center" color="#1553ec" font-size="24px" font-weight="bold">
-          TEST EMAIL - KAVAK
+          TEST EMAIL
         </mj-text>
         <mj-text align="center" color="#000000" font-size="16px" line-height="1.6" padding="10px">
           This is a test email to verify MJML compilation is working correctly.
