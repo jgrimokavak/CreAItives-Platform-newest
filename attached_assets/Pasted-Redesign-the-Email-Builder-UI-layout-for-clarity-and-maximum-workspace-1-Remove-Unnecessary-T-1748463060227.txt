@@ -1,0 +1,30 @@
+Redesign the Email Builder UI layout for clarity and maximum workspace:
+
+1. **Remove Unnecessary Top Bar Elements:**
+   - Remove the entire top section containing the title ("Email CreAIItor"), description, and the three tab toggles ("Templates", "Builder", "Preview").
+   - The only active view should be the builder itself.
+
+2. **Side Panels:**
+   - Tools (left) and Properties (right) panels must be fixed/sticky to the sides of the screen and occupy the full viewport height at all times.
+   - The contents of each panel must scroll independently when content overflows.
+   - The width of these side panels should be visually balanced and not squeeze the central area.
+
+3. **Central Workspace:**
+   - Centered between Tools and Properties should be the main email workspace. 
+   - The top central section is the Email Builder. As you add more components, the builder grows vertically. There should be **no internal scroll** in this area; the builder expands, and the page scrolls naturally.
+   - Immediately below the builder, render the Live MJML Preview (same width as the builder). It should always align with the builder and grow in height as needed.
+   - Both builder and preview must remain visually distinct and not overlap.
+   - All drag/drop and editing actions in the builder should continue to work as before.
+
+4. **Templates Access:**
+   - Since the "Templates" toggle/tab is gone, add a compact "Templates" button in the Tools panel, top or bottom. When clicked, open a modal or drawer to choose templates (use the existing template picker UI inside the modal/drawer).
+   - No space should be wasted on tabs or page toggles.
+
+5. **General:**
+   - All panels (Tools, Builder, Properties) and the MJML preview must remain visually separated, adapt to long content, and never overlap or float outside their designated area.
+   - The overall workspace should maximize central space for editing and previewing the email.
+
+**Goal:**  
+A clean, efficient builder with sticky/scrolled side panels, a vertically-growing builder + preview center column, and no unnecessary headers, tabs, or wasted space. All template selection is handled in a modal/drawer from the Tools panel.
+
+Adapt all UI elements (including the ones shown in the latest screenshots) to this new layout.
