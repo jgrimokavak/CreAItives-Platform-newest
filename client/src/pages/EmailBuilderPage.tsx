@@ -1,4 +1,4 @@
-import React, { useState, useRef, createContext, useContext } from 'react';
+import React, { useState, useRef, createContext, useContext, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -137,6 +137,7 @@ export default function EmailBuilderPage() {
   const [selectedComponent, setSelectedComponent] = useState<string | null>(null);
   const [showImageGallery, setShowImageGallery] = useState(false);
   const [templateName, setTemplateName] = useState('');
+  const [mjmlPreviewHtml, setMjmlPreviewHtml] = useState('');
   const { toast } = useToast();
   
   // Ref to capture the live builder HTML
@@ -147,6 +148,17 @@ export default function EmailBuilderPage() {
     queryKey: ['/api/gallery'],
     enabled: showImageGallery
   });
+
+  // Update MJML preview whenever email content changes
+  useEffect(() => {
+    try {
+      const mjmlHtml = getBuilderHtml();
+      setMjmlPreviewHtml(mjmlHtml);
+    } catch (error) {
+      console.warn('MJML preview update failed:', error);
+      setMjmlPreviewHtml('<div style="padding: 20px; text-align: center; color: #666;">Preview unavailable</div>');
+    }
+  }, [emailComponents, emailContent.subject]);
 
   // Helper functions for px handling
   const stripPx = (value: string) => {
@@ -2776,19 +2788,21 @@ export default function EmailBuilderPage() {
                 </div>
 
                 {/* Email Builder Canvas */}
-                <div className="flex-1">
-                  <Card className="h-full flex flex-col">
-                    <CardHeader className="flex-shrink-0">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg">Email Builder</CardTitle>
-                        <Button 
-                          onClick={() => setActiveTab('preview')}
-                          size="sm"
-                        >
-                          Preview →
-                        </Button>
-                      </div>
-                    </CardHeader>
+                <div className="flex-1 flex gap-3">
+                  {/* Editing Panel */}
+                  <div className="flex-1">
+                    <Card className="h-full flex flex-col">
+                      <CardHeader className="flex-shrink-0">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-lg">Email Builder</CardTitle>
+                          <Button 
+                            onClick={() => setActiveTab('preview')}
+                            size="sm"
+                          >
+                            Preview →
+                          </Button>
+                        </div>
+                      </CardHeader>
                     <CardContent className="p-0 flex-1 flex flex-col">
                       <div className="flex-1 overflow-y-auto bg-gray-100 p-4 flex justify-center">
                         <EditingContext.Provider value={true}>
@@ -2844,6 +2858,37 @@ export default function EmailBuilderPage() {
                     </CardContent>
                   </Card>
                 </div>
+
+                {/* Live MJML Preview Panel */}
+                <div className="w-1/2">
+                  <Card className="h-full flex flex-col">
+                    <CardHeader className="flex-shrink-0">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">Live MJML Preview</CardTitle>
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span className="text-xs text-green-600">Real-time</span>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-0 flex-1 flex flex-col">
+                      <div className="flex-1 overflow-y-auto bg-gray-100 p-4">
+                        <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-4">
+                          <p className="text-xs text-blue-700">
+                            ✨ This shows the actual MJML-compiled HTML that will be exported
+                          </p>
+                        </div>
+                        <div 
+                          className="bg-white border rounded overflow-hidden w-full max-w-[600px] mx-auto shadow-sm"
+                          dangerouslySetInnerHTML={{ 
+                            __html: mjmlPreviewHtml || '<div style="padding: 40px; text-align: center; color: #9ca3af;">Add components to see MJML preview</div>' 
+                          }}
+                        ></div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
 
                 {/* Properties Panel */}
                 <div className="w-1/3 xl:w-[35%] flex-shrink-0">
@@ -2903,21 +2948,19 @@ export default function EmailBuilderPage() {
                 <Card>
                   <CardContent className="p-8">
                     <div className="max-w-2xl mx-auto bg-white border rounded-lg overflow-hidden shadow-lg">
-                      {/* Live preview using the same components as builder */}
-                      <div className="w-full max-w-[600px] bg-white mx-auto">
-                        <div className="p-4 border-b bg-gray-50">
-                          <div className="font-semibold">{emailContent.subject}</div>
+                      {/* MJML-compiled HTML preview */}
+                      <div className="w-full bg-gray-100 p-4">
+                        <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-4">
+                          <p className="text-xs text-blue-700">
+                            ✨ Live MJML Preview - This is the actual compiled HTML that will be exported
+                          </p>
                         </div>
-                        {emailComponents.map((component) => (
-                          <div key={component.id}>
-                            {renderEmailComponent(component)}
-                          </div>
-                        ))}
-                        <div className="p-8 text-center text-gray-600 text-sm bg-gray-50 border-t">
-                          <p className="mb-1"><strong>KAVAK</strong> - Tu experiencia automotriz</p>
-                          <p className="mb-1">© {new Date().getFullYear()} KAVAK. Todos los derechos reservados.</p>
-                          <p className="text-xs text-gray-500">Este email fue generado con Email CreAItor</p>
-                        </div>
+                        <div 
+                          className="bg-white border rounded overflow-hidden"
+                          dangerouslySetInnerHTML={{ 
+                            __html: getBuilderHtml() || '<div class="p-8 text-center text-gray-500">Add components to see preview</div>' 
+                          }}
+                        />
                       </div>
                     </div>
                   </CardContent>
