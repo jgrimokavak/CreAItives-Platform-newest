@@ -23,7 +23,7 @@ import modelRoutes, { initializeModels } from "./routes/model-routes";
 import upscaleRoutes from "./routes/upscale-routes";
 import enhancePromptRouter from "./routes/enhancePrompt";
 import promptSuggestionsRouter from "./routes/promptSuggestions";
-import { generateEmailContent, saveEmailTemplate, getEmailTemplates } from "./routes/email-routes";
+import { generateEmailContent, saveEmailTemplate, getEmailTemplates, compileMjml } from "./routes/email-routes";
 import { listMakes, listModels, listBodyStyles, listTrims, flushCarCache, loadCarData, getLastFetchTime, setupCarDataAutoRefresh } from "./carData";
 import axios from "axios";
 import Papa from "papaparse";
@@ -692,6 +692,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/email/generate-content', generateEmailContent);
   app.post('/api/email/save-template', saveEmailTemplate);
   app.get('/api/email/templates', getEmailTemplates);
+  app.post('/api/email/compile-mjml', compileMjml);
   
   // Car generation routes
   app.get("/api/cars/makes", async (_req, res) => res.json(await listMakes()));

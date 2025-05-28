@@ -5,6 +5,8 @@ import { emailTemplates, insertEmailTemplateSchema, type EmailTemplate, type Ins
 import { db } from '../db';
 import { eq } from 'drizzle-orm';
 import DOMPurify from 'isomorphic-dompurify';
+// Use mjml-browser for compilation
+const mjml = require('mjml-browser');
 
 // Enhanced validation schemas with sanitization
 const emailContentSchema = z.object({
@@ -188,5 +190,124 @@ export async function getEmailTemplates(req: Request, res: Response) {
       details: error.message 
     });
   }
+}
+
+// MJML Compilation endpoint
+export async function compileMjml(req: Request, res: Response) {
+  try {
+    const { subject, components } = req.body;
+    
+    // Convert components to MJML
+    const mjmlContent = generateMjmlFromComponents(subject, components || []);
+    
+    // Compile MJML to HTML
+    const { html, errors } = mjml2html(mjmlContent, {
+      validationLevel: 'soft',
+      minify: false
+    });
+
+    if (errors && errors.length > 0) {
+      console.warn('MJML compilation warnings:', errors);
+    }
+
+    res.json({
+      success: true,
+      mjml: mjmlContent,
+      html: html
+    });
+
+  } catch (error: any) {
+    console.error('Error compiling MJML:', error);
+    res.status(500).json({ 
+      error: 'Error al compilar MJML',
+      details: error.message 
+    });
+  }
+}
+
+// Convert email components to MJML structure
+function generateMjmlFromComponents(subject: string, components: EmailComponent[]): string {
+  const mjmlComponents = components.map(component => {
+    switch (component.type) {
+      case 'text':
+        return `        <mj-text 
+          align="${component.styles?.textAlign || 'left'}"
+          color="${component.styles?.color || '#000000'}"
+          font-size="${component.styles?.fontSize || '16px'}"
+          padding="${component.styles?.padding || '15px'}"
+          line-height="1.6"
+        >
+          ${sanitizeInput(component.content?.text || '')}
+        </mj-text>`;
+        
+      case 'image':
+        if (!component.content?.src) {
+          return `        <mj-text align="center" color="#9ca3af" padding="20px">
+            [Image placeholder - Add image URL in properties]
+          </mj-text>`;
+        }
+        return `        <mj-image 
+          src="${component.content.src}"
+          alt="${component.content?.alt || ''}"
+          width="${component.styles?.width || '600px'}"
+          padding="${component.styles?.padding || '15px'}"
+        />`;
+        
+      case 'button':
+        return `        <mj-button 
+          background-color="${component.styles?.backgroundColor || '#1553ec'}"
+          color="${component.styles?.color || '#ffffff'}"
+          border-radius="${component.styles?.borderRadius || '6px'}"
+          padding="${component.styles?.margin || '15px'}"
+          href="${component.content?.href || '#'}"
+          align="${component.styles?.textAlign || 'center'}"
+        >
+          ${sanitizeInput(component.content?.text || 'Click here')}
+        </mj-button>`;
+        
+      case 'spacer':
+        return `        <mj-spacer height="${component.styles?.height || '20px'}" />`;
+        
+      default:
+        return '';
+    }
+  }).join('\n');
+
+  const mjmlStructure = `
+<mjml>
+  <mj-head>
+    <mj-title>${sanitizeInput(subject || 'KAVAK Email')}</mj-title>
+    <mj-attributes>
+      <mj-all font-family="Arial, sans-serif" />
+      <mj-text font-size="16px" color="#000000" line-height="1.6" />
+      <mj-button background-color="#1553ec" color="#ffffff" border-radius="6px" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#f3f4f6">
+    <mj-section background-color="#ffffff" padding="0px">
+      <mj-column>
+${components.length === 0 ? 
+  '        <mj-text align="center" color="#9ca3af" padding="40px">No hay contenido en este email</mj-text>' : 
+  mjmlComponents
+}
+      </mj-column>
+    </mj-section>
+    
+    <!-- KAVAK Footer -->
+    <mj-section background-color="#ffffff" padding="20px">
+      <mj-column>
+        <mj-text align="center" font-size="12px" color="#666666">
+          <strong>KAVAK México</strong><br>
+          Tu plataforma confiable para comprar y vender autos usados
+        </mj-text>
+        <mj-text align="center" font-size="11px" color="#999999" padding="10px 0 0 0">
+          Si no deseas recibir más emails, puedes <a href="#" style="color: #1553ec;">darte de baja aquí</a>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>`;
+
+  return mjmlStructure;
 }
 
