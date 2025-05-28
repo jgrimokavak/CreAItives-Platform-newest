@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, createContext, useContext } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,6 +31,10 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+
+// Editing context for separating editor controls from email content
+const EditingContext = createContext<boolean>(true);
+const useEditing = () => useContext(EditingContext);
 
 // Email template definitions for KAVAK
 const emailTemplates = [
@@ -88,6 +92,32 @@ const componentTypes = [
   { type: 'button', name: 'Button', icon: <Mail className="h-4 w-4" />, description: 'Action button' },
   { type: 'spacer', name: 'Spacer', icon: <Plus className="h-4 w-4" />, description: 'Blank space' }
 ];
+
+// Email subject component that renders differently in editing vs export mode
+const EmailSubjectHeader = ({ subject, onSubjectChange }: { subject: string; onSubjectChange: (subject: string) => void }) => {
+  const isEditing = useEditing();
+  
+  if (!isEditing) {
+    // Export mode: render as plain text or hidden
+    return subject ? (
+      <div className="p-4 border-b bg-gray-50">
+        <div className="font-semibold text-gray-900">{subject}</div>
+      </div>
+    ) : null;
+  }
+  
+  // Editing mode: render as input field
+  return (
+    <div className="p-4 border-b bg-gray-50">
+      <Input
+        value={subject}
+        onChange={(e) => onSubjectChange(e.target.value)}
+        placeholder="Email subject"
+        className="font-semibold bg-white"
+      />
+    </div>
+  );
+};
 
 export default function EmailBuilderPage() {
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
@@ -510,6 +540,7 @@ export default function EmailBuilderPage() {
 
   // Sortable component wrapper
   const SortableEmailComponent = ({ component }: { component: EmailComponent }) => {
+    const isEditing = useEditing();
     const {
       attributes,
       listeners,
@@ -525,6 +556,16 @@ export default function EmailBuilderPage() {
       opacity: isDragging ? 0.5 : 1,
     };
 
+    // If not editing, render only the clean content
+    if (!isEditing) {
+      return (
+        <div style={{ margin: 0, padding: 0 }}>
+          {renderEmailComponent(component)}
+        </div>
+      );
+    }
+
+    // Editing mode: render with all controls
     return (
       <div
         ref={setNodeRef}
@@ -2559,14 +2600,10 @@ export default function EmailBuilderPage() {
                       <div className="flex-1 overflow-y-auto bg-gray-100 p-4 flex justify-center">
                         <div ref={builderRef} className="w-full max-w-[600px] bg-white rounded-lg shadow-sm border">
                           {/* Email Subject */}
-                          <div className="p-4 border-b bg-gray-50">
-                            <Input
-                              value={emailContent.subject}
-                              onChange={(e) => setEmailContent(prev => ({ ...prev, subject: e.target.value }))}
-                              placeholder="Email subject"
-                              className="font-semibold bg-white"
-                            />
-                          </div>
+                          <EmailSubjectHeader 
+                            subject={emailContent.subject}
+                            onSubjectChange={(subject) => setEmailContent(prev => ({ ...prev, subject }))}
+                          />
 
                           {/* Dynamic Components with Drag & Drop */}
                           <div>
