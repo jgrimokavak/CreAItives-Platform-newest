@@ -1,0 +1,277 @@
+client:536 WebSocket connection to 'wss://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/?token=peKTIzJ-xB3x' failed: 
+setupWebSocket @ client:536
+(anonymous) @ client:531
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=peKTIzJ-xB3x' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+setupWebSocket @ client:536
+fallback @ client:509
+(anonymous) @ client:555
+chunk-WERSD76P.js?v=76b574d0:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+EmailBuilderPage.tsx:108 Compiling MJML to HTML
+EmailBuilderPage.tsx:123 Generated MJML: 
+<mjml>
+  <mj-head>
+    <mj-title>KAVAK Email</mj-title>
+    <mj-attributes>
+      <mj-all font-family="Arial, sans-serif" />
+      <mj-text font-size="16px" color="#000000" line-height="1.6" />
+      <mj-button background-color="#1553ec" color="#ffffff" border-radius="6px" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#f3f4f6">
+    <mj-section background-color="#ffffff" padding="0px">
+      <mj-column>
+        <mj-text align="center" color="#9ca3af" padding="40px">No hay contenido en este email</mj-text>
+      </mj-column>
+    </mj-section>
+    
+    <!-- KAVAK Footer -->
+    <mj-section background-color="#ffffff" padding="20px">
+      <mj-column>
+        <mj-text align="center" font-size="12px" color="#666666">
+          <strong>KAVAK México</strong><br>
+          Tu plataforma confiable para comprar y vender autos usados
+        </mj-text>
+        <mj-text align="center" font-size="11px" color="#999999" padding="10px 0 0 0">
+          Si no deseas recibir más emails, puedes <a href="#" style="color: #1553ec;">darte de baja aquí</a>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>
+websocket.ts:25 WebSocket connected
+EmailBuilderPage.tsx:108 Compiling MJML to HTML
+EmailBuilderPage.tsx:123 Generated MJML: 
+<mjml>
+  <mj-head>
+    <mj-title>KAVAK - KAVAK Promocional</mj-title>
+    <mj-attributes>
+      <mj-all font-family="Arial, sans-serif" />
+      <mj-text font-size="16px" color="#000000" line-height="1.6" />
+      <mj-button background-color="#1553ec" color="#ffffff" border-radius="6px" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#f3f4f6">
+    <mj-section background-color="#ffffff" padding="0px">
+      <mj-column>
+        <mj-text align="center" color="#9ca3af" padding="40px">No hay contenido en este email</mj-text>
+      </mj-column>
+    </mj-section>
+    
+    <!-- KAVAK Footer -->
+    <mj-section background-color="#ffffff" padding="20px">
+      <mj-column>
+        <mj-text align="center" font-size="12px" color="#666666">
+          <strong>KAVAK México</strong><br>
+          Tu plataforma confiable para comprar y vender autos usados
+        </mj-text>
+        <mj-text align="center" font-size="11px" color="#999999" padding="10px 0 0 0">
+          Si no deseas recibir más emails, puedes <a href="#" style="color: #1553ec;">darte de baja aquí</a>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>
+EmailBuilderPage.tsx:108 Compiling MJML to HTML
+EmailBuilderPage.tsx:123 Generated MJML: 
+<mjml>
+  <mj-head>
+    <mj-title>KAVAK - KAVAK Promocional</mj-title>
+    <mj-attributes>
+      <mj-all font-family="Arial, sans-serif" />
+      <mj-text font-size="16px" color="#000000" line-height="1.6" />
+      <mj-button background-color="#1553ec" color="#ffffff" border-radius="6px" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#f3f4f6">
+    <mj-section background-color="#ffffff" padding="0px">
+      <mj-column>
+        <mj-text align="center" color="#9ca3af" padding="20px">
+            [Image placeholder - Add image URL in properties]
+          </mj-text>
+      </mj-column>
+    </mj-section>
+    
+    <!-- KAVAK Footer -->
+    <mj-section background-color="#ffffff" padding="20px">
+      <mj-column>
+        <mj-text align="center" font-size="12px" color="#666666">
+          <strong>KAVAK México</strong><br>
+          Tu plataforma confiable para comprar y vender autos usados
+        </mj-text>
+        <mj-text align="center" font-size="11px" color="#999999" padding="10px 0 0 0">
+          Si no deseas recibir más emails, puedes <a href="#" style="color: #1553ec;">darte de baja aquí</a>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>
+EmailBuilderPage.tsx:108 Compiling MJML to HTML
+EmailBuilderPage.tsx:123 Generated MJML: 
+<mjml>
+  <mj-head>
+    <mj-title>KAVAK - KAVAK Promocional</mj-title>
+    <mj-attributes>
+      <mj-all font-family="Arial, sans-serif" />
+      <mj-text font-size="16px" color="#000000" line-height="1.6" />
+      <mj-button background-color="#1553ec" color="#ffffff" border-radius="6px" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#f3f4f6">
+    <mj-section background-color="#ffffff" padding="0px">
+      <mj-column>
+        <mj-text align="center" color="#9ca3af" padding="20px">
+            [Image placeholder - Add image URL in properties]
+          </mj-text>
+        <mj-button 
+          background-color="#1553ec"
+          color="#ffffff"
+          border-radius="6px"
+          padding="15px"
+          href="#"
+          align="center"
+        >
+          Click here
+        </mj-button>
+      </mj-column>
+    </mj-section>
+    
+    <!-- KAVAK Footer -->
+    <mj-section background-color="#ffffff" padding="20px">
+      <mj-column>
+        <mj-text align="center" font-size="12px" color="#666666">
+          <strong>KAVAK México</strong><br>
+          Tu plataforma confiable para comprar y vender autos usados
+        </mj-text>
+        <mj-text align="center" font-size="11px" color="#999999" padding="10px 0 0 0">
+          Si no deseas recibir más emails, puedes <a href="#" style="color: #1553ec;">darte de baja aquí</a>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>
+EmailBuilderPage.tsx:108 Compiling MJML to HTML
+EmailBuilderPage.tsx:123 Generated MJML: 
+<mjml>
+  <mj-head>
+    <mj-title>KAVAK - KAVAK Promocional</mj-title>
+    <mj-attributes>
+      <mj-all font-family="Arial, sans-serif" />
+      <mj-text font-size="16px" color="#000000" line-height="1.6" />
+      <mj-button background-color="#1553ec" color="#ffffff" border-radius="6px" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#f3f4f6">
+    <mj-section background-color="#ffffff" padding="0px">
+      <mj-column>
+        <mj-text align="center" color="#9ca3af" padding="20px">
+            [Image placeholder - Add image URL in properties]
+          </mj-text>
+        <mj-button 
+          background-color="#1553ec"
+          color="#ffffff"
+          border-radius="6px"
+          padding="15px"
+          href="#"
+          align="center"
+        >
+          Click here
+        </mj-button>
+        <mj-text 
+          align="left"
+          color="#000000"
+          font-size="16px"
+          padding="15px"
+          line-height="1.6"
+        >
+          Add your text here
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    
+    <!-- KAVAK Footer -->
+    <mj-section background-color="#ffffff" padding="20px">
+      <mj-column>
+        <mj-text align="center" font-size="12px" color="#666666">
+          <strong>KAVAK México</strong><br>
+          Tu plataforma confiable para comprar y vender autos usados
+        </mj-text>
+        <mj-text align="center" font-size="11px" color="#999999" padding="10px 0 0 0">
+          Si no deseas recibir más emails, puedes <a href="#" style="color: #1553ec;">darte de baja aquí</a>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>
+EmailBuilderPage.tsx:108 Compiling MJML to HTML
+EmailBuilderPage.tsx:123 Generated MJML: 
+<mjml>
+  <mj-head>
+    <mj-title>KAVAK - KAVAK Promocional</mj-title>
+    <mj-attributes>
+      <mj-all font-family="Arial, sans-serif" />
+      <mj-text font-size="16px" color="#000000" line-height="1.6" />
+      <mj-button background-color="#1553ec" color="#ffffff" border-radius="6px" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#f3f4f6">
+    <mj-section background-color="#ffffff" padding="0px">
+      <mj-column>
+        <mj-text align="center" color="#9ca3af" padding="20px">
+            [Image placeholder - Add image URL in properties]
+          </mj-text>
+        <mj-button 
+          background-color="#1553ec"
+          color="#ffffff"
+          border-radius="6px"
+          padding="15px"
+          href="#"
+          align="center"
+        >
+          Click here
+        </mj-button>
+        <mj-text 
+          align="left"
+          color="#000000"
+          font-size="16px"
+          padding="15px"
+          line-height="1.6"
+        >
+          Add your text here
+        </mj-text>
+        <mj-spacer height="20px" />
+      </mj-column>
+    </mj-section>
+    
+    <!-- KAVAK Footer -->
+    <mj-section background-color="#ffffff" padding="20px">
+      <mj-column>
+        <mj-text align="center" font-size="12px" color="#666666">
+          <strong>KAVAK México</strong><br>
+          Tu plataforma confiable para comprar y vender autos usados
+        </mj-text>
+        <mj-text align="center" font-size="11px" color="#999999" padding="10px 0 0 0">
+          Si no deseas recibir más emails, puedes <a href="#" style="color: #1553ec;">darte de baja aquí</a>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>
+EmailBuilderPage.tsx:777 === TESTING MJML CLIENT/SERVER COMMUNICATION ===
+EmailBuilderPage.tsx:781 Test MJML response: {success: true, mjml: '\n<mjml>\n  <mj-head>\n    <mj-title>Test KAVAK Email…mj-column>\n    </mj-section>\n  </mj-body>\n</mjml>', html: '<!doctype html>\n<html lang="und" dir="auto" xmlns=…\n    \n    \n      </div>\n    \n  </body>\n</html>\n  ', htmlLength: 5228, errors: Array(0)}
+EmailBuilderPage.tsx:782 Test HTML length: 5228
+EmailBuilderPage.tsx:783 Test HTML preview: <!doctype html>
+<html lang="und" dir="auto" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+  <head>
+    <title>Test KAV...
+EmailBuilderPage.tsx:786 ✅ Test HTML successfully set in preview state
+EmailBuilderPage.tsx:777 === TESTING MJML CLIENT/SERVER COMMUNICATION ===
+EmailBuilderPage.tsx:781 Test MJML response: {success: true, mjml: '\n<mjml>\n  <mj-head>\n    <mj-title>Test KAVAK Email…mj-column>\n    </mj-section>\n  </mj-body>\n</mjml>', html: '<!doctype html>\n<html lang="und" dir="auto" xmlns=…\n    \n    \n      </div>\n    \n  </body>\n</html>\n  ', htmlLength: 5228, errors: Array(0)}
+EmailBuilderPage.tsx:782 Test HTML length: 5228
+EmailBuilderPage.tsx:783 Test HTML preview: <!doctype html>
+<html lang="und" dir="auto" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+  <head>
+    <title>Test KAV...
+EmailBuilderPage.tsx:786 ✅ Test HTML successfully set in preview state

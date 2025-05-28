@@ -76,18 +76,13 @@ const EditingContext = createContext(false);
 export default function EmailBuilderPage() {
   const { toast } = useToast();
   
-  // State Management
-  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  // State Management - Pure MJML Editor (no templates)
   const [emailContent, setEmailContent] = useState<EmailContent>({
     subject: '',
     components: []
   });
   const [emailComponents, setEmailComponents] = useState<EmailComponent[]>([]);
   const [selectedComponent, setSelectedComponent] = useState<string | null>(null);
-  const [templateName, setTemplateName] = useState('');
-  const [tone, setTone] = useState('professional');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [showTemplates, setShowTemplates] = useState(false);
   const [mjmlPreviewHtml, setMjmlPreviewHtml] = useState<string>('');
 
   // Refs
@@ -149,17 +144,7 @@ export default function EmailBuilderPage() {
     compileToMjml();
   }, [emailContent, emailComponents]);
 
-  // Template Selection
-  const selectTemplate = (templateId: string) => {
-    setSelectedTemplate(templateId);
-    setEmailContent(prev => ({ 
-      ...prev, 
-      subject: `KAVAK - ${emailTemplates.find(t => t.id === templateId)?.name || 'Email'}` 
-    }));
-    setEmailComponents([]);
-    setSelectedComponent(null);
-    setShowTemplates(false);
-  };
+  // Pure MJML Editor - no template system
 
   // Component Management
   const addComponent = (type: string) => {
@@ -309,56 +294,116 @@ export default function EmailBuilderPage() {
     );
   };
 
-  // Email Component Renderer
+  // Pure MJML Component Renderer - matches MJML output exactly
   const renderEmailComponent = (component: EmailComponent) => {
     switch (component.type) {
       case 'text':
         return (
-          <div style={{ ...component.styles }}>
+          <div style={{
+            fontFamily: 'Arial, sans-serif',
+            fontSize: component.styles?.fontSize || '16px',
+            lineHeight: '1.6',
+            textAlign: component.styles?.textAlign || 'left',
+            color: component.styles?.color || '#000000',
+            padding: component.styles?.padding || '10px 25px'
+          }}>
             {component.content.text}
           </div>
         );
       case 'image':
         return (
-          <div style={{ padding: component.styles.padding, margin: component.styles.margin }}>
+          <div style={{ 
+            fontSize: '0px',
+            padding: component.styles?.padding || '10px 25px',
+            textAlign: 'center'
+          }}>
             {component.content.src ? (
               <img 
                 src={component.content.src} 
                 alt={component.content.alt}
-                style={{ width: component.styles.width }}
+                style={{ 
+                  border: '0',
+                  height: 'auto',
+                  lineHeight: '100%',
+                  outline: 'none',
+                  textDecoration: 'none',
+                  width: component.styles?.width || '600px',
+                  maxWidth: '100%'
+                }}
               />
             ) : (
-              <div className="bg-gray-200 p-8 text-center text-gray-500 rounded">
-                <Image className="h-8 w-8 mx-auto mb-2" />
-                <p>Add image URL in properties</p>
+              <div style={{
+                padding: '20px',
+                textAlign: 'center',
+                color: '#9ca3af',
+                backgroundColor: '#f9fafb',
+                border: '1px dashed #d1d5db',
+                fontFamily: 'Arial, sans-serif',
+                fontSize: '14px'
+              }}>
+                [Image placeholder - Add image URL in properties]
               </div>
             )}
           </div>
         );
       case 'button':
         return (
-          <div style={{ textAlign: component.styles.textAlign, padding: component.styles.margin }}>
-            <a
-              href={component.content.href}
+          <div style={{ 
+            fontSize: '0px',
+            padding: component.styles?.margin || '10px 25px',
+            textAlign: component.styles?.textAlign || 'center'
+          }}>
+            <table
               style={{
-                display: 'inline-block',
-                backgroundColor: component.styles.backgroundColor,
-                color: component.styles.color,
-                padding: component.styles.padding,
-                borderRadius: component.styles.borderRadius,
-                textDecoration: 'none'
+                borderCollapse: 'separate',
+                lineHeight: '100%',
+                margin: '0 auto'
               }}
             >
-              {component.content.text}
-            </a>
+              <tbody>
+                <tr>
+                  <td
+                    style={{
+                      border: 'none',
+                      borderRadius: component.styles?.borderRadius || '3px',
+                      cursor: 'auto',
+                      backgroundColor: component.styles?.backgroundColor || '#1553ec',
+                      padding: component.styles?.padding || '10px 25px'
+                    }}
+                  >
+                    <a
+                      href={component.content.href}
+                      style={{
+                        display: 'inline-block',
+                        backgroundColor: component.styles?.backgroundColor || '#1553ec',
+                        color: component.styles?.color || '#ffffff',
+                        fontFamily: 'Arial, sans-serif',
+                        fontSize: '13px',
+                        fontWeight: 'normal',
+                        lineHeight: '120%',
+                        margin: '0',
+                        textDecoration: 'none',
+                        textTransform: 'none',
+                        padding: '10px 25px',
+                        borderRadius: component.styles?.borderRadius || '3px'
+                      }}
+                    >
+                      {component.content.text}
+                    </a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         );
       case 'spacer':
         return (
           <div style={{ 
-            height: component.styles.height,
-            backgroundColor: component.styles.backgroundColor 
-          }} />
+            height: component.styles?.height || '20px',
+            lineHeight: component.styles?.height || '20px'
+          }}>
+            &#8202;
+          </div>
         );
       default:
         return null;
@@ -710,24 +755,26 @@ export default function EmailBuilderPage() {
                 <CardContent className="p-0">
                   <div className="bg-gray-100 p-6 flex justify-center">
                     <EditingContext.Provider value={true}>
-                      <div ref={builderRef} className="w-full max-w-[600px] bg-white rounded-lg shadow-sm border">
-                        {/* Email Subject */}
-                        <div className="p-4 border-b bg-gray-50">
-                          <Input
-                            value={emailContent.subject}
-                            onChange={(e) => setEmailContent(prev => ({ ...prev, subject: e.target.value }))}
-                            placeholder="Email subject"
-                            className="font-semibold bg-white"
-                          />
-                        </div>
+                      <div ref={builderRef} className="w-full max-w-[600px] bg-white">
+                        {/* Email Subject - Optional */}
+                        {emailContent.subject && (
+                          <div className="p-4 border-b bg-gray-50">
+                            <Input
+                              value={emailContent.subject}
+                              onChange={(e) => setEmailContent(prev => ({ ...prev, subject: e.target.value }))}
+                              placeholder="Email subject"
+                              className="font-semibold bg-white"
+                            />
+                          </div>
+                        )}
 
-                        {/* Dynamic Components with Drag & Drop */}
-                        <div>
+                        {/* Pure MJML Canvas - Blank by default */}
+                        <div style={{ fontFamily: 'Arial, sans-serif', backgroundColor: '#ffffff' }}>
                           {emailComponents.length === 0 ? (
-                            <div className="text-center py-8 text-gray-500">
+                            <div className="text-center py-8 text-gray-500 border-2 border-dashed border-gray-300">
                               <Mail className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                              <p>Add components to start building your email</p>
-                              <p className="text-sm mt-2">🚀 Drag and drop to reorder</p>
+                              <p>Blank MJML Canvas</p>
+                              <p className="text-sm mt-2">Add components to start building</p>
                             </div>
                           ) : (
                             <DndContext 
@@ -739,7 +786,7 @@ export default function EmailBuilderPage() {
                                 items={emailComponents.map(c => c.id)}
                                 strategy={verticalListSortingStrategy}
                               >
-                                <div className="space-y-1">
+                                <div>
                                   {emailComponents.map((component) => (
                                     <SortableEmailComponent 
                                       key={component.id} 
@@ -750,11 +797,6 @@ export default function EmailBuilderPage() {
                               </SortableContext>
                             </DndContext>
                           )}
-                        </div>
-
-                        {/* Email Footer */}
-                        <div className="p-4 bg-gray-100 text-center border-t">
-                          <p className="text-xs text-gray-600">KAVAK - Tu experiencia automotriz</p>
                         </div>
                       </div>
                     </EditingContext.Provider>

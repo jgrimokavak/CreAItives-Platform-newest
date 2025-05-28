@@ -322,33 +322,20 @@ function generateMjmlFromComponents(subject: string, components: EmailComponent[
   const mjmlStructure = `
 <mjml>
   <mj-head>
-    <mj-title>${sanitizeInput(subject || 'KAVAK Email')}</mj-title>
+    <mj-title>${sanitizeInput(subject || 'Email')}</mj-title>
     <mj-attributes>
       <mj-all font-family="Arial, sans-serif" />
       <mj-text font-size="16px" color="#000000" line-height="1.6" />
       <mj-button background-color="#1553ec" color="#ffffff" border-radius="6px" />
     </mj-attributes>
   </mj-head>
-  <mj-body background-color="#f3f4f6">
+  <mj-body background-color="#ffffff">
     <mj-section background-color="#ffffff" padding="0px">
       <mj-column>
 ${components.length === 0 ? 
-  '        <mj-text align="center" color="#9ca3af" padding="40px">No hay contenido en este email</mj-text>' : 
+  '' : 
   mjmlComponents
 }
-      </mj-column>
-    </mj-section>
-    
-    <!-- KAVAK Footer -->
-    <mj-section background-color="#ffffff" padding="20px">
-      <mj-column>
-        <mj-text align="center" font-size="12px" color="#666666">
-          <strong>KAVAK México</strong><br>
-          Tu plataforma confiable para comprar y vender autos usados
-        </mj-text>
-        <mj-text align="center" font-size="11px" color="#999999" padding="10px 0 0 0">
-          Si no deseas recibir más emails, puedes <a href="#" style="color: #1553ec;">darte de baja aquí</a>
-        </mj-text>
       </mj-column>
     </mj-section>
   </mj-body>
@@ -357,34 +344,42 @@ ${components.length === 0 ?
   return mjmlStructure;
 }
 
-// Generate fallback HTML when MJML compilation fails
+// Generate fallback HTML when MJML compilation fails - clean structure
 function generateFallbackHtml(subject: string, components: EmailComponent[]): string {
   const htmlComponents = components.map(component => {
     switch (component.type) {
       case 'text':
-        return `<div style="padding: ${component.styles?.padding || '15px'}; color: ${component.styles?.color || '#000000'}; font-size: ${component.styles?.fontSize || '16px'}; text-align: ${component.styles?.textAlign || 'left'};">
+        return `<div style="font-family: Arial, sans-serif; font-size: ${component.styles?.fontSize || '16px'}; line-height: 1.6; text-align: ${component.styles?.textAlign || 'left'}; color: ${component.styles?.color || '#000000'}; padding: ${component.styles?.padding || '10px 25px'};">
           ${sanitizeInput(component.content?.text || '')}
         </div>`;
         
       case 'image':
         if (!component.content?.src) {
-          return `<div style="padding: 20px; text-align: center; color: #9ca3af; background: #f9fafb; border: 1px dashed #d1d5db;">
+          return `<div style="padding: 20px; text-align: center; color: #9ca3af; background: #f9fafb; border: 1px dashed #d1d5db; font-family: Arial, sans-serif; font-size: 14px;">
             [Image placeholder - Add image URL in properties]
           </div>`;
         }
-        return `<div style="padding: ${component.styles?.padding || '15px'}; text-align: center;">
-          <img src="${component.content.src}" alt="${component.content?.alt || ''}" style="max-width: 100%; height: auto;" />
+        return `<div style="font-size: 0px; padding: ${component.styles?.padding || '10px 25px'}; text-align: center;">
+          <img src="${component.content.src}" alt="${component.content?.alt || ''}" style="border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; width: ${component.styles?.width || '600px'}; max-width: 100%;" />
         </div>`;
         
       case 'button':
-        return `<div style="padding: ${component.styles?.margin || '15px'}; text-align: ${component.styles?.textAlign || 'center'};">
-          <a href="${component.content?.href || '#'}" style="display: inline-block; background-color: ${component.styles?.backgroundColor || '#1553ec'}; color: ${component.styles?.color || '#ffffff'}; padding: ${component.styles?.padding || '12px 24px'}; border-radius: ${component.styles?.borderRadius || '6px'}; text-decoration: none;">
-            ${sanitizeInput(component.content?.text || 'Click here')}
-          </a>
+        return `<div style="font-size: 0px; padding: ${component.styles?.margin || '10px 25px'}; text-align: ${component.styles?.textAlign || 'center'};">
+          <table style="border-collapse: separate; line-height: 100%; margin: 0 auto;">
+            <tbody>
+              <tr>
+                <td style="border: none; border-radius: ${component.styles?.borderRadius || '3px'}; cursor: auto; background-color: ${component.styles?.backgroundColor || '#1553ec'}; padding: ${component.styles?.padding || '10px 25px'};">
+                  <a href="${component.content?.href || '#'}" style="display: inline-block; background-color: ${component.styles?.backgroundColor || '#1553ec'}; color: ${component.styles?.color || '#ffffff'}; font-family: Arial, sans-serif; font-size: 13px; font-weight: normal; line-height: 120%; margin: 0; text-decoration: none; text-transform: none; padding: 10px 25px; border-radius: ${component.styles?.borderRadius || '3px'};">
+                    ${sanitizeInput(component.content?.text || 'Click here')}
+                  </a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>`;
         
       case 'spacer':
-        return `<div style="height: ${component.styles?.height || '20px'};"></div>`;
+        return `<div style="height: ${component.styles?.height || '20px'}; line-height: ${component.styles?.height || '20px'};">&#8202;</div>`;
         
       default:
         return '';
@@ -392,16 +387,8 @@ function generateFallbackHtml(subject: string, components: EmailComponent[]): st
   }).join('');
 
   return `
-    <div style="padding: 20px; border-bottom: 1px solid #e5e7eb;">
-      <h1 style="margin: 0; font-size: 18px; font-weight: bold;">${sanitizeInput(subject || 'KAVAK Email')}</h1>
-      <p style="margin: 5px 0 0 0; color: #6b7280; font-size: 12px;">From: KAVAK &lt;no-reply@kavak.com&gt;</p>
-    </div>
-    ${components.length === 0 ? 
-      '<div style="padding: 40px; text-align: center; color: #9ca3af;">No hay contenido en este email</div>' : 
-      htmlComponents
-    }
-    <div style="padding: 20px; text-align: center; background: #f9fafb; border-top: 1px solid #e5e7eb;">
-      <p style="margin: 0; font-size: 12px; color: #666666;"><strong>KAVAK México</strong><br>Tu plataforma confiable para comprar y vender autos usados</p>
+    <div style="font-family: Arial, sans-serif; background-color: #ffffff;">
+      ${components.length === 0 ? '' : htmlComponents}
     </div>
   `;
 }
