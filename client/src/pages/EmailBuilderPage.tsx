@@ -12,6 +12,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useQuery } from '@tanstack/react-query';
 import { Slider } from '@/components/ui/slider';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+// @ts-ignore - mjml-browser doesn't have types
+import mjml2html from 'mjml-browser';
 import {
   DndContext,
   closestCenter,
@@ -31,6 +33,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import type { MJMLComponent, MJMLEmailContent } from '@shared/schema';
 
 // Editing context for separating editor controls from email content
 const EditingContext = createContext<boolean>(true);
@@ -156,133 +159,149 @@ export default function EmailBuilderPage() {
     return isNaN(num) ? '0px' : `${num}px`;
   };
 
-  // Clean HTML export that creates pure email content without editor controls
-  const getBuilderHtml = () => {
-    console.log('Generating clean HTML for export without editor controls');
-    
-    // Create clean HTML structure manually to ensure no editor controls
-    const subjectHtml = emailContent.subject ? 
-      `<div style="padding: 1rem; border-bottom: 1px solid #e5e7eb; background-color: #f9fafb;">
-         <div style="font-weight: 600; color: #111827;">${emailContent.subject}</div>
-       </div>` : '';
-    
-    const componentsHtml = emailComponents.map(component => {
-      return renderCleanComponent(component);
-    }).join('');
-    
-    const emailBodyHtml = `
-      <div style="width: 100%; max-width: 600px; background-color: #ffffff; border-radius: 0.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); border: 1px solid #e5e7eb; margin: 0 auto;">
-        ${subjectHtml}
-        <div>
-          ${componentsHtml || '<div style="padding: 2rem; text-align: center; color: #9ca3af;">No hay contenido en este email</div>'}
-        </div>
-        <div style="padding: 1rem; background-color: #f3f4f6; text-align: center; border-top: 1px solid #e5e7eb;">
-          <p style="margin: 0; font-size: 0.75rem; color: #4b5563;">KAVAK - Tu experiencia automotriz</p>
-        </div>
-      </div>
-    `;
-    
-    // Return complete HTML document
-    return `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${emailContent.subject || 'My Email'}</title>
-  <style>
-    body { margin: 0; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; background-color: #f3f4f6; }
-  </style>
-</head>
-<body>
-  ${emailBodyHtml}
-  
-  <!-- KAVAK Footer -->
-  <div style="max-width: 600px; margin: 20px auto 0; padding: 20px; text-align: center; color: #666; font-size: 12px; background-color: #ffffff; border-radius: 0.5rem; border: 1px solid #e5e7eb;">
-    <p style="margin: 0 0 10px 0;">
-      <strong>KAVAK México</strong><br>
-      Tu plataforma confiable para comprar y vender autos usados
-    </p>
-    <p style="margin: 0; font-size: 11px;">
-      © ${new Date().getFullYear()} KAVAK. Todos los derechos reservados.<br>
-      Si no deseas recibir más correos, <a href="#" style="color: #1553ec;">haz clic aquí</a>
-    </p>
-  </div>
-</body>
-</html>`;
+  // Convert legacy components to MJML components
+  const convertToMJMLComponents = (components: EmailComponent[]): MJMLComponent[] => {
+    return components.map(component => ({
+      id: component.id,
+      type: component.type as 'text' | 'image' | 'button' | 'spacer',
+      content: component.content,
+      attributes: convertStylesToMJMLAttributes(component.type, component.styles)
+    }));
   };
 
-  // Render component as clean HTML without editor controls
-  const renderCleanComponent = (component: EmailComponent) => {
-    const styles = cleanStyles(component.styles);
-
-    switch (component.type) {
+  // Convert CSS styles to MJML attributes
+  const convertStylesToMJMLAttributes = (type: string, styles: Record<string, any>): Record<string, any> => {
+    const attributes: Record<string, any> = {};
+    
+    switch (type) {
       case 'text':
-        const textStyles = [
-          `padding: ${styles.padding || '15px 20px'}`,
-          `margin: ${styles.margin || '0px'}`,
-          `font-family: ${styles.fontFamily || 'Arial, sans-serif'}`,
-          `font-size: ${styles.fontSize || '16px'}`,
-          `font-weight: ${styles.fontWeight || 'normal'}`,
-          `color: ${styles.color || '#000000'}`,
-          `line-height: ${styles.lineHeight || '1.6'}`,
-          `text-align: ${styles.textAlign || 'left'}`,
-          `background-color: ${styles.backgroundColor || 'transparent'}`,
-          `border-radius: ${styles.borderRadius || '0px'}`,
-          `max-width: 100%`,
-          `display: block`
-        ].join('; ');
-        return `<div style="${textStyles}">${component.content.text || ''}</div>`;
-        
+        if (styles.fontSize) attributes['font-size'] = styles.fontSize;
+        if (styles.fontFamily) attributes['font-family'] = styles.fontFamily;
+        if (styles.fontWeight) attributes['font-weight'] = styles.fontWeight;
+        if (styles.color) attributes.color = styles.color;
+        if (styles.textAlign) attributes.align = styles.textAlign;
+        if (styles.padding) attributes.padding = styles.padding;
+        if (styles.lineHeight) attributes['line-height'] = styles.lineHeight;
+        break;
       case 'image':
-        const imgContainerStyles = [
-          `text-align: ${styles.textAlign || 'center'}`,
-          `padding: ${styles.padding || '10px'}`,
-          `margin: ${styles.margin || '0px'}`
-        ].join('; ');
-        const imgStyles = [
-          `max-width: ${styles.width || '300px'}`,
-          `height: auto`,
-          `border-radius: ${styles.borderRadius || '0px'}`
-        ].join('; ');
-        return `<div style="${imgContainerStyles}">
-          <img src="${component.content.src || ''}" alt="${component.content.alt || ''}" style="${imgStyles}" />
-        </div>`;
-        
+        if (styles.width) attributes.width = styles.width;
+        if (styles.textAlign) attributes.align = styles.textAlign;
+        if (styles.padding) attributes.padding = styles.padding;
+        if (styles.borderRadius) attributes['border-radius'] = styles.borderRadius;
+        break;
       case 'button':
-        const btnContainerStyles = [
-          `text-align: ${styles.alignment || 'center'}`,
-          `padding: ${styles.padding || '10px'}`,
-          `margin: ${styles.margin || '0px'}`
-        ].join('; ');
-        const btnStyles = [
-          `display: ${styles.display || 'inline-block'}`,
-          `padding: 12px 24px`,
-          `background-color: ${styles.backgroundColor || '#1553ec'}`,
-          `color: ${styles.textColor || '#ffffff'}`,
-          `text-decoration: none`,
-          `border-radius: ${styles.borderRadius || '6px'}`,
-          `font-family: ${styles.fontFamily || 'Arial, sans-serif'}`,
-          `font-size: ${styles.fontSize || '16px'}`,
-          `font-weight: ${styles.fontWeight || 'bold'}`,
-          `border: ${styles.borderWidth || '0px'} solid ${styles.borderColor || 'transparent'}`
-        ].join('; ');
-        return `<div style="${btnContainerStyles}">
-          <a href="${component.content.href || '#'}" style="${btnStyles}">
-            ${component.content.text || 'Click Here'}
-          </a>
-        </div>`;
-        
+        if (styles.backgroundColor) attributes['background-color'] = styles.backgroundColor;
+        if (styles.textColor) attributes.color = styles.textColor;
+        if (styles.fontSize) attributes['font-size'] = styles.fontSize;
+        if (styles.fontFamily) attributes['font-family'] = styles.fontFamily;
+        if (styles.fontWeight) attributes['font-weight'] = styles.fontWeight;
+        if (styles.borderRadius) attributes['border-radius'] = styles.borderRadius;
+        if (styles.alignment) attributes.align = styles.alignment;
+        if (styles.padding) attributes['inner-padding'] = styles.padding;
+        break;
       case 'spacer':
-        const spacerStyles = [
-          `height: ${styles.height || '20px'}`,
-          `background-color: ${styles.backgroundColor || 'transparent'}`
-        ].join('; ');
-        return `<div style="${spacerStyles}"></div>`;
-        
-      default:
-        return '';
+        if (styles.height) attributes.height = styles.height;
+        break;
+    }
+    
+    return attributes;
+  };
+
+  // Generate MJML markup from components
+  const generateMJML = (): string => {
+    const mjmlComponents = convertToMJMLComponents(emailComponents);
+    
+    const mjmlBody = mjmlComponents.map(component => {
+      switch (component.type) {
+        case 'text':
+          const textAttrs = Object.entries(component.attributes)
+            .map(([key, value]) => `${key}="${value}"`)
+            .join(' ');
+          return `<mj-text ${textAttrs}>${component.content.text || ''}</mj-text>`;
+          
+        case 'image':
+          const imgAttrs = Object.entries(component.attributes)
+            .map(([key, value]) => `${key}="${value}"`)
+            .join(' ');
+          return `<mj-image ${imgAttrs} src="${component.content.src || ''}" alt="${component.content.alt || ''}" />`;
+          
+        case 'button':
+          const btnAttrs = Object.entries(component.attributes)
+            .map(([key, value]) => `${key}="${value}"`)
+            .join(' ');
+          return `<mj-button ${btnAttrs} href="${component.content.href || '#'}">${component.content.text || 'Click Here'}</mj-button>`;
+          
+        case 'spacer':
+          const spacerAttrs = Object.entries(component.attributes)
+            .map(([key, value]) => `${key}="${value}"`)
+            .join(' ');
+          return `<mj-spacer ${spacerAttrs} />`;
+          
+        default:
+          return '';
+      }
+    }).join('\n');
+
+    return `
+<mjml>
+  <mj-head>
+    <mj-title>${emailContent.subject || 'KAVAK Email'}</mj-title>
+    <mj-attributes>
+      <mj-all font-family="Arial, sans-serif" />
+      <mj-text font-size="16px" color="#000000" line-height="1.6" />
+      <mj-button background-color="#1553ec" color="#ffffff" border-radius="6px" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#f3f4f6">
+    <mj-section background-color="#ffffff" padding="0px">
+      <mj-column>
+        ${mjmlBody || '<mj-text align="center" color="#9ca3af" padding="40px">No hay contenido en este email</mj-text>'}
+      </mj-column>
+    </mj-section>
+    
+    <!-- KAVAK Footer -->
+    <mj-section background-color="#ffffff" padding="20px">
+      <mj-column>
+        <mj-text align="center" font-size="12px" color="#666666">
+          <strong>KAVAK México</strong><br>
+          Tu plataforma confiable para comprar y vender autos usados
+        </mj-text>
+        <mj-text align="center" font-size="11px" color="#666666" padding-top="10px">
+          © ${new Date().getFullYear()} KAVAK. Todos los derechos reservados.<br>
+          Si no deseas recibir más correos, <a href="#" style="color: #1553ec;">haz clic aquí</a>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>`;
+  };
+
+  // Compile MJML to HTML
+  const getBuilderHtml = (): string => {
+    try {
+      console.log('Compiling MJML to HTML');
+      const mjmlMarkup = generateMJML();
+      console.log('Generated MJML:', mjmlMarkup);
+      
+      const result = mjml2html(mjmlMarkup);
+      
+      if (result.errors && result.errors.length > 0) {
+        console.warn('MJML compilation warnings:', result.errors);
+      }
+      
+      return result.html;
+    } catch (error) {
+      console.error('MJML compilation failed:', error);
+      toast({
+        title: "Error de compilación",
+        description: "No se pudo generar el HTML del email. Verifica el contenido.",
+        variant: "destructive",
+      });
+      return '';
     }
   };
+
+
 
   // Drag and drop sensors
   const sensors = useSensors(

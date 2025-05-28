@@ -151,7 +151,25 @@ export const insertEmailTemplateSchema = createInsertSchema(emailTemplates);
 export type InsertEmailTemplate = z.infer<typeof insertEmailTemplateSchema>;
 export type EmailTemplate = typeof emailTemplates.$inferSelect;
 
-// Email Builder Component Schema
+// MJML-based Email Builder Component Schema
+export interface MJMLComponent {
+  id: string;
+  type: 'text' | 'image' | 'button' | 'spacer';
+  content: any;
+  attributes: Record<string, any>; // MJML attributes instead of CSS styles
+}
+
+export interface MJMLEmailContent {
+  subject: string;
+  components: MJMLComponent[];
+  mjmlAttributes: {
+    backgroundColor?: string;
+    fontFamily?: string;
+    width?: string;
+  };
+}
+
+// Legacy interface for backwards compatibility
 export interface EmailComponent {
   id: string;
   type: 'text' | 'image' | 'button' | 'spacer' | 'background' | 'column';

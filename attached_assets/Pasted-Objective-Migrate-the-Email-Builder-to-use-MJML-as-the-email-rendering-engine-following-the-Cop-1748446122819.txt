@@ -1,0 +1,49 @@
+Objective:  
+Migrate the Email Builder to use MJML as the email rendering engine, following the Copilot migration plan. The goal is to standardize export/preview, improve cross-client consistency, and ensure future extensibility. The migration must preserve the current builder UI and editing experience as much as possible, but only implement properties and layouts supported by MJML.
+
+---
+
+Migration Steps:
+
+1. **Install MJML**
+   - Add the appropriate MJML package: use `mjml-browser` for client-side compilation, or set up server-side MJML compilation if needed.
+
+2. **Component Mapping**
+   - For each builder component (Text, Image, Button, Spacer), map it directly to the closest MJML primitive (`<mj-text>`, `<mj-image>`, `<mj-button>`, `<mj-spacer>`).
+   - Update the property controls for each component so they only expose properties that are supported by MJML.
+
+3. **Refactor the Data Model**
+   - Replace the EmailComponent style object with a new structure matching MJML attributes.
+   - Update data storage (and shared/schema.ts types) so each email is saved as an MJML-compatible JSON or markup tree.
+
+4. **Refactor Builder Components**
+   - Update each editing component to render using MJML-like primitives for the live canvas.
+   - Maintain editing controls using the EditingContext approach, but ensure that only valid MJML attributes are stored and edited.
+
+5. **MJML Compilation**
+   - Implement logic so that, on preview or export, the builder assembles the full MJML markup (`<mjml><mj-body>...</mj-body></mjml>`) and compiles it to HTML using the MJML engine.
+   - The output HTML should always come from MJML, not manual string assembly.
+
+6. **Template Saving and Loading**
+   - Update backend routes and schemas to save emails in MJML format.
+   - Implement migration logic for old templates: automatically convert and map legacy templates on first load.
+
+7. **Tests**
+   - Remove obsolete tests referencing manual HTML export.
+   - Add new tests to verify that getBuilderMJML() returns valid MJML and that compiled HTML renders as expected.
+
+8. **Limitations**
+   - Do NOT attempt to port any property, style, or layout that MJML cannot support. If a feature is impossible in MJML, flag it clearly in the code and UI.
+   - The migration should NOT break the builder UI or editing experience—unsupported features should be hidden or disabled, not left broken.
+
+---
+
+Deliverable:
+- The Email Builder stores, previews, and exports emails via MJML, with a clean separation between editing and MJML compilation.
+- All templates are migrated and compatible.
+- No manual HTML string assembly remains.
+- Unsupported features are explicitly disabled or documented.
+
+---
+
+If anything is not possible in MJML, skip it and note the limitation. Do NOT attempt hacks or unsupported workarounds.
