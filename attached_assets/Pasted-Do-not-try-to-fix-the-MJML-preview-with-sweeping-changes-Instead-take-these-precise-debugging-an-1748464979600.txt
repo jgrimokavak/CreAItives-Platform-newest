@@ -1,0 +1,32 @@
+Do not try to "fix" the MJML preview with sweeping changes. Instead, take these precise debugging and diagnostic steps, and stop after each with a status update. Only proceed to the next if the previous step is confirmed to work.
+
+1. **Verify Server-Side MJML Compilation:**
+   - In server/routes/email-routes.ts, write a test-only endpoint (/api/email/test-mjml) that returns a fixed, known-valid MJML string compiled with the server-side mjml package.
+   - Confirm that this endpoint always returns a valid HTML string. Log the HTML on the server and in the client console.  
+   - If this endpoint fails, output the exact error stack. Do NOT proceed to the next step until you can confirm the HTML is present and valid.
+
+2. **Verify Client/Server Communication:**
+   - On the client, fetch /api/email/test-mjml and inject the returned HTML into a test div with dangerouslySetInnerHTML.
+   - Confirm the HTML is received and rendered in the browser. Log the HTML string to the browser console.
+   - If the test HTML is not visible in the UI or logged in the console, diagnose the issue and do not proceed until fixed.
+
+3. **Test Real MJML Compilation Flow:**
+   - Re-enable the real /api/email/compile-mjml endpoint.
+   - Log the full MJML string being compiled (console.log the MJML) on the server, and log the resulting HTML.
+   - On the client, log the received HTML from the endpoint before setting it in state.
+
+4. **Add Defensive Client-Side Rendering:**
+   - Before injecting any HTML into the preview, check that the HTML is non-empty, and display a clear warning or error if it is blank or invalid.
+   - Never update the preview with empty or undefined HTML—show an explicit error instead.
+
+5. **ONLY IF all above steps are confirmed working:**
+   - Remove the /api/email/test-mjml endpoint and re-connect the builder live preview to the real compiled MJML HTML.
+
+**Important:**  
+- Do not make any other UI or layout changes.  
+- Focus only on making the live MJML preview render actual HTML, or giving explicit error messages if anything fails.  
+- Output all relevant logs and diagnostics at every step.  
+- If any step fails, stop and report what is wrong—do not continue.
+
+**Goal:**  
+Absolute, step-by-step confirmation that MJML is compiling, HTML is returned, and the live preview actually renders it. No guessing, no silent errors.

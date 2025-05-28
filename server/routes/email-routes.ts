@@ -5,7 +5,7 @@ import { emailTemplates, insertEmailTemplateSchema, type EmailTemplate, type Ins
 import { db } from '../db';
 import { eq } from 'drizzle-orm';
 import DOMPurify from 'isomorphic-dompurify';
-import mjml2html from 'mjml';
+const mjml2html = require('mjml');
 
 // Enhanced validation schemas with sanitization
 const emailContentSchema = z.object({
@@ -401,5 +401,76 @@ function generateFallbackHtml(subject: string, components: EmailComponent[]): st
       <p style="margin: 0; font-size: 12px; color: #666666;"><strong>KAVAK México</strong><br>Tu plataforma confiable para comprar y vender autos usados</p>
     </div>
   `;
+}
+
+// Test endpoint to verify MJML compilation works
+export async function testMjmlCompilation(req: Request, res: Response) {
+  console.log('=== MJML TEST ENDPOINT CALLED ===');
+  
+  try {
+    // Known valid MJML string
+    const testMjmlString = `
+<mjml>
+  <mj-head>
+    <mj-title>Test KAVAK Email</mj-title>
+    <mj-attributes>
+      <mj-all font-family="Arial, sans-serif" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#f3f4f6">
+    <mj-section background-color="#ffffff" padding="20px">
+      <mj-column>
+        <mj-text align="center" color="#1553ec" font-size="24px" font-weight="bold">
+          TEST EMAIL - KAVAK
+        </mj-text>
+        <mj-text align="center" color="#000000" font-size="16px" line-height="1.6" padding="10px">
+          This is a test email to verify MJML compilation is working correctly.
+        </mj-text>
+        <mj-button background-color="#1553ec" color="#ffffff" href="#" align="center">
+          Test Button
+        </mj-button>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>`;
+
+    console.log('Test MJML string length:', testMjmlString.length);
+    console.log('Test MJML preview:', testMjmlString.substring(0, 200) + '...');
+
+    // Try MJML compilation
+    const result = mjml2html(testMjmlString, {
+      validationLevel: 'soft',
+      minify: false
+    });
+
+    console.log('MJML compilation result:');
+    console.log('- HTML length:', result.html.length);
+    console.log('- Errors count:', result.errors?.length || 0);
+    console.log('- HTML preview:', result.html.substring(0, 300) + '...');
+    
+    if (result.errors && result.errors.length > 0) {
+      console.log('MJML warnings:', result.errors);
+    }
+
+    res.json({
+      success: true,
+      mjml: testMjmlString,
+      html: result.html,
+      htmlLength: result.html.length,
+      errors: result.errors || []
+    });
+
+  } catch (error: any) {
+    console.error('=== MJML TEST COMPILATION FAILED ===');
+    console.error('Error details:', error);
+    console.error('Error stack:', error.stack);
+    
+    res.status(500).json({
+      success: false,
+      error: 'MJML compilation failed',
+      details: error.message,
+      stack: error.stack
+    });
+  }
 }
 
