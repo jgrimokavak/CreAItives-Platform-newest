@@ -297,31 +297,39 @@ export default function EmailBuilderPage() {
           <div style={{ 
             fontSize: '0px',
             padding: component.styles?.margin || '10px 25px',
+            wordBreak: 'break-word',
             textAlign: component.styles?.textAlign || 'center'
           }}>
             <table
+              role="presentation"
               style={{
                 borderCollapse: 'separate',
-                lineHeight: '100%',
-                margin: '0 auto'
+                lineHeight: '100%'
               }}
+              align="center"
+              border={0}
+              cellPadding={0}
+              cellSpacing={0}
             >
               <tbody>
                 <tr>
                   <td
+                    role="presentation"
                     style={{
                       border: 'none',
-                      borderRadius: component.styles?.borderRadius || '3px',
+                      borderRadius: component.styles?.borderRadius || '6px',
                       cursor: 'auto',
-                      backgroundColor: component.styles?.backgroundColor || '#1553ec',
-                      padding: component.styles?.padding || '10px 25px'
+                      msoFontSize: '0px',
+                      background: component.styles?.backgroundColor || '#1553ec'
                     }}
+                    valign="top"
                   >
                     <a
-                      href={component.content.href}
+                      href={component.content.href || '#'}
                       style={{
                         display: 'inline-block',
-                        backgroundColor: component.styles?.backgroundColor || '#1553ec',
+                        width: component.styles?.width || 'auto',
+                        background: component.styles?.backgroundColor || '#1553ec',
                         color: component.styles?.color || '#ffffff',
                         fontFamily: 'Arial, sans-serif',
                         fontSize: '13px',
@@ -330,9 +338,11 @@ export default function EmailBuilderPage() {
                         margin: '0',
                         textDecoration: 'none',
                         textTransform: 'none',
-                        padding: '10px 25px',
-                        borderRadius: component.styles?.borderRadius || '3px'
+                        msoFontSize: '0px',
+                        padding: component.styles?.padding || '15px',
+                        borderRadius: component.styles?.borderRadius || '6px'
                       }}
+                      target="_blank"
                     >
                       {component.content.text}
                     </a>

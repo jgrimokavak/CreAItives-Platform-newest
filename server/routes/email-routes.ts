@@ -319,6 +319,24 @@ function generateMjmlFromComponents(subject: string, components: EmailComponent[
     }
   }).join('\n');
 
+  // Pure MJML structure - completely blank when no components
+  if (components.length === 0) {
+    const mjmlStructure = `
+<mjml>
+  <mj-head>
+    <mj-title>${sanitizeInput(subject || 'Email')}</mj-title>
+    <mj-attributes>
+      <mj-all font-family="Arial, sans-serif" />
+      <mj-text font-size="16px" color="#000000" line-height="1.6" />
+      <mj-button background-color="#1553ec" color="#ffffff" border-radius="6px" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#ffffff">
+  </mj-body>
+</mjml>`;
+    return mjmlStructure;
+  }
+
   const mjmlStructure = `
 <mjml>
   <mj-head>
@@ -332,10 +350,7 @@ function generateMjmlFromComponents(subject: string, components: EmailComponent[
   <mj-body background-color="#ffffff">
     <mj-section background-color="#ffffff" padding="0px">
       <mj-column>
-${components.length === 0 ? 
-  '' : 
-  mjmlComponents
-}
+${mjmlComponents}
       </mj-column>
     </mj-section>
   </mj-body>
