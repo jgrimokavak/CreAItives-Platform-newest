@@ -1343,6 +1343,7 @@ export default function EmailBuilderPage() {
     </div>
   );
 
+  // MJML-compatible property controls (simplified)
   const renderComponentProperties = (component: EmailComponent) => {
     const updateContent = (updates: any) => {
       updateComponent(component.id, { content: { ...component.content, ...updates } });
@@ -1356,6 +1357,13 @@ export default function EmailBuilderPage() {
       case 'text':
         return (
           <div className="h-full flex flex-col space-y-6">
+            {/* MJML Notice */}
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-xs text-blue-700">
+                ✨ Now using MJML for better email compatibility
+              </p>
+            </div>
+
             {/* Content Section */}
             <div className="space-y-4">
               <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1.5 rounded-full">
@@ -1372,6 +1380,92 @@ export default function EmailBuilderPage() {
                   placeholder="Enter your text content here..."
                 />
                 <p className="text-xs text-gray-500">This is the main text content that will appear in your email</p>
+              </div>
+            </div>
+
+            {/* MJML Typography Controls */}
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-2 bg-green-100 text-green-800 px-3 py-1.5 rounded-full">
+                <Type className="w-4 h-4" />
+                <span className="text-sm font-semibold">MJML Typography</span>
+              </div>
+
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Font Size</Label>
+                  <Select
+                    value={component.styles.fontSize || '16px'}
+                    onValueChange={(value) => updateStyles({ fontSize: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="12px">Small (12px)</SelectItem>
+                      <SelectItem value="14px">Regular (14px)</SelectItem>
+                      <SelectItem value="16px">Medium (16px)</SelectItem>
+                      <SelectItem value="18px">Large (18px)</SelectItem>
+                      <SelectItem value="24px">Extra Large (24px)</SelectItem>
+                      <SelectItem value="32px">Heading (32px)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Text Color</Label>
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      type="color"
+                      value={component.styles.color || '#000000'}
+                      onChange={(e) => updateStyles({ color: e.target.value })}
+                      className="w-12 h-8 p-1 rounded border"
+                    />
+                    <span className="text-xs text-gray-600">Text color</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Text Alignment</Label>
+                  <Select
+                    value={component.styles.textAlign || 'left'}
+                    onValueChange={(value) => updateStyles({ textAlign: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="left">Left</SelectItem>
+                      <SelectItem value="center">Center</SelectItem>
+                      <SelectItem value="right">Right</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Font Weight</Label>
+                  <Select
+                    value={component.styles.fontWeight || 'normal'}
+                    onValueChange={(value) => updateStyles({ fontWeight: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="normal">Normal</SelectItem>
+                      <SelectItem value="bold">Bold</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Padding</Label>
+                  <Input
+                    value={component.styles.padding || '10px'}
+                    onChange={(e) => updateStyles({ padding: e.target.value })}
+                    placeholder="e.g., 10px or 10px 20px"
+                  />
+                  <p className="text-xs text-gray-500">MJML padding format</p>
+                </div>
               </div>
             </div>
 
