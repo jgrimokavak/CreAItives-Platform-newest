@@ -156,20 +156,33 @@ export default function EmailBuilderPage() {
     return isNaN(num) ? '0px' : `${num}px`;
   };
 
-  // WYSIWYG HTML export that captures the actual rendered DOM
+  // Clean HTML export that creates pure email content without editor controls
   const getBuilderHtml = () => {
-    console.log('Capturing actual DOM from builder canvas');
+    console.log('Generating clean HTML for export without editor controls');
     
-    if (!builderRef.current) {
-      console.log('Builder ref not available');
-      return '';
-    }
+    // Create clean HTML structure manually to ensure no editor controls
+    const subjectHtml = emailContent.subject ? 
+      `<div style="padding: 1rem; border-bottom: 1px solid #e5e7eb; background-color: #f9fafb;">
+         <div style="font-weight: 600; color: #111827;">${emailContent.subject}</div>
+       </div>` : '';
     
-    // Get the actual rendered HTML from the builder canvas
-    const html = builderRef.current.outerHTML;
-    console.log('Captured DOM HTML length:', html.length);
+    const componentsHtml = emailComponents.map(component => {
+      return renderCleanComponent(component);
+    }).join('');
     
-    // Return complete HTML document with the captured DOM
+    const emailBodyHtml = `
+      <div style="width: 100%; max-width: 600px; background-color: #ffffff; border-radius: 0.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); border: 1px solid #e5e7eb; margin: 0 auto;">
+        ${subjectHtml}
+        <div>
+          ${componentsHtml || '<div style="padding: 2rem; text-align: center; color: #9ca3af;">No hay contenido en este email</div>'}
+        </div>
+        <div style="padding: 1rem; background-color: #f3f4f6; text-align: center; border-top: 1px solid #e5e7eb;">
+          <p style="margin: 0; font-size: 0.75rem; color: #4b5563;">KAVAK - Tu experiencia automotriz</p>
+        </div>
+      </div>
+    `;
+    
+    // Return complete HTML document
     return `<!DOCTYPE html>
 <html>
 <head>
@@ -177,31 +190,98 @@ export default function EmailBuilderPage() {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${emailContent.subject || 'My Email'}</title>
   <style>
-    body { margin: 0; padding: 0; font-family: sans-serif; }
-    /* Essential shared styles */
-    .w-full { width: 100%; }
-    .max-w-\\[600px\\] { max-width: 600px; }
-    .bg-white { background-color: #ffffff; }
-    .rounded-lg { border-radius: 0.5rem; }
-    .shadow-sm { box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); }
-    .border { border-width: 1px; border-color: #e5e7eb; }
-    .p-4 { padding: 1rem; }
-    .space-y-1 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.25rem; }
-    .text-center { text-align: center; }
-    .font-semibold { font-weight: 600; }
+    body { margin: 0; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; background-color: #f3f4f6; }
   </style>
 </head>
 <body>
-  ${html}
+  ${emailBodyHtml}
   
   <!-- KAVAK Footer -->
-  <div style="max-width: 600px; margin: 20px auto 0; padding: 20px; text-align: center; color: #666; font-size: 12px; background-color: #f8f9fa;">
-    <p style="margin: 0 0 5px 0;"><strong>KAVAK</strong> - Tu experiencia automotriz</p>
-    <p style="margin: 0 0 5px 0;">© ${new Date().getFullYear()} KAVAK. Todos los derechos reservados.</p>
-    <p style="margin: 0; font-size: 10px; color: #999;">Este email fue generado con Email CreAItor</p>
+  <div style="max-width: 600px; margin: 20px auto 0; padding: 20px; text-align: center; color: #666; font-size: 12px; background-color: #ffffff; border-radius: 0.5rem; border: 1px solid #e5e7eb;">
+    <p style="margin: 0 0 10px 0;">
+      <strong>KAVAK México</strong><br>
+      Tu plataforma confiable para comprar y vender autos usados
+    </p>
+    <p style="margin: 0; font-size: 11px;">
+      © ${new Date().getFullYear()} KAVAK. Todos los derechos reservados.<br>
+      Si no deseas recibir más correos, <a href="#" style="color: #1553ec;">haz clic aquí</a>
+    </p>
   </div>
 </body>
 </html>`;
+  };
+
+  // Render component as clean HTML without editor controls
+  const renderCleanComponent = (component: EmailComponent) => {
+    const styles = cleanStyles(component.styles);
+
+    switch (component.type) {
+      case 'text':
+        const textStyles = [
+          `padding: ${styles.padding || '15px 20px'}`,
+          `margin: ${styles.margin || '0px'}`,
+          `font-family: ${styles.fontFamily || 'Arial, sans-serif'}`,
+          `font-size: ${styles.fontSize || '16px'}`,
+          `font-weight: ${styles.fontWeight || 'normal'}`,
+          `color: ${styles.color || '#000000'}`,
+          `line-height: ${styles.lineHeight || '1.6'}`,
+          `text-align: ${styles.textAlign || 'left'}`,
+          `background-color: ${styles.backgroundColor || 'transparent'}`,
+          `border-radius: ${styles.borderRadius || '0px'}`,
+          `max-width: 100%`,
+          `display: block`
+        ].join('; ');
+        return `<div style="${textStyles}">${component.content.text || ''}</div>`;
+        
+      case 'image':
+        const imgContainerStyles = [
+          `text-align: ${styles.textAlign || 'center'}`,
+          `padding: ${styles.padding || '10px'}`,
+          `margin: ${styles.margin || '0px'}`
+        ].join('; ');
+        const imgStyles = [
+          `max-width: ${styles.width || '300px'}`,
+          `height: auto`,
+          `border-radius: ${styles.borderRadius || '0px'}`
+        ].join('; ');
+        return `<div style="${imgContainerStyles}">
+          <img src="${component.content.src || ''}" alt="${component.content.alt || ''}" style="${imgStyles}" />
+        </div>`;
+        
+      case 'button':
+        const btnContainerStyles = [
+          `text-align: ${styles.alignment || 'center'}`,
+          `padding: ${styles.padding || '10px'}`,
+          `margin: ${styles.margin || '0px'}`
+        ].join('; ');
+        const btnStyles = [
+          `display: ${styles.display || 'inline-block'}`,
+          `padding: 12px 24px`,
+          `background-color: ${styles.backgroundColor || '#1553ec'}`,
+          `color: ${styles.textColor || '#ffffff'}`,
+          `text-decoration: none`,
+          `border-radius: ${styles.borderRadius || '6px'}`,
+          `font-family: ${styles.fontFamily || 'Arial, sans-serif'}`,
+          `font-size: ${styles.fontSize || '16px'}`,
+          `font-weight: ${styles.fontWeight || 'bold'}`,
+          `border: ${styles.borderWidth || '0px'} solid ${styles.borderColor || 'transparent'}`
+        ].join('; ');
+        return `<div style="${btnContainerStyles}">
+          <a href="${component.content.href || '#'}" style="${btnStyles}">
+            ${component.content.text || 'Click Here'}
+          </a>
+        </div>`;
+        
+      case 'spacer':
+        const spacerStyles = [
+          `height: ${styles.height || '20px'}`,
+          `background-color: ${styles.backgroundColor || 'transparent'}`
+        ].join('; ');
+        return `<div style="${spacerStyles}"></div>`;
+        
+      default:
+        return '';
+    }
   };
 
   // Drag and drop sensors
@@ -2598,12 +2678,17 @@ export default function EmailBuilderPage() {
                     </CardHeader>
                     <CardContent className="p-0 flex-1 flex flex-col">
                       <div className="flex-1 overflow-y-auto bg-gray-100 p-4 flex justify-center">
-                        <div ref={builderRef} className="w-full max-w-[600px] bg-white rounded-lg shadow-sm border">
+                        <EditingContext.Provider value={true}>
+                          <div ref={builderRef} className="w-full max-w-[600px] bg-white rounded-lg shadow-sm border">
                           {/* Email Subject */}
-                          <EmailSubjectHeader 
-                            subject={emailContent.subject}
-                            onSubjectChange={(subject) => setEmailContent(prev => ({ ...prev, subject }))}
-                          />
+                          <div className="p-4 border-b bg-gray-50">
+                            <Input
+                              value={emailContent.subject}
+                              onChange={(e) => setEmailContent(prev => ({ ...prev, subject: e.target.value }))}
+                              placeholder="Email subject"
+                              className="font-semibold bg-white"
+                            />
+                          </div>
 
                           {/* Dynamic Components with Drag & Drop */}
                           <div>
@@ -2640,7 +2725,8 @@ export default function EmailBuilderPage() {
                           <div className="p-4 bg-gray-100 text-center border-t">
                             <p className="text-xs text-gray-600">KAVAK - Tu experiencia automotriz</p>
                           </div>
-                        </div>
+                          </div>
+                        </EditingContext.Provider>
                       </div>
                     </CardContent>
                   </Card>
