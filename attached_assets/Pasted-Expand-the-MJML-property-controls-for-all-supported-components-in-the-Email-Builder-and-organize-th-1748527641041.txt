@@ -1,0 +1,53 @@
+Expand the MJML property controls for all supported components in the Email Builder, and organize them for clarity and usability.
+
+For each MJML-supported component, add property controls in the Properties panel for **all** valid MJML attributes (listed below). Each control must update the MJML structure in state and sync with the live preview.
+
+**Property Grouping and UI Organization:**
+- Properties must be organized into clear, logical groups for visibility and UX.
+- Each group/category should be collapsible for easier navigation, especially when there are many properties.
+- Example groups per component: Content, Typography, Colors & Background, Borders, Sizing, Alignment, Spacing & Padding, Link/Action, Advanced.
+
+---  
+
+MJML <mj-text> (Text Block):
+- **Content:** content (editable text)
+- **Typography:** font-family, font-size, font-style, font-weight, line-height, letter-spacing, text-transform, text-decoration
+- **Colors & Background:** color, background-color
+- **Alignment:** align, vertical-align
+- **Spacing & Padding:** padding, padding-top, padding-bottom, padding-left, padding-right
+- **Advanced:** (attributes like vertical-align or others as needed)
+
+MJML <mj-image> (Image):
+- **Content:** src (image URL), alt, title
+- **Link/Action:** href (link), rel
+- **Sizing:** width, height, fluid-on-mobile
+- **Borders:** border, border-radius
+- **Colors & Background:** container-background-color
+- **Alignment:** align
+- **Spacing & Padding:** padding, padding-top, padding-bottom, padding-left, padding-right
+
+MJML <mj-button> (Button):
+- **Content:** content (button label), title
+- **Typography:** font-family, font-size, font-style, font-weight, letter-spacing, line-height, text-transform, text-decoration
+- **Colors & Background:** background-color, color, container-background-color
+- **Borders:** border, border-bottom, border-left, border-radius, border-right, border-top
+- **Sizing:** width, height
+- **Alignment:** align, text-align, vertical-align
+- **Spacing & Padding:** padding, padding-top, padding-bottom, padding-left, padding-right
+- **Link/Action:** href, rel, target
+
+MJML <mj-spacer> (Spacer):
+- **Sizing:** height
+- **Colors & Background:** container-background-color
+- **Spacing & Padding:** padding, padding-top, padding-bottom, padding-left, padding-right
+
+---
+
+**Implementation:**
+- Use a schema-driven approach for all property controls and groupings.  
+- All groups/categories must be collapsible/expandable in the Properties panel.
+- Controls within each group should be clearly labeled and easy to find.
+- If a property is not supported for a given component, do not display it.
+- If an attribute is present in MJML but not supported in your UI, flag or disable it with a tooltip: “Advanced MJML only.”
+
+Do not stop or check in until **all attributes above** are implemented in the correct groups, with collapsible categories, and every property syncs live with the MJML preview.

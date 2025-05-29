@@ -20,7 +20,8 @@ import {
   Eye, 
   Download, 
   Settings,
-  Mail
+  Mail,
+  ChevronDown
 } from 'lucide-react';
 
 // Types for MJML Editor
@@ -363,158 +364,1045 @@ export default function EmailBuilderPage() {
   };
 
   // Component Properties Panel
+  // Property group component for collapsible sections
+  const PropertyGroup = ({ title, children, defaultOpen = false }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) => {
+    const [isOpen, setIsOpen] = useState(defaultOpen);
+    
+    return (
+      <div className="border border-gray-200 rounded-lg">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+        >
+          <span className="font-medium text-sm">{title}</span>
+          <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        </button>
+        {isOpen && (
+          <div className="p-3 space-y-3">
+            {children}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const renderComponentProperties = (component: EmailComponent) => {
     if (!component) return null;
+
+    const updateStyles = (updates: Record<string, any>) => {
+      updateComponent(component.id, 'styles', updates);
+    };
+
+    const updateContent = (updates: Record<string, any>) => {
+      updateComponent(component.id, 'content', updates);
+    };
 
     switch (component.type) {
       case 'text':
         return (
           <div className="space-y-4">
-            <div>
-              <Label htmlFor="text-content">Text Content</Label>
-              <Input
-                id="text-content"
-                value={component.content.text}
-                onChange={(e) => updateComponent(component.id, 'content', { text: e.target.value })}
-                placeholder="Enter your text"
-              />
-            </div>
-            <div>
-              <Label htmlFor="text-size">Font Size</Label>
-              <Select 
-                value={component.styles.fontSize} 
-                onValueChange={(value) => updateComponent(component.id, 'styles', { fontSize: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="12px">12px</SelectItem>
-                  <SelectItem value="14px">14px</SelectItem>
-                  <SelectItem value="16px">16px</SelectItem>
-                  <SelectItem value="18px">18px</SelectItem>
-                  <SelectItem value="20px">20px</SelectItem>
-                  <SelectItem value="24px">24px</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="text-color">Text Color</Label>
-              <Input
-                id="text-color"
-                type="color"
-                value={component.styles.color}
-                onChange={(e) => updateComponent(component.id, 'styles', { color: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label htmlFor="text-align">Text Alignment</Label>
-              <Select 
-                value={component.styles.textAlign} 
-                onValueChange={(value) => updateComponent(component.id, 'styles', { textAlign: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="left">Left</SelectItem>
-                  <SelectItem value="center">Center</SelectItem>
-                  <SelectItem value="right">Right</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Content Group */}
+            <PropertyGroup title="Content" defaultOpen={true}>
+              <div>
+                <Label htmlFor="text-content">Text Content</Label>
+                <textarea
+                  id="text-content"
+                  value={component.content?.text || ''}
+                  onChange={(e) => updateContent({ text: e.target.value })}
+                  placeholder="Enter your text"
+                  className="w-full p-2 border border-gray-300 rounded-md resize-none min-h-[80px]"
+                />
+              </div>
+            </PropertyGroup>
+
+            {/* Typography Group */}
+            <PropertyGroup title="Typography">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="font-family">Font Family</Label>
+                  <Select 
+                    value={component.styles?.fontFamily || 'Arial, sans-serif'} 
+                    onValueChange={(value) => updateStyles({ fontFamily: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Arial, sans-serif">Arial</SelectItem>
+                      <SelectItem value="Helvetica, sans-serif">Helvetica</SelectItem>
+                      <SelectItem value="Georgia, serif">Georgia</SelectItem>
+                      <SelectItem value="Times, serif">Times</SelectItem>
+                      <SelectItem value="Verdana, sans-serif">Verdana</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="font-size">Font Size</Label>
+                  <Select 
+                    value={component.styles?.fontSize || '16px'} 
+                    onValueChange={(value) => updateStyles({ fontSize: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="12px">12px</SelectItem>
+                      <SelectItem value="14px">14px</SelectItem>
+                      <SelectItem value="16px">16px</SelectItem>
+                      <SelectItem value="18px">18px</SelectItem>
+                      <SelectItem value="20px">20px</SelectItem>
+                      <SelectItem value="24px">24px</SelectItem>
+                      <SelectItem value="28px">28px</SelectItem>
+                      <SelectItem value="32px">32px</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="font-weight">Font Weight</Label>
+                  <Select 
+                    value={component.styles?.fontWeight || 'normal'} 
+                    onValueChange={(value) => updateStyles({ fontWeight: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="normal">Normal</SelectItem>
+                      <SelectItem value="bold">Bold</SelectItem>
+                      <SelectItem value="lighter">Lighter</SelectItem>
+                      <SelectItem value="100">100</SelectItem>
+                      <SelectItem value="300">300</SelectItem>
+                      <SelectItem value="400">400</SelectItem>
+                      <SelectItem value="500">500</SelectItem>
+                      <SelectItem value="600">600</SelectItem>
+                      <SelectItem value="700">700</SelectItem>
+                      <SelectItem value="900">900</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="font-style">Font Style</Label>
+                  <Select 
+                    value={component.styles?.fontStyle || 'normal'} 
+                    onValueChange={(value) => updateStyles({ fontStyle: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="normal">Normal</SelectItem>
+                      <SelectItem value="italic">Italic</SelectItem>
+                      <SelectItem value="oblique">Oblique</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="line-height">Line Height</Label>
+                  <Input
+                    id="line-height"
+                    value={component.styles?.lineHeight || '1.6'}
+                    onChange={(e) => updateStyles({ lineHeight: e.target.value })}
+                    placeholder="1.6"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="letter-spacing">Letter Spacing</Label>
+                  <Input
+                    id="letter-spacing"
+                    value={component.styles?.letterSpacing || 'normal'}
+                    onChange={(e) => updateStyles({ letterSpacing: e.target.value })}
+                    placeholder="normal"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="text-transform">Text Transform</Label>
+                  <Select 
+                    value={component.styles?.textTransform || 'none'} 
+                    onValueChange={(value) => updateStyles({ textTransform: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      <SelectItem value="uppercase">Uppercase</SelectItem>
+                      <SelectItem value="lowercase">Lowercase</SelectItem>
+                      <SelectItem value="capitalize">Capitalize</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="text-decoration">Text Decoration</Label>
+                  <Select 
+                    value={component.styles?.textDecoration || 'none'} 
+                    onValueChange={(value) => updateStyles({ textDecoration: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      <SelectItem value="underline">Underline</SelectItem>
+                      <SelectItem value="overline">Overline</SelectItem>
+                      <SelectItem value="line-through">Line Through</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </PropertyGroup>
+
+            {/* Colors & Background Group */}
+            <PropertyGroup title="Colors & Background">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="text-color">Text Color</Label>
+                  <Input
+                    id="text-color"
+                    type="color"
+                    value={component.styles?.color || '#000000'}
+                    onChange={(e) => updateStyles({ color: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="background-color">Background Color</Label>
+                  <Input
+                    id="background-color"
+                    type="color"
+                    value={component.styles?.backgroundColor || '#ffffff'}
+                    onChange={(e) => updateStyles({ backgroundColor: e.target.value })}
+                  />
+                </div>
+              </div>
+            </PropertyGroup>
+
+            {/* Alignment Group */}
+            <PropertyGroup title="Alignment">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="text-align">Text Alignment</Label>
+                  <Select 
+                    value={component.styles?.textAlign || 'left'} 
+                    onValueChange={(value) => updateStyles({ textAlign: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="left">Left</SelectItem>
+                      <SelectItem value="center">Center</SelectItem>
+                      <SelectItem value="right">Right</SelectItem>
+                      <SelectItem value="justify">Justify</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="vertical-align">Vertical Alignment</Label>
+                  <Select 
+                    value={component.styles?.verticalAlign || 'top'} 
+                    onValueChange={(value) => updateStyles({ verticalAlign: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="top">Top</SelectItem>
+                      <SelectItem value="middle">Middle</SelectItem>
+                      <SelectItem value="bottom">Bottom</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </PropertyGroup>
+
+            {/* Spacing & Padding Group */}
+            <PropertyGroup title="Spacing & Padding">
+              <div>
+                <Label htmlFor="padding">Padding (all sides)</Label>
+                <Input
+                  id="padding"
+                  value={component.styles?.padding || '10px 25px'}
+                  onChange={(e) => updateStyles({ padding: e.target.value })}
+                  placeholder="10px 25px"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="padding-top">Padding Top</Label>
+                  <Input
+                    id="padding-top"
+                    value={component.styles?.paddingTop || ''}
+                    onChange={(e) => updateStyles({ paddingTop: e.target.value })}
+                    placeholder="10px"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="padding-bottom">Padding Bottom</Label>
+                  <Input
+                    id="padding-bottom"
+                    value={component.styles?.paddingBottom || ''}
+                    onChange={(e) => updateStyles({ paddingBottom: e.target.value })}
+                    placeholder="10px"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="padding-left">Padding Left</Label>
+                  <Input
+                    id="padding-left"
+                    value={component.styles?.paddingLeft || ''}
+                    onChange={(e) => updateStyles({ paddingLeft: e.target.value })}
+                    placeholder="25px"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="padding-right">Padding Right</Label>
+                  <Input
+                    id="padding-right"
+                    value={component.styles?.paddingRight || ''}
+                    onChange={(e) => updateStyles({ paddingRight: e.target.value })}
+                    placeholder="25px"
+                  />
+                </div>
+              </div>
+            </PropertyGroup>
           </div>
         );
 
       case 'image':
         return (
           <div className="space-y-4">
-            <div>
-              <Label htmlFor="image-src">Image URL</Label>
-              <Input
-                id="image-src"
-                value={component.content.src}
-                onChange={(e) => updateComponent(component.id, 'content', { src: e.target.value })}
-                placeholder="https://example.com/image.jpg"
-              />
-            </div>
-            <div>
-              <Label htmlFor="image-alt">Alt Text</Label>
-              <Input
-                id="image-alt"
-                value={component.content.alt}
-                onChange={(e) => updateComponent(component.id, 'content', { alt: e.target.value })}
-                placeholder="Describe the image"
-              />
-            </div>
-            <div>
-              <Label htmlFor="image-width">Width (px)</Label>
-              <Input
-                id="image-width"
-                value={component.styles.width?.replace('px', '') || '600'}
-                onChange={(e) => updateComponent(component.id, 'styles', { width: e.target.value + 'px' })}
-                placeholder="600"
-              />
-            </div>
+            {/* Content Group */}
+            <PropertyGroup title="Content" defaultOpen={true}>
+              <div>
+                <Label htmlFor="image-src">Image URL</Label>
+                <Input
+                  id="image-src"
+                  value={component.content?.src || ''}
+                  onChange={(e) => updateContent({ src: e.target.value })}
+                  placeholder="https://example.com/image.jpg"
+                />
+              </div>
+              <div>
+                <Label htmlFor="image-alt">Alt Text</Label>
+                <Input
+                  id="image-alt"
+                  value={component.content?.alt || ''}
+                  onChange={(e) => updateContent({ alt: e.target.value })}
+                  placeholder="Describe the image"
+                />
+              </div>
+              <div>
+                <Label htmlFor="image-title">Title</Label>
+                <Input
+                  id="image-title"
+                  value={component.content?.title || ''}
+                  onChange={(e) => updateContent({ title: e.target.value })}
+                  placeholder="Image title"
+                />
+              </div>
+            </PropertyGroup>
+
+            {/* Link/Action Group */}
+            <PropertyGroup title="Link/Action">
+              <div>
+                <Label htmlFor="image-href">Link URL</Label>
+                <Input
+                  id="image-href"
+                  value={component.content?.href || ''}
+                  onChange={(e) => updateContent({ href: e.target.value })}
+                  placeholder="https://example.com"
+                />
+              </div>
+              <div>
+                <Label htmlFor="image-rel">Rel Attribute</Label>
+                <Input
+                  id="image-rel"
+                  value={component.content?.rel || ''}
+                  onChange={(e) => updateContent({ rel: e.target.value })}
+                  placeholder="nofollow, noopener"
+                />
+              </div>
+            </PropertyGroup>
+
+            {/* Sizing Group */}
+            <PropertyGroup title="Sizing">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="image-width">Width</Label>
+                  <Input
+                    id="image-width"
+                    value={component.styles?.width || '600px'}
+                    onChange={(e) => updateStyles({ width: e.target.value })}
+                    placeholder="600px"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="image-height">Height</Label>
+                  <Input
+                    id="image-height"
+                    value={component.styles?.height || ''}
+                    onChange={(e) => updateStyles({ height: e.target.value })}
+                    placeholder="auto"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="fluid-on-mobile"
+                  checked={component.styles?.fluidOnMobile === 'true'}
+                  onChange={(e) => updateStyles({ fluidOnMobile: e.target.checked ? 'true' : 'false' })}
+                />
+                <Label htmlFor="fluid-on-mobile">Fluid on Mobile</Label>
+              </div>
+            </PropertyGroup>
+
+            {/* Borders Group */}
+            <PropertyGroup title="Borders">
+              <div>
+                <Label htmlFor="image-border">Border</Label>
+                <Input
+                  id="image-border"
+                  value={component.styles?.border || ''}
+                  onChange={(e) => updateStyles({ border: e.target.value })}
+                  placeholder="1px solid #000"
+                />
+              </div>
+              <div>
+                <Label htmlFor="image-border-radius">Border Radius</Label>
+                <Input
+                  id="image-border-radius"
+                  value={component.styles?.borderRadius || ''}
+                  onChange={(e) => updateStyles({ borderRadius: e.target.value })}
+                  placeholder="4px"
+                />
+              </div>
+            </PropertyGroup>
+
+            {/* Colors & Background Group */}
+            <PropertyGroup title="Colors & Background">
+              <div>
+                <Label htmlFor="container-bg-color">Container Background Color</Label>
+                <Input
+                  id="container-bg-color"
+                  type="color"
+                  value={component.styles?.containerBackgroundColor || '#ffffff'}
+                  onChange={(e) => updateStyles({ containerBackgroundColor: e.target.value })}
+                />
+              </div>
+            </PropertyGroup>
+
+            {/* Alignment Group */}
+            <PropertyGroup title="Alignment">
+              <div>
+                <Label htmlFor="image-align">Alignment</Label>
+                <Select 
+                  value={component.styles?.align || 'center'} 
+                  onValueChange={(value) => updateStyles({ align: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="left">Left</SelectItem>
+                    <SelectItem value="center">Center</SelectItem>
+                    <SelectItem value="right">Right</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </PropertyGroup>
+
+            {/* Spacing & Padding Group */}
+            <PropertyGroup title="Spacing & Padding">
+              <div>
+                <Label htmlFor="image-padding">Padding (all sides)</Label>
+                <Input
+                  id="image-padding"
+                  value={component.styles?.padding || '10px 25px'}
+                  onChange={(e) => updateStyles({ padding: e.target.value })}
+                  placeholder="10px 25px"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="image-padding-top">Padding Top</Label>
+                  <Input
+                    id="image-padding-top"
+                    value={component.styles?.paddingTop || ''}
+                    onChange={(e) => updateStyles({ paddingTop: e.target.value })}
+                    placeholder="10px"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="image-padding-bottom">Padding Bottom</Label>
+                  <Input
+                    id="image-padding-bottom"
+                    value={component.styles?.paddingBottom || ''}
+                    onChange={(e) => updateStyles({ paddingBottom: e.target.value })}
+                    placeholder="10px"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="image-padding-left">Padding Left</Label>
+                  <Input
+                    id="image-padding-left"
+                    value={component.styles?.paddingLeft || ''}
+                    onChange={(e) => updateStyles({ paddingLeft: e.target.value })}
+                    placeholder="25px"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="image-padding-right">Padding Right</Label>
+                  <Input
+                    id="image-padding-right"
+                    value={component.styles?.paddingRight || ''}
+                    onChange={(e) => updateStyles({ paddingRight: e.target.value })}
+                    placeholder="25px"
+                  />
+                </div>
+              </div>
+            </PropertyGroup>
           </div>
         );
 
       case 'button':
         return (
           <div className="space-y-4">
-            <div>
-              <Label htmlFor="button-text">Button Text</Label>
-              <Input
-                id="button-text"
-                value={component.content.text}
-                onChange={(e) => updateComponent(component.id, 'content', { text: e.target.value })}
-                placeholder="Click here"
-              />
-            </div>
-            <div>
-              <Label htmlFor="button-href">Link URL</Label>
-              <Input
-                id="button-href"
-                value={component.content.href}
-                onChange={(e) => updateComponent(component.id, 'content', { href: e.target.value })}
-                placeholder="https://example.com"
-              />
-            </div>
-            <div>
-              <Label htmlFor="button-bg">Background Color</Label>
-              <Input
-                id="button-bg"
-                type="color"
-                value={component.styles.backgroundColor}
-                onChange={(e) => updateComponent(component.id, 'styles', { backgroundColor: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label htmlFor="button-color">Text Color</Label>
-              <Input
-                id="button-color"
-                type="color"
-                value={component.styles.color}
-                onChange={(e) => updateComponent(component.id, 'styles', { color: e.target.value })}
-              />
-            </div>
+            {/* Content Group */}
+            <PropertyGroup title="Content" defaultOpen={true}>
+              <div>
+                <Label htmlFor="button-text">Button Text</Label>
+                <Input
+                  id="button-text"
+                  value={component.content?.text || 'Click here'}
+                  onChange={(e) => updateContent({ text: e.target.value })}
+                  placeholder="Click here"
+                />
+              </div>
+              <div>
+                <Label htmlFor="button-title">Title</Label>
+                <Input
+                  id="button-title"
+                  value={component.content?.title || ''}
+                  onChange={(e) => updateContent({ title: e.target.value })}
+                  placeholder="Button title"
+                />
+              </div>
+            </PropertyGroup>
+
+            {/* Typography Group */}
+            <PropertyGroup title="Typography">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="button-font-family">Font Family</Label>
+                  <Select 
+                    value={component.styles?.fontFamily || 'Arial, sans-serif'} 
+                    onValueChange={(value) => updateStyles({ fontFamily: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Arial, sans-serif">Arial</SelectItem>
+                      <SelectItem value="Helvetica, sans-serif">Helvetica</SelectItem>
+                      <SelectItem value="Georgia, serif">Georgia</SelectItem>
+                      <SelectItem value="Times, serif">Times</SelectItem>
+                      <SelectItem value="Verdana, sans-serif">Verdana</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="button-font-size">Font Size</Label>
+                  <Select 
+                    value={component.styles?.fontSize || '16px'} 
+                    onValueChange={(value) => updateStyles({ fontSize: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="12px">12px</SelectItem>
+                      <SelectItem value="14px">14px</SelectItem>
+                      <SelectItem value="16px">16px</SelectItem>
+                      <SelectItem value="18px">18px</SelectItem>
+                      <SelectItem value="20px">20px</SelectItem>
+                      <SelectItem value="24px">24px</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="button-font-weight">Font Weight</Label>
+                  <Select 
+                    value={component.styles?.fontWeight || 'normal'} 
+                    onValueChange={(value) => updateStyles({ fontWeight: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="normal">Normal</SelectItem>
+                      <SelectItem value="bold">Bold</SelectItem>
+                      <SelectItem value="100">100</SelectItem>
+                      <SelectItem value="300">300</SelectItem>
+                      <SelectItem value="400">400</SelectItem>
+                      <SelectItem value="500">500</SelectItem>
+                      <SelectItem value="600">600</SelectItem>
+                      <SelectItem value="700">700</SelectItem>
+                      <SelectItem value="900">900</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="button-font-style">Font Style</Label>
+                  <Select 
+                    value={component.styles?.fontStyle || 'normal'} 
+                    onValueChange={(value) => updateStyles({ fontStyle: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="normal">Normal</SelectItem>
+                      <SelectItem value="italic">Italic</SelectItem>
+                      <SelectItem value="oblique">Oblique</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <Label htmlFor="button-letter-spacing">Letter Spacing</Label>
+                  <Input
+                    id="button-letter-spacing"
+                    value={component.styles?.letterSpacing || 'normal'}
+                    onChange={(e) => updateStyles({ letterSpacing: e.target.value })}
+                    placeholder="normal"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="button-line-height">Line Height</Label>
+                  <Input
+                    id="button-line-height"
+                    value={component.styles?.lineHeight || '1.6'}
+                    onChange={(e) => updateStyles({ lineHeight: e.target.value })}
+                    placeholder="1.6"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="button-text-transform">Text Transform</Label>
+                  <Select 
+                    value={component.styles?.textTransform || 'none'} 
+                    onValueChange={(value) => updateStyles({ textTransform: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      <SelectItem value="uppercase">Uppercase</SelectItem>
+                      <SelectItem value="lowercase">Lowercase</SelectItem>
+                      <SelectItem value="capitalize">Capitalize</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="button-text-decoration">Text Decoration</Label>
+                <Select 
+                  value={component.styles?.textDecoration || 'none'} 
+                  onValueChange={(value) => updateStyles({ textDecoration: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    <SelectItem value="underline">Underline</SelectItem>
+                    <SelectItem value="overline">Overline</SelectItem>
+                    <SelectItem value="line-through">Line Through</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </PropertyGroup>
+
+            {/* Colors & Background Group */}
+            <PropertyGroup title="Colors & Background">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="button-bg-color">Background Color</Label>
+                  <Input
+                    id="button-bg-color"
+                    type="color"
+                    value={component.styles?.backgroundColor || '#1553ec'}
+                    onChange={(e) => updateStyles({ backgroundColor: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="button-text-color">Text Color</Label>
+                  <Input
+                    id="button-text-color"
+                    type="color"
+                    value={component.styles?.color || '#ffffff'}
+                    onChange={(e) => updateStyles({ color: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="button-container-bg">Container Background Color</Label>
+                <Input
+                  id="button-container-bg"
+                  type="color"
+                  value={component.styles?.containerBackgroundColor || '#ffffff'}
+                  onChange={(e) => updateStyles({ containerBackgroundColor: e.target.value })}
+                />
+              </div>
+            </PropertyGroup>
+
+            {/* Borders Group */}
+            <PropertyGroup title="Borders">
+              <div>
+                <Label htmlFor="button-border">Border (all sides)</Label>
+                <Input
+                  id="button-border"
+                  value={component.styles?.border || ''}
+                  onChange={(e) => updateStyles({ border: e.target.value })}
+                  placeholder="1px solid #000"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="button-border-top">Border Top</Label>
+                  <Input
+                    id="button-border-top"
+                    value={component.styles?.borderTop || ''}
+                    onChange={(e) => updateStyles({ borderTop: e.target.value })}
+                    placeholder="1px solid #000"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="button-border-bottom">Border Bottom</Label>
+                  <Input
+                    id="button-border-bottom"
+                    value={component.styles?.borderBottom || ''}
+                    onChange={(e) => updateStyles({ borderBottom: e.target.value })}
+                    placeholder="1px solid #000"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="button-border-left">Border Left</Label>
+                  <Input
+                    id="button-border-left"
+                    value={component.styles?.borderLeft || ''}
+                    onChange={(e) => updateStyles({ borderLeft: e.target.value })}
+                    placeholder="1px solid #000"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="button-border-right">Border Right</Label>
+                  <Input
+                    id="button-border-right"
+                    value={component.styles?.borderRight || ''}
+                    onChange={(e) => updateStyles({ borderRight: e.target.value })}
+                    placeholder="1px solid #000"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="button-border-radius">Border Radius</Label>
+                <Input
+                  id="button-border-radius"
+                  value={component.styles?.borderRadius || '6px'}
+                  onChange={(e) => updateStyles({ borderRadius: e.target.value })}
+                  placeholder="6px"
+                />
+              </div>
+            </PropertyGroup>
+
+            {/* Sizing Group */}
+            <PropertyGroup title="Sizing">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="button-width">Width</Label>
+                  <Input
+                    id="button-width"
+                    value={component.styles?.width || 'auto'}
+                    onChange={(e) => updateStyles({ width: e.target.value })}
+                    placeholder="auto"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="button-height">Height</Label>
+                  <Input
+                    id="button-height"
+                    value={component.styles?.height || 'auto'}
+                    onChange={(e) => updateStyles({ height: e.target.value })}
+                    placeholder="auto"
+                  />
+                </div>
+              </div>
+            </PropertyGroup>
+
+            {/* Alignment Group */}
+            <PropertyGroup title="Alignment">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="button-align">Button Alignment</Label>
+                  <Select 
+                    value={component.styles?.align || 'center'} 
+                    onValueChange={(value) => updateStyles({ align: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="left">Left</SelectItem>
+                      <SelectItem value="center">Center</SelectItem>
+                      <SelectItem value="right">Right</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="button-text-align">Text Alignment</Label>
+                  <Select 
+                    value={component.styles?.textAlign || 'center'} 
+                    onValueChange={(value) => updateStyles({ textAlign: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="left">Left</SelectItem>
+                      <SelectItem value="center">Center</SelectItem>
+                      <SelectItem value="right">Right</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="button-vertical-align">Vertical Alignment</Label>
+                <Select 
+                  value={component.styles?.verticalAlign || 'middle'} 
+                  onValueChange={(value) => updateStyles({ verticalAlign: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="top">Top</SelectItem>
+                    <SelectItem value="middle">Middle</SelectItem>
+                    <SelectItem value="bottom">Bottom</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </PropertyGroup>
+
+            {/* Spacing & Padding Group */}
+            <PropertyGroup title="Spacing & Padding">
+              <div>
+                <Label htmlFor="button-padding">Padding (all sides)</Label>
+                <Input
+                  id="button-padding"
+                  value={component.styles?.padding || '10px 25px'}
+                  onChange={(e) => updateStyles({ padding: e.target.value })}
+                  placeholder="10px 25px"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="button-padding-top">Padding Top</Label>
+                  <Input
+                    id="button-padding-top"
+                    value={component.styles?.paddingTop || ''}
+                    onChange={(e) => updateStyles({ paddingTop: e.target.value })}
+                    placeholder="10px"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="button-padding-bottom">Padding Bottom</Label>
+                  <Input
+                    id="button-padding-bottom"
+                    value={component.styles?.paddingBottom || ''}
+                    onChange={(e) => updateStyles({ paddingBottom: e.target.value })}
+                    placeholder="10px"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="button-padding-left">Padding Left</Label>
+                  <Input
+                    id="button-padding-left"
+                    value={component.styles?.paddingLeft || ''}
+                    onChange={(e) => updateStyles({ paddingLeft: e.target.value })}
+                    placeholder="25px"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="button-padding-right">Padding Right</Label>
+                  <Input
+                    id="button-padding-right"
+                    value={component.styles?.paddingRight || ''}
+                    onChange={(e) => updateStyles({ paddingRight: e.target.value })}
+                    placeholder="25px"
+                  />
+                </div>
+              </div>
+            </PropertyGroup>
+
+            {/* Link/Action Group */}
+            <PropertyGroup title="Link/Action">
+              <div>
+                <Label htmlFor="button-href">Link URL</Label>
+                <Input
+                  id="button-href"
+                  value={component.content?.href || '#'}
+                  onChange={(e) => updateContent({ href: e.target.value })}
+                  placeholder="https://example.com"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="button-rel">Rel Attribute</Label>
+                  <Input
+                    id="button-rel"
+                    value={component.content?.rel || ''}
+                    onChange={(e) => updateContent({ rel: e.target.value })}
+                    placeholder="nofollow, noopener"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="button-target">Target</Label>
+                  <Select 
+                    value={component.content?.target || '_self'} 
+                    onValueChange={(value) => updateContent({ target: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_self">Same Window</SelectItem>
+                      <SelectItem value="_blank">New Window</SelectItem>
+                      <SelectItem value="_parent">Parent Frame</SelectItem>
+                      <SelectItem value="_top">Top Frame</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </PropertyGroup>
           </div>
         );
 
       case 'spacer':
         return (
           <div className="space-y-4">
-            <div>
-              <Label htmlFor="spacer-height">Height: {component.styles.height}</Label>
-              <Slider
-                value={[parseInt(component.styles.height?.replace('px', '') || '20')]}
-                onValueChange={(values) => updateComponent(component.id, 'styles', { height: `${values[0]}px` })}
-                max={100}
-                min={5}
-                step={5}
-                className="w-full"
-              />
-            </div>
+            {/* Sizing Group */}
+            <PropertyGroup title="Sizing" defaultOpen={true}>
+              <div>
+                <Label htmlFor="spacer-height">Height: {component.styles?.height || '20px'}</Label>
+                <Slider
+                  value={[parseInt(component.styles?.height?.replace('px', '') || '20')]}
+                  onValueChange={(values) => updateStyles({ height: `${values[0]}px` })}
+                  max={100}
+                  min={5}
+                  step={5}
+                  className="w-full"
+                />
+              </div>
+              <div>
+                <Label htmlFor="spacer-height-input">Height (manual input)</Label>
+                <Input
+                  id="spacer-height-input"
+                  value={component.styles?.height || '20px'}
+                  onChange={(e) => updateStyles({ height: e.target.value })}
+                  placeholder="20px"
+                />
+              </div>
+            </PropertyGroup>
+
+            {/* Colors & Background Group */}
+            <PropertyGroup title="Colors & Background">
+              <div>
+                <Label htmlFor="spacer-container-bg">Container Background Color</Label>
+                <Input
+                  id="spacer-container-bg"
+                  type="color"
+                  value={component.styles?.containerBackgroundColor || '#ffffff'}
+                  onChange={(e) => updateStyles({ containerBackgroundColor: e.target.value })}
+                />
+              </div>
+            </PropertyGroup>
+
+            {/* Spacing & Padding Group */}
+            <PropertyGroup title="Spacing & Padding">
+              <div>
+                <Label htmlFor="spacer-padding">Padding (all sides)</Label>
+                <Input
+                  id="spacer-padding"
+                  value={component.styles?.padding || ''}
+                  onChange={(e) => updateStyles({ padding: e.target.value })}
+                  placeholder="0px"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="spacer-padding-top">Padding Top</Label>
+                  <Input
+                    id="spacer-padding-top"
+                    value={component.styles?.paddingTop || ''}
+                    onChange={(e) => updateStyles({ paddingTop: e.target.value })}
+                    placeholder="0px"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="spacer-padding-bottom">Padding Bottom</Label>
+                  <Input
+                    id="spacer-padding-bottom"
+                    value={component.styles?.paddingBottom || ''}
+                    onChange={(e) => updateStyles({ paddingBottom: e.target.value })}
+                    placeholder="0px"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="spacer-padding-left">Padding Left</Label>
+                  <Input
+                    id="spacer-padding-left"
+                    value={component.styles?.paddingLeft || ''}
+                    onChange={(e) => updateStyles({ paddingLeft: e.target.value })}
+                    placeholder="0px"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="spacer-padding-right">Padding Right</Label>
+                  <Input
+                    id="spacer-padding-right"
+                    value={component.styles?.paddingRight || ''}
+                    onChange={(e) => updateStyles({ paddingRight: e.target.value })}
+                    placeholder="0px"
+                  />
+                </div>
+              </div>
+            </PropertyGroup>
           </div>
         );
 
