@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, createContext } from 'react';
+import { useState, useEffect, useRef, createContext, useCallback, memo } from 'react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
@@ -23,6 +23,34 @@ import {
   Mail,
   ChevronDown
 } from 'lucide-react';
+
+// Property group component - defined outside main component to prevent re-creation
+const PropertyGroup = memo(({ title, children, defaultOpen = false }: { 
+  title: string; 
+  children: React.ReactNode; 
+  defaultOpen?: boolean 
+}) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  
+  return (
+    <div className="border border-gray-200 rounded-lg">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+      >
+        <span className="font-medium text-sm">{title}</span>
+        <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+      {isOpen && (
+        <div className="p-3 space-y-3">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+});
+
+PropertyGroup.displayName = 'PropertyGroup';
 
 // Types for MJML Editor
 interface EmailComponent {
@@ -62,7 +90,7 @@ export default function EmailBuilderPage() {
     })
   );
 
-  // MJML Compilation Effect
+  // Debounced MJML Compilation Effect
   useEffect(() => {
     const compileToMjml = async () => {
       try {
@@ -97,7 +125,10 @@ export default function EmailBuilderPage() {
       }
     };
 
-    compileToMjml();
+    // Debounce MJML compilation to avoid running on every keystroke
+    const timeoutId = setTimeout(compileToMjml, 300);
+    
+    return () => clearTimeout(timeoutId);
   }, [emailContent, emailComponents]);
 
   // Component Management
@@ -188,8 +219,8 @@ export default function EmailBuilderPage() {
           borderRight: '',
           borderRadius: '6px',
           // Sizing
-          width: 'auto',
-          height: 'auto',
+          width: '',
+          height: '',
           // Alignment
           align: 'center',
           textAlign: 'center',
@@ -211,14 +242,14 @@ export default function EmailBuilderPage() {
     }
   };
 
-  const removeComponent = (id: string) => {
+  const removeComponent = useCallback((id: string) => {
     setEmailComponents(prev => prev.filter(c => c.id !== id));
     if (selectedComponent === id) {
       setSelectedComponent(null);
     }
-  };
+  }, [selectedComponent]);
 
-  const updateComponent = (id: string, field: string, value: any) => {
+  const updateComponent = useCallback((id: string, field: string, value: any) => {
     setEmailComponents(prev => prev.map(comp => 
       comp.id === id 
         ? {
@@ -231,7 +262,7 @@ export default function EmailBuilderPage() {
           }
         : comp
     ));
-  };
+  }, []);
 
   // Drag and Drop Handler
   const handleDragEnd = (event: DragEndEvent) => {
@@ -501,27 +532,6 @@ export default function EmailBuilderPage() {
   };
 
   // Component Properties Panel
-  // Property group component for collapsible sections
-  const PropertyGroup = ({ title, children, defaultOpen = false }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) => {
-    const [isOpen, setIsOpen] = useState(defaultOpen);
-    
-    return (
-      <div className="border border-gray-200 rounded-lg">
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 transition-colors"
-        >
-          <span className="font-medium text-sm">{title}</span>
-          <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-        </button>
-        {isOpen && (
-          <div className="p-3 space-y-3">
-            {children}
-          </div>
-        )}
-      </div>
-    );
-  };
 
   const renderComponentProperties = (component: EmailComponent) => {
     if (!component) return null;
