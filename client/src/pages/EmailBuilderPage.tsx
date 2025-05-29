@@ -549,7 +549,7 @@ export default function EmailBuilderPage() {
         return (
           <div className="space-y-4">
             {/* Content Group */}
-            <PropertyGroup title="Content" defaultOpen={true}>
+            <PropertyGroup title="Content" defaultOpen={false}>
               <div>
                 <Label htmlFor="text-content">Text Content</Label>
                 <textarea
@@ -829,7 +829,7 @@ export default function EmailBuilderPage() {
         return (
           <div className="space-y-4">
             {/* Content Group */}
-            <PropertyGroup title="Content" defaultOpen={true}>
+            <PropertyGroup title="Content" defaultOpen={false}>
               <div>
                 <Label htmlFor="image-src">Image URL</Label>
                 <Input
@@ -1028,7 +1028,7 @@ export default function EmailBuilderPage() {
         return (
           <div className="space-y-4">
             {/* Content Group */}
-            <PropertyGroup title="Content" defaultOpen={true}>
+            <PropertyGroup title="Content" defaultOpen={false}>
               <div>
                 <Label htmlFor="button-text">Button Text</Label>
                 <Input
@@ -1462,7 +1462,7 @@ export default function EmailBuilderPage() {
         return (
           <div className="space-y-4">
             {/* Sizing Group */}
-            <PropertyGroup title="Sizing" defaultOpen={true}>
+            <PropertyGroup title="Sizing" defaultOpen={false}>
               <div>
                 <Label htmlFor="spacer-height">Height: {component.styles?.height || '20px'}</Label>
                 <Slider
