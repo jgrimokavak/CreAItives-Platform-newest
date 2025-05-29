@@ -75,13 +75,29 @@ function generateMjmlFromComponents(subject: string, components: EmailComponent[
   const mjmlComponents = components.map(component => {
     switch (component.type) {
       case 'text':
-        return `        <mj-text 
-          align="${component.styles?.textAlign || 'left'}"
-          color="${component.styles?.color || '#000000'}"
-          font-size="${component.styles?.fontSize || '16px'}"
-          padding="${component.styles?.padding || '10px 25px'}"
-          line-height="1.6"
-        >
+        // Build comprehensive mj-text attributes
+        const textAttrs = [];
+        if (component.styles?.textAlign) textAttrs.push(`align="${component.styles.textAlign}"`);
+        if (component.styles?.color) textAttrs.push(`color="${component.styles.color}"`);
+        if (component.styles?.backgroundColor) textAttrs.push(`background-color="${component.styles.backgroundColor}"`);
+        if (component.styles?.fontSize) textAttrs.push(`font-size="${component.styles.fontSize}"`);
+        if (component.styles?.fontFamily) textAttrs.push(`font-family="${component.styles.fontFamily}"`);
+        if (component.styles?.fontWeight) textAttrs.push(`font-weight="${component.styles.fontWeight}"`);
+        if (component.styles?.fontStyle) textAttrs.push(`font-style="${component.styles.fontStyle}"`);
+        if (component.styles?.lineHeight) textAttrs.push(`line-height="${component.styles.lineHeight}"`);
+        if (component.styles?.letterSpacing) textAttrs.push(`letter-spacing="${component.styles.letterSpacing}"`);
+        if (component.styles?.textTransform) textAttrs.push(`text-transform="${component.styles.textTransform}"`);
+        if (component.styles?.textDecoration) textAttrs.push(`text-decoration="${component.styles.textDecoration}"`);
+        if (component.styles?.verticalAlign) textAttrs.push(`vertical-align="${component.styles.verticalAlign}"`);
+        
+        // Handle padding attributes
+        if (component.styles?.padding) textAttrs.push(`padding="${component.styles.padding}"`);
+        if (component.styles?.paddingTop) textAttrs.push(`padding-top="${component.styles.paddingTop}"`);
+        if (component.styles?.paddingBottom) textAttrs.push(`padding-bottom="${component.styles.paddingBottom}"`);
+        if (component.styles?.paddingLeft) textAttrs.push(`padding-left="${component.styles.paddingLeft}"`);
+        if (component.styles?.paddingRight) textAttrs.push(`padding-right="${component.styles.paddingRight}"`);
+        
+        return `        <mj-text ${textAttrs.join(' ')}>
           ${sanitizeInput(component.content?.text || '')}
         </mj-text>`;
         
@@ -91,27 +107,86 @@ function generateMjmlFromComponents(subject: string, components: EmailComponent[
             [Image placeholder - Add image URL in properties]
           </mj-text>`;
         }
-        return `        <mj-image 
-          src="${component.content.src}"
-          alt="${component.content?.alt || ''}"
-          width="${component.styles?.width || '600px'}"
-          padding="${component.styles?.padding || '10px 25px'}"
-        />`;
+        
+        // Build comprehensive mj-image attributes
+        const imageAttrs = [];
+        imageAttrs.push(`src="${component.content.src}"`);
+        if (component.content?.alt) imageAttrs.push(`alt="${component.content.alt}"`);
+        if (component.content?.title) imageAttrs.push(`title="${component.content.title}"`);
+        if (component.content?.href) imageAttrs.push(`href="${component.content.href}"`);
+        if (component.content?.rel) imageAttrs.push(`rel="${component.content.rel}"`);
+        if (component.styles?.width) imageAttrs.push(`width="${component.styles.width}"`);
+        if (component.styles?.height) imageAttrs.push(`height="${component.styles.height}"`);
+        if (component.styles?.align) imageAttrs.push(`align="${component.styles.align}"`);
+        if (component.styles?.border) imageAttrs.push(`border="${component.styles.border}"`);
+        if (component.styles?.borderRadius) imageAttrs.push(`border-radius="${component.styles.borderRadius}"`);
+        if (component.styles?.containerBackgroundColor) imageAttrs.push(`container-background-color="${component.styles.containerBackgroundColor}"`);
+        if (component.styles?.fluidOnMobile === 'true') imageAttrs.push(`fluid-on-mobile="true"`);
+        
+        // Handle padding attributes
+        if (component.styles?.padding) imageAttrs.push(`padding="${component.styles.padding}"`);
+        if (component.styles?.paddingTop) imageAttrs.push(`padding-top="${component.styles.paddingTop}"`);
+        if (component.styles?.paddingBottom) imageAttrs.push(`padding-bottom="${component.styles.paddingBottom}"`);
+        if (component.styles?.paddingLeft) imageAttrs.push(`padding-left="${component.styles.paddingLeft}"`);
+        if (component.styles?.paddingRight) imageAttrs.push(`padding-right="${component.styles.paddingRight}"`);
+        
+        return `        <mj-image ${imageAttrs.join(' ')} />`;
         
       case 'button':
-        return `        <mj-button 
-          background-color="${component.styles?.backgroundColor || '#1553ec'}"
-          color="${component.styles?.color || '#ffffff'}"
-          border-radius="${component.styles?.borderRadius || '6px'}"
-          padding="${component.styles?.margin || '10px 25px'}"
-          href="${component.content?.href || '#'}"
-          align="${component.styles?.textAlign || 'center'}"
-        >
+        // Build comprehensive mj-button attributes
+        const buttonAttrs = [];
+        if (component.styles?.backgroundColor) buttonAttrs.push(`background-color="${component.styles.backgroundColor}"`);
+        if (component.styles?.color) buttonAttrs.push(`color="${component.styles.color}"`);
+        if (component.styles?.fontFamily) buttonAttrs.push(`font-family="${component.styles.fontFamily}"`);
+        if (component.styles?.fontSize) buttonAttrs.push(`font-size="${component.styles.fontSize}"`);
+        if (component.styles?.fontWeight) buttonAttrs.push(`font-weight="${component.styles.fontWeight}"`);
+        if (component.styles?.fontStyle) buttonAttrs.push(`font-style="${component.styles.fontStyle}"`);
+        if (component.styles?.lineHeight) buttonAttrs.push(`line-height="${component.styles.lineHeight}"`);
+        if (component.styles?.letterSpacing) buttonAttrs.push(`letter-spacing="${component.styles.letterSpacing}"`);
+        if (component.styles?.textTransform) buttonAttrs.push(`text-transform="${component.styles.textTransform}"`);
+        if (component.styles?.textDecoration) buttonAttrs.push(`text-decoration="${component.styles.textDecoration}"`);
+        if (component.styles?.borderRadius) buttonAttrs.push(`border-radius="${component.styles.borderRadius}"`);
+        if (component.styles?.border) buttonAttrs.push(`border="${component.styles.border}"`);
+        if (component.styles?.borderTop) buttonAttrs.push(`border-top="${component.styles.borderTop}"`);
+        if (component.styles?.borderBottom) buttonAttrs.push(`border-bottom="${component.styles.borderBottom}"`);
+        if (component.styles?.borderLeft) buttonAttrs.push(`border-left="${component.styles.borderLeft}"`);
+        if (component.styles?.borderRight) buttonAttrs.push(`border-right="${component.styles.borderRight}"`);
+        if (component.styles?.width) buttonAttrs.push(`width="${component.styles.width}"`);
+        if (component.styles?.height) buttonAttrs.push(`height="${component.styles.height}"`);
+        if (component.styles?.align) buttonAttrs.push(`align="${component.styles.align}"`);
+        if (component.styles?.textAlign) buttonAttrs.push(`text-align="${component.styles.textAlign}"`);
+        if (component.styles?.verticalAlign) buttonAttrs.push(`vertical-align="${component.styles.verticalAlign}"`);
+        if (component.styles?.containerBackgroundColor) buttonAttrs.push(`container-background-color="${component.styles.containerBackgroundColor}"`);
+        if (component.content?.href) buttonAttrs.push(`href="${component.content.href}"`);
+        if (component.content?.rel) buttonAttrs.push(`rel="${component.content.rel}"`);
+        if (component.content?.target) buttonAttrs.push(`target="${component.content.target}"`);
+        if (component.content?.title) buttonAttrs.push(`title="${component.content.title}"`);
+        
+        // Handle padding attributes
+        if (component.styles?.padding) buttonAttrs.push(`padding="${component.styles.padding}"`);
+        if (component.styles?.paddingTop) buttonAttrs.push(`padding-top="${component.styles.paddingTop}"`);
+        if (component.styles?.paddingBottom) buttonAttrs.push(`padding-bottom="${component.styles.paddingBottom}"`);
+        if (component.styles?.paddingLeft) buttonAttrs.push(`padding-left="${component.styles.paddingLeft}"`);
+        if (component.styles?.paddingRight) buttonAttrs.push(`padding-right="${component.styles.paddingRight}"`);
+        
+        return `        <mj-button ${buttonAttrs.join(' ')}>
           ${sanitizeInput(component.content?.text || 'Click here')}
         </mj-button>`;
         
       case 'spacer':
-        return `        <mj-spacer height="${component.styles?.height || '20px'}" />`;
+        // Build comprehensive mj-spacer attributes
+        const spacerAttrs = [];
+        if (component.styles?.height) spacerAttrs.push(`height="${component.styles.height}"`);
+        if (component.styles?.containerBackgroundColor) spacerAttrs.push(`container-background-color="${component.styles.containerBackgroundColor}"`);
+        
+        // Handle padding attributes
+        if (component.styles?.padding) spacerAttrs.push(`padding="${component.styles.padding}"`);
+        if (component.styles?.paddingTop) spacerAttrs.push(`padding-top="${component.styles.paddingTop}"`);
+        if (component.styles?.paddingBottom) spacerAttrs.push(`padding-bottom="${component.styles.paddingBottom}"`);
+        if (component.styles?.paddingLeft) spacerAttrs.push(`padding-left="${component.styles.paddingLeft}"`);
+        if (component.styles?.paddingRight) spacerAttrs.push(`padding-right="${component.styles.paddingRight}"`);
+        
+        return `        <mj-spacer ${spacerAttrs.join(' ')} />`;
         
       default:
         return '';

@@ -117,11 +117,11 @@ export default function EmailBuilderPage() {
       case 'text':
         return { text: 'Add your text here' };
       case 'image':
-        return { src: '', alt: 'Image description' };
+        return { src: '', alt: 'Image description', title: '', href: '', rel: '' };
       case 'button':
-        return { text: 'Click here', href: '#' };
+        return { text: 'Click here', href: '#', title: '', rel: '', target: '_self' };
       case 'spacer':
-        return { height: '20px' };
+        return {};
       default:
         return {};
     }
@@ -131,28 +131,80 @@ export default function EmailBuilderPage() {
     switch (type) {
       case 'text':
         return {
+          // Typography
+          fontFamily: 'Arial, sans-serif',
           fontSize: '16px',
+          fontWeight: 'normal',
+          fontStyle: 'normal',
+          lineHeight: '1.6',
+          letterSpacing: 'normal',
+          textTransform: 'none',
+          textDecoration: 'none',
+          // Colors & Background
           color: '#000000',
+          backgroundColor: 'transparent',
+          // Alignment
           textAlign: 'left',
-          padding: '15px'
+          verticalAlign: 'top',
+          // Spacing & Padding
+          padding: '10px 25px'
         };
       case 'image':
         return {
+          // Sizing
           width: '600px',
-          padding: '15px'
+          height: 'auto',
+          fluidOnMobile: 'false',
+          // Borders
+          border: '',
+          borderRadius: '',
+          // Colors & Background
+          containerBackgroundColor: 'transparent',
+          // Alignment
+          align: 'center',
+          // Spacing & Padding
+          padding: '10px 25px'
         };
       case 'button':
         return {
+          // Typography
+          fontFamily: 'Arial, sans-serif',
+          fontSize: '16px',
+          fontWeight: 'normal',
+          fontStyle: 'normal',
+          lineHeight: '1.6',
+          letterSpacing: 'normal',
+          textTransform: 'none',
+          textDecoration: 'none',
+          // Colors & Background
           backgroundColor: '#1553ec',
           color: '#ffffff',
-          padding: '15px',
+          containerBackgroundColor: 'transparent',
+          // Borders
+          border: '',
+          borderTop: '',
+          borderBottom: '',
+          borderLeft: '',
+          borderRight: '',
           borderRadius: '6px',
+          // Sizing
+          width: 'auto',
+          height: 'auto',
+          // Alignment
+          align: 'center',
           textAlign: 'center',
-          margin: '15px'
+          verticalAlign: 'middle',
+          // Spacing & Padding
+          padding: '10px 25px'
         };
       case 'spacer':
         return {
-          height: '20px'
+          // Sizing
+          height: '20px',
+          // Colors & Background
+          containerBackgroundColor: 'transparent',
+          // Spacing & Padding
+          padding: ''
         };
       default:
         return {};
@@ -243,41 +295,94 @@ export default function EmailBuilderPage() {
 
   // Pure MJML Component Renderer - matches MJML output exactly
   const renderEmailComponent = (component: EmailComponent) => {
+    // Helper to build padding styles from individual properties
+    const buildPaddingStyle = (styles: any) => {
+      if (styles?.padding) return styles.padding;
+      
+      const paddingParts = [];
+      const top = styles?.paddingTop || '0';
+      const right = styles?.paddingRight || '0';
+      const bottom = styles?.paddingBottom || '0';
+      const left = styles?.paddingLeft || '0';
+      
+      if (top === right && right === bottom && bottom === left && top !== '0') {
+        return top;
+      }
+      if (top === bottom && left === right) {
+        return `${top} ${right}`;
+      }
+      return `${top} ${right} ${bottom} ${left}`;
+    };
+
     switch (component.type) {
       case 'text':
         return (
           <div style={{
-            fontFamily: 'Arial, sans-serif',
+            fontFamily: component.styles?.fontFamily || 'Arial, sans-serif',
             fontSize: component.styles?.fontSize || '16px',
-            lineHeight: '1.6',
+            fontWeight: component.styles?.fontWeight || 'normal',
+            fontStyle: component.styles?.fontStyle || 'normal',
+            lineHeight: component.styles?.lineHeight || '1.6',
+            letterSpacing: component.styles?.letterSpacing || 'normal',
             textAlign: component.styles?.textAlign || 'left',
+            textTransform: component.styles?.textTransform || 'none',
+            textDecoration: component.styles?.textDecoration || 'none',
             color: component.styles?.color || '#000000',
-            padding: component.styles?.padding || '10px 25px'
+            backgroundColor: component.styles?.backgroundColor || 'transparent',
+            padding: buildPaddingStyle(component.styles) || '10px 25px',
+            verticalAlign: component.styles?.verticalAlign || 'top'
           }}>
-            {component.content.text}
+            {component.content?.text || ''}
           </div>
         );
+        
       case 'image':
+        const containerAlign = component.styles?.align || 'center';
+        const imagePadding = buildPaddingStyle(component.styles) || '10px 25px';
+        
         return (
           <div style={{ 
             fontSize: '0px',
-            padding: component.styles?.padding || '10px 25px',
-            textAlign: 'center'
+            padding: imagePadding,
+            textAlign: containerAlign,
+            backgroundColor: component.styles?.containerBackgroundColor || 'transparent'
           }}>
-            {component.content.src ? (
-              <img 
-                src={component.content.src} 
-                alt={component.content.alt}
-                style={{ 
-                  border: '0',
-                  height: 'auto',
-                  lineHeight: '100%',
-                  outline: 'none',
-                  textDecoration: 'none',
-                  width: component.styles?.width || '600px',
-                  maxWidth: '100%'
-                }}
-              />
+            {component.content?.src ? (
+              component.content?.href ? (
+                <a href={component.content.href} target="_blank" rel={component.content?.rel || 'noopener'}>
+                  <img 
+                    src={component.content.src} 
+                    alt={component.content?.alt || ''}
+                    title={component.content?.title || ''}
+                    style={{ 
+                      border: component.styles?.border || '0',
+                      borderRadius: component.styles?.borderRadius || '0',
+                      height: component.styles?.height || 'auto',
+                      lineHeight: '100%',
+                      outline: 'none',
+                      textDecoration: 'none',
+                      width: component.styles?.width || '600px',
+                      maxWidth: '100%'
+                    }}
+                  />
+                </a>
+              ) : (
+                <img 
+                  src={component.content.src} 
+                  alt={component.content?.alt || ''}
+                  title={component.content?.title || ''}
+                  style={{ 
+                    border: component.styles?.border || '0',
+                    borderRadius: component.styles?.borderRadius || '0',
+                    height: component.styles?.height || 'auto',
+                    lineHeight: '100%',
+                    outline: 'none',
+                    textDecoration: 'none',
+                    width: component.styles?.width || '600px',
+                    maxWidth: '100%'
+                  }}
+                />
+              )
             ) : (
               <div style={{
                 padding: '20px',
@@ -293,20 +398,39 @@ export default function EmailBuilderPage() {
             )}
           </div>
         );
+        
       case 'button':
+        const buttonPadding = buildPaddingStyle(component.styles) || '10px 25px';
+        const buttonAlign = component.styles?.align || 'center';
+        const textAlign = component.styles?.textAlign || 'center';
+        
+        // Build border style from individual border properties
+        let borderStyle = component.styles?.border || 'none';
+        if (!component.styles?.border && (component.styles?.borderTop || component.styles?.borderRight || component.styles?.borderBottom || component.styles?.borderLeft)) {
+          const borderParts = [
+            component.styles?.borderTop || 'none',
+            component.styles?.borderRight || 'none', 
+            component.styles?.borderBottom || 'none',
+            component.styles?.borderLeft || 'none'
+          ];
+          borderStyle = borderParts.join(' ');
+        }
+        
         return (
           <div style={{ 
             fontSize: '0px',
-            padding: component.styles?.margin || '10px 25px',
+            padding: buttonPadding,
             wordBreak: 'break-word',
-            textAlign: component.styles?.textAlign || 'center'
+            textAlign: buttonAlign,
+            backgroundColor: component.styles?.containerBackgroundColor || 'transparent'
           }}>
             <table
               style={{
                 borderCollapse: 'separate',
-                lineHeight: '100%'
+                lineHeight: '100%',
+                width: component.styles?.width || 'auto'
               }}
-              align="center"
+              align={buttonAlign}
               border={0}
               cellPadding={0}
               cellSpacing={0}
@@ -315,33 +439,39 @@ export default function EmailBuilderPage() {
                 <tr>
                   <td
                     style={{
-                      border: 'none',
+                      border: borderStyle,
                       borderRadius: component.styles?.borderRadius || '6px',
                       cursor: 'auto',
-                      background: component.styles?.backgroundColor || '#1553ec'
+                      background: component.styles?.backgroundColor || '#1553ec',
+                      height: component.styles?.height || 'auto'
                     }}
-                    align="center"
-                    valign="middle"
+                    align={textAlign}
+                    valign={component.styles?.verticalAlign || 'middle'}
                   >
                     <a
-                      href={component.content.href || '#'}
+                      href={component.content?.href || '#'}
                       style={{
                         display: 'inline-block',
                         background: component.styles?.backgroundColor || '#1553ec',
                         color: component.styles?.color || '#ffffff',
-                        fontFamily: 'Arial, sans-serif',
-                        fontSize: '13px',
-                        fontWeight: 'normal',
-                        lineHeight: '120%',
+                        fontFamily: component.styles?.fontFamily || 'Arial, sans-serif',
+                        fontSize: component.styles?.fontSize || '16px',
+                        fontWeight: component.styles?.fontWeight || 'normal',
+                        fontStyle: component.styles?.fontStyle || 'normal',
+                        lineHeight: component.styles?.lineHeight || '120%',
+                        letterSpacing: component.styles?.letterSpacing || 'normal',
+                        textTransform: component.styles?.textTransform || 'none',
+                        textDecoration: component.styles?.textDecoration || 'none',
                         margin: '0',
-                        textDecoration: 'none',
-                        textTransform: 'none',
                         padding: '10px 25px',
-                        borderRadius: component.styles?.borderRadius || '6px'
+                        borderRadius: component.styles?.borderRadius || '6px',
+                        textAlign: textAlign
                       }}
-                      target="_blank"
+                      target={component.content?.target || '_self'}
+                      rel={component.content?.rel || ''}
+                      title={component.content?.title || ''}
                     >
-                      {component.content.text}
+                      {component.content?.text || 'Click here'}
                     </a>
                   </td>
                 </tr>
@@ -349,15 +479,22 @@ export default function EmailBuilderPage() {
             </table>
           </div>
         );
+        
       case 'spacer':
+        const spacerPadding = buildPaddingStyle(component.styles) || '0';
+        
         return (
           <div style={{ 
             height: component.styles?.height || '20px',
-            lineHeight: component.styles?.height || '20px'
+            lineHeight: component.styles?.height || '20px',
+            fontSize: '0px',
+            padding: spacerPadding,
+            backgroundColor: component.styles?.containerBackgroundColor || 'transparent'
           }}>
             &#8202;
           </div>
         );
+        
       default:
         return null;
     }
