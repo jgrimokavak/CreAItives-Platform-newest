@@ -85,7 +85,10 @@ function generateMjmlFromComponents(subject: string, components: EmailComponent[
         if (component.styles?.fontWeight) textAttrs.push(`font-weight="${component.styles.fontWeight}"`);
         if (component.styles?.fontStyle) textAttrs.push(`font-style="${component.styles.fontStyle}"`);
         if (component.styles?.lineHeight) textAttrs.push(`line-height="${component.styles.lineHeight}"`);
-        if (component.styles?.letterSpacing) textAttrs.push(`letter-spacing="${component.styles.letterSpacing}"`);
+        // Only add letter-spacing if it's a valid MJML unit (px, em) or empty
+        if (component.styles?.letterSpacing && component.styles.letterSpacing !== 'normal' && component.styles.letterSpacing.match(/^\d+(px|em)$/)) {
+          textAttrs.push(`letter-spacing="${component.styles.letterSpacing}"`);
+        }
         if (component.styles?.textTransform) textAttrs.push(`text-transform="${component.styles.textTransform}"`);
         if (component.styles?.textDecoration) textAttrs.push(`text-decoration="${component.styles.textDecoration}"`);
         if (component.styles?.verticalAlign) textAttrs.push(`vertical-align="${component.styles.verticalAlign}"`);
@@ -142,7 +145,10 @@ function generateMjmlFromComponents(subject: string, components: EmailComponent[
         if (component.styles?.fontWeight) buttonAttrs.push(`font-weight="${component.styles.fontWeight}"`);
         if (component.styles?.fontStyle) buttonAttrs.push(`font-style="${component.styles.fontStyle}"`);
         if (component.styles?.lineHeight) buttonAttrs.push(`line-height="${component.styles.lineHeight}"`);
-        if (component.styles?.letterSpacing) buttonAttrs.push(`letter-spacing="${component.styles.letterSpacing}"`);
+        // Only add letter-spacing if it's a valid MJML unit (px, em) or empty
+        if (component.styles?.letterSpacing && component.styles.letterSpacing !== 'normal' && component.styles.letterSpacing.match(/^\d+(px|em)$/)) {
+          buttonAttrs.push(`letter-spacing="${component.styles.letterSpacing}"`);
+        }
         if (component.styles?.textTransform) buttonAttrs.push(`text-transform="${component.styles.textTransform}"`);
         if (component.styles?.textDecoration) buttonAttrs.push(`text-decoration="${component.styles.textDecoration}"`);
         if (component.styles?.borderRadius) buttonAttrs.push(`border-radius="${component.styles.borderRadius}"`);
@@ -151,8 +157,13 @@ function generateMjmlFromComponents(subject: string, components: EmailComponent[
         if (component.styles?.borderBottom) buttonAttrs.push(`border-bottom="${component.styles.borderBottom}"`);
         if (component.styles?.borderLeft) buttonAttrs.push(`border-left="${component.styles.borderLeft}"`);
         if (component.styles?.borderRight) buttonAttrs.push(`border-right="${component.styles.borderRight}"`);
-        if (component.styles?.width) buttonAttrs.push(`width="${component.styles.width}"`);
-        if (component.styles?.height) buttonAttrs.push(`height="${component.styles.height}"`);
+        // Only add width/height if they have valid MJML units (px, %) and are not 'auto'
+        if (component.styles?.width && component.styles.width !== 'auto' && component.styles.width.match(/^\d+(px|%)$/)) {
+          buttonAttrs.push(`width="${component.styles.width}"`);
+        }
+        if (component.styles?.height && component.styles.height !== 'auto' && component.styles.height.match(/^\d+(px|%)$/)) {
+          buttonAttrs.push(`height="${component.styles.height}"`);
+        }
         if (component.styles?.align) buttonAttrs.push(`align="${component.styles.align}"`);
         if (component.styles?.textAlign) buttonAttrs.push(`text-align="${component.styles.textAlign}"`);
         if (component.styles?.verticalAlign) buttonAttrs.push(`vertical-align="${component.styles.verticalAlign}"`);
