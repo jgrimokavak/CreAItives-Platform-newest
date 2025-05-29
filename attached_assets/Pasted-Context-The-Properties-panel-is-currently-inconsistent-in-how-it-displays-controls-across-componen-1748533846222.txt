@@ -1,0 +1,39 @@
+Context:
+The Properties panel is currently inconsistent in how it displays controls across components (Text, Image, Button, Spacer). Controls for common attributes (like padding, color, alignment) appear and behave differently depending on the component. This causes confusion and makes the system hard to maintain as new components are added.
+
+Instructions:
+1. Implement a standardized UI for all property controls across all components, based on modern best practices from leading design platforms and email builders:
+
+   - **Grouping & Order:** 
+     - Use logical, collapsible groups for all properties (e.g., Content, Typography, Colors, Sizing, Spacing & Padding, Borders, Alignment, Link/Action, Advanced).
+     - The group order and control order must be identical across all components—e.g., if "Spacing & Padding" is group 5 for Text, it must also be group 5 for Button.
+
+   - **Controls:** 
+     - **Color:** Use a unified color picker with hex input and color swatch for all color values.
+     - **Number/Size:** Stack sliders on top of numeric inputs, both labeled above, with unit suffixes (e.g., px).
+     - **Dropdowns:** Use the same dropdown/select component everywhere; always vertical, never side-by-side.
+     - **Per-side (Padding, Border):** Use a "box model" mini-control showing T/R/B/L fields in a single row, label above.
+     - **Boolean:** Use left-aligned toggle/checkbox with label right.
+     - **Text:** Inputs and textareas stack vertically, label above.
+     - All controls must have clear, top-aligned labels. Tooltips for advanced settings.
+
+   - **Responsiveness:** 
+     - On small screens, controls stack vertically, never side-by-side. All controls are keyboard and touch accessible.
+
+2. **Registry-Based Future-Proofing:**
+   - Define every property and group in a central `propertyRegistry` or schema, specifying type, group, order, label, min/max/step, MJML mapping, etc.
+   - Property panels and controls must be auto-generated from the registry/schema so adding new components or properties automatically follows the same UI standards.
+
+3. **Normalization:**
+   - If a property appears in several components (e.g., padding, color, align), it must always use the same control, group, and order everywhere.
+   - No property should be presented with a different UI in different components.
+
+4. **Remove Inconsistencies:**
+   - Eliminate redundant, duplicate, or confusing controls.
+   - Do not display controls for properties unsupported by MJML.
+
+5. **Layout:**
+   - Controls never appear side-by-side if both require width (e.g., sliders).
+   - Use vertical stacking for all inputs with appropriate spacing.
+
+Do not check in until all properties for all components use these standards, the property panels are fully normalized and future-proofed, and the UI is clean and user-friendly.

@@ -1,4 +1,12 @@
 import { useState, useEffect, useRef, createContext, useCallback, memo } from 'react';
+import { PropertyControl } from '@/components/PropertyControls';
+import { 
+  getPropertiesForComponent, 
+  getGroupedProperties, 
+  getGroupsForComponent, 
+  getDefaultValuesForComponent,
+  PROPERTY_GROUPS 
+} from '@/lib/propertyRegistry';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
@@ -144,102 +152,29 @@ export default function EmailBuilderPage() {
   };
 
   const getDefaultContent = (type: string) => {
-    switch (type) {
-      case 'text':
-        return { text: 'Add your text here' };
-      case 'image':
-        return { src: '', alt: 'Image description', title: '', href: '', rel: '' };
-      case 'button':
-        return { text: 'Click here', href: '#', title: '', rel: '', target: '_self' };
-      case 'spacer':
-        return {};
-      default:
-        return {};
-    }
+    const properties = getPropertiesForComponent(type);
+    const content: any = {};
+    
+    properties.forEach(prop => {
+      if (prop.group === 'content' || prop.group === 'action') {
+        content[prop.key] = prop.defaultValue;
+      }
+    });
+    
+    return content;
   };
 
   const getDefaultStyles = (type: string) => {
-    switch (type) {
-      case 'text':
-        return {
-          // Typography
-          fontFamily: 'Arial, sans-serif',
-          fontSize: '16px',
-          fontWeight: 'normal',
-          fontStyle: 'normal',
-          lineHeight: '1.6',
-          letterSpacing: 'normal',
-          textTransform: 'none',
-          textDecoration: 'none',
-          // Colors & Background
-          color: '#000000',
-          backgroundColor: 'transparent',
-          // Alignment
-          textAlign: 'left',
-          verticalAlign: 'top',
-          // Spacing & Padding
-          padding: '10px 25px'
-        };
-      case 'image':
-        return {
-          // Sizing
-          width: '600px',
-          height: 'auto',
-          fluidOnMobile: 'false',
-          // Borders
-          border: '',
-          borderRadius: '',
-          // Colors & Background
-          containerBackgroundColor: 'transparent',
-          // Alignment
-          align: 'center',
-          // Spacing & Padding
-          padding: '10px 25px'
-        };
-      case 'button':
-        return {
-          // Typography
-          fontFamily: 'Arial, sans-serif',
-          fontSize: '16px',
-          fontWeight: 'normal',
-          fontStyle: 'normal',
-          lineHeight: '1.6',
-          letterSpacing: 'normal',
-          textTransform: 'none',
-          textDecoration: 'none',
-          // Colors & Background
-          backgroundColor: '#1553ec',
-          color: '#ffffff',
-          containerBackgroundColor: 'transparent',
-          // Borders
-          border: '',
-          borderTop: '',
-          borderBottom: '',
-          borderLeft: '',
-          borderRight: '',
-          borderRadius: '6px',
-          // Sizing
-          width: '',
-          height: '',
-          // Alignment
-          align: 'center',
-          textAlign: 'center',
-          verticalAlign: 'middle',
-          // Spacing & Padding
-          padding: '10px 25px'
-        };
-      case 'spacer':
-        return {
-          // Sizing
-          height: '20px',
-          // Colors & Background
-          containerBackgroundColor: 'transparent',
-          // Spacing & Padding
-          padding: ''
-        };
-      default:
-        return {};
-    }
+    const properties = getPropertiesForComponent(type);
+    const styles: any = {};
+    
+    properties.forEach(prop => {
+      if (prop.group !== 'content' && prop.group !== 'action') {
+        styles[prop.key] = prop.defaultValue;
+      }
+    });
+    
+    return styles;
   };
 
   const removeComponent = useCallback((id: string) => {
@@ -536,15 +471,59 @@ export default function EmailBuilderPage() {
   const renderComponentProperties = (component: EmailComponent) => {
     if (!component) return null;
 
-    const updateStyles = (updates: Record<string, any>) => {
-      updateComponent(component.id, 'styles', updates);
+    const groupedProperties = getGroupedProperties(component.type);
+    const groups = getGroupsForComponent(component.type);
+
+    const updateProperty = (propertyKey: string, value: any) => {
+      const properties = getPropertiesForComponent(component.type);
+      const property = properties.find(p => p.key === propertyKey);
+      
+      if (!property) return;
+      
+      if (property.group === 'content' || property.group === 'action') {
+        updateComponent(component.id, 'content', { [propertyKey]: value });
+      } else {
+        updateComponent(component.id, 'styles', { [propertyKey]: value });
+      }
     };
 
-    const updateContent = (updates: Record<string, any>) => {
-      updateComponent(component.id, 'content', updates);
+    const getPropertyValue = (propertyKey: string) => {
+      const properties = getPropertiesForComponent(component.type);
+      const property = properties.find(p => p.key === propertyKey);
+      
+      if (!property) return '';
+      
+      if (property.group === 'content' || property.group === 'action') {
+        return component.content?.[propertyKey] ?? property.defaultValue;
+      } else {
+        return component.styles?.[propertyKey] ?? property.defaultValue;
+      }
     };
 
-    switch (component.type) {
+    return (
+      <div className="space-y-4">
+        {groups.map(group => {
+          const groupProperties = groupedProperties[group.key] || [];
+          if (groupProperties.length === 0) return null;
+
+          return (
+            <PropertyGroup key={group.key} title={group.label} defaultOpen={false}>
+              <div className="space-y-4">
+                {groupProperties.map(property => (
+                  <PropertyControl
+                    key={property.key}
+                    property={property}
+                    value={getPropertyValue(property.key)}
+                    onChange={(value) => updateProperty(property.key, value)}
+                  />
+                ))}
+              </div>
+            </PropertyGroup>
+          );
+        })}
+      </div>
+    );
+  };
       case 'text':
         return (
           <div className="space-y-4">
