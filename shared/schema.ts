@@ -133,58 +133,15 @@ export const editImageSchema = z.object({
 
 export type EditImageInput = z.infer<typeof editImageSchema>;
 
-// Email Builder Schema
-export const emailTemplates = pgTable("email_templates", {
-  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-  name: text("name").notNull(),
-  description: text("description"),
-  content: text("content").notNull(), // Stores the email structure as JSON string
-  htmlContent: text("html_content"), // Generated HTML
-  isTemplate: text("is_template").default("true"),
-  userId: text("user_id").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
-
-export const insertEmailTemplateSchema = createInsertSchema(emailTemplates);
-
-export type InsertEmailTemplate = z.infer<typeof insertEmailTemplateSchema>;
-export type EmailTemplate = typeof emailTemplates.$inferSelect;
-
-// MJML-based Email Builder Component Schema
-export interface MJMLComponent {
+// Email Builder Schema - MJML-based only
+export interface EmailComponent {
   id: string;
   type: 'text' | 'image' | 'button' | 'spacer';
   content: any;
-  attributes: Record<string, any>; // MJML attributes instead of CSS styles
-}
-
-export interface MJMLEmailContent {
-  subject: string;
-  components: MJMLComponent[];
-  mjmlAttributes: {
-    backgroundColor?: string;
-    fontFamily?: string;
-    width?: string;
-  };
-}
-
-// Legacy interface for backwards compatibility
-export interface EmailComponent {
-  id: string;
-  type: 'text' | 'image' | 'button' | 'spacer' | 'background' | 'column';
-  content: any;
   styles: Record<string, any>;
-  children?: EmailComponent[];
 }
 
 export interface EmailContent {
   subject: string;
   components: EmailComponent[];
-  globalStyles: {
-    backgroundColor: string;
-    fontFamily: string;
-    primaryColor: string;
-    secondaryColor: string;
-  };
 }
