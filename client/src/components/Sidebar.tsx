@@ -24,7 +24,7 @@ interface SidebarLinkProps {
 const SidebarLink = ({ to, icon, children }: SidebarLinkProps) => {
   const [location] = useLocation();
   const isActive = location === to;
-
+  
   return (
     <Link to={to}>
       <div
@@ -75,7 +75,7 @@ const Sidebar = ({ children }: SidebarProps) => {
         <div className="px-6 py-7 border-b border-slate-200 flex items-center">
           <img src={kavakLogo} alt="Kavak Logo" className="h-6 ml-1" />
         </div>
-
+        
         <nav className="flex-1 px-6 py-4 space-y-1">
           <SidebarLink to="/home" icon={<Home size={18} />}>
             Home
@@ -93,7 +93,7 @@ const Sidebar = ({ children }: SidebarProps) => {
             Upscale
           </SidebarLink>
           <SidebarLink to="/email-builder" icon={<Mail size={18} />}>
-            Email Cre<span className="text-purple-600 font-bold">AI</span>tor
+            Email CreAItor
           </SidebarLink>
           <SidebarLink to="/trash" icon={<Trash2 size={18} />}>
             Trash
