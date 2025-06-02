@@ -196,42 +196,74 @@ const BoxModelControl = memo(({ property, value, onChange }: PropertyControlProp
           className="w-full"
         />
         
-        {/* Individual sides in box layout */}
-        <div className="grid grid-cols-4 gap-1 text-xs">
-          <div className="text-center">
-            <label className="block text-gray-600 mb-1">T</label>
+        {/* Individual sides with sliders */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">Top</label>
+            <Slider
+              value={[parseFloat(boxValues.top) || 0]}
+              onValueChange={(values) => updateBoxValue('top', `${values[0]}px`)}
+              min={0}
+              max={100}
+              step={1}
+              className="mb-1"
+            />
             <Input
               value={boxValues.top}
               onChange={(e) => updateBoxValue('top', e.target.value)}
-              placeholder="0"
-              className="h-8 text-xs text-center"
+              placeholder="0px"
+              className="h-6 text-xs text-center"
             />
           </div>
-          <div className="text-center">
-            <label className="block text-gray-600 mb-1">R</label>
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">Right</label>
+            <Slider
+              value={[parseFloat(boxValues.right) || 0]}
+              onValueChange={(values) => updateBoxValue('right', `${values[0]}px`)}
+              min={0}
+              max={100}
+              step={1}
+              className="mb-1"
+            />
             <Input
               value={boxValues.right}
               onChange={(e) => updateBoxValue('right', e.target.value)}
-              placeholder="0"
-              className="h-8 text-xs text-center"
+              placeholder="0px"
+              className="h-6 text-xs text-center"
             />
           </div>
-          <div className="text-center">
-            <label className="block text-gray-600 mb-1">B</label>
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">Bottom</label>
+            <Slider
+              value={[parseFloat(boxValues.bottom) || 0]}
+              onValueChange={(values) => updateBoxValue('bottom', `${values[0]}px`)}
+              min={0}
+              max={100}
+              step={1}
+              className="mb-1"
+            />
             <Input
               value={boxValues.bottom}
               onChange={(e) => updateBoxValue('bottom', e.target.value)}
-              placeholder="0"
-              className="h-8 text-xs text-center"
+              placeholder="0px"
+              className="h-6 text-xs text-center"
             />
           </div>
-          <div className="text-center">
-            <label className="block text-gray-600 mb-1">L</label>
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">Left</label>
+            <Slider
+              value={[parseFloat(boxValues.left) || 0]}
+              onValueChange={(values) => updateBoxValue('left', `${values[0]}px`)}
+              min={0}
+              max={100}
+              step={1}
+              className="mb-1"
+            />
             <Input
               value={boxValues.left}
               onChange={(e) => updateBoxValue('left', e.target.value)}
-              placeholder="0"
-              className="h-8 text-xs text-center"
+              placeholder="0px"
+              className="h-6 text-xs text-center"
             />
           </div>
         </div>

@@ -322,7 +322,7 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
     {
       key: 'width',
       label: 'Width',
-      type: 'number',
+      type: 'slider',
       group: 'sizing',
       groupOrder: 4,
       order: 1,
@@ -336,13 +336,16 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
     {
       key: 'height',
       label: 'Height',
-      type: 'text',
+      type: 'slider',
       group: 'sizing',
       groupOrder: 4,
       order: 2,
-      placeholder: 'auto, 300px',
+      min: 50,
+      max: 600,
+      step: 10,
+      unit: 'px',
       mjmlAttribute: 'height',
-      defaultValue: 'auto'
+      defaultValue: 200
     },
     {
       key: 'fluidOnMobile',
@@ -382,7 +385,7 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
     {
       key: 'borderRadius',
       label: 'Border Radius',
-      type: 'number',
+      type: 'slider',
       group: 'borders',
       groupOrder: 6,
       order: 2,
@@ -391,7 +394,7 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
       step: 1,
       unit: 'px',
       mjmlAttribute: 'border-radius',
-      defaultValue: ''
+      defaultValue: 0
     },
 
     // Alignment Group
@@ -488,13 +491,16 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
     {
       key: 'fontSize',
       label: 'Font Size',
-      type: 'select',
+      type: 'slider',
       group: 'typography',
       groupOrder: 2,
       order: 2,
-      options: FONT_SIZES,
+      min: 8,
+      max: 72,
+      step: 1,
+      unit: 'px',
       mjmlAttribute: 'font-size',
-      defaultValue: '16px'
+      defaultValue: 16
     },
     {
       key: 'fontWeight',
