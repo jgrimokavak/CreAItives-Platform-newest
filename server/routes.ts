@@ -929,9 +929,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .replace("{{wheel_color}}", wheel_color || "")
         .replace(/\s+/g, " ").trim();
       
-      // Append adventure cladding text if enabled
+      // Inject adventure cladding text immediately after "with {wheel_color} alloy wheels" if enabled
       if (has_adventure_cladding === 'true' || has_adventure_cladding === true) {
-        prompt += " Equipped with an adventure-spec matte-black composite cladding package fully integrated into the front fascia, wheel arches, rocker panels, and lower door sections—including fog-lamp bezels and lower grille inserts in rugged textured finish—creating a sharply segmented two-tone look that visually dominates the vehicle's entire lower body.";
+        const adventureCladdingText = " Equipped with an adventure-spec matte-black composite cladding package fully integrated into the front fascia, wheel arches, rocker panels, and lower door sections—including fog-lamp bezels and lower grille inserts in rugged textured finish—creating a sharply segmented two-tone look that visually dominates the vehicle's entire lower body.";
+        prompt = prompt.replace(
+          `with ${wheel_color || ""} alloy wheels.`,
+          `with ${wheel_color || ""} alloy wheels.${adventureCladdingText}`
+        );
       }
       
       console.log(`Car generation request with prompt: ${prompt}`);
