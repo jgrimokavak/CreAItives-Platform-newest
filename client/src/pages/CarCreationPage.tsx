@@ -33,7 +33,6 @@ const carGenerationSchema = z.object({
   body_style: z.string().optional(),
   trim: z.string().optional(),
   color: z.string().optional(),
-  wheel_color: z.string().optional(),
   background: z.enum(["white", "hub"]).default("white")
 });
 
@@ -71,7 +70,6 @@ const CarCreationPage: React.FC = () => {
       body_style: 'None',
       trim: 'None',
       color: 'silver', // Set default color to silver
-      wheel_color: 'silver', // Set default wheel color to silver
       background: 'hub'
     }
   });
@@ -244,8 +242,7 @@ const CarCreationPage: React.FC = () => {
         make: values.make === 'None' ? '' : values.make,
         model: values.model === 'None' ? '' : values.model,
         body_style: values.body_style === 'None' ? '' : values.body_style,
-        trim: values.trim === 'None' ? '' : values.trim,
-        wheel_color: values.wheel_color || 'silver'
+        trim: values.trim === 'None' ? '' : values.trim
       };
       
       // Create form data (API expects multipart form)
@@ -691,31 +688,6 @@ const CarCreationPage: React.FC = () => {
                             <SelectItem value="bronze">Bronze</SelectItem>
                             <SelectItem value="pearl white">Pearl White</SelectItem>
                             <SelectItem value="metallic blue">Metallic Blue</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      {/* Wheel Color selector */}
-                      <div className="space-y-2">
-                        <Label htmlFor="wheel_color">Wheel Color</Label>
-                        <Select
-                          value={form.watch('wheel_color') || 'silver'}
-                          onValueChange={(value) => setValue('wheel_color', value)}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select wheel color" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="silver">Silver</SelectItem>
-                            <SelectItem value="black">Black</SelectItem>
-                            <SelectItem value="dark-grey">Dark Grey</SelectItem>
-                            <SelectItem value="light-grey">Light Grey</SelectItem>
-                            <SelectItem value="white">White</SelectItem>
-                            <SelectItem value="chrome">Chrome</SelectItem>
-                            <SelectItem value="bronze">Bronze</SelectItem>
-                            <SelectItem value="gunmetal">Gunmetal</SelectItem>
-                            <SelectItem value="anthracite">Anthracite</SelectItem>
-                            <SelectItem value="polished-aluminum">Polished Aluminum</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
