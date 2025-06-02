@@ -1,4 +1,6 @@
-// Standardized Property Registry - All numeric properties use sliders
+// Property Registry - Central schema for all component properties
+// This ensures consistency across all components and makes adding new components automatic
+
 export type PropertyControlType = 
   | 'text' 
   | 'textarea' 
@@ -36,7 +38,7 @@ export interface PropertyGroup {
   icon?: string;
 }
 
-// Property groups ordered by importance
+// Standard property groups - consistent order across all components
 export const PROPERTY_GROUPS: PropertyGroup[] = [
   { key: 'content', label: 'Content', order: 1 },
   { key: 'typography', label: 'Typography', order: 2 },
@@ -49,7 +51,7 @@ export const PROPERTY_GROUPS: PropertyGroup[] = [
   { key: 'advanced', label: 'Advanced', order: 9 }
 ];
 
-// Font family options - includes Roboto
+// Font family options - standardized across all components
 const FONT_FAMILIES = [
   { value: 'Arial, sans-serif', label: 'Arial' },
   { value: 'Helvetica, sans-serif', label: 'Helvetica' },
@@ -61,7 +63,21 @@ const FONT_FAMILIES = [
   { value: 'Courier New, monospace', label: 'Courier New' }
 ];
 
-// Component property registry - ALL numeric properties use sliders
+// Font size options - standardized
+const FONT_SIZES = [
+  { value: '12px', label: '12px' },
+  { value: '14px', label: '14px' },
+  { value: '16px', label: '16px' },
+  { value: '18px', label: '18px' },
+  { value: '20px', label: '20px' },
+  { value: '24px', label: '24px' },
+  { value: '28px', label: '28px' },
+  { value: '32px', label: '32px' },
+  { value: '36px', label: '36px' },
+  { value: '48px', label: '48px' }
+];
+
+// Component property registry - defines all properties for each component
 export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
   text: [
     // Content Group
@@ -77,7 +93,7 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
       defaultValue: 'Add your text here'
     },
 
-    // Typography Group - ALL numeric properties use sliders
+    // Typography Group
     {
       key: 'fontFamily',
       label: 'Font Family',
@@ -141,7 +157,7 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
     {
       key: 'lineHeight',
       label: 'Line Height',
-      type: 'slider',
+      type: 'number',
       group: 'typography',
       groupOrder: 2,
       order: 5,
@@ -149,12 +165,12 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
       max: 3,
       step: 0.1,
       mjmlAttribute: 'line-height',
-      defaultValue: 1.6
+      defaultValue: '1.6'
     },
     {
       key: 'letterSpacing',
       label: 'Letter Spacing',
-      type: 'slider',
+      type: 'number',
       group: 'typography',
       groupOrder: 2,
       order: 6,
@@ -163,7 +179,7 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
       step: 0.5,
       unit: 'px',
       mjmlAttribute: 'letter-spacing',
-      defaultValue: 0
+      defaultValue: ''
     },
     {
       key: 'textTransform',
@@ -302,11 +318,11 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
       defaultValue: ''
     },
 
-    // Sizing Group - ALL numeric properties use sliders
+    // Sizing Group
     {
       key: 'width',
       label: 'Width',
-      type: 'slider',
+      type: 'number',
       group: 'sizing',
       groupOrder: 4,
       order: 1,
@@ -320,16 +336,13 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
     {
       key: 'height',
       label: 'Height',
-      type: 'slider',
+      type: 'text',
       group: 'sizing',
       groupOrder: 4,
       order: 2,
-      min: 50,
-      max: 600,
-      step: 10,
-      unit: 'px',
+      placeholder: 'auto, 300px',
       mjmlAttribute: 'height',
-      defaultValue: 200
+      defaultValue: 'auto'
     },
     {
       key: 'fluidOnMobile',
@@ -354,7 +367,7 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
       defaultValue: 'transparent'
     },
 
-    // Borders Group - ALL numeric properties use sliders
+    // Borders Group
     {
       key: 'border',
       label: 'Border',
@@ -369,7 +382,7 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
     {
       key: 'borderRadius',
       label: 'Border Radius',
-      type: 'slider',
+      type: 'number',
       group: 'borders',
       groupOrder: 6,
       order: 2,
@@ -378,7 +391,7 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
       step: 1,
       unit: 'px',
       mjmlAttribute: 'border-radius',
-      defaultValue: 0
+      defaultValue: ''
     },
 
     // Alignment Group
@@ -460,7 +473,7 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
       defaultValue: ''
     },
 
-    // Typography Group - ALL numeric properties use sliders
+    // Typography Group (same as text)
     {
       key: 'fontFamily',
       label: 'Font Family',
@@ -475,16 +488,13 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
     {
       key: 'fontSize',
       label: 'Font Size',
-      type: 'slider',
+      type: 'select',
       group: 'typography',
       groupOrder: 2,
       order: 2,
-      min: 8,
-      max: 72,
-      step: 1,
-      unit: 'px',
+      options: FONT_SIZES,
       mjmlAttribute: 'font-size',
-      defaultValue: 16
+      defaultValue: '16px'
     },
     {
       key: 'fontWeight',
@@ -524,7 +534,7 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
     {
       key: 'lineHeight',
       label: 'Line Height',
-      type: 'slider',
+      type: 'number',
       group: 'typography',
       groupOrder: 2,
       order: 5,
@@ -532,12 +542,12 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
       max: 3,
       step: 0.1,
       mjmlAttribute: 'line-height',
-      defaultValue: 1.6
+      defaultValue: '1.6'
     },
     {
       key: 'letterSpacing',
       label: 'Letter Spacing',
-      type: 'slider',
+      type: 'number',
       group: 'typography',
       groupOrder: 2,
       order: 6,
@@ -546,7 +556,7 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
       step: 0.5,
       unit: 'px',
       mjmlAttribute: 'letter-spacing',
-      defaultValue: 0
+      defaultValue: ''
     },
     {
       key: 'textTransform',
@@ -583,24 +593,24 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
 
     // Colors & Background Group
     {
+      key: 'backgroundColor',
+      label: 'Background Color',
+      type: 'color',
+      group: 'colors',
+      groupOrder: 3,
+      order: 1,
+      mjmlAttribute: 'background-color',
+      defaultValue: '#1553ec'
+    },
+    {
       key: 'color',
       label: 'Text Color',
       type: 'color',
       group: 'colors',
       groupOrder: 3,
-      order: 1,
+      order: 2,
       mjmlAttribute: 'color',
       defaultValue: '#ffffff'
-    },
-    {
-      key: 'backgroundColor',
-      label: 'Button Color',
-      type: 'color',
-      group: 'colors',
-      groupOrder: 3,
-      order: 2,
-      mjmlAttribute: 'background-color',
-      defaultValue: '#1553ec'
     },
     {
       key: 'containerBackgroundColor',
@@ -613,7 +623,43 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
       defaultValue: 'transparent'
     },
 
-    // Borders Group - ALL numeric properties use sliders
+    // Sizing Group
+    {
+      key: 'width',
+      label: 'Width',
+      type: 'text',
+      group: 'sizing',
+      groupOrder: 4,
+      order: 1,
+      placeholder: 'auto, 200px, 100%',
+      mjmlAttribute: 'width',
+      defaultValue: ''
+    },
+    {
+      key: 'height',
+      label: 'Height',
+      type: 'text',
+      group: 'sizing',
+      groupOrder: 4,
+      order: 2,
+      placeholder: 'auto, 50px',
+      mjmlAttribute: 'height',
+      defaultValue: ''
+    },
+
+    // Spacing & Padding Group
+    {
+      key: 'padding',
+      label: 'Padding',
+      type: 'boxModel',
+      group: 'spacing',
+      groupOrder: 5,
+      order: 1,
+      mjmlAttribute: 'padding',
+      defaultValue: '10px 25px'
+    },
+
+    // Borders Group
     {
       key: 'border',
       label: 'Border',
@@ -626,92 +672,18 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
       defaultValue: ''
     },
     {
-      key: 'borderTop',
-      label: 'Border Top',
-      type: 'text',
+      key: 'borderRadius',
+      label: 'Border Radius',
+      type: 'number',
       group: 'borders',
       groupOrder: 6,
       order: 2,
-      placeholder: '1px solid #000',
-      mjmlAttribute: 'border-top',
-      defaultValue: ''
-    },
-    {
-      key: 'borderBottom',
-      label: 'Border Bottom',
-      type: 'text',
-      group: 'borders',
-      groupOrder: 6,
-      order: 3,
-      placeholder: '1px solid #000',
-      mjmlAttribute: 'border-bottom',
-      defaultValue: ''
-    },
-    {
-      key: 'borderLeft',
-      label: 'Border Left',
-      type: 'text',
-      group: 'borders',
-      groupOrder: 6,
-      order: 4,
-      placeholder: '1px solid #000',
-      mjmlAttribute: 'border-left',
-      defaultValue: ''
-    },
-    {
-      key: 'borderRight',
-      label: 'Border Right',
-      type: 'text',
-      group: 'borders',
-      groupOrder: 6,
-      order: 5,
-      placeholder: '1px solid #000',
-      mjmlAttribute: 'border-right',
-      defaultValue: ''
-    },
-    {
-      key: 'borderRadius',
-      label: 'Border Radius',
-      type: 'slider',
-      group: 'borders',
-      groupOrder: 6,
-      order: 6,
       min: 0,
       max: 50,
       step: 1,
       unit: 'px',
       mjmlAttribute: 'border-radius',
-      defaultValue: 6
-    },
-
-    // Sizing Group - ALL numeric properties use sliders
-    {
-      key: 'width',
-      label: 'Width',
-      type: 'slider',
-      group: 'sizing',
-      groupOrder: 4,
-      order: 1,
-      min: 50,
-      max: 400,
-      step: 10,
-      unit: 'px',
-      mjmlAttribute: 'width',
-      defaultValue: 200
-    },
-    {
-      key: 'height',
-      label: 'Height',
-      type: 'slider',
-      group: 'sizing',
-      groupOrder: 4,
-      order: 2,
-      min: 30,
-      max: 100,
-      step: 5,
-      unit: 'px',
-      mjmlAttribute: 'height',
-      defaultValue: 50
+      defaultValue: '6px'
     },
 
     // Alignment Group
@@ -740,8 +712,7 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
       options: [
         { value: 'left', label: 'Left' },
         { value: 'center', label: 'Center' },
-        { value: 'right', label: 'Right' },
-        { value: 'justify', label: 'Justify' }
+        { value: 'right', label: 'Right' }
       ],
       mjmlAttribute: 'text-align',
       defaultValue: 'center'
@@ -762,28 +733,6 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
       defaultValue: 'middle'
     },
 
-    // Spacing & Padding Group
-    {
-      key: 'padding',
-      label: 'Container Padding',
-      type: 'boxModel',
-      group: 'spacing',
-      groupOrder: 5,
-      order: 1,
-      mjmlAttribute: 'padding',
-      defaultValue: '10px 25px'
-    },
-    {
-      key: 'innerPadding',
-      label: 'Button Inner Padding',
-      type: 'boxModel',
-      group: 'spacing',
-      groupOrder: 5,
-      order: 2,
-      mjmlAttribute: 'inner-padding',
-      defaultValue: '12px 24px'
-    },
-
     // Link/Action Group
     {
       key: 'href',
@@ -794,6 +743,17 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
       order: 1,
       placeholder: 'https://example.com',
       mjmlAttribute: 'href',
+      defaultValue: '#'
+    },
+    {
+      key: 'rel',
+      label: 'Rel Attribute',
+      type: 'text',
+      group: 'action',
+      groupOrder: 8,
+      order: 2,
+      placeholder: 'nofollow, noopener',
+      mjmlAttribute: 'rel',
       defaultValue: ''
     },
     {
@@ -802,10 +762,12 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
       type: 'select',
       group: 'action',
       groupOrder: 8,
-      order: 2,
+      order: 3,
       options: [
         { value: '_self', label: 'Same Window' },
-        { value: '_blank', label: 'New Window' }
+        { value: '_blank', label: 'New Window' },
+        { value: '_parent', label: 'Parent Frame' },
+        { value: '_top', label: 'Top Frame' }
       ],
       mjmlAttribute: 'target',
       defaultValue: '_self'
@@ -813,7 +775,7 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
   ],
 
   spacer: [
-    // Sizing Group - ALL numeric properties use sliders
+    // Sizing Group
     {
       key: 'height',
       label: 'Height',
@@ -822,7 +784,7 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
       groupOrder: 4,
       order: 1,
       min: 5,
-      max: 200,
+      max: 100,
       step: 5,
       unit: 'px',
       mjmlAttribute: 'height',
@@ -832,7 +794,7 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
     // Colors & Background Group
     {
       key: 'containerBackgroundColor',
-      label: 'Background Color',
+      label: 'Container Background',
       type: 'color',
       group: 'colors',
       groupOrder: 3,
@@ -855,6 +817,7 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
   ]
 };
 
+// Utility functions
 export function getPropertiesForComponent(componentType: string): PropertyDefinition[] {
   return PROPERTY_REGISTRY[componentType] || [];
 }
@@ -880,10 +843,9 @@ export function getGroupedProperties(componentType: string): Record<string, Prop
 
 export function getGroupsForComponent(componentType: string): PropertyGroup[] {
   const properties = getPropertiesForComponent(componentType);
-  const usedGroups = new Set(properties.map(prop => prop.group));
+  const usedGroups = new Set(properties.map(p => p.group));
   
-  return PROPERTY_GROUPS
-    .filter(group => usedGroups.has(group.key))
+  return PROPERTY_GROUPS.filter(group => usedGroups.has(group.key))
     .sort((a, b) => a.order - b.order);
 }
 

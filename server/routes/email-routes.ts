@@ -55,17 +55,6 @@ export async function compileMjml(req: Request, res: Response) {
   }
 }
 
-// Helper function to ensure numeric values have proper units for MJML
-function ensureUnit(value: any, unit: string = 'px'): string {
-  if (value === undefined || value === null || value === '') return '';
-  const str = String(value);
-  // If it's a number without units, add the default unit
-  if (/^\d+(\.\d+)?$/.test(str)) {
-    return `${str}${unit}`;
-  }
-  return str;
-}
-
 // Convert email components to MJML structure
 function generateMjmlFromComponents(subject: string, components: EmailComponent[]): string {
   // Completely blank when no components
@@ -91,7 +80,7 @@ function generateMjmlFromComponents(subject: string, components: EmailComponent[
         if (component.styles?.textAlign) textAttrs.push(`align="${component.styles.textAlign}"`);
         if (component.styles?.color) textAttrs.push(`color="${component.styles.color}"`);
         if (component.styles?.backgroundColor) textAttrs.push(`background-color="${component.styles.backgroundColor}"`);
-        if (component.styles?.fontSize) textAttrs.push(`font-size="${ensureUnit(component.styles.fontSize)}"`);
+        if (component.styles?.fontSize) textAttrs.push(`font-size="${component.styles.fontSize}"`);
         if (component.styles?.fontFamily) textAttrs.push(`font-family="${component.styles.fontFamily}"`);
         if (component.styles?.fontWeight) textAttrs.push(`font-weight="${component.styles.fontWeight}"`);
         if (component.styles?.fontStyle) textAttrs.push(`font-style="${component.styles.fontStyle}"`);
@@ -129,11 +118,11 @@ function generateMjmlFromComponents(subject: string, components: EmailComponent[
         if (component.content?.title) imageAttrs.push(`title="${component.content.title}"`);
         if (component.content?.href) imageAttrs.push(`href="${component.content.href}"`);
         if (component.content?.rel) imageAttrs.push(`rel="${component.content.rel}"`);
-        if (component.styles?.width) imageAttrs.push(`width="${ensureUnit(component.styles.width)}"`);
-        if (component.styles?.height) imageAttrs.push(`height="${ensureUnit(component.styles.height)}"`);
+        if (component.styles?.width) imageAttrs.push(`width="${component.styles.width}"`);
+        if (component.styles?.height) imageAttrs.push(`height="${component.styles.height}"`);
         if (component.styles?.align) imageAttrs.push(`align="${component.styles.align}"`);
         if (component.styles?.border) imageAttrs.push(`border="${component.styles.border}"`);
-        if (component.styles?.borderRadius) imageAttrs.push(`border-radius="${ensureUnit(component.styles.borderRadius)}"`);
+        if (component.styles?.borderRadius) imageAttrs.push(`border-radius="${component.styles.borderRadius}"`);
         if (component.styles?.containerBackgroundColor) imageAttrs.push(`container-background-color="${component.styles.containerBackgroundColor}"`);
         if (component.styles?.fluidOnMobile === 'true') imageAttrs.push(`fluid-on-mobile="true"`);
         
@@ -152,28 +141,28 @@ function generateMjmlFromComponents(subject: string, components: EmailComponent[
         if (component.styles?.backgroundColor) buttonAttrs.push(`background-color="${component.styles.backgroundColor}"`);
         if (component.styles?.color) buttonAttrs.push(`color="${component.styles.color}"`);
         if (component.styles?.fontFamily) buttonAttrs.push(`font-family="${component.styles.fontFamily}"`);
-        if (component.styles?.fontSize) buttonAttrs.push(`font-size="${ensureUnit(component.styles.fontSize)}"`);
+        if (component.styles?.fontSize) buttonAttrs.push(`font-size="${component.styles.fontSize}"`);
         if (component.styles?.fontWeight) buttonAttrs.push(`font-weight="${component.styles.fontWeight}"`);
         if (component.styles?.fontStyle) buttonAttrs.push(`font-style="${component.styles.fontStyle}"`);
         if (component.styles?.lineHeight) buttonAttrs.push(`line-height="${component.styles.lineHeight}"`);
-        // Handle letter-spacing with proper units
-        if (component.styles?.letterSpacing && component.styles.letterSpacing !== 0) {
-          buttonAttrs.push(`letter-spacing="${ensureUnit(component.styles.letterSpacing)}"`);
+        // Only add letter-spacing if it's a valid MJML unit (px, em) or empty
+        if (component.styles?.letterSpacing && component.styles.letterSpacing !== 'normal' && component.styles.letterSpacing.match(/^\d+(px|em)$/)) {
+          buttonAttrs.push(`letter-spacing="${component.styles.letterSpacing}"`);
         }
         if (component.styles?.textTransform) buttonAttrs.push(`text-transform="${component.styles.textTransform}"`);
         if (component.styles?.textDecoration) buttonAttrs.push(`text-decoration="${component.styles.textDecoration}"`);
-        if (component.styles?.borderRadius) buttonAttrs.push(`border-radius="${ensureUnit(component.styles.borderRadius)}"`);
+        if (component.styles?.borderRadius) buttonAttrs.push(`border-radius="${component.styles.borderRadius}"`);
         if (component.styles?.border) buttonAttrs.push(`border="${component.styles.border}"`);
         if (component.styles?.borderTop) buttonAttrs.push(`border-top="${component.styles.borderTop}"`);
         if (component.styles?.borderBottom) buttonAttrs.push(`border-bottom="${component.styles.borderBottom}"`);
         if (component.styles?.borderLeft) buttonAttrs.push(`border-left="${component.styles.borderLeft}"`);
         if (component.styles?.borderRight) buttonAttrs.push(`border-right="${component.styles.borderRight}"`);
-        // Handle width/height with proper units
-        if (component.styles?.width) {
-          buttonAttrs.push(`width="${ensureUnit(component.styles.width)}"`);
+        // Only add width/height if they have valid MJML units (px, %) and are not 'auto'
+        if (component.styles?.width && component.styles.width !== 'auto' && component.styles.width.match(/^\d+(px|%)$/)) {
+          buttonAttrs.push(`width="${component.styles.width}"`);
         }
-        if (component.styles?.height) {
-          buttonAttrs.push(`height="${ensureUnit(component.styles.height)}"`);
+        if (component.styles?.height && component.styles.height !== 'auto' && component.styles.height.match(/^\d+(px|%)$/)) {
+          buttonAttrs.push(`height="${component.styles.height}"`);
         }
         if (component.styles?.align) buttonAttrs.push(`align="${component.styles.align}"`);
         if (component.styles?.textAlign) buttonAttrs.push(`text-align="${component.styles.textAlign}"`);
@@ -198,7 +187,7 @@ function generateMjmlFromComponents(subject: string, components: EmailComponent[
       case 'spacer':
         // Build comprehensive mj-spacer attributes
         const spacerAttrs = [];
-        if (component.styles?.height) spacerAttrs.push(`height="${ensureUnit(component.styles.height)}"`);
+        if (component.styles?.height) spacerAttrs.push(`height="${component.styles.height}"`);
         if (component.styles?.containerBackgroundColor) spacerAttrs.push(`container-background-color="${component.styles.containerBackgroundColor}"`);
         
         // Handle padding attributes
