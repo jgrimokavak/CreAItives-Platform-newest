@@ -33,6 +33,7 @@ const carGenerationSchema = z.object({
   body_style: z.string().optional(),
   trim: z.string().optional(),
   color: z.string().optional(),
+  wheel_color: z.string().optional(),
   background: z.enum(["white", "hub"]).default("white")
 });
 
@@ -70,6 +71,7 @@ const CarCreationPage: React.FC = () => {
       body_style: 'None',
       trim: 'None',
       color: 'silver', // Set default color to silver
+      wheel_color: 'silver', // Set default wheel color to silver
       background: 'hub'
     }
   });
@@ -242,7 +244,8 @@ const CarCreationPage: React.FC = () => {
         make: values.make === 'None' ? '' : values.make,
         model: values.model === 'None' ? '' : values.model,
         body_style: values.body_style === 'None' ? '' : values.body_style,
-        trim: values.trim === 'None' ? '' : values.trim
+        trim: values.trim === 'None' ? '' : values.trim,
+        wheel_color: values.wheel_color || 'silver'
       };
       
       // Create form data (API expects multipart form)

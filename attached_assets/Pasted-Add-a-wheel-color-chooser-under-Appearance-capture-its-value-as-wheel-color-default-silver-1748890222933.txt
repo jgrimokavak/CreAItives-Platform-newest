@@ -1,0 +1,23 @@
+Add a wheel-color chooser under “Appearance,” capture its value as {{wheel_color}} (default = silver), and inject that variable into the image-generation prompt—so the text string changes from [A hyper-realistic professional studio photograph of a {{year}} {{make}} {{model}} {{body_style}} {{trim}} in metallic {{color}} paint with subtle micro-reflections. The vehicle is positioned at a precise 35-degree angle showing the front grille, headlights with signature lighting illuminated, and right side profile. Premium tinted windows reflect ambient studio lighting. The car sits on low-profile performance tires with detailed alloy wheels showing brake components behind the spokes. Shot on a polished circular dark charcoal gray studio floor that subtly reflects the vehicle's undercarriage and creates natural graduated shadows. Clean matte white seamless backdrop curves smoothly from floor to wall. Professional three-point lighting setup with key light, fill light, and rim lighting creates dimensional depth while preserving paint reflections and surface textures. Black front license plate features the 'kavak' logo in white. Camera positioned at chest height with slight downward angle. Sharp focus throughout with shallow depth of field on background edges. Commercial automotive photography quality with color-accurate rendering and professional retouching standards] to [A hyper-realistic professional studio photograph of a {{year}} {{make}} {{model}} {{body_style}} {{trim}} in metallic {{color}} paint with subtle micro-reflections with with {{wheel_color}} alloy wheels. The vehicle is positioned at a precise 35-degree angle showing the front grille, headlights with signature lighting illuminated, and right side profile. Premium tinted windows reflect ambient studio lighting. The car sits on low-profile performance tires with detailed alloy wheels showing brake components behind the spokes. Shot on a polished circular dark charcoal gray studio floor that subtly reflects the vehicle's undercarriage and creates natural graduated shadows. Clean matte white seamless backdrop curves smoothly from floor to wall. Professional three-point lighting setup with key light, fill light, and rim lighting creates dimensional depth while preserving paint reflections and surface textures. Black front license plate features the 'kavak' logo in white. Camera positioned at chest height with slight downward angle. Sharp focus throughout with shallow depth of field on background edges. Commercial automotive photography quality with color-accurate rendering and professional retouching standards], where the second version includes “with {{wheel_color}} alloy wheels” immediately after the paint-color phrase. The chooser should be a dropdown underneath the “car color” chooser in the appearance section. It should have a small swatch that shows what color is currently chosen. 
+
+The available wheel color options should be:
+
+silver
+
+black
+
+dark-grey
+
+light-grey
+
+white
+
+chrome
+
+bronze
+
+gunmetal
+
+anthracite
+
+polished-aluminum

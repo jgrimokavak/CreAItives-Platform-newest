@@ -1,0 +1,87 @@
+Objective  
+Add a **wheel-color chooser** and integrate the new `{{wheel_color}}` variable into both single and batch car-generation flows.
+
+1. Update the frontend form  
+   - **Filename:** `src/components/CarForm.tsx`  
+     - Insert a new **WheelFinishSelector** block immediately under the paint-color selector inside the “Appearance” section.  
+     - Component name: `WheelFinishSelector`  
+       ```ts
+       // WheelFinishSelector component
+       const presetFinishes = ["black", "dark-grey", "light-grey", "silver", "white"];
+       export function WheelFinishSelector({ value, onChange }: { value: string; onChange: (v: string) => void; }) {
+         return (
+           <div className="flex flex-wrap gap-2">
+             {presetFinishes.map((finish) => (
+               <button
+                 key={finish}
+                 className={`h-10 w-10 rounded-full border-2 ${value === finish ? "ring-2 ring-indigo-500" : ""}`}
+                 style={{ backgroundColor: finish === "silver" ? "#C0C0C0" : finish }}
+                 onClick={() => onChange(finish)}
+                 aria-label={`Select ${finish} wheels`}
+               />
+             ))}
+           </div>
+         );
+       }
+       ```  
+     - Bind its state to **`wheel_color`** in the parent component’s form state with default `"silver"`.
+
+2. Extend the request payload  
+   - **Filename:** `src/types/CarRequest.ts`  
+     - Add an optional `wheel_color?: string` field.  
+   - **Filename:** `src/api.ts`  
+     - Ensure the POST body includes `wheel_color` from form state.
+
+3. Modify prompt templates  
+   - **Filename:** `server/prompts.ts`  
+     ```ts
+     export const PROMPTS = {
+       hub: `A hyper-realistic professional studio photograph of a {{year}} {{make}} {{model}} {{body_style}} {{trim}} in metallic {{color}} paint with subtle micro-reflections **with {{wheel_color}} alloy wheels**. The vehicle is positioned at a precise 35-degree angle showing the front grille, ...`,
+       white: `Isolated render of a {{year}} {{make}} {{model}} {{body_style}} {{trim}} metallic {{color}}, flat-field white (#FFFFFF) environment, reflections off, baked contact shadow 6 %, camera 35° front-left, vehicle nose points left **with {{wheel_color}} alloy wheels**. Post-process: ...`
+     };
+     ```
+
+4. Inject the new variable in single-generation route  
+   - **Filename:** `server/routes.ts`  
+     ```ts
+     const prompt = template
+       .replace("{{year}}", year || "")
+       .replace("{{make}}", make || "")
+       .replace("{{model}}", model || "")
+       .replace("{{body_style}}", body_style || "")
+       .replace("{{trim}}", trim || "")
+       .replace("{{color}}", color || "")
+       .replace("{{wheel_color}}", wheel_color || "silver")
+       .replace(/\s+/g, " ")
+       .trim();
+     ```
+
+5. Inject the new variable in batch flow  
+   - **Filename:** `server/batch.ts`  
+     ```ts
+     return tpl
+       .replace(/{{(\w+)}}/g, (_, key) => (r as any)[key] || (key === "wheel_color" ? "silver" : ""))
+       .replace(/\s+/g, " ")
+       .trim();
+     ```
+
+6. Extend CSV import & validation  
+   - **Filename:** `server/batch.ts`  
+     - Accept the column header `wheel_color` (default `"silver"` if absent).  
+
+7. Update UI preview & defaults  
+   - Show selected wheel color under the 3-D preview card.  
+   - Ensure existing cars without this field still generate by falling back to `"silver"`.
+
+Testing  
+- **Scenario A (Single):** Generate a 2025 Subaru Outback in metallic green **with black alloy wheels**. Prompt string should contain “…metallic green paint… **with black alloy wheels.**”  
+- **Scenario B (Single):** Leave the wheel selector untouched → default should insert “silver alloy wheels.”  
+- **Scenario C (Batch):** CSV row sets `wheel_color=white` → verify prompt contains “white alloy wheels.”  
+- **Scenario D (Batch):** CSV lacks `wheel_color` column → generator must auto-fill “silver”.
+
+Reminders & Constraints  
+- Keep component names self-explanatory (e.g., `WheelFinishSelector`, not `colorSwatch1`).  
+- Do **not** alter any unrelated form logic.  
+- Preserve existing prompt formatting; only add the wheel-color phrase right after the color paint phrase.  
+- Ensure regex replacement in batch flow remains O(1) per variable.  
+- Maintain default **“silver”** to avoid breaking legacy data.
