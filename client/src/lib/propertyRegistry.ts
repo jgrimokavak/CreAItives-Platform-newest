@@ -157,7 +157,7 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
     {
       key: 'lineHeight',
       label: 'Line Height',
-      type: 'slider',
+      type: 'number',
       group: 'typography',
       groupOrder: 2,
       order: 5,
@@ -170,7 +170,7 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
     {
       key: 'letterSpacing',
       label: 'Letter Spacing',
-      type: 'slider',
+      type: 'number',
       group: 'typography',
       groupOrder: 2,
       order: 6,
@@ -322,7 +322,7 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
     {
       key: 'width',
       label: 'Width',
-      type: 'slider',
+      type: 'number',
       group: 'sizing',
       groupOrder: 4,
       order: 1,
@@ -382,7 +382,7 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
     {
       key: 'borderRadius',
       label: 'Border Radius',
-      type: 'slider',
+      type: 'number',
       group: 'borders',
       groupOrder: 6,
       order: 2,
@@ -488,16 +488,13 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
     {
       key: 'fontSize',
       label: 'Font Size',
-      type: 'slider',
+      type: 'select',
       group: 'typography',
       groupOrder: 2,
       order: 2,
-      min: 8,
-      max: 72,
-      step: 1,
-      unit: 'px',
+      options: FONT_SIZES,
       mjmlAttribute: 'font-size',
-      defaultValue: 16
+      defaultValue: '16px'
     },
     {
       key: 'fontWeight',
@@ -537,7 +534,7 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
     {
       key: 'lineHeight',
       label: 'Line Height',
-      type: 'slider',
+      type: 'number',
       group: 'typography',
       groupOrder: 2,
       order: 5,
@@ -550,7 +547,7 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
     {
       key: 'letterSpacing',
       label: 'Letter Spacing',
-      type: 'slider',
+      type: 'number',
       group: 'typography',
       groupOrder: 2,
       order: 6,
@@ -677,7 +674,7 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
     {
       key: 'borderRadius',
       label: 'Border Radius',
-      type: 'slider',
+      type: 'number',
       group: 'borders',
       groupOrder: 6,
       order: 2,
@@ -791,7 +788,7 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
       step: 5,
       unit: 'px',
       mjmlAttribute: 'height',
-      defaultValue: '20px'
+      defaultValue: 20
     },
 
     // Colors & Background Group
