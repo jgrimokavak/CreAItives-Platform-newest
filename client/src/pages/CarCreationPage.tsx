@@ -694,6 +694,51 @@ const CarCreationPage: React.FC = () => {
                           </SelectContent>
                         </Select>
                       </div>
+                      
+                      {/* Wheel Color selector */}
+                      <div className="space-y-2">
+                        <Label htmlFor="wheel_color">Wheel Color</Label>
+                        <div className="flex gap-2 items-center">
+                          <div 
+                            className="w-8 h-8 rounded-full border-2 border-gray-300 flex-shrink-0"
+                            style={{
+                              background: 
+                                watchWheelColor === 'silver' ? 'linear-gradient(135deg, #D8D8D8, #A8A8A8)' :
+                                watchWheelColor === 'black' ? 'linear-gradient(135deg, #333333, #111111)' :
+                                watchWheelColor === 'dark-grey' ? 'linear-gradient(135deg, #555555, #333333)' :
+                                watchWheelColor === 'light-grey' ? 'linear-gradient(135deg, #CCCCCC, #999999)' :
+                                watchWheelColor === 'white' ? 'linear-gradient(135deg, #FFFFFF, #F0F0F0)' :
+                                watchWheelColor === 'chrome' ? 'linear-gradient(135deg, #E8E8E8, #B8B8B8, #E8E8E8)' :
+                                watchWheelColor === 'bronze' ? 'linear-gradient(135deg, #CD7F32, #A0522D)' :
+                                watchWheelColor === 'gunmetal' ? 'linear-gradient(135deg, #2C3539, #1A1F23)' :
+                                watchWheelColor === 'anthracite' ? 'linear-gradient(135deg, #3C4142, #2A2E2F)' :
+                                watchWheelColor === 'polished-aluminum' ? 'linear-gradient(135deg, #F5F5F5, #DCDCDC, #F5F5F5)' :
+                                '#D8D8D8',
+                              boxShadow: 'inset 0 0 5px rgba(0,0,0,0.1)'
+                            }}
+                          />
+                          <Select
+                            value={watchWheelColor || 'silver'}
+                            onValueChange={(value) => setValue('wheel_color', value)}
+                          >
+                            <SelectTrigger className="flex-1">
+                              <SelectValue placeholder="Select wheel color" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="silver">Silver</SelectItem>
+                              <SelectItem value="black">Black</SelectItem>
+                              <SelectItem value="dark-grey">Dark Grey</SelectItem>
+                              <SelectItem value="light-grey">Light Grey</SelectItem>
+                              <SelectItem value="white">White</SelectItem>
+                              <SelectItem value="chrome">Chrome</SelectItem>
+                              <SelectItem value="bronze">Bronze</SelectItem>
+                              <SelectItem value="gunmetal">Gunmetal</SelectItem>
+                              <SelectItem value="anthracite">Anthracite</SelectItem>
+                              <SelectItem value="polished-aluminum">Polished Aluminum</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   

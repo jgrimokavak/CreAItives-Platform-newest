@@ -910,11 +910,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Car generation endpoint
   app.post("/api/car-generate", upload.single("dummy"), async (req, res) => {
     try {
-      const { make, model, body_style, trim, year, color, aspect_ratio="1:1", background="white" } = req.body;
+      const { make, model, body_style, trim, year, color, wheel_color, aspect_ratio="1:1", background="white" } = req.body;
       
       const TEMPLATES = {
         white: `Isolated render of a {{year}} {{make}} {{model}} {{body_style}} {{trim}} metallic {{color}}, flat-field white (#FFFFFF) environment, reflections off, baked contact shadow 6 %, camera 35° front-left, vehicle nose points left. Post-process: auto-threshold background to #FFFFFF (tolerance 1 RGB), remove artefacts, keep 6 % shadow, run edge cleanup. Export high-resolution 8 k file without drawing any text, watermarks or badges; restrict "KAVAK" to licence plate only.`,
-        hub: `A hyper-realistic professional studio photograph of a {{year}} {{make}} {{model}} {{body_style}} {{trim}} in metallic {{color}} paint with subtle micro-reflections. The vehicle is positioned at a precise 35-degree angle showing the front grille, headlights with signature lighting illuminated, and right side profile. Premium tinted windows reflect ambient studio lighting. The car sits on low-profile performance tires with detailed alloy wheels showing brake components behind the spokes. Shot on a polished circular dark charcoal gray studio floor that subtly reflects the vehicle's undercarriage and creates natural graduated shadows. Clean matte white seamless backdrop curves smoothly from floor to wall. Professional three-point lighting setup with key light, fill light, and rim lighting creates dimensional depth while preserving paint reflections and surface textures. Black front license plate features the 'kavak' logo in white. Camera positioned at chest height with slight downward angle. Sharp focus throughout with shallow depth of field on background edges. Commercial automotive photography quality with color-accurate rendering and professional retouching standards.`
+        hub: `A hyper-realistic professional studio photograph of a {{year}} {{make}} {{model}} {{body_style}} {{trim}} in metallic {{color}} paint with subtle micro-reflections with {{wheel_color}} alloy wheels. The vehicle is positioned at a precise 35-degree angle showing the front grille, headlights with signature lighting illuminated, and right side profile. Premium tinted windows reflect ambient studio lighting. The car sits on low-profile performance tires with detailed alloy wheels showing brake components behind the spokes. Shot on a polished circular dark charcoal gray studio floor that subtly reflects the vehicle's undercarriage and creates natural graduated shadows. Clean matte white seamless backdrop curves smoothly from floor to wall. Professional three-point lighting setup with key light, fill light, and rim lighting creates dimensional depth while preserving paint reflections and surface textures. Black front license plate features the 'kavak' logo in white. Camera positioned at chest height with slight downward angle. Sharp focus throughout with shallow depth of field on background edges. Commercial automotive photography quality with color-accurate rendering and professional retouching standards.`
       } as const;
       
       const template = TEMPLATES[background === "hub" ? "hub" : "white"];
@@ -926,6 +926,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .replace("{{body_style}}", body_style || "")
         .replace("{{trim}}", trim || "")
         .replace("{{color}}", color || "")
+        .replace("{{wheel_color}}", wheel_color || "")
         .replace(/\s+/g, " ").trim();
       
       console.log(`Car generation request with prompt: ${prompt}`);
