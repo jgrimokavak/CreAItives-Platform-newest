@@ -108,13 +108,16 @@ export const PROPERTY_REGISTRY: Record<string, PropertyDefinition[]> = {
     {
       key: 'fontSize',
       label: 'Font Size',
-      type: 'select',
+      type: 'slider',
       group: 'typography',
       groupOrder: 2,
       order: 2,
-      options: FONT_SIZES,
+      min: 8,
+      max: 72,
+      step: 1,
+      unit: 'px',
       mjmlAttribute: 'font-size',
-      defaultValue: '16px'
+      defaultValue: 16
     },
     {
       key: 'fontWeight',
