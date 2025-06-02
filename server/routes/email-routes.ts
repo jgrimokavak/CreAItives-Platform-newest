@@ -55,6 +55,17 @@ export async function compileMjml(req: Request, res: Response) {
   }
 }
 
+// Helper function to ensure numeric values have proper units for MJML
+function ensureUnit(value: any, unit: string = 'px'): string {
+  if (value === undefined || value === null || value === '') return '';
+  const str = String(value);
+  // If it's a number without units, add the default unit
+  if (/^\d+(\.\d+)?$/.test(str)) {
+    return `${str}${unit}`;
+  }
+  return str;
+}
+
 // Convert email components to MJML structure
 function generateMjmlFromComponents(subject: string, components: EmailComponent[]): string {
   // Completely blank when no components
@@ -80,7 +91,7 @@ function generateMjmlFromComponents(subject: string, components: EmailComponent[
         if (component.styles?.textAlign) textAttrs.push(`align="${component.styles.textAlign}"`);
         if (component.styles?.color) textAttrs.push(`color="${component.styles.color}"`);
         if (component.styles?.backgroundColor) textAttrs.push(`background-color="${component.styles.backgroundColor}"`);
-        if (component.styles?.fontSize) textAttrs.push(`font-size="${component.styles.fontSize}"`);
+        if (component.styles?.fontSize) textAttrs.push(`font-size="${ensureUnit(component.styles.fontSize)}"`);
         if (component.styles?.fontFamily) textAttrs.push(`font-family="${component.styles.fontFamily}"`);
         if (component.styles?.fontWeight) textAttrs.push(`font-weight="${component.styles.fontWeight}"`);
         if (component.styles?.fontStyle) textAttrs.push(`font-style="${component.styles.fontStyle}"`);
