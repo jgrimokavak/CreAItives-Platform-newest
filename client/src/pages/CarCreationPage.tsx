@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { CarFront, RefreshCw, CheckCircle, AlertCircle, Download, Pencil, Maximize2, ImageIcon } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 // Import the local GeneratedImage type used by ImageCard
 import type { GeneratedImage } from '@/types/image';
 import { Card, CardContent } from '@/components/ui/card';
@@ -34,6 +35,7 @@ const carGenerationSchema = z.object({
   trim: z.string().optional(),
   color: z.string().optional(),
   wheel_color: z.string().optional(),
+  has_adventure_cladding: z.boolean().optional(),
   background: z.enum(["white", "hub"]).default("white")
 });
 
@@ -72,6 +74,7 @@ const CarCreationPage: React.FC = () => {
       trim: 'None',
       color: 'silver', // Set default color to silver
       wheel_color: 'silver', // Set default wheel color to silver
+      has_adventure_cladding: false, // Set default adventure cladding to false
       background: 'hub'
     }
   });
@@ -81,6 +84,7 @@ const CarCreationPage: React.FC = () => {
   const watchModel = watch('model');
   const watchBodyStyle = watch('body_style');
   const watchWheelColor = watch('wheel_color');
+  const watchAdventureCladding = watch('has_adventure_cladding');
 
   // Fetch makes
   const fetchMakes = async () => {
@@ -737,6 +741,23 @@ const CarCreationPage: React.FC = () => {
                               <SelectItem value="polished-aluminum">Polished Aluminum</SelectItem>
                             </SelectContent>
                           </Select>
+                        </div>
+                      </div>
+                      
+                      {/* Adventure Cladding toggle */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-1">
+                            <Label htmlFor="adventure_cladding">Add Adventure Cladding</Label>
+                            <p className="text-xs text-muted-foreground">
+                              Applies thick matte-black plastic cladding around the bumpers, wheel arches, rocker panels, and lower doors for a rugged, off-road look.
+                            </p>
+                          </div>
+                          <Switch
+                            id="adventure_cladding"
+                            checked={watchAdventureCladding || false}
+                            onCheckedChange={(checked: boolean) => setValue('has_adventure_cladding', checked)}
+                          />
                         </div>
                       </div>
                     </div>

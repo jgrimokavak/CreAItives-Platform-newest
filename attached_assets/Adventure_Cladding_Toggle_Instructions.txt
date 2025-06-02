@@ -1,0 +1,27 @@
+Task: Add 'Adventure Cladding' Toggle to Car Creator (Single-Car Mode Only)
+
+Objective
+
+Add a toggle switch under the “Appearance” section, directly beneath the existing wheel color chooser.
+
+Toggle Specification:
+
+- **Internal variable name:** has_adventure_cladding
+- **Label on UI:** “Add Adventure Cladding”
+- **Default value:** false
+- **Tooltip or subtext:** “Applies thick matte-black plastic cladding around the bumpers, wheel arches, rocker panels, and lower doors for a rugged, off-road look.”
+
+Functionality:
+
+If the toggle is enabled (true), inject the following sentence at the **very end** of the final prompt string (single-car generation only, not batch):
+
+Equipped with an adventure-spec matte-black composite cladding package fully integrated into the front fascia, wheel arches, rocker panels, and lower door sections—including fog-lamp bezels and lower grille inserts in rugged textured finish—creating a sharply segmented two-tone look that visually dominates the vehicle’s entire lower body.
+
+Prompt Integration Rules:
+
+- Only apply this sentence if `has_adventure_cladding === true`
+- Always append it to the end of the prompt, after all existing content
+- Do not alter existing prompt structure, punctuation, or variables
+- Do not apply to batch generation
+
+This task only applies to single image generation mode.

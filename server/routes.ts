@@ -910,7 +910,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Car generation endpoint
   app.post("/api/car-generate", upload.single("dummy"), async (req, res) => {
     try {
-      const { make, model, body_style, trim, year, color, wheel_color, aspect_ratio="1:1", background="white" } = req.body;
+      const { make, model, body_style, trim, year, color, wheel_color, has_adventure_cladding, aspect_ratio="1:1", background="white" } = req.body;
       
       const TEMPLATES = {
         white: `Isolated render of a {{year}} {{make}} {{model}} {{body_style}} {{trim}} metallic {{color}}, flat-field white (#FFFFFF) environment, reflections off, baked contact shadow 6 %, camera 35° front-left, vehicle nose points left. Post-process: auto-threshold background to #FFFFFF (tolerance 1 RGB), remove artefacts, keep 6 % shadow, run edge cleanup. Export high-resolution 8 k file without drawing any text, watermarks or badges; restrict "KAVAK" to licence plate only.`,
@@ -919,7 +919,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const template = TEMPLATES[background === "hub" ? "hub" : "white"];
       
-      const prompt = template
+      let prompt = template
         .replace("{{year}}", year || "")
         .replace("{{make}}", make || "")
         .replace("{{model}}", model || "")
@@ -928,6 +928,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .replace("{{color}}", color || "")
         .replace("{{wheel_color}}", wheel_color || "")
         .replace(/\s+/g, " ").trim();
+      
+      // Append adventure cladding text if enabled
+      if (has_adventure_cladding === 'true' || has_adventure_cladding === true) {
+        prompt += " Equipped with an adventure-spec matte-black composite cladding package fully integrated into the front fascia, wheel arches, rocker panels, and lower door sections—including fog-lamp bezels and lower grille inserts in rugged textured finish—creating a sharply segmented two-tone look that visually dominates the vehicle's entire lower body.";
+      }
       
       console.log(`Car generation request with prompt: ${prompt}`);
       
