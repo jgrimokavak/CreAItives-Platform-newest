@@ -61,6 +61,7 @@ export function makeFilename(r: Row, idx: number): string {
   if (bodyStyle) parts.push(bodyStyle);
   if (trim) parts.push(trim);
   if (color) parts.push(color);
+  if (wheelColor) parts.push(wheelColor);
   if (background) parts.push(background);
   
   // If no parts are available, use a fallback name with index

@@ -768,6 +768,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (normalized === 'bg' || normalized === 'background') {
         return 'background';
       }
+      if (normalized === 'wheel' || normalized === 'wheel_color' || normalized === 'wheelcolor' || normalized === 'wheels') {
+        return 'wheel_color';
+      }
       
       // Return the normalized header or the original if no mapping found
       return normalized;
