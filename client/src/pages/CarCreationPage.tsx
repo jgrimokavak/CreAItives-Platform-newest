@@ -694,6 +694,31 @@ const CarCreationPage: React.FC = () => {
                           </SelectContent>
                         </Select>
                       </div>
+                      
+                      {/* Wheel Color selector */}
+                      <div className="space-y-2">
+                        <Label htmlFor="wheel_color">Wheel Color</Label>
+                        <Select
+                          value={form.watch('wheel_color') || 'silver'}
+                          onValueChange={(value) => setValue('wheel_color', value)}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select wheel color" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="silver">Silver</SelectItem>
+                            <SelectItem value="black">Black</SelectItem>
+                            <SelectItem value="dark-grey">Dark Grey</SelectItem>
+                            <SelectItem value="light-grey">Light Grey</SelectItem>
+                            <SelectItem value="white">White</SelectItem>
+                            <SelectItem value="chrome">Chrome</SelectItem>
+                            <SelectItem value="bronze">Bronze</SelectItem>
+                            <SelectItem value="gunmetal">Gunmetal</SelectItem>
+                            <SelectItem value="anthracite">Anthracite</SelectItem>
+                            <SelectItem value="polished-aluminum">Polished Aluminum</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   </div>
                   
