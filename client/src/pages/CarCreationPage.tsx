@@ -748,7 +748,12 @@ const CarCreationPage: React.FC = () => {
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <div className="space-y-1">
-                            <Label htmlFor="adventure_cladding">Add Adventure Cladding</Label>
+                            <div className="flex items-center gap-2">
+                              <Label htmlFor="adventure_cladding">Add Adventure Cladding</Label>
+                              <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 text-xs px-2 py-0.5">
+                                BETA
+                              </Badge>
+                            </div>
                             <p className="text-xs text-muted-foreground">
                               Applies thick matte-black plastic cladding around the bumpers, wheel arches, rocker panels, and lower doors for a rugged, off-road look.
                             </p>
