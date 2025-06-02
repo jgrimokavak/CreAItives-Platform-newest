@@ -33,6 +33,7 @@ const carGenerationSchema = z.object({
   body_style: z.string().optional(),
   trim: z.string().optional(),
   color: z.string().optional(),
+  wheel_color: z.string().optional(),
   background: z.enum(["white", "hub"]).default("white")
 });
 
@@ -70,6 +71,7 @@ const CarCreationPage: React.FC = () => {
       body_style: 'None',
       trim: 'None',
       color: 'silver', // Set default color to silver
+      wheel_color: 'silver', // Set default wheel color to silver
       background: 'hub'
     }
   });
@@ -78,6 +80,7 @@ const CarCreationPage: React.FC = () => {
   const watchMake = watch('make');
   const watchModel = watch('model');
   const watchBodyStyle = watch('body_style');
+  const watchWheelColor = watch('wheel_color');
 
   // Fetch makes
   const fetchMakes = async () => {
