@@ -55,6 +55,7 @@ export const PROPERTY_GROUPS: PropertyGroup[] = [
 const FONT_FAMILIES = [
   { value: 'Arial, sans-serif', label: 'Arial' },
   { value: 'Helvetica, sans-serif', label: 'Helvetica' },
+  { value: 'Roboto, sans-serif', label: 'Roboto' },
   { value: 'Georgia, serif', label: 'Georgia' },
   { value: 'Times, serif', label: 'Times' },
   { value: 'Verdana, sans-serif', label: 'Verdana' },

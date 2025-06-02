@@ -1,0 +1,25 @@
+Context:
+The builder/editor view is still out of sync with the MJML preview and export. Style changes (like italics, alignment, borders, or font selection) show up in the preview/export but NOT in the editor. Also, many property controls (like sizing, spacing, and borders) are not as user-friendly as they could be—some numeric values use only text fields instead of sliders.
+
+Instructions:
+1. Update the builder/editor React rendering logic (renderEmailComponent and related):
+   - Ensure EVERY property supported by the property panel/propertyRegistry and forwarded to MJML is ALSO applied in the React editor view.
+   - This includes all typography (fontStyle, lineHeight, letterSpacing, fontWeight, textTransform, textDecoration, verticalAlign), all alignment, all spacing, sizing, color, and border-related props—including per-side properties where possible.
+   - The editor view must always visually reflect every property the user can set, for true WYSIWYG.
+
+2. Add Roboto (and any other desired fonts):
+   - Import Roboto via Google Fonts in the project’s HTML/CSS, and ensure it is available as a fontFamily option in the property panel and MJML output.
+   - Font dropdowns should offer all standard web fonts, plus Roboto, and reflect changes immediately in both the editor and preview/export.
+
+3. Improve Property Controls UI:
+   - For every numeric property (font-size, width, height, border-radius, spacing, etc.), use a slider where possible, stacked above a numeric input for direct editing.
+   - For controls where sliders are not practical (e.g., text inputs for URLs, hex values, or descriptive text), use clear, vertically stacked fields.
+   - Ensure per-side controls (e.g., padding, border) use a consistent, intuitive box-model UI for all components.
+
+4. Make sure all property controls across all components use the same layout, style, and user interaction patterns for normalization and user-friendliness.
+
+Do not stop or check in until:
+- All editable properties are visually reflected in the editor.
+- All fonts (including Roboto) are fully supported and imported.
+- All possible numeric controls use sliders in the UI.
+- The editor and MJML preview/export are always visually consistent.

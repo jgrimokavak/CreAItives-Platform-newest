@@ -196,10 +196,28 @@ export default function EmailBuilderPage() {
               fontFamily: component.styles?.fontFamily || 'Arial, sans-serif',
               fontSize: component.styles?.fontSize || '16px',
               fontWeight: component.styles?.fontWeight || 'normal',
+              fontStyle: component.styles?.fontStyle || 'normal',
+              lineHeight: component.styles?.lineHeight || '1.6',
+              letterSpacing: component.styles?.letterSpacing || 'normal',
+              textTransform: component.styles?.textTransform || 'none',
+              textDecoration: component.styles?.textDecoration || 'none',
               color: component.styles?.color || '#000000',
-              textAlign: component.styles?.textAlign || 'left',
-              padding: component.styles?.padding || '10px 25px',
               backgroundColor: component.styles?.backgroundColor || 'transparent',
+              textAlign: component.styles?.textAlign || 'left',
+              verticalAlign: component.styles?.verticalAlign || 'top',
+              padding: component.styles?.padding || '10px 25px',
+              paddingTop: component.styles?.paddingTop,
+              paddingBottom: component.styles?.paddingBottom,
+              paddingLeft: component.styles?.paddingLeft,
+              paddingRight: component.styles?.paddingRight,
+              border: component.styles?.border,
+              borderTop: component.styles?.borderTop,
+              borderBottom: component.styles?.borderBottom,
+              borderLeft: component.styles?.borderLeft,
+              borderRight: component.styles?.borderRight,
+              borderRadius: component.styles?.borderRadius,
+              width: component.styles?.width,
+              height: component.styles?.height,
             }}
           >
             {component.content?.text || 'Enter your text here...'}
@@ -211,6 +229,10 @@ export default function EmailBuilderPage() {
             style={{
               textAlign: component.styles?.align || 'center',
               padding: component.styles?.padding || '10px 25px',
+              paddingTop: component.styles?.paddingTop,
+              paddingBottom: component.styles?.paddingBottom,
+              paddingLeft: component.styles?.paddingLeft,
+              paddingRight: component.styles?.paddingRight,
               backgroundColor: component.styles?.containerBackgroundColor || 'transparent',
             }}
           >
@@ -223,21 +245,30 @@ export default function EmailBuilderPage() {
                   width: component.styles?.width || '600px',
                   height: component.styles?.height || 'auto',
                   border: component.styles?.border || '',
+                  borderTop: component.styles?.borderTop,
+                  borderBottom: component.styles?.borderBottom,
+                  borderLeft: component.styles?.borderLeft,
+                  borderRight: component.styles?.borderRight,
                   borderRadius: component.styles?.borderRadius || '',
-                  maxWidth: '100%',
+                  maxWidth: component.styles?.fluidOnMobile === 'true' ? '100%' : undefined,
                 }}
               />
             ) : (
               <div
                 style={{
                   width: component.styles?.width || '600px',
-                  height: '200px',
+                  height: component.styles?.height || '200px',
                   backgroundColor: '#f0f0f0',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  border: '2px dashed #ccc',
+                  border: component.styles?.border || '2px dashed #ccc',
+                  borderTop: component.styles?.borderTop,
+                  borderBottom: component.styles?.borderBottom,
+                  borderLeft: component.styles?.borderLeft,
+                  borderRight: component.styles?.borderRight,
                   borderRadius: component.styles?.borderRadius || '',
+                  maxWidth: component.styles?.fluidOnMobile === 'true' ? '100%' : undefined,
                 }}
               >
                 <span style={{ color: '#666' }}>No image selected</span>
@@ -251,6 +282,10 @@ export default function EmailBuilderPage() {
             style={{
               textAlign: component.styles?.align || 'center',
               padding: component.styles?.padding || '10px 25px',
+              paddingTop: component.styles?.paddingTop,
+              paddingBottom: component.styles?.paddingBottom,
+              paddingLeft: component.styles?.paddingLeft,
+              paddingRight: component.styles?.paddingRight,
               backgroundColor: component.styles?.containerBackgroundColor || 'transparent',
             }}
           >
@@ -259,16 +294,26 @@ export default function EmailBuilderPage() {
                 fontFamily: component.styles?.fontFamily || 'Arial, sans-serif',
                 fontSize: component.styles?.fontSize || '16px',
                 fontWeight: component.styles?.fontWeight || 'normal',
+                fontStyle: component.styles?.fontStyle || 'normal',
+                lineHeight: component.styles?.lineHeight || '1.6',
+                letterSpacing: component.styles?.letterSpacing || 'normal',
+                textTransform: component.styles?.textTransform || 'none',
+                textDecoration: component.styles?.textDecoration || 'none',
                 color: component.styles?.color || '#ffffff',
                 backgroundColor: component.styles?.backgroundColor || '#1553ec',
                 border: component.styles?.border || 'none',
+                borderTop: component.styles?.borderTop,
+                borderBottom: component.styles?.borderBottom,
+                borderLeft: component.styles?.borderLeft,
+                borderRight: component.styles?.borderRight,
                 borderRadius: component.styles?.borderRadius || '6px',
-                padding: '12px 24px',
+                padding: component.styles?.innerPadding || '12px 24px',
                 cursor: 'pointer',
-                textDecoration: 'none',
                 display: 'inline-block',
                 width: component.styles?.width || 'auto',
                 height: component.styles?.height || 'auto',
+                textAlign: component.styles?.textAlign || 'center',
+                verticalAlign: component.styles?.verticalAlign || 'middle',
               }}
             >
               {component.content?.text || 'Button Text'}
@@ -282,6 +327,17 @@ export default function EmailBuilderPage() {
               height: component.styles?.height || '20px',
               backgroundColor: component.styles?.containerBackgroundColor || 'transparent',
               padding: component.styles?.padding || '',
+              paddingTop: component.styles?.paddingTop,
+              paddingBottom: component.styles?.paddingBottom,
+              paddingLeft: component.styles?.paddingLeft,
+              paddingRight: component.styles?.paddingRight,
+              border: component.styles?.border,
+              borderTop: component.styles?.borderTop,
+              borderBottom: component.styles?.borderBottom,
+              borderLeft: component.styles?.borderLeft,
+              borderRight: component.styles?.borderRight,
+              borderRadius: component.styles?.borderRadius,
+              width: component.styles?.width || '100%',
             }}
           />
         );
