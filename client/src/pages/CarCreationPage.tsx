@@ -700,6 +700,20 @@ const CarCreationPage: React.FC = () => {
                             <SelectItem value="electric orange">Electric Orange</SelectItem>
                             <SelectItem value="dark grey">Dark Grey</SelectItem>
                             <SelectItem value="light grey">Light Grey</SelectItem>
+                            <SelectItem value="charcoal">Charcoal</SelectItem>
+                            <SelectItem value="midnight blue">Midnight Blue</SelectItem>
+                            <SelectItem value="forest green">Forest Green</SelectItem>
+                            <SelectItem value="champagne">Champagne</SelectItem>
+                            <SelectItem value="matte black">Matte Black</SelectItem>
+                            <SelectItem value="matte gray">Matte Gray</SelectItem>
+                            <SelectItem value="satin silver">Satin Silver</SelectItem>
+                            <SelectItem value="sage green">Sage Green</SelectItem>
+                            <SelectItem value="ceramic gray">Ceramic Gray</SelectItem>
+                            <SelectItem value="volcanic gray">Volcanic Gray</SelectItem>
+                            <SelectItem value="beige">Beige</SelectItem>
+                            <SelectItem value="tan">Tan</SelectItem>
+                            <SelectItem value="cherry red">Cherry Red</SelectItem>
+                            <SelectItem value="royal blue">Royal Blue</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
