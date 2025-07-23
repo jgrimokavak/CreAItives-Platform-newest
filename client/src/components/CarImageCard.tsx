@@ -107,11 +107,15 @@ export default function CarImageCard({
         // Load and draw the pre-rendered disclaimer PNG overlay
         const disclaimerImg = new Image();
         disclaimerImg.onload = () => {
+          console.log('Disclaimer PNG loaded successfully:', disclaimerImg.width, 'x', disclaimerImg.height);
+          
           // Position disclaimer in bottom-right corner with 64px margin
           const marginRight = 64;
           const marginBottom = 64;
           const disclaimerX = finalWidth - disclaimerImg.width - marginRight;
           const disclaimerY = finalHeight - disclaimerImg.height - marginBottom;
+          
+          console.log('Positioning disclaimer at:', disclaimerX, disclaimerY);
           
           // Draw the disclaimer PNG overlay at native resolution
           ctx.drawImage(disclaimerImg, disclaimerX, disclaimerY);
@@ -121,12 +125,14 @@ export default function CarImageCard({
           resolve(dataUrl);
         };
 
-        disclaimerImg.onerror = () => {
-          reject(new Error('Failed to load disclaimer overlay'));
+        disclaimerImg.onerror = (error) => {
+          console.error('Failed to load disclaimer overlay:', disclaimerFilename, error);
+          reject(new Error(`Failed to load disclaimer overlay: ${disclaimerFilename}`));
         };
 
         // Load the appropriate disclaimer PNG based on region
         const disclaimerFilename = `ai_disclaimer_${region}.png`;
+        console.log('Loading disclaimer PNG:', disclaimerFilename);
         disclaimerImg.src = `/${disclaimerFilename}`;
       };
 
