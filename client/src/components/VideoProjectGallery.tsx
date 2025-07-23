@@ -60,13 +60,16 @@ export default function VideoProjectGallery({ onSelectProject }: VideoProjectGal
 
   // Create project mutation
   const createProjectMutation = useMutation({
-    mutationFn: (data: { name: string; description?: string }) =>
-      apiRequest('/api/projects', {
+    mutationFn: (data: { name: string; description?: string }) => {
+      console.log('Creating project with data:', data);
+      return apiRequest('/api/projects', {
         method: 'POST',
         body: JSON.stringify(data),
         headers: { 'Content-Type': 'application/json' },
-      }),
-    onSuccess: () => {
+      });
+    },
+    onSuccess: (data) => {
+      console.log('Project created successfully:', data);
       queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
       setIsCreateDialogOpen(false);
       setNewProjectName('');
@@ -76,10 +79,11 @@ export default function VideoProjectGallery({ onSelectProject }: VideoProjectGal
         description: 'Your new project has been created successfully.',
       });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Project creation failed:', error);
       toast({
         title: 'Error',
-        description: 'Failed to create project. Please try again.',
+        description: `Failed to create project: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: 'destructive',
       });
     },
