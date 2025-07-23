@@ -1,0 +1,58 @@
+client:536 WebSocket connection to 'wss://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/?token=p8HLTW6MInkP' failed: 
+setupWebSocket @ client:536
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=p8HLTW6MInkP' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+chunk-WERSD76P.js?v=f63cc157:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+websocket.ts:25 WebSocket connected
+ImageModal.tsx:47 ImageModal: Rendering with image URL: /uploads/full/d04f0ec2-b2a0-425a-8521-12b23d22a790.png
+ImageModal.tsx:47 ImageModal: Rendering with image URL: /uploads/full/d04f0ec2-b2a0-425a-8521-12b23d22a790.png
+CarImageCard.tsx:135 Loading disclaimer PNG: ai_disclaimer_AR.png
+CarImageCard.tsx:129 Failed to load disclaimer overlay: ai_disclaimer_AR.png Event {isTrusted: true, type: 'error', target: img, currentTarget: img, eventPhase: 2, …}
+disclaimerImg.onerror @ CarImageCard.tsx:129
+CarImageCard.tsx:195 Error creating disclaimer image: Error: Failed to load disclaimer overlay: ai_disclaimer_AR.png
+    at disclaimerImg.onerror (CarImageCard.tsx:130:18)
+handleDisclaimerDownload @ CarImageCard.tsx:195
+await in handleDisclaimerDownload
+onClick @ CarImageCard.tsx:307
+handleEvent @ chunk-PFAUAXO7.js?v=f63cc157:11
+callCallback2 @ chunk-WERSD76P.js?v=f63cc157:3674
+invokeGuardedCallbackDev @ chunk-WERSD76P.js?v=f63cc157:3699
+invokeGuardedCallback @ chunk-WERSD76P.js?v=f63cc157:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-WERSD76P.js?v=f63cc157:3736
+executeDispatch @ chunk-WERSD76P.js?v=f63cc157:7014
+processDispatchQueueItemsInOrder @ chunk-WERSD76P.js?v=f63cc157:7034
+processDispatchQueue @ chunk-WERSD76P.js?v=f63cc157:7043
+dispatchEventsForPlugins @ chunk-WERSD76P.js?v=f63cc157:7051
+(anonymous) @ chunk-WERSD76P.js?v=f63cc157:7174
+batchedUpdates$1 @ chunk-WERSD76P.js?v=f63cc157:18913
+batchedUpdates @ chunk-WERSD76P.js?v=f63cc157:3579
+dispatchEventForPluginEventSystem @ chunk-WERSD76P.js?v=f63cc157:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-WERSD76P.js?v=f63cc157:5478
+dispatchEvent @ chunk-WERSD76P.js?v=f63cc157:5472
+dispatchDiscreteEvent @ chunk-WERSD76P.js?v=f63cc157:5449
+CarImageCard.tsx:135 Loading disclaimer PNG: ai_disclaimer_MX.png
+CarImageCard.tsx:129 Failed to load disclaimer overlay: ai_disclaimer_MX.png Event {isTrusted: true, type: 'error', target: img, currentTarget: img, eventPhase: 2, …}
+disclaimerImg.onerror @ CarImageCard.tsx:129
+CarImageCard.tsx:195 Error creating disclaimer image: Error: Failed to load disclaimer overlay: ai_disclaimer_MX.png
+    at disclaimerImg.onerror (CarImageCard.tsx:130:18)
+handleDisclaimerDownload @ CarImageCard.tsx:195
+await in handleDisclaimerDownload
+onClick @ CarImageCard.tsx:307
+handleEvent @ chunk-PFAUAXO7.js?v=f63cc157:11
+callCallback2 @ chunk-WERSD76P.js?v=f63cc157:3674
+invokeGuardedCallbackDev @ chunk-WERSD76P.js?v=f63cc157:3699
+invokeGuardedCallback @ chunk-WERSD76P.js?v=f63cc157:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-WERSD76P.js?v=f63cc157:3736
+executeDispatch @ chunk-WERSD76P.js?v=f63cc157:7014
+processDispatchQueueItemsInOrder @ chunk-WERSD76P.js?v=f63cc157:7034
+processDispatchQueue @ chunk-WERSD76P.js?v=f63cc157:7043
+dispatchEventsForPlugins @ chunk-WERSD76P.js?v=f63cc157:7051
+(anonymous) @ chunk-WERSD76P.js?v=f63cc157:7174
+batchedUpdates$1 @ chunk-WERSD76P.js?v=f63cc157:18913
+batchedUpdates @ chunk-WERSD76P.js?v=f63cc157:3579
+dispatchEventForPluginEventSystem @ chunk-WERSD76P.js?v=f63cc157:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-WERSD76P.js?v=f63cc157:5478
+dispatchEvent @ chunk-WERSD76P.js?v=f63cc157:5472
+dispatchDiscreteEvent @ chunk-WERSD76P.js?v=f63cc157:5449

@@ -130,8 +130,8 @@ export default function CarImageCard({
           reject(new Error(`Failed to load disclaimer overlay: ${disclaimerFilename}`));
         };
 
-        // Load the appropriate disclaimer PNG based on region
-        const disclaimerFilename = `ai_disclaimer_${region}.png`;
+        // Load the appropriate disclaimer PNG based on region (convert to lowercase)
+        const disclaimerFilename = `ai_disclaimer_${region.toLowerCase()}.png`;
         console.log('Loading disclaimer PNG:', disclaimerFilename);
         disclaimerImg.src = `/${disclaimerFilename}`;
       };
