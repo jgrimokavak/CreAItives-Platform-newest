@@ -56,7 +56,7 @@ export default function CarImageCard({
 }: CarImageCardProps) {
   const [isHovered, setIsHovered] = useState(false);
 
-  // Helper function to create image with disclaimer (cropped to 1.71:1 aspect ratio)
+  // Helper function to create image with disclaimer (cropped to 1.71:1 aspect ratio at 1280×748)
   const createImageWithDisclaimer = async (disclaimerText: string): Promise<string> => {
     return new Promise((resolve, reject) => {
       const canvas = document.createElement('canvas');
@@ -70,8 +70,10 @@ export default function CarImageCard({
       img.crossOrigin = 'anonymous'; // Handle CORS if needed
       
       img.onload = () => {
-        // Target aspect ratio: 1.71:1 (900×525 proportion)
-        const targetAspectRatio = 1.71;
+        // Target dimensions: exactly 1280×748 pixels (1.71:1 aspect ratio)
+        const finalWidth = 1280;
+        const finalHeight = 748;
+        const targetAspectRatio = finalWidth / finalHeight; // 1.71:1
         
         // Calculate crop dimensions to maintain 1.71:1 aspect ratio
         let cropWidth = img.width;
@@ -91,10 +93,7 @@ export default function CarImageCard({
           cropY = (img.height - cropHeight) / 2;
         }
         
-        // Set canvas to final cropped dimensions (maintain quality)
-        const finalWidth = Math.min(900, cropWidth);
-        const finalHeight = finalWidth / targetAspectRatio;
-        
+        // Set canvas to exact final dimensions
         canvas.width = finalWidth;
         canvas.height = finalHeight;
 
@@ -105,84 +104,127 @@ export default function CarImageCard({
           0, 0, finalWidth, finalHeight
         );
 
-        // Parse disclaimer text into two lines
-        const textParts = disclaimerText.split('. ');
-        const line1 = textParts[0] + (textParts.length > 1 ? '.' : '');
-        const line2 = textParts.length > 1 ? textParts.slice(1).join('. ') : '';
+        // Parse disclaimer text based on region
+        const parseDisclaimerText = (text: string) => {
+          // Split at period followed by space, but keep periods with first part
+          const parts = text.split(/\.\s+/);
+          if (parts.length >= 2) {
+            return {
+              line1: parts[0] + '.',
+              line2: parts.slice(1).join('. ')
+            };
+          }
+          // Fallback for text without clear sentence breaks
+          return {
+            line1: text,
+            line2: ''
+          };
+        };
         
-        // Calculate disclaimer pill positioning and styling
-        const edgePadding = finalWidth * 0.055; // 5.5% from edges for equidistant spacing
-        const fontSize = Math.max(12, finalHeight * 0.025); // Scale based on height, more readable
-        const lineHeight = fontSize * 1.2; // Line spacing
-        const iconSize = fontSize * 1.1; // AI spark icon size
-        const pillPaddingH = 18; // Fixed generous horizontal padding
-        const pillPaddingV = 10; // Fixed generous vertical padding
-        const iconTextGap = 8; // Gap between icon and text
+        const { line1, line2 } = parseDisclaimerText(disclaimerText);
         
-        // Set fonts - try Helvetica Neue first, fall back to system defaults
-        const boldFont = `600 ${fontSize}px "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif`;
-        const regularFont = `400 ${fontSize}px "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif`;
+        // Calculate disclaimer pill positioning and styling (exact specifications)
+        const edgePadding = 40; // Fixed 40px margin from edges (~3.1% of 1280px width)
+        const boldFontSize = 21; // ~20-22px for first line
+        const regularFontSize = 19; // ~18-20px for second line
+        const lineHeight = boldFontSize * 1.15; // Tight line spacing
+        const iconSize = 24; // Fixed icon size
+        const pillPaddingH = 18; // Fixed horizontal padding
+        const pillPaddingV = 10; // Fixed vertical padding
+        const iconTextGap = 11; // 10-12px gap between icon and text
+        
+        // Set fonts - Helvetica Neue with exact weights
+        const boldFont = `700 ${boldFontSize}px "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif`;
+        const regularFont = `400 ${regularFontSize}px "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif`;
         
         // Measure text to determine pill size
         ctx.font = boldFont;
         const line1Width = ctx.measureText(line1).width;
         ctx.font = regularFont;
-        const line2Width = line2 ? ctx.measureText(line2).width : 0;
+        const line2Width = ctx.measureText(line2).width;
         const maxTextWidth = Math.max(line1Width, line2Width);
         
         // Pill dimensions
         const contentWidth = iconSize + iconTextGap + maxTextWidth;
         const pillWidth = contentWidth + (pillPaddingH * 2);
-        const pillHeight = (line2 ? lineHeight * 2 : fontSize) + (pillPaddingV * 2);
+        const pillHeight = (boldFontSize + regularFontSize + lineHeight * 0.5) + (pillPaddingV * 2);
         const pillRadius = 999; // Full pill shape (border-radius: 999px)
         
-        // Pill position (bottom-right with equidistant edge padding)
+        // Pill position (bottom-right with fixed 40px edge padding)
         const pillX = finalWidth - edgePadding - pillWidth;
         const pillY = finalHeight - edgePadding - pillHeight;
         
         // Draw pill background with subtle shadow
         ctx.save();
         
-        // Add subtle drop shadow (0px 2px 6px rgba(0,0,0,0.3))
+        // Add single soft drop shadow (0px 2px 6px rgba(0,0,0,0.3))
         ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 2;
         ctx.shadowBlur = 6;
         
-        // Draw pill background with translucent blue
-        ctx.fillStyle = 'rgba(21, 83, 236, 0.7)';
+        // Draw pill background with semi-transparent black
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
         ctx.beginPath();
         ctx.roundRect(pillX, pillY, pillWidth, pillHeight, pillRadius);
         ctx.fill();
         
         ctx.restore();
         
-        // Draw AI spark icon (simple sparkle design)
+        // Draw Lucide sparkles icon (solid blue #1553ec)
         const iconX = pillX + pillPaddingH;
-        const iconY = pillY + pillHeight / 2;
+        const iconCenterY = pillY + pillHeight / 2;
         
-        ctx.fillStyle = '#ffffff';
+        ctx.fillStyle = '#1553ec'; // Solid blue
         ctx.save();
         
-        // Draw a simple AI spark/star icon
-        ctx.translate(iconX + iconSize/2, iconY);
-        ctx.beginPath();
-        const spikes = 8;
-        const outerRadius = iconSize / 2;
-        const innerRadius = outerRadius * 0.4;
+        // Draw Lucide sparkles icon - simplified version
+        ctx.translate(iconX + iconSize/2, iconCenterY);
         
-        for (let i = 0; i < spikes * 2; i++) {
-          const radius = i % 2 === 0 ? outerRadius : innerRadius;
-          const angle = (i * Math.PI) / spikes;
-          const x = Math.cos(angle) * radius;
-          const y = Math.sin(angle) * radius;
-          
-          if (i === 0) {
-            ctx.moveTo(x, y);
-          } else {
-            ctx.lineTo(x, y);
-          }
-        }
+        // Main sparkle (4-pointed star)
+        ctx.fillStyle = '#1553ec';
+        ctx.beginPath();
+        const mainSize = iconSize * 0.4;
+        ctx.moveTo(0, -mainSize);
+        ctx.lineTo(mainSize * 0.3, -mainSize * 0.3);
+        ctx.lineTo(mainSize, 0);
+        ctx.lineTo(mainSize * 0.3, mainSize * 0.3);
+        ctx.lineTo(0, mainSize);
+        ctx.lineTo(-mainSize * 0.3, mainSize * 0.3);
+        ctx.lineTo(-mainSize, 0);
+        ctx.lineTo(-mainSize * 0.3, -mainSize * 0.3);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Small sparkle (top-right)
+        ctx.beginPath();
+        const smallSize = iconSize * 0.15;
+        const offsetX = iconSize * 0.3;
+        const offsetY = -iconSize * 0.25;
+        ctx.moveTo(offsetX, offsetY - smallSize);
+        ctx.lineTo(offsetX + smallSize * 0.3, offsetY - smallSize * 0.3);
+        ctx.lineTo(offsetX + smallSize, offsetY);
+        ctx.lineTo(offsetX + smallSize * 0.3, offsetY + smallSize * 0.3);
+        ctx.lineTo(offsetX, offsetY + smallSize);
+        ctx.lineTo(offsetX - smallSize * 0.3, offsetY + smallSize * 0.3);
+        ctx.lineTo(offsetX - smallSize, offsetY);
+        ctx.lineTo(offsetX - smallSize * 0.3, offsetY - smallSize * 0.3);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Tiny sparkle (bottom-left)
+        ctx.beginPath();
+        const tinySize = iconSize * 0.1;
+        const offsetX2 = -iconSize * 0.25;
+        const offsetY2 = iconSize * 0.3;
+        ctx.moveTo(offsetX2, offsetY2 - tinySize);
+        ctx.lineTo(offsetX2 + tinySize * 0.3, offsetY2 - tinySize * 0.3);
+        ctx.lineTo(offsetX2 + tinySize, offsetY2);
+        ctx.lineTo(offsetX2 + tinySize * 0.3, offsetY2 + tinySize * 0.3);
+        ctx.lineTo(offsetX2, offsetY2 + tinySize);
+        ctx.lineTo(offsetX2 - tinySize * 0.3, offsetY2 + tinySize * 0.3);
+        ctx.lineTo(offsetX2 - tinySize, offsetY2);
+        ctx.lineTo(offsetX2 - tinySize * 0.3, offsetY2 - tinySize * 0.3);
         ctx.closePath();
         ctx.fill();
         
@@ -192,7 +234,7 @@ export default function CarImageCard({
         const textStartX = iconX + iconSize + iconTextGap;
         ctx.fillStyle = '#ffffff';
         ctx.textAlign = 'left';
-        ctx.textBaseline = 'middle';
+        ctx.textBaseline = 'top';
         
         // Clear any shadows for text
         ctx.shadowColor = 'transparent';
@@ -200,30 +242,18 @@ export default function CarImageCard({
         ctx.shadowOffsetY = 0;
         ctx.shadowBlur = 0;
         
-        // Add letter spacing for polish (simulate by drawing characters with spacing)
-        const letterSpacing = 0.3;
+        // Calculate text block vertical center position
+        const textBlockHeight = boldFontSize + regularFontSize + (lineHeight * 0.5);
+        const textBlockStartY = pillY + pillPaddingV + (pillHeight - (pillPaddingV * 2) - textBlockHeight) / 2;
         
-        // Helper function to draw text with letter spacing
-        const drawTextWithSpacing = (text: string, x: number, y: number) => {
-          let currentX = x;
-          for (let i = 0; i < text.length; i++) {
-            const char = text.charAt(i);
-            ctx.fillText(char, currentX, y);
-            currentX += ctx.measureText(char).width + letterSpacing;
-          }
-        };
-        
-        // Draw first line (bold)
+        // Draw first line (bold, 700 weight)
         ctx.font = boldFont;
-        const line1Y = line2 ? pillY + pillPaddingV + fontSize/2 + 2 : pillY + pillHeight / 2;
-        drawTextWithSpacing(line1, textStartX, line1Y);
+        ctx.fillText(line1, textStartX, textBlockStartY);
         
-        // Draw second line (regular) if exists
-        if (line2) {
-          ctx.font = regularFont;
-          const line2Y = line1Y + lineHeight;
-          drawTextWithSpacing(line2, textStartX, line2Y);
-        }
+        // Draw second line (regular, 400 weight)
+        ctx.font = regularFont;
+        const line2Y = textBlockStartY + boldFontSize + (lineHeight * 0.5);
+        ctx.fillText(line2, textStartX, line2Y);
 
         // Convert to JPEG with good quality
         const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
