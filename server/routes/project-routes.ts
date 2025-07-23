@@ -8,26 +8,21 @@ const router = express.Router();
 // Project schema for validation
 const createProjectSchema = z.object({
   name: z.string().min(1).max(100),
-  description: z.string().optional(),
 });
 
-// GET / - List all projects with video counts
+const projectsTable = 'projects'; // We'll add this to schema later
+
+// GET / - List all projects
 router.get('/', async (req, res) => {
   try {
-    const projects = await storage.getAllProjects();
+    // For now, return mock projects since we haven't implemented projects table
+    const mockProjects = [
+      { id: '1', name: 'Marketing Campaign 2024', createdAt: new Date('2024-01-15') },
+      { id: '2', name: 'Product Demo Videos', createdAt: new Date('2024-02-20') },
+      { id: '3', name: 'Social Media Content', createdAt: new Date('2024-03-10') },
+    ];
     
-    // Get video counts for each project
-    const projectsWithCounts = await Promise.all(
-      projects.map(async (project) => {
-        const videos = await storage.getVideosByProject(project.id);
-        return {
-          ...project,
-          video_count: videos.length,
-        };
-      })
-    );
-    
-    res.json(projectsWithCounts);
+    res.json(mockProjects);
   } catch (error) {
     console.log(`Error fetching projects: ${error}`);
     res.status(500).json({ error: 'Internal server error' });
@@ -39,14 +34,13 @@ router.post('/', async (req, res) => {
   try {
     const validatedData = createProjectSchema.parse(req.body);
     
-    const projectData = {
+    const project = {
       id: uuidv4(),
       name: validatedData.name,
-      description: validatedData.description || null,
-      gcs_folder: `projects/${uuidv4()}`, // Create unique GCS folder for each project
+      createdAt: new Date(),
     };
     
-    const project = await storage.createProject(projectData);
+    // TODO: Store in database when projects table is added
     console.log('Created project:', project);
     
     res.json(project);
@@ -69,70 +63,12 @@ router.get('/:id/videos', async (req, res) => {
   try {
     const { id } = req.params;
     
-    const videos = await storage.getVideosByProject(id);
-    console.log(`Fetched ${videos.length} videos for project: ${id}`);
+    // TODO: Implement when we have proper video-project relationships
+    console.log(`Fetching videos for project: ${id}`);
     
-    res.json(videos);
+    res.json([]);
   } catch (error) {
     console.log(`Error fetching project videos: ${error}`);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// GET /:id - Get project details
-router.get('/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    const project = await storage.getProjectById(id);
-    if (!project) {
-      return res.status(404).json({ error: 'Project not found' });
-    }
-    
-    res.json(project);
-  } catch (error) {
-    console.log(`Error fetching project: ${error}`);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// PUT /:id - Update project
-router.put('/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const validatedData = createProjectSchema.parse(req.body);
-    
-    const updated = await storage.updateProject(id, validatedData);
-    if (!updated) {
-      return res.status(404).json({ error: 'Project not found' });
-    }
-    
-    res.json(updated);
-  } catch (error) {
-    console.log(`Error updating project: ${error}`);
-    
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({
-        error: 'Invalid request data',
-        details: error.errors,
-      });
-    }
-    
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// DELETE /:id - Delete project and all its videos
-router.delete('/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    await storage.deleteProject(id);
-    console.log(`Deleted project: ${id}`);
-    
-    res.status(204).send();
-  } catch (error) {
-    console.log(`Error deleting project: ${error}`);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

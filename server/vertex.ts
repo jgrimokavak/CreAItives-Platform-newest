@@ -31,7 +31,6 @@ interface VideoGenerationRequest {
   seed?: number;
   enhancePrompt?: boolean;
   personGeneration?: 'allow_all' | 'dont_allow';
-  projectId?: string;
 }
 
 interface VideoGenerationResponse {
@@ -47,10 +46,8 @@ export async function startVertexVideoJob(input: VideoGenerationRequest): Promis
     // Create the endpoint path
     const endpoint = `projects/${projectId}/locations/${location}/publishers/google/models/${modelId}`;
     
-    // Generate GCS storage URI (organized by project if provided)
-    const timestamp = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-    const projectFolder = input.projectId ? `projects/${input.projectId}` : `videos/${timestamp}`;
-    const gcsPrefix = `gs://${bucketName}/${projectFolder}/${videoId}`;
+    // Generate GCS storage URI
+    const gcsPrefix = `gs://${bucketName}/videos/${videoId}`;
     
     // Map resolution to height
     const heightMap = {
