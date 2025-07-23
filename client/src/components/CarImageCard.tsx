@@ -105,49 +105,93 @@ export default function CarImageCard({
           0, 0, finalWidth, finalHeight
         );
 
-        // Calculate disclaimer pill positioning and styling
-        const edgePadding = finalWidth * 0.06; // 6% from edges
-        const fontSize = Math.max(14, finalWidth * 0.018); // Larger, more readable font
-        const pillPaddingH = fontSize * 0.8; // Horizontal padding inside pill
-        const pillPaddingV = fontSize * 0.4; // Vertical padding inside pill
+        // Parse disclaimer text into two lines
+        const textParts = disclaimerText.split('. ');
+        const line1 = textParts[0] + (textParts.length > 1 ? '.' : '');
+        const line2 = textParts.length > 1 ? textParts.slice(1).join('. ') : '';
         
-        // Set font - try Helvetica Neue first, fall back to system defaults
-        ctx.font = `500 ${fontSize}px "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif`;
+        // Calculate disclaimer pill positioning and styling
+        const edgePadding = finalWidth * 0.055; // 5.5% from edges for equidistant spacing
+        const fontSize = Math.max(12, finalHeight * 0.025); // Scale based on height, more readable
+        const lineHeight = fontSize * 1.2; // Line spacing
+        const iconSize = fontSize * 1.1; // AI spark icon size
+        const pillPaddingH = 18; // Fixed generous horizontal padding
+        const pillPaddingV = 10; // Fixed generous vertical padding
+        const iconTextGap = 8; // Gap between icon and text
+        
+        // Set fonts - try Helvetica Neue first, fall back to system defaults
+        const boldFont = `600 ${fontSize}px "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif`;
+        const regularFont = `400 ${fontSize}px "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif`;
         
         // Measure text to determine pill size
-        const textMetrics = ctx.measureText(disclaimerText);
-        const textWidth = textMetrics.width;
-        const textHeight = fontSize;
+        ctx.font = boldFont;
+        const line1Width = ctx.measureText(line1).width;
+        ctx.font = regularFont;
+        const line2Width = line2 ? ctx.measureText(line2).width : 0;
+        const maxTextWidth = Math.max(line1Width, line2Width);
         
         // Pill dimensions
-        const pillWidth = textWidth + (pillPaddingH * 2);
-        const pillHeight = textHeight + (pillPaddingV * 2);
-        const pillRadius = pillHeight / 2; // Full pill shape
+        const contentWidth = iconSize + iconTextGap + maxTextWidth;
+        const pillWidth = contentWidth + (pillPaddingH * 2);
+        const pillHeight = (line2 ? lineHeight * 2 : fontSize) + (pillPaddingV * 2);
+        const pillRadius = 999; // Full pill shape (border-radius: 999px)
         
-        // Pill position (bottom-right with edge padding)
+        // Pill position (bottom-right with equidistant edge padding)
         const pillX = finalWidth - edgePadding - pillWidth;
         const pillY = finalHeight - edgePadding - pillHeight;
         
         // Draw pill background with subtle shadow
         ctx.save();
         
-        // Add subtle drop shadow
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+        // Add subtle drop shadow (0px 2px 6px rgba(0,0,0,0.3))
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 2;
-        ctx.shadowBlur = 8;
+        ctx.shadowBlur = 6;
         
-        // Draw pill background
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        // Draw pill background with translucent blue
+        ctx.fillStyle = 'rgba(21, 83, 236, 0.7)';
         ctx.beginPath();
         ctx.roundRect(pillX, pillY, pillWidth, pillHeight, pillRadius);
         ctx.fill();
         
         ctx.restore();
         
-        // Draw text
-        ctx.fillStyle = '#ffffff'; // Pure white text
-        ctx.textAlign = 'center';
+        // Draw AI spark icon (simple sparkle design)
+        const iconX = pillX + pillPaddingH;
+        const iconY = pillY + pillHeight / 2;
+        
+        ctx.fillStyle = '#ffffff';
+        ctx.save();
+        
+        // Draw a simple AI spark/star icon
+        ctx.translate(iconX + iconSize/2, iconY);
+        ctx.beginPath();
+        const spikes = 8;
+        const outerRadius = iconSize / 2;
+        const innerRadius = outerRadius * 0.4;
+        
+        for (let i = 0; i < spikes * 2; i++) {
+          const radius = i % 2 === 0 ? outerRadius : innerRadius;
+          const angle = (i * Math.PI) / spikes;
+          const x = Math.cos(angle) * radius;
+          const y = Math.sin(angle) * radius;
+          
+          if (i === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+        }
+        ctx.closePath();
+        ctx.fill();
+        
+        ctx.restore();
+        
+        // Draw text lines (left-aligned beside icon)
+        const textStartX = iconX + iconSize + iconTextGap;
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
         
         // Clear any shadows for text
@@ -156,12 +200,30 @@ export default function CarImageCard({
         ctx.shadowOffsetY = 0;
         ctx.shadowBlur = 0;
         
-        // Draw disclaimer text centered in pill
-        ctx.fillText(
-          disclaimerText,
-          pillX + pillWidth / 2,
-          pillY + pillHeight / 2
-        );
+        // Add letter spacing for polish (simulate by drawing characters with spacing)
+        const letterSpacing = 0.3;
+        
+        // Helper function to draw text with letter spacing
+        const drawTextWithSpacing = (text: string, x: number, y: number) => {
+          let currentX = x;
+          for (let i = 0; i < text.length; i++) {
+            const char = text.charAt(i);
+            ctx.fillText(char, currentX, y);
+            currentX += ctx.measureText(char).width + letterSpacing;
+          }
+        };
+        
+        // Draw first line (bold)
+        ctx.font = boldFont;
+        const line1Y = line2 ? pillY + pillPaddingV + fontSize/2 + 2 : pillY + pillHeight / 2;
+        drawTextWithSpacing(line1, textStartX, line1Y);
+        
+        // Draw second line (regular) if exists
+        if (line2) {
+          ctx.font = regularFont;
+          const line2Y = line1Y + lineHeight;
+          drawTextWithSpacing(line2, textStartX, line2Y);
+        }
 
         // Convert to JPEG with good quality
         const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
