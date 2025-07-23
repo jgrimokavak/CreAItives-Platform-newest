@@ -1,4 +1,4 @@
-import { users, images, videos, type User, type InsertUser, type GeneratedImage, type Video, type InsertVideo } from "@shared/schema";
+import { users, images, videos, projects, type User, type InsertUser, type GeneratedImage, type Video, type InsertVideo, type Project, type InsertProject } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, isNull, isNotNull, and, ilike, lt } from "drizzle-orm";
 import * as fs from "fs";
@@ -22,6 +22,12 @@ export interface IStorage {
   createVideo(video: InsertVideo): Promise<Video>;
   getVideoById(id: string): Promise<Video | undefined>;
   updateVideo(id: string, updates: Partial<Video>): Promise<Video | undefined>;
+  getVideosByProject(projectId: string): Promise<Video[]>;
+  createProject(project: InsertProject): Promise<Project>;
+  getAllProjects(): Promise<Project[]>;
+  getProjectById(id: string): Promise<Project | undefined>;
+  updateProject(id: string, updates: Partial<Project>): Promise<Project | undefined>;
+  deleteProject(id: string): Promise<void>;
 }
 
 // Database storage implementation
@@ -465,6 +471,45 @@ export class DatabaseStorage implements IStorage {
   async getVideoById(id: string): Promise<Video | undefined> {
     const [video] = await db.select().from(videos).where(eq(videos.id, id));
     return video;
+  }
+
+  async updateVideo(id: string, updates: Partial<Video>): Promise<Video | undefined> {
+    const [updated] = await db.update(videos).set(updates).where(eq(videos.id, id)).returning();
+    return updated;
+  }
+
+  async getVideosByProject(projectId: string): Promise<Video[]> {
+    return await db.select().from(videos).where(eq(videos.project_id, projectId)).orderBy(desc(videos.created_at));
+  }
+
+  // Project methods
+  async createProject(project: InsertProject): Promise<Project> {
+    const [created] = await db.insert(projects).values(project).returning();
+    return created;
+  }
+
+  async getAllProjects(): Promise<Project[]> {
+    return await db.select().from(projects).orderBy(desc(projects.created_at));
+  }
+
+  async getProjectById(id: string): Promise<Project | undefined> {
+    const [project] = await db.select().from(projects).where(eq(projects.id, id));
+    return project;
+  }
+
+  async updateProject(id: string, updates: Partial<Project>): Promise<Project | undefined> {
+    const [updated] = await db.update(projects).set({
+      ...updates,
+      updated_at: new Date(),
+    }).where(eq(projects.id, id)).returning();
+    return updated;
+  }
+
+  async deleteProject(id: string): Promise<void> {
+    // First delete all videos in the project
+    await db.delete(videos).where(eq(videos.project_id, id));
+    // Then delete the project
+    await db.delete(projects).where(eq(projects.id, id));
   }
 
   async updateVideo(id: string, updates: Partial<Video>): Promise<Video | undefined> {
