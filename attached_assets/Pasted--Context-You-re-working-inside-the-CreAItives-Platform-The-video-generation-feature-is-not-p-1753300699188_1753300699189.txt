@@ -1,0 +1,63 @@
+# Context  
+You're working inside the CreAItives Platform.  
+The video generation feature is not producing real output — videos are not appearing, and nothing is saved in the GCS bucket.  
+The user wants to know whether the backend is actually sending requests to Vertex AI or failing silently.
+
+This task is purely about **adding debug logging** to verify the backend behavior when hitting `/api/video-generate`.
+
+# Objective  
+Instrument the backend with detailed `console.log` statements so we can trace:
+
+- Whether the frontend request reaches the backend correctly
+- Whether the backend is building and sending a valid request to Vertex AI
+- Whether Vertex AI returns an `operationName`
+- Whether errors are being caught and logged
+- Whether the expected GCS path is being constructed
+
+# Tasks
+
+## 1. Log incoming frontend request
+In `server/routes/video-routes.ts`, inside the POST handler for `/api/video-generate`, add:
+
+```ts
+console.log("🎯 Incoming video generate request:", req.body);
+```
+
+## 2. Log what is sent to Vertex AI
+In `server/vertex.ts`, inside the function that sends the `predictLongRunning` request (usually `startVertexVideoJob()`), add:
+
+```ts
+console.log("🔁 Calling Vertex AI with input:", input);
+console.log("➡️ Using GCS storage URI:", gcsPrefix);
+```
+
+After the `predictLongRunning` call, add:
+
+```ts
+console.log("✅ Vertex AI response received. Operation Name:", operation.name);
+```
+
+## 3. Log any caught errors
+In any `try/catch` block (in both `vertex.ts` and `video-routes.ts`), ensure this is added:
+
+```ts
+catch (err) {
+  console.error("❌ Vertex AI error:", err);
+  next(err);
+}
+```
+
+## 4. Confirm log visibility
+Ensure that all logs appear in Replit’s Console when hitting the endpoint.
+
+---
+
+# Deliverable
+
+Once this is added, the user will:
+- Trigger a video generation from the UI
+- Watch the Console
+- Check if the logs appear
+- Use that info to verify whether Vertex AI is being called and whether anything fails
+
+This step does not modify frontend or polling logic — it’s only for backend diagnostics.

@@ -11,6 +11,8 @@ const router = express.Router();
 // POST / - Generate video
 router.post('/', async (req, res) => {
   try {
+    console.log("🎯 Incoming video generate request:", req.body);
+    
     // Validate request body
     const validatedData = generateVideoSchema.parse(req.body);
     
@@ -67,6 +69,7 @@ router.post('/', async (req, res) => {
     });
     
   } catch (error) {
+    console.error("❌ Video generation error:", error);
     console.log(`Error in video generation endpoint: ${error}`);
     
     if (error instanceof z.ZodError) {
@@ -79,6 +82,7 @@ router.post('/', async (req, res) => {
     // For authentication errors, create a test video entry
     if (error instanceof Error && error.message.includes('Could not refresh access token')) {
       console.log('🧪 Authentication failed, creating test video entry for development');
+      console.error("❌ Authentication error details:", error.message);
       
       try {
         // Create video record in database with test status

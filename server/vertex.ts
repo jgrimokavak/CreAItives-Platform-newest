@@ -103,6 +103,8 @@ export async function startVertexVideoJob(input: VideoGenerationRequest): Promis
       parameters.sampleCount = input.sampleCount;
     }
     
+    console.log("🔁 Calling Vertex AI with input:", parameters);
+    console.log("➡️ Using GCS storage URI:", gcsPrefix);
     console.log(`Starting Vertex AI video generation with parameters: ${JSON.stringify(parameters, null, 2)}`);
     
     // Make the prediction request to Vertex AI
@@ -123,12 +125,14 @@ export async function startVertexVideoJob(input: VideoGenerationRequest): Promis
       const operationName = response.predictions?.[0]?.operationName || 
                            `projects/${projectId}/locations/${location}/operations/video-${videoId}`;
       
+      console.log("✅ Vertex AI response received. Operation Name:", operationName);
       console.log('✅ Vertex AI request successful:', operationName);
       return {
         operationName,
         gcsPrefix,
       };
     } catch (error) {
+      console.error("❌ Vertex AI error:", error);
       console.log('⚠️ Vertex AI request failed, using test mode:', error);
       
       // Fallback for testing without proper credentials
@@ -155,6 +159,7 @@ export async function startVertexVideoJob(input: VideoGenerationRequest): Promis
     };
     
   } catch (error) {
+    console.error("❌ Vertex AI error:", error);
     console.log(`Error starting Vertex AI video job: ${error}`);
     throw error;
   }
