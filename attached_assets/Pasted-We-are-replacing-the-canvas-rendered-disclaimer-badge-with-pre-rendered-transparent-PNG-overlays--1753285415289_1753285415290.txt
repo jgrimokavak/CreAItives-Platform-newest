@@ -1,0 +1,80 @@
+We are replacing the canvas-rendered disclaimer badge with pre-rendered transparent PNG overlays.
+
+This change applies exclusively to the “Download with AI disclaimer” action in the Car Creation page.
+
+Do not use any of the old canvas-based disclaimer logic from now on. That includes:
+- Rendering text with ctx.fillText
+- Manually calculating line height, icon positioning, font sizes, or dynamic widths
+- Drawing icons from the Lucide library
+- Constructing the pill with canvas shapes, paths, or measurements
+
+---
+
+✅ NEW SYSTEM OVERVIEW
+
+Instead of building the pill dynamically, we are now baking the design into **final PNGs**. These contain:
+- Icon
+- Text in two lines
+- Proper font, spacing, weight, and padding
+- Rounded shape and shadow
+- Transparent background
+
+The PNGs are all complete visual assets — no additional drawing logic is needed beyond positioning them on top of the generated image.
+
+---
+
+📁 FILES TO USE
+
+You must use the following files based on the region or language of the request:
+
+| Language | Filename              |
+|----------|------------------------|
+| English  | `ai_disclaimer_en.png` |
+| Spanish (Mexico) | `ai_disclaimer_mx.png` |
+| Spanish (Argentina) | `ai_disclaimer_ar.png` |
+| Spanish (Chile) | `ai_disclaimer_cl.png` |
+| Portuguese (Brazil) | `ai_disclaimer_br.png` |
+
+---
+
+🖼 IMAGE SPECS
+
+The final image (with disclaimer applied) is always:
+- **Canvas size**: `1280 × 748 px`
+- **Base image**: The AI-generated vehicle image, already center-cropped
+
+Each pill PNG has its own fixed size:
+- `ai_disclaimer_en.png`: `887 × 319 px`
+- `ai_disclaimer_mx.png`: `992 × 319 px`
+- `ai_disclaimer_ar.png`: `992 × 319 px`
+- `ai_disclaimer_br.png`: `957 × 319 px`
+- `ai_disclaimer_cl.png`: `992 × 319 px`
+
+These sizes are intentional — they already account for padding, layout, and proportions.
+
+---
+
+📌 PLACEMENT RULES
+
+- Do not resize, scale, or stretch any PNG.
+- Always render the pill **at native resolution**.
+- The PNG should be anchored to the **bottom-right corner** of the canvas with:
+  - **64px margin from the right**
+  - **64px margin from the bottom**
+- This offset assumes the PNGs are designed at 2× scale (for Retina clarity). The padding visually aligns with 32px at 1×.
+
+---
+
+📸 EXPORT RULE
+
+The final image (with pill) should still be exported as:
+- JPEG
+- 85% quality (`canvas.toDataURL('image/jpeg', 0.85)`)
+
+---
+
+✅ This new system guarantees pixel-perfect design in every language and removes all layout inconsistencies.
+
+Only render the corresponding pill overlay based on language/region. Do not fallback to canvas or generate any dynamic visual disclaimers anymore.
+
+Let me know if anything is unclear or if you need help mapping region selection to file name.

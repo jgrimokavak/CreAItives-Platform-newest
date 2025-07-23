@@ -56,8 +56,8 @@ export default function CarImageCard({
 }: CarImageCardProps) {
   const [isHovered, setIsHovered] = useState(false);
 
-  // Helper function to create image with disclaimer (cropped to 1.71:1 aspect ratio at 1280×748)
-  const createImageWithDisclaimer = async (disclaimerText: string): Promise<string> => {
+  // Helper function to create image with disclaimer using pre-rendered PNG overlays
+  const createImageWithDisclaimer = async (region: keyof typeof DISCLAIMER_TEXTS): Promise<string> => {
     return new Promise((resolve, reject) => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
@@ -67,13 +67,13 @@ export default function CarImageCard({
       }
 
       const img = new Image();
-      img.crossOrigin = 'anonymous'; // Handle CORS if needed
+      img.crossOrigin = 'anonymous';
       
       img.onload = () => {
         // Target dimensions: exactly 1280×748 pixels (1.71:1 aspect ratio)
         const finalWidth = 1280;
         const finalHeight = 748;
-        const targetAspectRatio = finalWidth / finalHeight; // 1.71:1
+        const targetAspectRatio = finalWidth / finalHeight;
         
         // Calculate crop dimensions to maintain 1.71:1 aspect ratio
         let cropWidth = img.width;
@@ -104,170 +104,37 @@ export default function CarImageCard({
           0, 0, finalWidth, finalHeight
         );
 
-        // Parse disclaimer text based on region
-        const parseDisclaimerText = (text: string) => {
-          // Split at period followed by space, but keep periods with first part
-          const parts = text.split(/\.\s+/);
-          if (parts.length >= 2) {
-            return {
-              line1: parts[0] + '.',
-              line2: parts.slice(1).join('. ')
-            };
-          }
-          // Fallback for text without clear sentence breaks
-          return {
-            line1: text,
-            line2: ''
-          };
+        // Load and draw the pre-rendered disclaimer PNG overlay
+        const disclaimerImg = new Image();
+        disclaimerImg.onload = () => {
+          // Position disclaimer in bottom-right corner with 64px margin
+          const marginRight = 64;
+          const marginBottom = 64;
+          const disclaimerX = finalWidth - disclaimerImg.width - marginRight;
+          const disclaimerY = finalHeight - disclaimerImg.height - marginBottom;
+          
+          // Draw the disclaimer PNG overlay at native resolution
+          ctx.drawImage(disclaimerImg, disclaimerX, disclaimerY);
+          
+          // Convert to JPEG with good quality
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          resolve(dataUrl);
         };
-        
-        const { line1, line2 } = parseDisclaimerText(disclaimerText);
-        
-        // Dynamic disclaimer pill specifications
-        const edgePadding = 32; // Fixed 32px margin from edges
-        const fontSize = 26; // Both lines use same font size (~25.5-28px)
-        const lineHeight = Math.round(fontSize * 1.15); // Tighter baseline separation (1.15x)
-        const iconSize = 29; // Larger icon to match/exceed cap height (~28-30px)
-        const pillPaddingH = 18; // Internal horizontal padding (left/right)
-        const pillPaddingV = 12; // Internal vertical padding (top/bottom)
-        const iconTextGap = 15; // Increased breathing room between icon and text
-        
-        // Set fonts - Helvetica Neue with exact weights and sizes
-        const boldFont = `700 ${fontSize}px "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif`;
-        const regularFont = `400 ${fontSize}px "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif`;
-        
-        // Measure text to determine dynamic pill size
-        ctx.font = boldFont;
-        const line1Width = ctx.measureText(line1).width;
-        ctx.font = regularFont;
-        const line2Width = line2 ? ctx.measureText(line2).width : 0;
-        const maxTextWidth = Math.max(line1Width, line2Width);
-        
-        // Calculate dynamic pill dimensions based on content
-        const contentWidth = iconSize + iconTextGap + maxTextWidth;
-        const pillWidth = contentWidth + (pillPaddingH * 2);
-        const textBlockHeight = line2 ? fontSize * 2 + (lineHeight - fontSize) : fontSize;
-        const pillHeight = textBlockHeight + (pillPaddingV * 2);
-        const pillRadius = 999; // Full pill shape (border-radius: 999px)
-        
-        // Pill position (bottom-right with fixed edge padding)
-        const pillX = finalWidth - edgePadding - pillWidth;
-        const pillY = finalHeight - edgePadding - pillHeight;
-        
-        // Draw pill background with subtle shadow
-        ctx.save();
-        
-        // Add single soft drop shadow (0px 2px 6px rgba(0,0,0,0.3))
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-        ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 2;
-        ctx.shadowBlur = 6;
-        
-        // Draw pill background with semi-transparent black
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-        ctx.beginPath();
-        ctx.roundRect(pillX, pillY, pillWidth, pillHeight, pillRadius);
-        ctx.fill();
-        
-        ctx.restore();
-        
-        // Draw Lucide sparkles icon (solid blue #1553ec) - properly sized and centered
-        const iconX = pillX + pillPaddingH;
-        const iconCenterY = pillY + pillHeight / 2;
-        
-        ctx.fillStyle = '#1553ec'; // Solid blue
-        ctx.save();
-        
-        // Draw Lucide sparkles icon - larger size for better visibility
-        ctx.translate(iconX + iconSize/2, iconCenterY);
-        
-        // Main sparkle (4-pointed star) - scaled up
-        ctx.fillStyle = '#1553ec';
-        ctx.beginPath();
-        const mainSize = iconSize * 0.4; // Increased from 0.35
-        ctx.moveTo(0, -mainSize);
-        ctx.lineTo(mainSize * 0.3, -mainSize * 0.3);
-        ctx.lineTo(mainSize, 0);
-        ctx.lineTo(mainSize * 0.3, mainSize * 0.3);
-        ctx.lineTo(0, mainSize);
-        ctx.lineTo(-mainSize * 0.3, mainSize * 0.3);
-        ctx.lineTo(-mainSize, 0);
-        ctx.lineTo(-mainSize * 0.3, -mainSize * 0.3);
-        ctx.closePath();
-        ctx.fill();
-        
-        // Small sparkle (top-right) - proportionally scaled
-        ctx.beginPath();
-        const smallSize = iconSize * 0.14; // Increased from 0.12
-        const offsetX = iconSize * 0.3; // Slightly adjusted
-        const offsetY = -iconSize * 0.24; // Slightly adjusted
-        ctx.moveTo(offsetX, offsetY - smallSize);
-        ctx.lineTo(offsetX + smallSize * 0.3, offsetY - smallSize * 0.3);
-        ctx.lineTo(offsetX + smallSize, offsetY);
-        ctx.lineTo(offsetX + smallSize * 0.3, offsetY + smallSize * 0.3);
-        ctx.lineTo(offsetX, offsetY + smallSize);
-        ctx.lineTo(offsetX - smallSize * 0.3, offsetY + smallSize * 0.3);
-        ctx.lineTo(offsetX - smallSize, offsetY);
-        ctx.lineTo(offsetX - smallSize * 0.3, offsetY - smallSize * 0.3);
-        ctx.closePath();
-        ctx.fill();
-        
-        // Tiny sparkle (bottom-left) - proportionally scaled
-        ctx.beginPath();
-        const tinySize = iconSize * 0.1; // Increased from 0.08
-        const offsetX2 = -iconSize * 0.24; // Adjusted
-        const offsetY2 = iconSize * 0.27; // Adjusted
-        ctx.moveTo(offsetX2, offsetY2 - tinySize);
-        ctx.lineTo(offsetX2 + tinySize * 0.3, offsetY2 - tinySize * 0.3);
-        ctx.lineTo(offsetX2 + tinySize, offsetY2);
-        ctx.lineTo(offsetX2 + tinySize * 0.3, offsetY2 + tinySize * 0.3);
-        ctx.lineTo(offsetX2, offsetY2 + tinySize);
-        ctx.lineTo(offsetX2 - tinySize * 0.3, offsetY2 + tinySize * 0.3);
-        ctx.lineTo(offsetX2 - tinySize, offsetY2);
-        ctx.lineTo(offsetX2 - tinySize * 0.3, offsetY2 - tinySize * 0.3);
-        ctx.closePath();
-        ctx.fill();
-        
-        ctx.restore();
-        
-        // Draw text lines (left-aligned beside icon with consistent padding)
-        const textStartX = iconX + iconSize + iconTextGap;
-        ctx.fillStyle = '#ffffff';
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'alphabetic';
-        
-        // Clear any shadows for text (shadow only on pill background)
-        ctx.shadowColor = 'transparent';
-        ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 0;
-        ctx.shadowBlur = 0;
-        
-        // Calculate text positioning for proper vertical centering of entire text block
-        const actualTextBlockHeight = line2 ? fontSize * 2 + (lineHeight - fontSize) : fontSize;
-        const textBlockCenterY = pillY + (pillHeight - actualTextBlockHeight) / 2;
-        const textBlockStartY = textBlockCenterY + fontSize;
-        
-        // Draw first line (bold, 700 weight)
-        ctx.font = boldFont;
-        ctx.fillText(line1, textStartX, textBlockStartY);
-        
-        // Draw second line (regular, 400 weight) if it exists
-        if (line2) {
-          ctx.font = regularFont;
-          const line2Y = textBlockStartY + lineHeight;
-          ctx.fillText(line2, textStartX, line2Y);
-        }
 
-        // Convert to JPEG with good quality
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-        resolve(dataUrl);
+        disclaimerImg.onerror = () => {
+          reject(new Error('Failed to load disclaimer overlay'));
+        };
+
+        // Load the appropriate disclaimer PNG based on region
+        const disclaimerFilename = `ai_disclaimer_${region}.png`;
+        disclaimerImg.src = `/${disclaimerFilename}`;
       };
 
       img.onerror = () => {
         reject(new Error('Failed to load image'));
       };
 
-      // Load the image
+      // Load the base image
       const imageUrl = image.fullUrl || image.url;
       if (imageUrl.startsWith('data:')) {
         img.src = imageUrl;
@@ -290,8 +157,7 @@ export default function CarImageCard({
   // Handle disclaimer download
   const handleDisclaimerDownload = async (region: keyof typeof DISCLAIMER_TEXTS) => {
     try {
-      const disclaimerText = DISCLAIMER_TEXTS[region];
-      const imageWithDisclaimer = await createImageWithDisclaimer(disclaimerText);
+      const imageWithDisclaimer = await createImageWithDisclaimer(region);
       
       // Generate filename
       let filename = 'car-image';
