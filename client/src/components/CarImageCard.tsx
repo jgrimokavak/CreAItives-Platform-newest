@@ -126,11 +126,11 @@ export default function CarImageCard({
         // Dynamic disclaimer pill specifications
         const edgePadding = 32; // Fixed 32px margin from edges
         const fontSize = 26; // Both lines use same font size (~25.5-28px)
-        const lineHeight = 28; // Baseline separation (tight spacing)
+        const lineHeight = Math.round(fontSize * 1.15); // Tighter baseline separation (1.15x)
         const iconSize = 29; // Larger icon to match/exceed cap height (~28-30px)
         const pillPaddingH = 18; // Internal horizontal padding (left/right)
         const pillPaddingV = 12; // Internal vertical padding (top/bottom)
-        const iconTextGap = 13; // 12-14px gap between icon and text
+        const iconTextGap = 15; // Increased breathing room between icon and text
         
         // Set fonts - Helvetica Neue with exact weights and sizes
         const boldFont = `700 ${fontSize}px "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif`;
@@ -242,8 +242,10 @@ export default function CarImageCard({
         ctx.shadowOffsetY = 0;
         ctx.shadowBlur = 0;
         
-        // Calculate text positioning for proper vertical centering
-        const textBlockStartY = pillY + pillPaddingV + fontSize;
+        // Calculate text positioning for proper vertical centering of entire text block
+        const actualTextBlockHeight = line2 ? fontSize * 2 + (lineHeight - fontSize) : fontSize;
+        const textBlockCenterY = pillY + (pillHeight - actualTextBlockHeight) / 2;
+        const textBlockStartY = textBlockCenterY + fontSize;
         
         // Draw first line (bold, 700 weight)
         ctx.font = boldFont;
