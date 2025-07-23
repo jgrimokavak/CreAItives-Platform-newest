@@ -37,6 +37,7 @@ interface CarImageCardProps {
   onCopyPrompt?: (prompt: string) => void;
   onUpscale?: (image: GeneratedImage) => void;
   onClick?: () => void;
+  disclaimerOnly?: boolean; // When true, only show disclaimer download buttons
 }
 
 export default function CarImageCard({ 
@@ -52,7 +53,8 @@ export default function CarImageCard({
   onDownload,
   onCopyPrompt,
   onUpscale,
-  onClick
+  onClick,
+  disclaimerOnly = false
 }: CarImageCardProps) {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -198,6 +200,32 @@ export default function CarImageCard({
       console.error('Error creating disclaimer image:', error);
     }
   };
+
+  // If disclaimerOnly mode, return just the disclaimer buttons
+  if (disclaimerOnly) {
+    return (
+      <div className="space-y-2">
+        <p className="text-xs font-medium text-muted-foreground">Download with AI disclaimer:</p>
+        <div className="grid grid-cols-2 gap-1.5">
+          {Object.entries(DISCLAIMER_TEXTS).map(([region, text]) => (
+            <Button
+              key={region}
+              size="sm"
+              variant="outline"
+              className="h-8 text-xs bg-card justify-start"
+              onClick={() => handleDisclaimerDownload(region as keyof typeof DISCLAIMER_TEXTS)}
+            >
+              <ChevronDown className="h-3.5 w-3.5 mr-1" />
+              {region === 'EN' ? 'English' : 
+               region === 'MX' ? 'México' :
+               region === 'AR' ? 'Argentina' :
+               region === 'BR' ? 'Brasil' : 'Chile'}
+            </Button>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div 

@@ -1091,6 +1091,18 @@ const CarCreationPage: React.FC = () => {
                           Fullscreen
                         </Button>
                       </div>
+                      
+                      {/* Disclaimer Downloads */}
+                      <div className="pt-2 border-t">
+                        <CarImageCard
+                          image={image}
+                          make={selectedMake}
+                          model={selectedModel}
+                          bodyStyle={selectedBodyStyle}
+                          color={selectedColor}
+                          disclaimerOnly={true}
+                        />
+                      </div>
                     </div>
                   </div>
                 ) : (
