@@ -1096,10 +1096,10 @@ const CarCreationPage: React.FC = () => {
                       <div className="pt-2 border-t">
                         <CarImageCard
                           image={image}
-                          make={selectedMake}
-                          model={selectedModel}
-                          bodyStyle={selectedBodyStyle}
-                          color={selectedColor}
+                          make={form.watch('make')}
+                          model={form.watch('model')}
+                          bodyStyle={form.watch('body_style')}
+                          color={form.watch('color')}
                           disclaimerOnly={true}
                         />
                       </div>
