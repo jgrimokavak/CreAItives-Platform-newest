@@ -56,7 +56,7 @@ export default function CarImageCard({
 }: CarImageCardProps) {
   const [isHovered, setIsHovered] = useState(false);
 
-  // Helper function to create image with disclaimer
+  // Helper function to create image with disclaimer (cropped to 1.71:1 aspect ratio)
   const createImageWithDisclaimer = async (disclaimerText: string): Promise<string> => {
     return new Promise((resolve, reject) => {
       const canvas = document.createElement('canvas');
@@ -70,34 +70,97 @@ export default function CarImageCard({
       img.crossOrigin = 'anonymous'; // Handle CORS if needed
       
       img.onload = () => {
-        // Set canvas dimensions to match image
-        canvas.width = img.width;
-        canvas.height = img.height;
+        // Target aspect ratio: 1.71:1 (900×525 proportion)
+        const targetAspectRatio = 1.71;
+        
+        // Calculate crop dimensions to maintain 1.71:1 aspect ratio
+        let cropWidth = img.width;
+        let cropHeight = img.height;
+        let cropX = 0;
+        let cropY = 0;
+        
+        const currentAspectRatio = img.width / img.height;
+        
+        if (currentAspectRatio > targetAspectRatio) {
+          // Image is wider than target - crop width
+          cropWidth = img.height * targetAspectRatio;
+          cropX = (img.width - cropWidth) / 2;
+        } else {
+          // Image is taller than target - crop height
+          cropHeight = img.width / targetAspectRatio;
+          cropY = (img.height - cropHeight) / 2;
+        }
+        
+        // Set canvas to final cropped dimensions (maintain quality)
+        const finalWidth = Math.min(900, cropWidth);
+        const finalHeight = finalWidth / targetAspectRatio;
+        
+        canvas.width = finalWidth;
+        canvas.height = finalHeight;
 
-        // Draw the original image
-        ctx.drawImage(img, 0, 0);
+        // Draw the cropped image
+        ctx.drawImage(
+          img,
+          cropX, cropY, cropWidth, cropHeight,
+          0, 0, finalWidth, finalHeight
+        );
 
-        // Calculate disclaimer positioning with internal padding
-        const padding = Math.max(20, img.width * 0.02); // 2% of image width, minimum 20px
-        const fontSize = Math.max(12, img.width * 0.012); // 1.2% of image width, minimum 12px
+        // Calculate disclaimer pill positioning and styling
+        const edgePadding = finalWidth * 0.06; // 6% from edges
+        const fontSize = Math.max(14, finalWidth * 0.018); // Larger, more readable font
+        const pillPaddingH = fontSize * 0.8; // Horizontal padding inside pill
+        const pillPaddingV = fontSize * 0.4; // Vertical padding inside pill
         
         // Set font - try Helvetica Neue first, fall back to system defaults
-        ctx.font = `${fontSize}px "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif`;
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'; // Semi-transparent black for readability
-        ctx.textAlign = 'right';
-        ctx.textBaseline = 'bottom';
-
-        // Add subtle text shadow for better readability
-        ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
-        ctx.shadowOffsetX = 1;
-        ctx.shadowOffsetY = 1;
-        ctx.shadowBlur = 2;
-
-        // Draw disclaimer text in bottom-right with padding
+        ctx.font = `500 ${fontSize}px "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif`;
+        
+        // Measure text to determine pill size
+        const textMetrics = ctx.measureText(disclaimerText);
+        const textWidth = textMetrics.width;
+        const textHeight = fontSize;
+        
+        // Pill dimensions
+        const pillWidth = textWidth + (pillPaddingH * 2);
+        const pillHeight = textHeight + (pillPaddingV * 2);
+        const pillRadius = pillHeight / 2; // Full pill shape
+        
+        // Pill position (bottom-right with edge padding)
+        const pillX = finalWidth - edgePadding - pillWidth;
+        const pillY = finalHeight - edgePadding - pillHeight;
+        
+        // Draw pill background with subtle shadow
+        ctx.save();
+        
+        // Add subtle drop shadow
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 2;
+        ctx.shadowBlur = 8;
+        
+        // Draw pill background
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.beginPath();
+        ctx.roundRect(pillX, pillY, pillWidth, pillHeight, pillRadius);
+        ctx.fill();
+        
+        ctx.restore();
+        
+        // Draw text
+        ctx.fillStyle = '#ffffff'; // Pure white text
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        // Clear any shadows for text
+        ctx.shadowColor = 'transparent';
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+        ctx.shadowBlur = 0;
+        
+        // Draw disclaimer text centered in pill
         ctx.fillText(
           disclaimerText,
-          canvas.width - padding,
-          canvas.height - padding
+          pillX + pillWidth / 2,
+          pillY + pillHeight / 2
         );
 
         // Convert to JPEG with good quality

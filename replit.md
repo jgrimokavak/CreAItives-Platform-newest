@@ -37,6 +37,7 @@ Preferred communication style: Simple, everyday language.
   - Batch processing with CSV upload
   - Image editing and enhancement
   - Car-specific generation with database-driven attributes
+  - Localized AI disclaimer downloads with 1.71:1 aspect ratio cropping
 
 #### Email Builder
 - **Engine**: MJML for cross-client compatibility
@@ -62,6 +63,7 @@ Preferred communication style: Simple, everyday language.
 5. Metadata is stored in PostgreSQL via Drizzle
 6. Real-time updates sent to frontend via WebSocket
 7. Images appear in gallery with management capabilities
+8. Car Creation page offers localized disclaimer downloads with canvas-based processing
 
 ### Email Building Flow
 1. User creates/edits email components in visual builder
