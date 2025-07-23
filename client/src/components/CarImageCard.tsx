@@ -109,16 +109,21 @@ export default function CarImageCard({
         disclaimerImg.onload = () => {
           console.log('Disclaimer PNG loaded successfully:', disclaimerImg.width, 'x', disclaimerImg.height);
           
+          // Scale PNG down to 50% (PNGs are designed at 2× resolution)
+          const scaledWidth = disclaimerImg.width * 0.5;
+          const scaledHeight = disclaimerImg.height * 0.5;
+          
           // Position disclaimer in bottom-right corner with 64px margin
           const marginRight = 64;
           const marginBottom = 64;
-          const disclaimerX = finalWidth - disclaimerImg.width - marginRight;
-          const disclaimerY = finalHeight - disclaimerImg.height - marginBottom;
+          const disclaimerX = finalWidth - scaledWidth - marginRight;
+          const disclaimerY = finalHeight - scaledHeight - marginBottom;
           
+          console.log('Scaled disclaimer dimensions:', scaledWidth, 'x', scaledHeight);
           console.log('Positioning disclaimer at:', disclaimerX, disclaimerY);
           
-          // Draw the disclaimer PNG overlay at native resolution
-          ctx.drawImage(disclaimerImg, disclaimerX, disclaimerY);
+          // Draw the disclaimer PNG overlay at 50% scale
+          ctx.drawImage(disclaimerImg, disclaimerX, disclaimerY, scaledWidth, scaledHeight);
           
           // Convert to JPEG with good quality
           const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
