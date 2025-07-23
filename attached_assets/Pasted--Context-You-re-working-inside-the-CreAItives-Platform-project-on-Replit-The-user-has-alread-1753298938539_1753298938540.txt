@@ -1,0 +1,52 @@
+# Context  
+You're working inside the CreAItives Platform project on Replit.  
+The user has already created and downloaded a Google Cloud service account key (JSON format).  
+This key has the necessary permissions (`Vertex AI User` and `Storage Object Admin`) to generate videos via Vertex AI and save them to Cloud Storage.  
+
+Your task is to prepare the project to use that service account by creating the right folder structure, setting environment variables, and installing required dependencies.
+
+# Objective  
+Set up the environment so the backend can authenticate using the service account key to access Google Cloud APIs.
+
+# Tasks
+
+## 1. Create credentials folder  
+Create a new folder in the root of the project named:  
+```
+credentials
+```
+This folder will store the JSON service account key file.
+
+## 2. Update .env file  
+Ensure there's a `.env` file in the root of the project.  
+If it doesn't exist, create it.  
+Add the following variables:
+
+```env
+GOOGLE_APPLICATION_CREDENTIALS=./credentials/video-generator-key.json
+GOOGLE_PROJECT_ID=mkt-ai-content-generation
+GCP_LOCATION=northamerica-south1
+GCS_BUCKET=mkt_ai_content_generation
+VEO_MODEL_ID=veo-3.0-generate-preview
+```
+
+Make sure the `GOOGLE_APPLICATION_CREDENTIALS` path matches where the user will upload the JSON key file.
+
+## 3. Install required dependencies  
+Install the following NPM packages:
+
+```bash
+npm install @google-cloud/aiplatform @google-cloud/storage
+```
+
+These are required to interact with Vertex AI and Google Cloud Storage.
+
+# Final Instruction to User  
+Once you've completed the steps above, clearly tell the user the following:
+
+- ✅ Upload your downloaded service account JSON file to:  
+  `./credentials/video-generator-key.json`  
+- ✅ Make sure the filename exactly matches what is referenced in the `.env` file.  
+- ✅ Do not push this file to GitHub or version control.  
+
+No API calls or backend logic should be added yet. This step is only about environment setup.
