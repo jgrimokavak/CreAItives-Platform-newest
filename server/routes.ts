@@ -24,6 +24,7 @@ import upscaleRoutes from "./routes/upscale-routes";
 import enhancePromptRouter from "./routes/enhancePrompt";
 import promptSuggestionsRouter from "./routes/promptSuggestions";
 import videoRoutes from "./routes/video-routes";
+import projectRoutes from "./routes/project-routes";
 import { compileMjml, testMjmlCompilation } from "./routes/email-routes";
 import { listMakes, listModels, listBodyStyles, listTrims, flushCarCache, loadCarData, getLastFetchTime, setupCarDataAutoRefresh } from "./carData";
 import axios from "axios";
@@ -691,6 +692,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Add video generation routes
   app.use('/api/video-generate', videoRoutes);
+  
+  // Add project management routes
+  app.use('/api/projects', projectRoutes);
   
   // Email Builder routes
   app.post('/api/email/compile-mjml', compileMjml);

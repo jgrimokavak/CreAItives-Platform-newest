@@ -1,0 +1,67 @@
+# Context  
+You're working inside the CreAItives Platform.  
+The video generation UI is working and renders properly, but the actual video generation is not behaving as expected.
+
+The backend is set up to use Google Vertex AI (Veo 3 and Veo 2), and credentials are already configured with access to Cloud Storage. However, the user is seeing the following issues:
+
+# Observed Problems
+- Pressing "Generate Video" triggers the UI, but after a short delay (3 seconds), "Session Results" appears with **empty video thumbnails or placeholders**
+- It is unclear whether the backend is actually calling the Vertex AI API
+- The generated video is not being rendered, and may not exist
+- The videos are not showing as being part of a "Project" — even when a project is selected, the results appear only under “Session Results”
+
+# Objective  
+Run a full diagnostic on the video generation workflow and fix any problems.
+
+---
+
+# Diagnostic Tasks
+
+## 1. Verify the `/api/video-generate` route
+- Confirm that the route actually sends a `predictLongRunning` request to Vertex AI
+- Log and return the `operationName`, and ensure the GCS `storageUri` is set properly
+- Check if the generation job is being awaited correctly, or if the system returns too early
+
+## 2. Check Vertex API logs
+- If possible, print logs or add temporary logging to confirm that a real job is submitted
+- Confirm that the request includes the expected prompt and model parameters
+
+## 3. Check polling or WebSocket logic (if any)
+- Is the frontend waiting for the video generation to finish before showing results?
+- If not, implement polling or use a background task to check the final status
+
+## 4. Confirm GCS Storage output
+- Ensure that the generation request includes a valid `storageUri` (e.g., `gs://mkt_ai_content_generation/videos/<uuid>/`)
+- If the folder exists in GCS, confirm that `.mp4` files are saved correctly
+
+---
+
+# Fixes to Implement
+
+## ✅ Backend
+- Ensure `startVertexVideoJob()` returns the full operation name and expected storage path
+- Ensure the frontend or server waits until status = `succeeded` before rendering
+
+## ✅ Frontend
+- If possible, connect Session Results to real DB results or polling logic
+- Add fallback or error UI if generation fails silently
+- (optional) Show loading or job ID during processing
+
+---
+
+# Project Organization Fix
+- The user wants to group video generations by **project**
+- Add logic to associate each generated video with the currently selected project
+- Reflect that in both DB and UI: instead of flat “Session Results,” group by project name or ID
+- Add a way to see past projects and their videos (mini-gallery per project)
+
+---
+
+# Deliverable
+
+- Fix video generation flow: video is created, stored in GCS, and rendered in UI
+- Associate each video with its selected project
+- Confirm logs show that Vertex API was called with the right data
+- Make UI wait until job is finished (don’t render empty cards)
+
+Once done, provide instructions on how to verify in Google Cloud whether the jobs were submitted (via Media Studio → History or GCS bucket).

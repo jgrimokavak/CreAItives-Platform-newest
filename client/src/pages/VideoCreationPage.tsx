@@ -26,7 +26,7 @@ interface Project {
 
 interface GeneratedVideo {
   id: string;
-  url: string;
+  url: string | null;
   gcsUri: string;
   prompt: string;
   model: VideoModel;
@@ -35,7 +35,9 @@ interface GeneratedVideo {
   duration: Duration;
   sampleIndex: number;
   timestamp: Date;
-  projectId: string;
+  projectId?: string;
+  status?: 'generating' | 'completed' | 'failed';
+  operationName?: string;
 }
 
 interface VideoFormData {
@@ -169,15 +171,46 @@ const VideoCreationPage: React.FC = () => {
 
     setIsGenerating(true);
     
-    // Simulate video generation
-    setTimeout(() => {
+    try {
+      console.log('Sending video generation request:', formData);
+      
+      const response = await fetch('/api/video-generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: formData.prompt,
+          negativePrompt: formData.negativePrompt,
+          model: formData.model,
+          aspectRatio: formData.aspectRatio,
+          resolution: formData.resolution,
+          duration: formData.duration,
+          sampleCount: formData.sampleCount,
+          generateAudio: formData.generateAudio,
+          seed: formData.seed,
+          enhancePrompt: formData.enhancePrompt,
+          personGeneration: formData.personGeneration,
+          projectId: formData.projectId,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Video generation failed');
+      }
+
+      const result = await response.json();
+      console.log('Video generation started:', result);
+      
+      // Create pending video entries for the UI
       const newVideos: GeneratedVideo[] = [];
       
       for (let i = 0; i < formData.sampleCount; i++) {
         newVideos.push({
-          id: `${Date.now()}-${i}`,
-          url: `https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_${i + 1}mb.mp4`,
-          gcsUri: `gs://vertex-ai-videos/generated-${Date.now()}-${i}.mp4`,
+          id: `${result.id}-${i}`,
+          url: null, // Will be populated when job completes
+          gcsUri: `pending`,
           prompt: formData.prompt,
           model: formData.model,
           aspectRatio: formData.aspectRatio,
@@ -186,18 +219,104 @@ const VideoCreationPage: React.FC = () => {
           sampleIndex: i + 1,
           timestamp: new Date(),
           projectId: formData.projectId,
+          status: 'generating',
+          operationName: result.operationName,
         });
       }
       
       setSessionVideos(prev => [...newVideos, ...prev]);
+      toast({ title: 'Video generation started', description: 'Your video is being processed...' });
+      
+      // Start polling for job completion
+      pollJobStatus(result.id, result.operationName);
+      
+    } catch (error) {
+      console.error('Video generation error:', error);
+      toast({ 
+        title: 'Generation failed', 
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'destructive' 
+      });
       setIsGenerating(false);
-      toast({ title: `Generated ${formData.sampleCount} video(s) successfully` });
-    }, 3000);
+    }
   };
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast({ title: 'Copied to clipboard' });
+  };
+
+  const pollJobStatus = async (videoId: string, operationName: string) => {
+    const maxAttempts = 60; // Poll for up to 10 minutes (60 * 10 seconds)
+    let attempts = 0;
+
+    const poll = async () => {
+      if (attempts >= maxAttempts) {
+        console.log('Polling timeout reached for video:', videoId);
+        setIsGenerating(false);
+        // Update video status to failed
+        setSessionVideos(prev => prev.map(video => 
+          video.id.startsWith(videoId) 
+            ? { ...video, status: 'failed' as const }
+            : video
+        ));
+        toast({ 
+          title: 'Generation timeout', 
+          description: 'Video generation took too long. Please try again.',
+          variant: 'destructive' 
+        });
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/video-generate/status/${videoId}`);
+        if (!response.ok) {
+          throw new Error('Failed to check status');
+        }
+
+        const status = await response.json();
+        console.log('Job status:', status);
+
+        if (status.status === 'completed') {
+          // Update video entries with completed status and URLs
+          setSessionVideos(prev => prev.map(video => 
+            video.id.startsWith(videoId) 
+              ? { 
+                  ...video, 
+                  status: 'completed' as const,
+                  url: status.video_url,
+                  gcsUri: status.gcs_uri
+                }
+              : video
+          ));
+          setIsGenerating(false);
+          toast({ title: 'Video generated successfully!' });
+        } else if (status.status === 'failed') {
+          setSessionVideos(prev => prev.map(video => 
+            video.id.startsWith(videoId) 
+              ? { ...video, status: 'failed' as const }
+              : video
+          ));
+          setIsGenerating(false);
+          toast({ 
+            title: 'Generation failed', 
+            description: status.error_message || 'Unknown error',
+            variant: 'destructive' 
+          });
+        } else {
+          // Still processing, continue polling
+          attempts++;
+          setTimeout(poll, 10000); // Poll every 10 seconds
+        }
+      } catch (error) {
+        console.error('Error polling job status:', error);
+        attempts++;
+        setTimeout(poll, 10000); // Continue polling even on errors
+      }
+    };
+
+    // Start polling after a short delay
+    setTimeout(poll, 5000);
   };
 
   return (
@@ -483,12 +602,46 @@ const VideoCreationPage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {sessionVideos.map((video) => (
                 <Card key={video.id} className="overflow-hidden">
-                  <div className="aspect-video bg-slate-100 flex items-center justify-center">
-                    <div className="text-center">
-                      <Play className="h-12 w-12 text-slate-400 mx-auto mb-2" />
-                      <p className="text-sm text-slate-500">Video Preview</p>
-                      <p className="text-xs text-slate-400">{video.resolution} • {video.duration}s</p>
-                    </div>
+                  <div className="aspect-video bg-slate-100 flex items-center justify-center relative">
+                    {video.status === 'generating' ? (
+                      <div className="text-center">
+                        <RefreshCw className="h-12 w-12 text-primary mx-auto mb-2 animate-spin" />
+                        <p className="text-sm text-slate-500">Generating Video...</p>
+                        <p className="text-xs text-slate-400">{video.resolution} • {video.duration}s</p>
+                      </div>
+                    ) : video.status === 'failed' ? (
+                      <div className="text-center">
+                        <X className="h-12 w-12 text-red-500 mx-auto mb-2" />
+                        <p className="text-sm text-red-600">Generation Failed</p>
+                        <p className="text-xs text-slate-400">{video.resolution} • {video.duration}s</p>
+                      </div>
+                    ) : video.url ? (
+                      <video 
+                        src={video.url}
+                        className="w-full h-full object-cover"
+                        controls
+                        poster="/api/placeholder/300/200"
+                      />
+                    ) : (
+                      <div className="text-center">
+                        <Play className="h-12 w-12 text-slate-400 mx-auto mb-2" />
+                        <p className="text-sm text-slate-500">Video Preview</p>
+                        <p className="text-xs text-slate-400">{video.resolution} • {video.duration}s</p>
+                      </div>
+                    )}
+                    
+                    {video.status && (
+                      <Badge 
+                        variant={
+                          video.status === 'completed' ? 'default' : 
+                          video.status === 'generating' ? 'secondary' : 
+                          'destructive'
+                        }
+                        className="absolute top-2 right-2"
+                      >
+                        {video.status}
+                      </Badge>
+                    )}
                   </div>
                   <CardContent className="p-4">
                     <div className="space-y-2">
