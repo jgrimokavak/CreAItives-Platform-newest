@@ -1,0 +1,104 @@
+# Context  
+You're working inside the CreAItives Platform project.  
+The environment is already configured with:
+- A valid Google Cloud service account JSON file at `./credentials/video-generator-key.json`
+- Environment variables correctly set in `.env`
+- Vertex AI and GCS permissions properly configured
+- Required libraries `@google-cloud/aiplatform` and `@google-cloud/storage` installed
+
+Your task now is to implement the backend logic to support video generation using Google Vertex AI (Veo 3 and similar models).
+
+# Objective  
+Create a new API endpoint at `POST /api/video-generate` that:
+- Receives video generation parameters (prompt, model, duration, etc.) from the frontend
+- Calls the Vertex AI `predictLongRunning` endpoint with those parameters
+- Specifies a `storageUri` so that the generated video is saved directly to the configured GCS bucket
+- Inserts a row into the `videos` table with metadata and status = "queued"
+- Returns `{ id, operationName }` to the frontend
+
+# Tasks
+
+## 1. Create a new Vertex adapter  
+**File:** `server/vertex.ts`  
+This module will export:
+- `startVertexVideoJob(input)` → sends the generation request
+- `pollVertexJob(operationName)` → (optional) allows polling job status later
+
+Use `@google-cloud/aiplatform` to call `predictLongRunning`.  
+Inject `storageUri` based on UUID and the configured `GCS_BUCKET`.  
+Use the env vars:
+- `GOOGLE_PROJECT_ID`
+- `GCP_LOCATION`
+- `VEO_MODEL_ID`
+
+## 2. Create the route handler  
+**File:** `server/routes/video-routes.ts`  
+Create an Express router with:
+```ts
+POST /
+```
+Parse the request body using Zod. Required fields:
+- `prompt` (string)
+- `aspectRatio` (enum)
+- `resolution` (number)
+- `duration` (number)
+- `modelId` (string)
+- `projectId` (uuid, optional)
+Optional fields:
+- `negativePrompt`, `generateAudio`, `sampleCount`, `seed`, `enhancePrompt`, `personGeneration`
+
+Call `startVertexVideoJob(input)` and await the `operationName` and `gcsPrefix`.
+
+Insert a row in the `videos` table using Drizzle:
+```ts
+{
+  project_id,
+  prompt,
+  model_id,
+  aspect_ratio,
+  resolution,
+  duration,
+  seed,
+  audio,
+  sample_count,
+  status: "queued",
+  gcs_uri,
+  vertex_op: operationName,
+  created_at
+}
+```
+
+Return a JSON response:
+```ts
+{ id: videoRow.id, operationName }
+```
+
+## 3. Mount the route  
+In `server/routes.ts`, add:
+```ts
+import videoRoutes from "./routes/video-routes";
+app.use("/api/video-generate", videoRoutes);
+```
+
+## 4. Update `.env.example`  
+Add these variables:
+```env
+GOOGLE_PROJECT_ID=
+GCP_LOCATION=northamerica-south1
+GCS_BUCKET=mkt_ai_content_generation
+VEO_MODEL_ID=veo-3.0-generate-preview
+```
+
+# Constraints
+- Use async/await with try/catch blocks
+- Validate all inputs with Zod
+- Use UUIDs for folder names in GCS paths to avoid collisions
+- Do not connect this endpoint to WebSocket or polling logic yet
+- Do not modify image routes or galleries
+
+# Success Criteria
+- `POST /api/video-generate` returns 200 with `{ id, operationName }`
+- A new row is inserted in the `videos` table with status `"queued"`
+- The request appears in Vertex AI console (Media Studio → History)
+
+Let me know once this is working and ready to test.

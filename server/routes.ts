@@ -23,6 +23,7 @@ import modelRoutes, { initializeModels } from "./routes/model-routes";
 import upscaleRoutes from "./routes/upscale-routes";
 import enhancePromptRouter from "./routes/enhancePrompt";
 import promptSuggestionsRouter from "./routes/promptSuggestions";
+import videoRoutes from "./routes/video-routes";
 import { compileMjml, testMjmlCompilation } from "./routes/email-routes";
 import { listMakes, listModels, listBodyStyles, listTrims, flushCarCache, loadCarData, getLastFetchTime, setupCarDataAutoRefresh } from "./carData";
 import axios from "axios";
@@ -687,6 +688,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Add prompt suggestions routes
   app.use('/api', promptSuggestionsRouter);
+  
+  // Add video generation routes
+  app.use('/api/video-generate', videoRoutes);
   
   // Email Builder routes
   app.post('/api/email/compile-mjml', compileMjml);

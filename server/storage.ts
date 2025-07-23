@@ -1,4 +1,4 @@
-import { users, images, type User, type InsertUser, type GeneratedImage } from "@shared/schema";
+import { users, images, videos, type User, type InsertUser, type GeneratedImage, type Video, type InsertVideo } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, isNull, isNotNull, and, ilike, lt } from "drizzle-orm";
 import * as fs from "fs";
@@ -19,6 +19,9 @@ export interface IStorage {
   updateImage(id: string, updates: Partial<GeneratedImage>): Promise<GeneratedImage | undefined>;
   deleteImage(id: string, permanent?: boolean): Promise<void>;
   bulkUpdateImages(ids: string[], updates: Partial<GeneratedImage>): Promise<void>;
+  createVideo(video: InsertVideo): Promise<Video>;
+  getVideoById(id: string): Promise<Video | undefined>;
+  updateVideo(id: string, updates: Partial<Video>): Promise<Video | undefined>;
 }
 
 // Database storage implementation
@@ -451,6 +454,26 @@ export class DatabaseStorage implements IStorage {
         }
       });
     }
+  }
+
+  // Video methods
+  async createVideo(video: InsertVideo): Promise<Video> {
+    const [savedVideo] = await db.insert(videos).values(video).returning();
+    return savedVideo;
+  }
+
+  async getVideoById(id: string): Promise<Video | undefined> {
+    const [video] = await db.select().from(videos).where(eq(videos.id, id));
+    return video;
+  }
+
+  async updateVideo(id: string, updates: Partial<Video>): Promise<Video | undefined> {
+    const [updatedVideo] = await db
+      .update(videos)
+      .set(updates)
+      .where(eq(videos.id, id))
+      .returning();
+    return updatedVideo;
   }
 }
 
