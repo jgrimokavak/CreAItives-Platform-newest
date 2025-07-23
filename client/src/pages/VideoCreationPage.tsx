@@ -1,34 +1,532 @@
-import React from 'react';
-import { VideoIcon } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import React, { useState } from 'react';
+import { VideoIcon, Play, Download, Copy, RefreshCw, Plus, X } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
+
+// Types
+type VideoModel = 'Veo 3' | 'Veo 3 Fast' | 'Veo 2';
+type AspectRatio = '16:9' | '9:16' | '1:1';
+type Resolution = '720p' | '1080p';
+type Duration = 5 | 6 | 7 | 8;
+type PersonGeneration = 'allow_all' | 'dont_allow';
+
+interface Project {
+  id: string;
+  name: string;
+  createdAt: Date;
+}
+
+interface GeneratedVideo {
+  id: string;
+  url: string;
+  gcsUri: string;
+  prompt: string;
+  model: VideoModel;
+  aspectRatio: AspectRatio;
+  resolution: Resolution;
+  duration: Duration;
+  sampleIndex: number;
+  timestamp: Date;
+  projectId: string;
+}
+
+interface VideoFormData {
+  prompt: string;
+  negativePrompt: string;
+  model: VideoModel;
+  aspectRatio: AspectRatio;
+  resolution: Resolution;
+  duration: Duration;
+  sampleCount: number;
+  generateAudio: boolean;
+  seed?: number;
+  enhancePrompt: boolean;
+  personGeneration: PersonGeneration;
+  projectId: string;
+}
+
+// Mock projects
+const mockProjects: Project[] = [
+  { id: '1', name: 'Marketing Campaign 2024', createdAt: new Date('2024-01-15') },
+  { id: '2', name: 'Product Demo Videos', createdAt: new Date('2024-02-20') },
+  { id: '3', name: 'Social Media Content', createdAt: new Date('2024-03-10') },
+];
 
 const VideoCreationPage: React.FC = () => {
+  const { toast } = useToast();
+  const [projects, setProjects] = useState<Project[]>(mockProjects);
+  const [sessionVideos, setSessionVideos] = useState<GeneratedVideo[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [newProjectName, setNewProjectName] = useState('');
+  const [showNewProjectDialog, setShowNewProjectDialog] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState<GeneratedVideo | null>(null);
+  
+  const [formData, setFormData] = useState<VideoFormData>({
+    prompt: '',
+    negativePrompt: '',
+    model: 'Veo 3',
+    aspectRatio: '16:9',
+    resolution: '720p',
+    duration: 8,
+    sampleCount: 1,
+    generateAudio: true,
+    enhancePrompt: false,
+    personGeneration: 'allow_all',
+    projectId: projects[0]?.id || '',
+  });
+
+  // Model constraints
+  const getModelConstraints = (model: VideoModel) => {
+    switch (model) {
+      case 'Veo 3':
+        return {
+          aspectRatios: ['16:9'] as AspectRatio[],
+          resolutions: ['720p', '1080p'] as Resolution[],
+          durations: [8] as Duration[],
+          sampleCounts: [1, 2],
+          supportsAudio: true,
+        };
+      case 'Veo 3 Fast':
+        return {
+          aspectRatios: ['16:9'] as AspectRatio[],
+          resolutions: ['720p', '1080p'] as Resolution[],
+          durations: [8] as Duration[],
+          sampleCounts: [1, 2],
+          supportsAudio: true,
+        };
+      case 'Veo 2':
+        return {
+          aspectRatios: ['16:9', '9:16', '1:1'] as AspectRatio[],
+          resolutions: ['720p'] as Resolution[],
+          durations: [5, 6, 7, 8] as Duration[],
+          sampleCounts: [1, 2, 3, 4],
+          supportsAudio: false,
+        };
+      default:
+        return {
+          aspectRatios: ['16:9'] as AspectRatio[],
+          resolutions: ['720p'] as Resolution[],
+          durations: [8] as Duration[],
+          sampleCounts: [1],
+          supportsAudio: false,
+        };
+    }
+  };
+
+  const constraints = getModelConstraints(formData.model);
+
+  // Handle model change and reset incompatible values
+  const handleModelChange = (model: VideoModel) => {
+    const newConstraints = getModelConstraints(model);
+    setFormData(prev => ({
+      ...prev,
+      model,
+      aspectRatio: newConstraints.aspectRatios.includes(prev.aspectRatio) 
+        ? prev.aspectRatio 
+        : newConstraints.aspectRatios[0],
+      resolution: newConstraints.resolutions.includes(prev.resolution)
+        ? prev.resolution
+        : newConstraints.resolutions[0],
+      duration: newConstraints.durations.includes(prev.duration)
+        ? prev.duration
+        : newConstraints.durations[0],
+      sampleCount: newConstraints.sampleCounts.includes(prev.sampleCount)
+        ? prev.sampleCount
+        : newConstraints.sampleCounts[0],
+      generateAudio: newConstraints.supportsAudio ? prev.generateAudio : false,
+    }));
+  };
+
+  const handleCreateProject = () => {
+    if (!newProjectName.trim()) return;
+    
+    const newProject: Project = {
+      id: Date.now().toString(),
+      name: newProjectName.trim(),
+      createdAt: new Date(),
+    };
+    
+    setProjects(prev => [newProject, ...prev]);
+    setFormData(prev => ({ ...prev, projectId: newProject.id }));
+    setNewProjectName('');
+    setShowNewProjectDialog(false);
+    toast({ title: 'Project created successfully' });
+  };
+
+  const handleGenerate = async () => {
+    if (!formData.prompt.trim()) {
+      toast({ title: 'Please enter a prompt', variant: 'destructive' });
+      return;
+    }
+
+    setIsGenerating(true);
+    
+    // Simulate video generation
+    setTimeout(() => {
+      const newVideos: GeneratedVideo[] = [];
+      
+      for (let i = 0; i < formData.sampleCount; i++) {
+        newVideos.push({
+          id: `${Date.now()}-${i}`,
+          url: `https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_${i + 1}mb.mp4`,
+          gcsUri: `gs://vertex-ai-videos/generated-${Date.now()}-${i}.mp4`,
+          prompt: formData.prompt,
+          model: formData.model,
+          aspectRatio: formData.aspectRatio,
+          resolution: formData.resolution,
+          duration: formData.duration,
+          sampleIndex: i + 1,
+          timestamp: new Date(),
+          projectId: formData.projectId,
+        });
+      }
+      
+      setSessionVideos(prev => [...newVideos, ...prev]);
+      setIsGenerating(false);
+      toast({ title: `Generated ${formData.sampleCount} video(s) successfully` });
+    }, 3000);
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({ title: 'Copied to clipboard' });
+  };
+
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6">
+      {/* Header */}
       <div className="flex items-center gap-3 mb-8">
         <div className="p-2 bg-primary/10 rounded-lg">
           <VideoIcon className="h-6 w-6 text-primary" />
         </div>
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Video Creation</h1>
-          <p className="text-slate-600 mt-1">AI-powered video generation with Google Vertex AI (Veo 3)</p>
+          <p className="text-slate-600 mt-1">AI-powered video generation with Google Vertex AI</p>
         </div>
       </div>
 
-      <Card className="border border-slate-200">
-        <CardContent className="p-12 text-center">
-          <div className="max-w-md mx-auto space-y-4">
-            <div className="p-4 bg-slate-50 rounded-full w-20 h-20 mx-auto flex items-center justify-center">
-              <VideoIcon className="h-10 w-10 text-slate-400" />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Generation Form */}
+        <div className="lg:col-span-2 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Generate Video</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Prompt */}
+              <div className="space-y-2">
+                <Label htmlFor="prompt">Prompt *</Label>
+                <Textarea
+                  id="prompt"
+                  placeholder="Describe the video you want to generate..."
+                  value={formData.prompt}
+                  onChange={(e) => setFormData(prev => ({ ...prev, prompt: e.target.value }))}
+                  rows={3}
+                />
+              </div>
+
+              {/* Negative Prompt */}
+              <div className="space-y-2">
+                <Label htmlFor="negativePrompt">Negative Prompt</Label>
+                <Input
+                  id="negativePrompt"
+                  placeholder="What to avoid in the video..."
+                  value={formData.negativePrompt}
+                  onChange={(e) => setFormData(prev => ({ ...prev, negativePrompt: e.target.value }))}
+                />
+              </div>
+
+              {/* Model Selector */}
+              <div className="space-y-2">
+                <Label>Model</Label>
+                <Select value={formData.model} onValueChange={handleModelChange}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Veo 3">Veo 3</SelectItem>
+                    <SelectItem value="Veo 3 Fast">Veo 3 Fast</SelectItem>
+                    <SelectItem value="Veo 2">Veo 2</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {/* Aspect Ratio */}
+                <div className="space-y-2">
+                  <Label>Aspect Ratio</Label>
+                  <Select 
+                    value={formData.aspectRatio} 
+                    onValueChange={(value: AspectRatio) => setFormData(prev => ({ ...prev, aspectRatio: value }))}
+                    disabled={constraints.aspectRatios.length === 1}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {constraints.aspectRatios.map(ratio => (
+                        <SelectItem key={ratio} value={ratio}>{ratio}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Resolution */}
+                <div className="space-y-2">
+                  <Label>Resolution</Label>
+                  <Select 
+                    value={formData.resolution} 
+                    onValueChange={(value: Resolution) => setFormData(prev => ({ ...prev, resolution: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {constraints.resolutions.map(res => (
+                        <SelectItem key={res} value={res}>{res}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Duration */}
+                <div className="space-y-2">
+                  <Label>Duration</Label>
+                  <Select 
+                    value={formData.duration.toString()} 
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, duration: parseInt(value) as Duration }))}
+                    disabled={constraints.durations.length === 1}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {constraints.durations.map(dur => (
+                        <SelectItem key={dur} value={dur.toString()}>{dur} seconds</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Sample Count */}
+                <div className="space-y-2">
+                  <Label>Sample Count</Label>
+                  <Select 
+                    value={formData.sampleCount.toString()} 
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, sampleCount: parseInt(value) }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {constraints.sampleCounts.map(count => (
+                        <SelectItem key={count} value={count.toString()}>{count}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Additional Options */}
+              <div className="space-y-3">
+                {constraints.supportsAudio && (
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="generateAudio"
+                      checked={formData.generateAudio}
+                      onCheckedChange={(checked) => setFormData(prev => ({ ...prev, generateAudio: checked as boolean }))}
+                    />
+                    <Label htmlFor="generateAudio">Generate Audio</Label>
+                  </div>
+                )}
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="enhancePrompt"
+                    checked={formData.enhancePrompt}
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, enhancePrompt: checked as boolean }))}
+                  />
+                  <Label htmlFor="enhancePrompt">Enhance Prompt</Label>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {/* Person Generation */}
+                <div className="space-y-2">
+                  <Label>Person Generation</Label>
+                  <Select 
+                    value={formData.personGeneration} 
+                    onValueChange={(value: PersonGeneration) => setFormData(prev => ({ ...prev, personGeneration: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="allow_all">Allow All</SelectItem>
+                      <SelectItem value="dont_allow">Don't Allow</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Seed */}
+                <div className="space-y-2">
+                  <Label htmlFor="seed">Seed (optional)</Label>
+                  <Input
+                    id="seed"
+                    type="number"
+                    placeholder="Random seed..."
+                    value={formData.seed || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, seed: e.target.value ? parseInt(e.target.value) : undefined }))}
+                  />
+                </div>
+              </div>
+
+              {/* Generate Button */}
+              <Button 
+                onClick={handleGenerate}
+                disabled={!formData.prompt.trim() || isGenerating}
+                className="w-full"
+                size="lg"
+              >
+                {isGenerating ? (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                    Generating Video...
+                  </>
+                ) : (
+                  <>
+                    <VideoIcon className="mr-2 h-4 w-4" />
+                    Generate Video
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Project Selector */}
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Project</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Select Project</Label>
+                <Select 
+                  value={formData.projectId} 
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, projectId: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projects.map(project => (
+                      <SelectItem key={project.id} value={project.id}>{project.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Dialog open={showNewProjectDialog} onOpenChange={setShowNewProjectDialog}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="w-full">
+                    <Plus className="mr-2 h-4 w-4" />
+                    New Project
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Create New Project</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="projectName">Project Name</Label>
+                      <Input
+                        id="projectName"
+                        placeholder="Enter project name..."
+                        value={newProjectName}
+                        onChange={(e) => setNewProjectName(e.target.value)}
+                      />
+                    </div>
+                    <div className="flex justify-end space-x-2">
+                      <Button variant="outline" onClick={() => setShowNewProjectDialog(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleCreateProject} disabled={!newProjectName.trim()}>
+                        Create Project
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Session Gallery */}
+      {sessionVideos.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Session Results</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {sessionVideos.map((video) => (
+                <Card key={video.id} className="overflow-hidden">
+                  <div className="aspect-video bg-slate-100 flex items-center justify-center">
+                    <div className="text-center">
+                      <Play className="h-12 w-12 text-slate-400 mx-auto mb-2" />
+                      <p className="text-sm text-slate-500">Video Preview</p>
+                      <p className="text-xs text-slate-400">{video.resolution} • {video.duration}s</p>
+                    </div>
+                  </div>
+                  <CardContent className="p-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Badge variant="secondary">{video.model}</Badge>
+                        <span className="text-xs text-slate-500">
+                          Sample {video.sampleIndex}
+                        </span>
+                      </div>
+                      <p className="text-sm text-slate-600 line-clamp-2">{video.prompt}</p>
+                      <div className="flex items-center justify-between text-xs text-slate-500">
+                        <span>{video.aspectRatio}</span>
+                        <span>{video.timestamp.toLocaleTimeString()}</span>
+                      </div>
+                      <div className="flex space-x-1">
+                        <Button size="sm" variant="outline" className="flex-1">
+                          <Download className="h-3 w-3 mr-1" />
+                          Download
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => copyToClipboard(video.gcsUri)}
+                        >
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          <RefreshCw className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
-            <h2 className="text-xl font-semibold text-slate-900">Video Creation – Coming Soon</h2>
-            <p className="text-slate-600">
-              Generate stunning videos using AI with Google Vertex AI's Veo 3 model. 
-              This powerful feature will be available soon.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
