@@ -123,32 +123,21 @@ export default function CarImageCard({
         
         const { line1, line2 } = parseDisclaimerText(disclaimerText);
         
-        // Calculate disclaimer pill positioning and styling (corrected specifications)
-        const edgePadding = 40; // Fixed 40px margin from edges
-        const boldFontSize = 28; // Increased for more presence
-        const regularFontSize = 24; // Increased for better alignment
-        const lineSpacing = 7; // 6-8px visual gap between lines
-        const iconSize = boldFontSize; // Match cap height of first line
-        const pillPaddingH = 18; // Fixed horizontal padding
-        const pillPaddingV = 11; // 10-12px vertical padding
+        // Pixel-accurate disclaimer pill specifications from SVG
+        const edgePadding = 32; // Fixed 32px margin from edges
+        const pillWidth = 412; // Exact pill width
+        const pillHeight = 90.5; // Exact pill height
+        const fontSize = 25.5; // Both lines use same font size
+        const lineHeight = 28.15; // Baseline separation (line-height ~1.1)
+        const iconSize = fontSize; // Match height of first text line
+        const pillPaddingH = 18; // Internal horizontal padding
+        const pillPaddingV = 12; // Internal vertical padding
         const iconTextGap = 13; // 12-14px gap between icon and text
         
-        // Set fonts - Helvetica Neue with exact weights
-        const boldFont = `700 ${boldFontSize}px "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif`;
-        const regularFont = `400 ${regularFontSize}px "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif`;
+        // Set fonts - Helvetica Neue with exact weights and sizes
+        const boldFont = `700 ${fontSize}px "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif`;
+        const regularFont = `400 ${fontSize}px "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif`;
         
-        // Measure text to determine pill size
-        ctx.font = boldFont;
-        const line1Width = ctx.measureText(line1).width;
-        ctx.font = regularFont;
-        const line2Width = ctx.measureText(line2).width;
-        const maxTextWidth = Math.max(line1Width, line2Width);
-        
-        // Pill dimensions (wrap tightly to content)
-        const contentWidth = iconSize + iconTextGap + maxTextWidth;
-        const pillWidth = contentWidth + (pillPaddingH * 2);
-        const textBlockHeight = boldFontSize + regularFontSize + lineSpacing;
-        const pillHeight = textBlockHeight + (pillPaddingV * 2);
         const pillRadius = 999; // Full pill shape (border-radius: 999px)
         
         // Pill position (bottom-right with fixed 40px edge padding)
@@ -172,17 +161,17 @@ export default function CarImageCard({
         
         ctx.restore();
         
-        // Draw Lucide sparkles icon (solid blue #1553ec) - vertically centered with text block
+        // Draw Lucide sparkles icon (solid blue #1553ec) - left edge, vertically centered
         const iconX = pillX + pillPaddingH;
-        const textBlockCenterY = pillY + pillPaddingV + textBlockHeight / 2;
+        const iconCenterY = pillY + pillHeight / 2;
         
         ctx.fillStyle = '#1553ec'; // Solid blue
         ctx.save();
         
-        // Draw Lucide sparkles icon - properly sized to match cap height
-        ctx.translate(iconX + iconSize/2, textBlockCenterY);
+        // Draw Lucide sparkles icon - pixel-accurate size matching text height
+        ctx.translate(iconX + iconSize/2, iconCenterY);
         
-        // Main sparkle (4-pointed star) - larger for better visibility
+        // Main sparkle (4-pointed star)
         ctx.fillStyle = '#1553ec';
         ctx.beginPath();
         const mainSize = iconSize * 0.35;
@@ -231,11 +220,11 @@ export default function CarImageCard({
         
         ctx.restore();
         
-        // Draw text lines (left-aligned beside icon with tight spacing)
+        // Draw text lines (hard left-aligned beside icon with precise spacing)
         const textStartX = iconX + iconSize + iconTextGap;
         ctx.fillStyle = '#ffffff';
         ctx.textAlign = 'left';
-        ctx.textBaseline = 'top';
+        ctx.textBaseline = 'alphabetic';
         
         // Clear any shadows for text (shadow only on pill background)
         ctx.shadowColor = 'transparent';
@@ -243,16 +232,18 @@ export default function CarImageCard({
         ctx.shadowOffsetY = 0;
         ctx.shadowBlur = 0;
         
-        // Calculate text starting position for tight vertical centering
-        const textBlockStartY = pillY + pillPaddingV;
+        // Calculate text positioning for precise vertical centering within pill
+        // Total text block height with tight line-height (~1.1)
+        const textBlockHeight = fontSize * 2 + (lineHeight - fontSize);
+        const textBlockStartY = pillY + (pillHeight - textBlockHeight) / 2 + fontSize;
         
         // Draw first line (bold, 700 weight)
         ctx.font = boldFont;
         ctx.fillText(line1, textStartX, textBlockStartY);
         
-        // Draw second line (regular, 400 weight) with tight 6-8px spacing
+        // Draw second line (regular, 400 weight) with exact baseline separation
         ctx.font = regularFont;
-        const line2Y = textBlockStartY + boldFontSize + lineSpacing;
+        const line2Y = textBlockStartY + lineHeight;
         ctx.fillText(line2, textStartX, line2Y);
 
         // Convert to JPEG with good quality
