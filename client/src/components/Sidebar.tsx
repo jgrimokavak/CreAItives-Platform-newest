@@ -10,7 +10,8 @@ import {
   ImageUpscale,
   CarFront,
   Home,
-  Mail
+  Mail,
+  VideoIcon
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import kavakLogo from '@assets/LOGO_W (low quality)-01.png';
@@ -85,6 +86,9 @@ const Sidebar = ({ children }: SidebarProps) => {
           </SidebarLink>
           <SidebarLink to="/car" icon={<CarFront size={18} />}>
             Car Creation
+          </SidebarLink>
+          <SidebarLink to="/video" icon={<VideoIcon size={18} />}>
+            Video Creation
           </SidebarLink>
           <SidebarLink to="/gallery" icon={<Images size={18} />}>
             Gallery

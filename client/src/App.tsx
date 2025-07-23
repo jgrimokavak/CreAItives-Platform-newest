@@ -8,6 +8,7 @@ import HomePage from "@/pages/HomePage";
 import SimpleGalleryPage from "@/pages/SimpleGalleryPage";
 import UpscalePage from "./pages/UpscalePageNew";
 import CarCreationPage from "./pages/CarCreationPage";
+import VideoCreationPage from "./pages/VideoCreationPage";
 import EmailBuilderPage from "./pages/EmailBuilderPage";
 import { EditorProvider } from "@/context/EditorContext";
 import Sidebar from "@/components/Sidebar";
@@ -28,6 +29,7 @@ function Router() {
         <Route path="/email-builder" component={EmailBuilderPage} />
         <Route path="/trash" component={() => <SimpleGalleryPage mode="trash" />} />
         <Route path="/car" component={CarCreationPage} />
+        <Route path="/video" component={VideoCreationPage} />
         <Route component={NotFound} />
       </Switch>
     </Sidebar>
