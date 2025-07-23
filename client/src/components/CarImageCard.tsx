@@ -123,24 +123,34 @@ export default function CarImageCard({
         
         const { line1, line2 } = parseDisclaimerText(disclaimerText);
         
-        // Pixel-accurate disclaimer pill specifications from SVG
+        // Dynamic disclaimer pill specifications
         const edgePadding = 32; // Fixed 32px margin from edges
-        const pillWidth = 412; // Exact pill width
-        const pillHeight = 90.5; // Exact pill height
-        const fontSize = 25.5; // Both lines use same font size
-        const lineHeight = 28.15; // Baseline separation (line-height ~1.1)
-        const iconSize = fontSize; // Match height of first text line
-        const pillPaddingH = 18; // Internal horizontal padding
-        const pillPaddingV = 12; // Internal vertical padding
+        const fontSize = 26; // Both lines use same font size (~25.5-28px)
+        const lineHeight = 28; // Baseline separation (tight spacing)
+        const iconSize = 29; // Larger icon to match/exceed cap height (~28-30px)
+        const pillPaddingH = 18; // Internal horizontal padding (left/right)
+        const pillPaddingV = 12; // Internal vertical padding (top/bottom)
         const iconTextGap = 13; // 12-14px gap between icon and text
         
         // Set fonts - Helvetica Neue with exact weights and sizes
         const boldFont = `700 ${fontSize}px "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif`;
         const regularFont = `400 ${fontSize}px "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif`;
         
+        // Measure text to determine dynamic pill size
+        ctx.font = boldFont;
+        const line1Width = ctx.measureText(line1).width;
+        ctx.font = regularFont;
+        const line2Width = line2 ? ctx.measureText(line2).width : 0;
+        const maxTextWidth = Math.max(line1Width, line2Width);
+        
+        // Calculate dynamic pill dimensions based on content
+        const contentWidth = iconSize + iconTextGap + maxTextWidth;
+        const pillWidth = contentWidth + (pillPaddingH * 2);
+        const textBlockHeight = line2 ? fontSize * 2 + (lineHeight - fontSize) : fontSize;
+        const pillHeight = textBlockHeight + (pillPaddingV * 2);
         const pillRadius = 999; // Full pill shape (border-radius: 999px)
         
-        // Pill position (bottom-right with fixed 40px edge padding)
+        // Pill position (bottom-right with fixed edge padding)
         const pillX = finalWidth - edgePadding - pillWidth;
         const pillY = finalHeight - edgePadding - pillHeight;
         
@@ -161,20 +171,20 @@ export default function CarImageCard({
         
         ctx.restore();
         
-        // Draw Lucide sparkles icon (solid blue #1553ec) - left edge, vertically centered
+        // Draw Lucide sparkles icon (solid blue #1553ec) - properly sized and centered
         const iconX = pillX + pillPaddingH;
         const iconCenterY = pillY + pillHeight / 2;
         
         ctx.fillStyle = '#1553ec'; // Solid blue
         ctx.save();
         
-        // Draw Lucide sparkles icon - pixel-accurate size matching text height
+        // Draw Lucide sparkles icon - larger size for better visibility
         ctx.translate(iconX + iconSize/2, iconCenterY);
         
-        // Main sparkle (4-pointed star)
+        // Main sparkle (4-pointed star) - scaled up
         ctx.fillStyle = '#1553ec';
         ctx.beginPath();
-        const mainSize = iconSize * 0.35;
+        const mainSize = iconSize * 0.4; // Increased from 0.35
         ctx.moveTo(0, -mainSize);
         ctx.lineTo(mainSize * 0.3, -mainSize * 0.3);
         ctx.lineTo(mainSize, 0);
@@ -186,11 +196,11 @@ export default function CarImageCard({
         ctx.closePath();
         ctx.fill();
         
-        // Small sparkle (top-right)
+        // Small sparkle (top-right) - proportionally scaled
         ctx.beginPath();
-        const smallSize = iconSize * 0.12;
-        const offsetX = iconSize * 0.28;
-        const offsetY = -iconSize * 0.22;
+        const smallSize = iconSize * 0.14; // Increased from 0.12
+        const offsetX = iconSize * 0.3; // Slightly adjusted
+        const offsetY = -iconSize * 0.24; // Slightly adjusted
         ctx.moveTo(offsetX, offsetY - smallSize);
         ctx.lineTo(offsetX + smallSize * 0.3, offsetY - smallSize * 0.3);
         ctx.lineTo(offsetX + smallSize, offsetY);
@@ -202,11 +212,11 @@ export default function CarImageCard({
         ctx.closePath();
         ctx.fill();
         
-        // Tiny sparkle (bottom-left)
+        // Tiny sparkle (bottom-left) - proportionally scaled
         ctx.beginPath();
-        const tinySize = iconSize * 0.08;
-        const offsetX2 = -iconSize * 0.22;
-        const offsetY2 = iconSize * 0.25;
+        const tinySize = iconSize * 0.1; // Increased from 0.08
+        const offsetX2 = -iconSize * 0.24; // Adjusted
+        const offsetY2 = iconSize * 0.27; // Adjusted
         ctx.moveTo(offsetX2, offsetY2 - tinySize);
         ctx.lineTo(offsetX2 + tinySize * 0.3, offsetY2 - tinySize * 0.3);
         ctx.lineTo(offsetX2 + tinySize, offsetY2);
@@ -220,7 +230,7 @@ export default function CarImageCard({
         
         ctx.restore();
         
-        // Draw text lines (hard left-aligned beside icon with precise spacing)
+        // Draw text lines (left-aligned beside icon with consistent padding)
         const textStartX = iconX + iconSize + iconTextGap;
         ctx.fillStyle = '#ffffff';
         ctx.textAlign = 'left';
@@ -232,19 +242,19 @@ export default function CarImageCard({
         ctx.shadowOffsetY = 0;
         ctx.shadowBlur = 0;
         
-        // Calculate text positioning for precise vertical centering within pill
-        // Total text block height with tight line-height (~1.1)
-        const textBlockHeight = fontSize * 2 + (lineHeight - fontSize);
-        const textBlockStartY = pillY + (pillHeight - textBlockHeight) / 2 + fontSize;
+        // Calculate text positioning for proper vertical centering
+        const textBlockStartY = pillY + pillPaddingV + fontSize;
         
         // Draw first line (bold, 700 weight)
         ctx.font = boldFont;
         ctx.fillText(line1, textStartX, textBlockStartY);
         
-        // Draw second line (regular, 400 weight) with exact baseline separation
-        ctx.font = regularFont;
-        const line2Y = textBlockStartY + lineHeight;
-        ctx.fillText(line2, textStartX, line2Y);
+        // Draw second line (regular, 400 weight) if it exists
+        if (line2) {
+          ctx.font = regularFont;
+          const line2Y = textBlockStartY + lineHeight;
+          ctx.fillText(line2, textStartX, line2Y);
+        }
 
         // Convert to JPEG with good quality
         const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
