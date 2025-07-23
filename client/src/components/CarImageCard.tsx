@@ -123,15 +123,15 @@ export default function CarImageCard({
         
         const { line1, line2 } = parseDisclaimerText(disclaimerText);
         
-        // Calculate disclaimer pill positioning and styling (exact specifications)
-        const edgePadding = 40; // Fixed 40px margin from edges (~3.1% of 1280px width)
-        const boldFontSize = 21; // ~20-22px for first line
-        const regularFontSize = 19; // ~18-20px for second line
-        const lineHeight = boldFontSize * 1.15; // Tight line spacing
-        const iconSize = 24; // Fixed icon size
+        // Calculate disclaimer pill positioning and styling (corrected specifications)
+        const edgePadding = 40; // Fixed 40px margin from edges
+        const boldFontSize = 28; // Increased for more presence
+        const regularFontSize = 24; // Increased for better alignment
+        const lineSpacing = 7; // 6-8px visual gap between lines
+        const iconSize = boldFontSize; // Match cap height of first line
         const pillPaddingH = 18; // Fixed horizontal padding
-        const pillPaddingV = 10; // Fixed vertical padding
-        const iconTextGap = 11; // 10-12px gap between icon and text
+        const pillPaddingV = 11; // 10-12px vertical padding
+        const iconTextGap = 13; // 12-14px gap between icon and text
         
         // Set fonts - Helvetica Neue with exact weights
         const boldFont = `700 ${boldFontSize}px "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif`;
@@ -144,10 +144,11 @@ export default function CarImageCard({
         const line2Width = ctx.measureText(line2).width;
         const maxTextWidth = Math.max(line1Width, line2Width);
         
-        // Pill dimensions
+        // Pill dimensions (wrap tightly to content)
         const contentWidth = iconSize + iconTextGap + maxTextWidth;
         const pillWidth = contentWidth + (pillPaddingH * 2);
-        const pillHeight = (boldFontSize + regularFontSize + lineHeight * 0.5) + (pillPaddingV * 2);
+        const textBlockHeight = boldFontSize + regularFontSize + lineSpacing;
+        const pillHeight = textBlockHeight + (pillPaddingV * 2);
         const pillRadius = 999; // Full pill shape (border-radius: 999px)
         
         // Pill position (bottom-right with fixed 40px edge padding)
@@ -171,20 +172,20 @@ export default function CarImageCard({
         
         ctx.restore();
         
-        // Draw Lucide sparkles icon (solid blue #1553ec)
+        // Draw Lucide sparkles icon (solid blue #1553ec) - vertically centered with text block
         const iconX = pillX + pillPaddingH;
-        const iconCenterY = pillY + pillHeight / 2;
+        const textBlockCenterY = pillY + pillPaddingV + textBlockHeight / 2;
         
         ctx.fillStyle = '#1553ec'; // Solid blue
         ctx.save();
         
-        // Draw Lucide sparkles icon - simplified version
-        ctx.translate(iconX + iconSize/2, iconCenterY);
+        // Draw Lucide sparkles icon - properly sized to match cap height
+        ctx.translate(iconX + iconSize/2, textBlockCenterY);
         
-        // Main sparkle (4-pointed star)
+        // Main sparkle (4-pointed star) - larger for better visibility
         ctx.fillStyle = '#1553ec';
         ctx.beginPath();
-        const mainSize = iconSize * 0.4;
+        const mainSize = iconSize * 0.35;
         ctx.moveTo(0, -mainSize);
         ctx.lineTo(mainSize * 0.3, -mainSize * 0.3);
         ctx.lineTo(mainSize, 0);
@@ -198,9 +199,9 @@ export default function CarImageCard({
         
         // Small sparkle (top-right)
         ctx.beginPath();
-        const smallSize = iconSize * 0.15;
-        const offsetX = iconSize * 0.3;
-        const offsetY = -iconSize * 0.25;
+        const smallSize = iconSize * 0.12;
+        const offsetX = iconSize * 0.28;
+        const offsetY = -iconSize * 0.22;
         ctx.moveTo(offsetX, offsetY - smallSize);
         ctx.lineTo(offsetX + smallSize * 0.3, offsetY - smallSize * 0.3);
         ctx.lineTo(offsetX + smallSize, offsetY);
@@ -214,9 +215,9 @@ export default function CarImageCard({
         
         // Tiny sparkle (bottom-left)
         ctx.beginPath();
-        const tinySize = iconSize * 0.1;
-        const offsetX2 = -iconSize * 0.25;
-        const offsetY2 = iconSize * 0.3;
+        const tinySize = iconSize * 0.08;
+        const offsetX2 = -iconSize * 0.22;
+        const offsetY2 = iconSize * 0.25;
         ctx.moveTo(offsetX2, offsetY2 - tinySize);
         ctx.lineTo(offsetX2 + tinySize * 0.3, offsetY2 - tinySize * 0.3);
         ctx.lineTo(offsetX2 + tinySize, offsetY2);
@@ -230,29 +231,28 @@ export default function CarImageCard({
         
         ctx.restore();
         
-        // Draw text lines (left-aligned beside icon)
+        // Draw text lines (left-aligned beside icon with tight spacing)
         const textStartX = iconX + iconSize + iconTextGap;
         ctx.fillStyle = '#ffffff';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
         
-        // Clear any shadows for text
+        // Clear any shadows for text (shadow only on pill background)
         ctx.shadowColor = 'transparent';
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 0;
         ctx.shadowBlur = 0;
         
-        // Calculate text block vertical center position
-        const textBlockHeight = boldFontSize + regularFontSize + (lineHeight * 0.5);
-        const textBlockStartY = pillY + pillPaddingV + (pillHeight - (pillPaddingV * 2) - textBlockHeight) / 2;
+        // Calculate text starting position for tight vertical centering
+        const textBlockStartY = pillY + pillPaddingV;
         
         // Draw first line (bold, 700 weight)
         ctx.font = boldFont;
         ctx.fillText(line1, textStartX, textBlockStartY);
         
-        // Draw second line (regular, 400 weight)
+        // Draw second line (regular, 400 weight) with tight 6-8px spacing
         ctx.font = regularFont;
-        const line2Y = textBlockStartY + boldFontSize + (lineHeight * 0.5);
+        const line2Y = textBlockStartY + boldFontSize + lineSpacing;
         ctx.fillText(line2, textStartX, line2Y);
 
         // Convert to JPEG with good quality
