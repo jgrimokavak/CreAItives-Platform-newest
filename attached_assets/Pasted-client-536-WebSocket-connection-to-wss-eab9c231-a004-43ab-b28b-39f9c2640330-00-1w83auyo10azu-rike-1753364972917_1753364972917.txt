@@ -1,0 +1,99 @@
+client:536 WebSocket connection to 'wss://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/?token=XHJ_d2A1lmoH' failed: 
+setupWebSocket @ client:536
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=XHJ_d2A1lmoH' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+chunk-WERSD76P.js?v=1bf7fa1c:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+websocket.ts:25 WebSocket connected
+SimpleGalleryPage.tsx:77 fetchImages called with search term: ""
+SimpleGalleryPage.tsx:91 Fetching images with URL: /api/gallery?
+SimpleGalleryPage.tsx:534 Search term changed to: ""
+SimpleGalleryPage.tsx:77 fetchImages called with search term: ""
+SimpleGalleryPage.tsx:91 Fetching images with URL: /api/gallery?
+SimpleGalleryPage.tsx:100 Gallery data received: 50 images
+SimpleGalleryPage.tsx:100 Gallery data received: 50 images
+/api/admin/users/45469575/status:1  Failed to load resource: the server responded with a status of 400 (Bad Request)
+/api/admin/users/45469575/role:1  Failed to load resource: the server responded with a status of 400 (Bad Request)
+/api/admin/users/45469575/role:1  Failed to load resource: the server responded with a status of 400 (Bad Request)
+queryClient.ts:14  PATCH https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/api/admin/users/45469575/role 400 (Bad Request)
+apiRequest @ queryClient.ts:14
+mutationFn @ UserManagementPage.tsx:61
+fn @ @tanstack_react-query.js?v=1bf7fa1c:1189
+run @ @tanstack_react-query.js?v=1bf7fa1c:494
+start @ @tanstack_react-query.js?v=1bf7fa1c:536
+execute @ @tanstack_react-query.js?v=1bf7fa1c:1225
+await in execute
+mutate @ @tanstack_react-query.js?v=1bf7fa1c:2630
+(anonymous) @ @tanstack_react-query.js?v=1bf7fa1c:3295
+toggleUserRole @ UserManagementPage.tsx:88
+onClick @ UserManagementPage.tsx:200
+callCallback2 @ chunk-WERSD76P.js?v=1bf7fa1c:3674
+invokeGuardedCallbackDev @ chunk-WERSD76P.js?v=1bf7fa1c:3699
+invokeGuardedCallback @ chunk-WERSD76P.js?v=1bf7fa1c:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-WERSD76P.js?v=1bf7fa1c:3736
+executeDispatch @ chunk-WERSD76P.js?v=1bf7fa1c:7014
+processDispatchQueueItemsInOrder @ chunk-WERSD76P.js?v=1bf7fa1c:7034
+processDispatchQueue @ chunk-WERSD76P.js?v=1bf7fa1c:7043
+dispatchEventsForPlugins @ chunk-WERSD76P.js?v=1bf7fa1c:7051
+(anonymous) @ chunk-WERSD76P.js?v=1bf7fa1c:7174
+batchedUpdates$1 @ chunk-WERSD76P.js?v=1bf7fa1c:18913
+batchedUpdates @ chunk-WERSD76P.js?v=1bf7fa1c:3579
+dispatchEventForPluginEventSystem @ chunk-WERSD76P.js?v=1bf7fa1c:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-WERSD76P.js?v=1bf7fa1c:5478
+dispatchEvent @ chunk-WERSD76P.js?v=1bf7fa1c:5472
+dispatchDiscreteEvent @ chunk-WERSD76P.js?v=1bf7fa1c:5449
+queryClient.ts:14  PATCH https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/api/admin/users/45469575/role 400 (Bad Request)
+apiRequest @ queryClient.ts:14
+mutationFn @ UserManagementPage.tsx:61
+fn @ @tanstack_react-query.js?v=1bf7fa1c:1189
+run @ @tanstack_react-query.js?v=1bf7fa1c:494
+start @ @tanstack_react-query.js?v=1bf7fa1c:536
+execute @ @tanstack_react-query.js?v=1bf7fa1c:1225
+await in execute
+mutate @ @tanstack_react-query.js?v=1bf7fa1c:2630
+(anonymous) @ @tanstack_react-query.js?v=1bf7fa1c:3295
+toggleUserRole @ UserManagementPage.tsx:88
+onClick @ UserManagementPage.tsx:200
+callCallback2 @ chunk-WERSD76P.js?v=1bf7fa1c:3674
+invokeGuardedCallbackDev @ chunk-WERSD76P.js?v=1bf7fa1c:3699
+invokeGuardedCallback @ chunk-WERSD76P.js?v=1bf7fa1c:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-WERSD76P.js?v=1bf7fa1c:3736
+executeDispatch @ chunk-WERSD76P.js?v=1bf7fa1c:7014
+processDispatchQueueItemsInOrder @ chunk-WERSD76P.js?v=1bf7fa1c:7034
+processDispatchQueue @ chunk-WERSD76P.js?v=1bf7fa1c:7043
+dispatchEventsForPlugins @ chunk-WERSD76P.js?v=1bf7fa1c:7051
+(anonymous) @ chunk-WERSD76P.js?v=1bf7fa1c:7174
+batchedUpdates$1 @ chunk-WERSD76P.js?v=1bf7fa1c:18913
+batchedUpdates @ chunk-WERSD76P.js?v=1bf7fa1c:3579
+dispatchEventForPluginEventSystem @ chunk-WERSD76P.js?v=1bf7fa1c:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-WERSD76P.js?v=1bf7fa1c:5478
+dispatchEvent @ chunk-WERSD76P.js?v=1bf7fa1c:5472
+dispatchDiscreteEvent @ chunk-WERSD76P.js?v=1bf7fa1c:5449
+queryClient.ts:14  PATCH https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/api/admin/users/45469575/status 400 (Bad Request)
+apiRequest @ queryClient.ts:14
+mutationFn @ UserManagementPage.tsx:38
+fn @ @tanstack_react-query.js?v=1bf7fa1c:1189
+run @ @tanstack_react-query.js?v=1bf7fa1c:494
+start @ @tanstack_react-query.js?v=1bf7fa1c:536
+execute @ @tanstack_react-query.js?v=1bf7fa1c:1225
+await in execute
+mutate @ @tanstack_react-query.js?v=1bf7fa1c:2630
+(anonymous) @ @tanstack_react-query.js?v=1bf7fa1c:3295
+toggleUserStatus @ UserManagementPage.tsx:83
+onClick @ UserManagementPage.tsx:181
+callCallback2 @ chunk-WERSD76P.js?v=1bf7fa1c:3674
+invokeGuardedCallbackDev @ chunk-WERSD76P.js?v=1bf7fa1c:3699
+invokeGuardedCallback @ chunk-WERSD76P.js?v=1bf7fa1c:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-WERSD76P.js?v=1bf7fa1c:3736
+executeDispatch @ chunk-WERSD76P.js?v=1bf7fa1c:7014
+processDispatchQueueItemsInOrder @ chunk-WERSD76P.js?v=1bf7fa1c:7034
+processDispatchQueue @ chunk-WERSD76P.js?v=1bf7fa1c:7043
+dispatchEventsForPlugins @ chunk-WERSD76P.js?v=1bf7fa1c:7051
+(anonymous) @ chunk-WERSD76P.js?v=1bf7fa1c:7174
+batchedUpdates$1 @ chunk-WERSD76P.js?v=1bf7fa1c:18913
+batchedUpdates @ chunk-WERSD76P.js?v=1bf7fa1c:3579
+dispatchEventForPluginEventSystem @ chunk-WERSD76P.js?v=1bf7fa1c:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-WERSD76P.js?v=1bf7fa1c:5478
+dispatchEvent @ chunk-WERSD76P.js?v=1bf7fa1c:5472
+dispatchDiscreteEvent @ chunk-WERSD76P.js?v=1bf7fa1c:5449

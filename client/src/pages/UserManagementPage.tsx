@@ -10,23 +10,11 @@ import { apiRequest } from '@/lib/queryClient';
 import type { User } from '@shared/schema';
 
 export default function UserManagementPage() {
-  const { user: currentUser, isLoading: authLoading } = useAuth();
+  const { user: currentUser } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  // Check if current user is admin
-  if (authLoading) {
-    return <div className="p-8">Loading...</div>;
-  }
-  
-  if (!currentUser || currentUser.role !== 'admin') {
-    return (
-      <div className="p-8 text-center">
-        <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-        <p className="text-gray-600">Admin access required to view this page.</p>
-      </div>
-    );
-  }
+  // AdminRoute component already handles access control, so we can assume user is admin here
 
   const { data: users, isLoading } = useQuery<User[]>({
     queryKey: ['/api/admin/users'],
@@ -37,6 +25,9 @@ export default function UserManagementPage() {
     mutationFn: async ({ userId, isActive }: { userId: string; isActive: boolean }) => {
       return await apiRequest(`/api/admin/users/${userId}/status`, {
         method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ isActive }),
       });
     },
@@ -60,6 +51,9 @@ export default function UserManagementPage() {
     mutationFn: async ({ userId, role }: { userId: string; role: 'user' | 'admin' }) => {
       return await apiRequest(`/api/admin/users/${userId}/role`, {
         method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ role }),
       });
     },
@@ -88,9 +82,10 @@ export default function UserManagementPage() {
     updateRoleMutation.mutate({ userId, role: newRole });
   };
 
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'Never';
-    return new Date(dateString).toLocaleDateString();
+  const formatDate = (date: string | Date | null) => {
+    if (!date) return 'Never';
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    return dateObj.toLocaleDateString();
   };
 
   const getInitials = (user: User) => {
@@ -173,7 +168,7 @@ export default function UserManagementPage() {
                   </div>
                   
                   <div className="flex items-center space-x-2">
-                    {user.id !== currentUser.id && (
+                    {user.id !== currentUser?.id && (
                       <>
                         <Button
                           variant="outline"
@@ -194,29 +189,36 @@ export default function UserManagementPage() {
                           )}
                         </Button>
                         
-                        <Button
-                          variant={user.role === 'admin' ? "destructive" : "default"}
-                          size="sm"
-                          onClick={() => toggleUserRole(user.id, user.role)}
-                          disabled={updateRoleMutation.isPending}
-                        >
-                          {user.role === 'admin' ? (
-                            <>
-                              <UserIcon className="w-4 h-4 mr-1" />
-                              Make User
-                            </>
-                          ) : (
-                            <>
-                              <Shield className="w-4 h-4 mr-1" />
-                              Make Admin
-                            </>
-                          )}
-                        </Button>
+                        {/* Show role toggle only if not joaquin.grimoldi@kavak.com */}
+                        {user.email !== 'joaquin.grimoldi@kavak.com' && (
+                          <Button
+                            variant={user.role === 'admin' ? "destructive" : "default"}
+                            size="sm"
+                            onClick={() => toggleUserRole(user.id, user.role)}
+                            disabled={updateRoleMutation.isPending}
+                          >
+                            {user.role === 'admin' ? (
+                              <>
+                                <UserIcon className="w-4 h-4 mr-1" />
+                                Make User
+                              </>
+                            ) : (
+                              <>
+                                <Shield className="w-4 h-4 mr-1" />
+                                Make Admin
+                              </>
+                            )}
+                          </Button>
+                        )}
                       </>
                     )}
                     
-                    {user.id === currentUser.id && (
+                    {user.id === currentUser?.id && (
                       <Badge variant="outline">You</Badge>
+                    )}
+                    
+                    {user.email === 'joaquin.grimoldi@kavak.com' && (
+                      <Badge variant="default">Primary Admin</Badge>
                     )}
                   </div>
                 </div>

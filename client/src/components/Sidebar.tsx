@@ -106,8 +106,8 @@ const Sidebar = ({ children }: SidebarProps) => {
             Trash
           </SidebarLink>
           
-          {/* Admin Section - Only show for admin users */}
-          {user?.role === 'admin' && (
+          {/* Admin Section - Only show for joaquin.grimoldi@kavak.com */}
+          {user?.email === 'joaquin.grimoldi@kavak.com' && user?.role === 'admin' && (
             <>
               <div className="my-4 border-t border-slate-200"></div>
               <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center">

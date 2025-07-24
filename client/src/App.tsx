@@ -12,6 +12,7 @@ import CarCreationPage from "./pages/CarCreationPage";
 import VideoCreationPage from "./pages/VideoCreationPage";
 import EmailBuilderPage from "./pages/EmailBuilderPage";
 import UserManagementPage from "./pages/UserManagementPage";
+import AdminRoute from "./components/AdminRoute";
 import { EditorProvider } from "@/context/EditorContext";
 import Sidebar from "@/components/Sidebar";
 import { useWebSocket } from "@/lib/websocket";
@@ -83,9 +84,12 @@ function Router() {
               <VideoCreationPage />
             </Sidebar>
           )} />
+          {/* Admin routes - redirect non-admins to main page */}
           <Route path="/admin/users" component={() => (
             <Sidebar>
-              <UserManagementPage />
+              <AdminRoute>
+                <UserManagementPage />
+              </AdminRoute>
             </Sidebar>
           )} />
         </>

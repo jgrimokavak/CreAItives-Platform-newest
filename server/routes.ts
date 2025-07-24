@@ -143,12 +143,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin middleware - check if user is admin
+  // Admin middleware - check if user is admin and specifically joaquin.grimoldi@kavak.com
   const isAdmin = async (req: any, res: any, next: any) => {
     try {
       const userId = req.user?.claims?.sub;
+      const userEmail = req.user?.claims?.email;
+      
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      // Only allow joaquin.grimoldi@kavak.com to access admin functions
+      if (userEmail !== 'joaquin.grimoldi@kavak.com') {
+        return res.status(403).json({ message: "Admin access restricted to authorized personnel only" });
       }
       
       const user = await storage.getUser(userId);
@@ -179,7 +186,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { userId } = req.params;
       const { isActive } = req.body;
       
+      console.log(`Admin status update request for user ${userId}:`, { isActive, body: req.body });
+      
       if (typeof isActive !== 'boolean') {
+        console.log(`Invalid isActive value: ${isActive}, type: ${typeof isActive}`);
         return res.status(400).json({ message: "isActive must be a boolean" });
       }
       
@@ -188,6 +198,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
       
+      console.log(`User ${userId} status updated successfully to: ${isActive}`);
       res.json(user);
     } catch (error) {
       console.error("Error updating user status:", error);
@@ -200,8 +211,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { userId } = req.params;
       const { role } = req.body;
       
+      console.log(`Admin role update request for user ${userId}:`, { role, body: req.body });
+      
       if (role !== 'user' && role !== 'admin') {
+        console.log(`Invalid role value: ${role}`);
         return res.status(400).json({ message: "Role must be 'user' or 'admin'" });
+      }
+      
+      // Prevent removing admin access from joaquin.grimoldi@kavak.com
+      const targetUser = await storage.getUser(userId);
+      if (!targetUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      if (targetUser.email === 'joaquin.grimoldi@kavak.com' && role !== 'admin') {
+        return res.status(403).json({ message: "Cannot remove admin access from the primary admin account" });
       }
       
       const user = await storage.updateUserRole(userId, role);
@@ -209,6 +233,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
       
+      console.log(`User ${userId} role updated successfully to: ${role}`);
       res.json(user);
     } catch (error) {
       console.error("Error updating user role:", error);
