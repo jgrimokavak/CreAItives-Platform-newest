@@ -139,9 +139,30 @@ export async function setupAuth(app: Express) {
   });
 
   app.get("/api/callback", (req, res, next) => {
-    passport.authenticate(`replitauth:${req.hostname}`, {
-      successRedirect: "/create",
-      failureRedirect: "/home?error=access_denied",
+    passport.authenticate(`replitauth:${req.hostname}`, (err: any, user: any, info: any) => {
+      if (err) {
+        console.error("Authentication error:", err);
+        return res.redirect("/home?error=auth_error");
+      }
+      
+      if (!user) {
+        // Authentication failed - user probably used non-@kavak.com email
+        console.log("Authentication failed, redirecting to home with error");
+        // Force logout to clear any partial session
+        req.logout(() => {
+          res.redirect("/home?error=access_denied");
+        });
+        return;
+      }
+      
+      // Success - log the user in
+      req.logIn(user, (err) => {
+        if (err) {
+          console.error("Login error:", err);
+          return res.redirect("/home?error=login_error");
+        }
+        res.redirect("/create");
+      });
     })(req, res, next);
   });
 

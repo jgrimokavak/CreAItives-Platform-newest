@@ -84,7 +84,17 @@ export default function HomePage() {
             <div className="flex items-center gap-4">
               {error === 'access_denied' && (
                 <div className="text-sm text-red-600 bg-red-50 px-3 py-1 rounded-md border border-red-200">
-                  Access restricted to @kavak.com users only
+                  Access restricted to @kavak.com users only. Please sign in with your @kavak.com email.
+                </div>
+              )}
+              {error === 'auth_error' && (
+                <div className="text-sm text-red-600 bg-red-50 px-3 py-1 rounded-md border border-red-200">
+                  Authentication error. Please try signing in again.
+                </div>
+              )}
+              {error === 'login_error' && (
+                <div className="text-sm text-red-600 bg-red-50 px-3 py-1 rounded-md border border-red-200">
+                  Login failed. Please try again.
                 </div>
               )}
               {isAuthenticated && user ? (

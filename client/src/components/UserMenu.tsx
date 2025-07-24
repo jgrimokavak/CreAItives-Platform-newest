@@ -9,14 +9,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut, User } from "lucide-react";
+import type { User as UserType } from "@shared/schema";
 
 interface UserMenuProps {
-  user: {
-    email: string;
-    firstName?: string;
-    lastName?: string;
-    profileImageUrl?: string;
-  };
+  user: UserType;
 }
 
 export function UserMenu({ user }: UserMenuProps) {
@@ -24,14 +20,14 @@ export function UserMenu({ user }: UserMenuProps) {
     if (user.firstName && user.lastName) {
       return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
     }
-    return user.email.substring(0, 2).toUpperCase();
+    return (user.email || '').substring(0, 2).toUpperCase();
   };
 
   const getDisplayName = () => {
     if (user.firstName && user.lastName) {
       return `${user.firstName} ${user.lastName}`;
     }
-    return user.email;
+    return user.email || 'User';
   };
 
   const handleLogout = () => {
@@ -52,7 +48,7 @@ export function UserMenu({ user }: UserMenuProps) {
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">{getDisplayName()}</p>
-            <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+            <p className="text-xs leading-none text-muted-foreground">{user.email || 'No email'}</p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
