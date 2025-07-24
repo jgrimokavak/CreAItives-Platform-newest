@@ -86,6 +86,11 @@ Preferred communication style: Simple, everyday language.
 - **Replicate API**: Alternative models (Imagen-3, Flux-Pro)
 - **Topaz Labs**: Image upscaling and enhancement
 
+### Authentication & Security
+- **Replit Auth**: OpenID Connect authentication provider
+- **Passport.js**: Authentication middleware with OpenID Connect strategy
+- **Express Session**: Secure session management with PostgreSQL storage
+
 ### Infrastructure
 - **Neon Database**: Serverless PostgreSQL hosting
 - **AWS S3**: Object storage for images and files

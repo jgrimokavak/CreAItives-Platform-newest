@@ -31,6 +31,7 @@ import axios from "axios";
 import Papa from "papaparse";
 import cron from "node-cron";
 import { jobs as batchJobs, queue, processBatch, cleanupOldZips, type Row as BatchRow } from "./batch";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 
 // Helper function to create a file-safe name from prompt text
 export function createFileSafeNameFromPrompt(prompt: string, maxLength: number = 50): string {
@@ -95,6 +96,9 @@ setInterval(() => {
 }, 5 * 60 * 1000); // Run every 5 minutes
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Auth middleware
+  await setupAuth(app);
+
   // Initialize Replicate model schemas and versions
   try {
     await initializeModels();
@@ -674,6 +678,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Use express.static with cache settings
   app.use('/uploads', express.static(uploadsPath, { maxAge: '7d' }));
+
+  // Auth routes
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
 
   // Add gallery routes
   app.use('/api', galleryRoutes);
