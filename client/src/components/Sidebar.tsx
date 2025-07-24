@@ -14,8 +14,8 @@ import {
   VideoIcon
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
-// import { useAuth } from '@/hooks/useAuth';
-// import { UserMenu } from './UserMenu';
+import { useAuth } from '@/hooks/useAuth';
+import { UserMenu } from './UserMenu';
 import kavakLogo from '@assets/LOGO_W (low quality)-01.png';
 
 interface SidebarLinkProps {
@@ -54,7 +54,7 @@ interface SidebarProps {
 const Sidebar = ({ children }: SidebarProps) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const isMobile = useIsMobile();
-  // const { user } = useAuth();
+  const { user } = useAuth();
 
   return (
     <div className="flex min-h-screen">
@@ -78,7 +78,7 @@ const Sidebar = ({ children }: SidebarProps) => {
       >
         <div className="px-6 py-7 border-b border-slate-200 flex items-center justify-between">
           <img src={kavakLogo} alt="Kavak Logo" className="h-6 ml-1" />
-          {/* {user && <UserMenu user={user} />} */}
+          {user && <UserMenu user={user} />}
         </div>
         
         <nav className="flex-1 px-6 py-4 space-y-1">

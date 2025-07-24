@@ -52,21 +52,54 @@ export class DatabaseStorage implements IStorage {
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
-    const [user] = await db
-      .insert(users)
-      .values(userData)
-      .onConflictDoUpdate({
-        target: users.id, // Primary key conflict
-        set: {
-          email: userData.email,
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          profileImageUrl: userData.profileImageUrl,
-          updatedAt: new Date(),
-        },
-      })
-      .returning();
-    return user;
+    try {
+      // Try to insert the user first
+      const [user] = await db
+        .insert(users)
+        .values(userData)
+        .onConflictDoUpdate({
+          target: users.id, // Handle ID conflicts (same user logging in again)
+          set: {
+            email: userData.email,
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            profileImageUrl: userData.profileImageUrl,
+            updatedAt: new Date(),
+          },
+        })
+        .returning();
+      return user;
+    } catch (error: any) {
+      // If we get an email constraint error, try to update by email
+      if (error.code === '23505' && error.constraint === 'users_email_key') {
+        console.log(`Email constraint conflict for ${userData.email}, attempting update by email`);
+        
+        // Find the existing user by email and update their information
+        const [existingUser] = await db
+          .select()
+          .from(users)
+          .where(eq(users.email, userData.email));
+          
+        if (existingUser) {
+          // Update the existing user with new data (especially the ID from Replit)
+          const [updatedUser] = await db
+            .update(users)
+            .set({
+              id: userData.id, // Update with new Replit ID
+              firstName: userData.firstName,
+              lastName: userData.lastName,
+              profileImageUrl: userData.profileImageUrl,
+              updatedAt: new Date(),
+            })
+            .where(eq(users.email, userData.email))
+            .returning();
+          return updatedUser;
+        }
+      }
+      
+      // Re-throw the error if it's not something we can handle
+      throw error;
+    }
   }
 
   async saveImage(image: GeneratedImage): Promise<GeneratedImage> {

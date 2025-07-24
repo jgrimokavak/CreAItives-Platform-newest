@@ -3,8 +3,8 @@ import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { motion } from 'framer-motion';
-// import { useAuth } from '@/hooks/useAuth';
-// import { UserMenu } from '@/components/UserMenu';
+import { useAuth } from '@/hooks/useAuth';
+import { UserMenu } from '@/components/UserMenu';
 import { 
   Sparkles, 
   Zap,
@@ -20,9 +20,7 @@ import {
 import kavakLogo from '@assets/LOGO_W (low quality)-01.png';
 
 export default function HomePage() {
-  // Temporarily disable auth check for testing
-  const isAuthenticated = false;
-  const user = null;
+  const { user, isLoading, isAuthenticated } = useAuth();
   
   // Check for access denied error
   const urlParams = new URLSearchParams(window.location.search);
@@ -90,7 +88,7 @@ export default function HomePage() {
                 </div>
               )}
               {isAuthenticated && user ? (
-                <div>User Menu</div>
+                <UserMenu user={user} />
               ) : (
                 <Button 
                   onClick={() => window.location.href = '/api/login'}
