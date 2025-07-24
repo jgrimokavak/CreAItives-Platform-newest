@@ -134,9 +134,10 @@ Preferred communication style: Simple, everyday language.
 - **Alternative**: Manual HTML generation was replaced for better reliability
 
 ### Real-time Updates
-- **Chosen**: Custom WebSocket implementation
+- **Chosen**: Custom WebSocket implementation with session-based authentication
 - **Rationale**: Direct control over connection handling, optimized for image generation workflows
-- **Features**: Job progress, gallery updates, connection resilience
+- **Features**: Job progress, gallery updates, connection resilience, secure authentication
+- **Security**: Session cookie validation, unauthenticated connection blocking, message injection prevention
 
 ### File Storage
 - **Chosen**: AWS S3 with presigned URLs
