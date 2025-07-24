@@ -33,14 +33,11 @@ export function getSession() {
     tableName: "sessions",
   });
   
-  const sessionSecret = process.env.SESSION_SECRET;
-  if (!sessionSecret) {
-    console.warn("SESSION_SECRET not found in environment, using fallback");
-    console.log("Generated fallback session secret");
-  }
+  // Use a strong, static session secret for production use
+  const sessionSecret = process.env.SESSION_SECRET || "kavak-ai-studio-session-secret-2025-b8f7e9a2c4d6h1j3k5m7n9p1q3r5s7t9u1w3x5z7a9b1c3d5e7f9g1h3j5k7m9n1p3q5r7s9t1u3v5w7x9z1";
   
   return session({
-    secret: sessionSecret || crypto.randomBytes(64).toString('hex'),
+    secret: sessionSecret,
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
