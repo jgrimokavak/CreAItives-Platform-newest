@@ -11,6 +11,10 @@ export interface IStorage {
   // (IMPORTANT) these user operations are mandatory for Replit Auth.
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
+  // User management operations
+  getAllUsers(): Promise<User[]>;
+  updateUserStatus(userId: string, isActive: boolean): Promise<User | undefined>;
+  updateUserRole(userId: string, role: 'user' | 'admin'): Promise<User | undefined>;
   saveImage(image: GeneratedImage): Promise<GeneratedImage>;
   getAllImages(options?: { starred?: boolean; trash?: boolean; limit?: number; cursor?: string; searchQuery?: string }): Promise<{ 
     items: GeneratedImage[]; 
@@ -78,7 +82,7 @@ export class DatabaseStorage implements IStorage {
         const [existingUser] = await db
           .select()
           .from(users)
-          .where(eq(users.email, userData.email));
+          .where(eq(users.email, userData.email!));
           
         if (existingUser) {
           // Update the existing user with new data (especially the ID from Replit)
@@ -91,7 +95,7 @@ export class DatabaseStorage implements IStorage {
               profileImageUrl: userData.profileImageUrl,
               updatedAt: new Date(),
             })
-            .where(eq(users.email, userData.email))
+            .where(eq(users.email, userData.email!))
             .returning();
           return updatedUser;
         }
@@ -100,6 +104,29 @@ export class DatabaseStorage implements IStorage {
       // Re-throw the error if it's not something we can handle
       throw error;
     }
+  }
+
+  // User management methods
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(users.createdAt);
+  }
+
+  async updateUserStatus(userId: string, isActive: boolean): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({ isActive, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  async updateUserRole(userId: string, role: 'user' | 'admin'): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({ role, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
   }
 
   async saveImage(image: GeneratedImage): Promise<GeneratedImage> {

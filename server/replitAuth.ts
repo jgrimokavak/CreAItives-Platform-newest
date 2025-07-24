@@ -83,6 +83,7 @@ async function upsertUser(
     firstName: claims["first_name"],
     lastName: claims["last_name"],
     profileImageUrl: claims["profile_image_url"],
+    lastLoginAt: new Date(),
   });
 }
 
@@ -132,6 +133,8 @@ export async function setupAuth(app: Express) {
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
+    // Add query parameter to hint Google login preference
+    const googleHint = req.query.provider === 'google' ? '&login_hint=google' : '';
     passport.authenticate(`replitauth:${req.hostname}`, {
       prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],
@@ -193,6 +196,18 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
       console.log(`Access denied for non-Kavak user: ${userEmail}`);
       return res.status(401).json({ message: "Access restricted to @kavak.com users only" });
     }
+    
+    // Check if user is active in database
+    const userId = user.claims?.sub;
+    if (userId) {
+      const { storage } = await import('./storage');
+      const dbUser = await storage.getUser(userId);
+      if (!dbUser || !dbUser.isActive) {
+        console.log(`Access denied for inactive user: ${userEmail}`);
+        return res.status(401).json({ message: "Account deactivated. Contact admin for access." });
+      }
+    }
+    
     return next();
   }
 

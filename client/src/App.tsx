@@ -11,6 +11,7 @@ import UpscalePage from "./pages/UpscalePageNew";
 import CarCreationPage from "./pages/CarCreationPage";
 import VideoCreationPage from "./pages/VideoCreationPage";
 import EmailBuilderPage from "./pages/EmailBuilderPage";
+import UserManagementPage from "./pages/UserManagementPage";
 import { EditorProvider } from "@/context/EditorContext";
 import Sidebar from "@/components/Sidebar";
 import { useWebSocket } from "@/lib/websocket";
@@ -69,7 +70,7 @@ function Router() {
           )} />
           <Route path="/trash" component={() => (
             <Sidebar>
-              <SimpleGalleryPage trash={true} />
+              <SimpleGalleryPage />
             </Sidebar>
           )} />
           <Route path="/car" component={() => (
@@ -80,6 +81,11 @@ function Router() {
           <Route path="/video" component={() => (
             <Sidebar>
               <VideoCreationPage />
+            </Sidebar>
+          )} />
+          <Route path="/admin/users" component={() => (
+            <Sidebar>
+              <UserManagementPage />
             </Sidebar>
           )} />
         </>

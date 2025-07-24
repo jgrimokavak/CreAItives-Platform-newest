@@ -11,7 +11,9 @@ import {
   CarFront,
   Home,
   Mail,
-  VideoIcon
+  VideoIcon,
+  Users,
+  Shield
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/useAuth';
@@ -103,6 +105,20 @@ const Sidebar = ({ children }: SidebarProps) => {
           <SidebarLink to="/trash" icon={<Trash2 size={18} />}>
             Trash
           </SidebarLink>
+          
+          {/* Admin Section - Only show for admin users */}
+          {user?.role === 'admin' && (
+            <>
+              <div className="my-4 border-t border-slate-200"></div>
+              <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center">
+                <Shield size={14} className="mr-2" />
+                Admin
+              </div>
+              <SidebarLink to="/admin/users" icon={<Users size={18} />}>
+                User Management
+              </SidebarLink>
+            </>
+          )}
         </nav>
       </div>
 
