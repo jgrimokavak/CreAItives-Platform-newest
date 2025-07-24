@@ -137,15 +137,13 @@ export default function PromptForm({
       }
       
       // Step 1: Submit the request to the server to create a new job
-      const response = await apiRequest("/api/generate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(filteredValues),
-      });
+      const response = await apiRequest(
+        "POST",
+        "/api/generate",
+        filteredValues
+      );
       
-      const { jobId } = response;
+      const { jobId } = await response.json();
       if (!jobId) throw new Error("No job ID returned from server");
       
       // Step 2: Start progress animation
@@ -167,7 +165,13 @@ export default function PromptForm({
         // Poll for job status
         const statusCheck = async () => {
           try {
-            const job = await apiRequest(`/api/job/${jobId}`);
+            const statusResponse = await apiRequest(
+              "GET",
+              `/api/job/${jobId}`,
+              null
+            );
+            
+            const job = await statusResponse.json();
             
             if (job.status === "done" && job.result) {
               // Job completed successfully
@@ -224,18 +228,16 @@ export default function PromptForm({
         throw new Error("Prompt must be at least 3 characters long");
       }
       
-      const response = await apiRequest("/api/enhance-prompt", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      const response = await apiRequest(
+        "POST",
+        "/api/enhance-prompt",
+        {
           text: currentPrompt,
           model: modelKey,
-        }),
-      });
+        }
+      );
       
-      return response;
+      return response.json();
     },
     onSuccess: (data) => {
       // Update the form with the enhanced prompt
