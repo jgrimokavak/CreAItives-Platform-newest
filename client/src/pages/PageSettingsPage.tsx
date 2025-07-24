@@ -149,41 +149,17 @@ export default function PageSettingsPage() {
                 </div>
               </div>
               
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
-                <div className="flex items-center space-x-2">
+              <div className="flex items-center justify-end">
+                <div className="flex items-center space-x-3">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {setting.isEnabled ? 'Visible in sidebar' : 'Hidden from sidebar'}
+                  </span>
                   <Switch
                     checked={setting.isEnabled}
                     onCheckedChange={() => handleTogglePageSetting(setting.pageKey, setting.isEnabled)}
                     disabled={updatePageSettingMutation.isPending}
                   />
-                  <span className="text-sm font-medium">
-                    {setting.isEnabled ? 'Visible' : 'Hidden'}
-                  </span>
                 </div>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleTogglePageSetting(setting.pageKey, setting.isEnabled)}
-                  disabled={updatePageSettingMutation.isPending}
-                  className={`w-full sm:w-auto ${
-                    setting.isEnabled 
-                      ? 'text-red-600 hover:bg-red-50' 
-                      : 'text-green-600 hover:bg-green-50'
-                  }`}
-                >
-                  {setting.isEnabled ? (
-                    <>
-                      <EyeOff className="w-4 h-4 mr-1" />
-                      Hide Page
-                    </>
-                  ) : (
-                    <>
-                      <Eye className="w-4 h-4 mr-1" />
-                      Show Page
-                    </>
-                  )}
-                </Button>
               </div>
             </div>
           </Card>
