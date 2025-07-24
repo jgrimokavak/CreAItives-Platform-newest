@@ -95,6 +95,13 @@ setInterval(() => {
 }, 5 * 60 * 1000); // Run every 5 minutes
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Add JSON parsing middleware
+  app.use(express.json());
+  
+  // Auth middleware - import and setup authentication
+  const { setupAuth, isAuthenticated } = await import('./replitAuth');
+  await setupAuth(app);
+  
   // Initialize Replicate model schemas and versions
   try {
     await initializeModels();
@@ -115,6 +122,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
   app.use("/downloads", express.static(downloadsPath, { maxAge: "1d" }));
   console.log(`Serving downloads from ${downloadsPath}`);
+  
+  // Auth routes
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = (req.session as any)?.user;
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
   // Helper function to run image generation job
   async function runGenerateJob(jobId: string, data: any) {
     console.log(`Starting job ${jobId} for image generation`);
@@ -274,8 +296,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
 
-  // API endpoint to generate images (async with job queue)
-  app.post("/api/generate", async (req, res) => {
+  // API endpoint to generate images (async with job queue) - Protected
+  app.post("/api/generate", isAuthenticated, async (req, res) => {
     try {
       // Validate request body
       const validationResult = generateImageSchema.safeParse(req.body);
@@ -310,8 +332,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // API endpoint to get all images
-  app.get("/api/images", async (req, res) => {
+  // API endpoint to get all images - Protected
+  app.get("/api/images", isAuthenticated, async (req, res) => {
     try {
       const images = await storage.getAllImages();
       res.json({ images });

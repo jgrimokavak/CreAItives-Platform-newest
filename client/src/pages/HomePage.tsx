@@ -3,6 +3,8 @@ import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { motion } from 'framer-motion';
+// import { useAuth } from '@/hooks/useAuth';
+// import { UserMenu } from '@/components/UserMenu';
 import { 
   Sparkles, 
   Zap,
@@ -12,11 +14,19 @@ import {
   Images, 
   Wand2,
   CarFront,
-  ArrowRight
+  ArrowRight,
+  LogIn
 } from 'lucide-react';
+import kavakLogo from '@assets/LOGO_W (low quality)-01.png';
 
 export default function HomePage() {
-  // Simplified homepage without carousel
+  // Temporarily disable auth check for testing
+  const isAuthenticated = false;
+  const user = null;
+  
+  // Check for access denied error
+  const urlParams = new URLSearchParams(window.location.search);
+  const error = urlParams.get('error');
 
   // Platform capabilities
   const capabilities = [
@@ -66,6 +76,37 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50">
+      {/* Header */}
+      <header className="bg-white border-b border-slate-200 px-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto max-w-7xl">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center">
+              <img src={kavakLogo} alt="Kavak Logo" className="h-6" />
+            </div>
+            <div className="flex items-center gap-4">
+              {error === 'access_denied' && (
+                <div className="text-sm text-red-600 bg-red-50 px-3 py-1 rounded-md border border-red-200">
+                  Access restricted to @kavak.com users only
+                </div>
+              )}
+              {isAuthenticated && user ? (
+                <div>User Menu</div>
+              ) : (
+                <Button 
+                  onClick={() => window.location.href = '/api/login'}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <LogIn className="h-4 w-4" />
+                  Sign In
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      </header>
+
       <main className="flex-grow">
         {/* Hero Section */}
         <section className="pt-20 pb-12 px-4 sm:px-6 lg:px-8 bg-white border-b">
@@ -86,16 +127,33 @@ export default function HomePage() {
                   imagery with our powerful suite of creation tools.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                  <Link to="/create">
-                    <Button size="lg" className="bg-[#001dd1] hover:bg-blue-800 text-white font-medium flex items-center gap-2">
-                      Get Started <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                  <Link to="/gallery">
-                    <Button size="lg" variant="outline" className="bg-white border-slate-200 text-slate-700 font-medium">
-                      Browse Gallery
-                    </Button>
-                  </Link>
+                  {isAuthenticated ? (
+                    <>
+                      <Link to="/create">
+                        <Button size="lg" className="bg-[#001dd1] hover:bg-blue-800 text-white font-medium flex items-center gap-2">
+                          Get Started <ArrowRight className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                      <Link to="/gallery">
+                        <Button size="lg" variant="outline" className="bg-white border-slate-200 text-slate-700 font-medium">
+                          Browse Gallery
+                        </Button>
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      <Button 
+                        size="lg" 
+                        className="bg-[#001dd1] hover:bg-blue-800 text-white font-medium flex items-center gap-2"
+                        onClick={() => window.location.href = '/api/login'}
+                      >
+                        Sign In to Get Started <ArrowRight className="h-4 w-4" />
+                      </Button>
+                      <div className="text-sm text-slate-600 self-center">
+                        Access restricted to @kavak.com users
+                      </div>
+                    </>
+                  )}
                 </div>
                 
                 <div className="flex items-center gap-6 mt-8 justify-center lg:justify-start">

@@ -1,4 +1,4 @@
-import { users, images, videos, projects, type User, type InsertUser, type GeneratedImage, type Video, type InsertVideo, type Project, type InsertProject } from "@shared/schema";
+import { users, images, videos, projects, type User, type UpsertUser, type GeneratedImage, type Video, type InsertVideo, type Project, type InsertProject } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, isNull, isNotNull, and, ilike, lt } from "drizzle-orm";
 import * as fs from "fs";
@@ -7,9 +7,10 @@ import { push } from "./ws";
 
 // Define storage interface
 export interface IStorage {
-  getUser(id: number): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  // User operations
+  // (IMPORTANT) these user operations are mandatory for Replit Auth.
+  getUser(id: string): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
   saveImage(image: GeneratedImage): Promise<GeneratedImage>;
   getAllImages(options?: { starred?: boolean; trash?: boolean; limit?: number; cursor?: string; searchQuery?: string }): Promise<{ 
     items: GeneratedImage[]; 
@@ -42,18 +43,26 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getUser(id: number): Promise<User | undefined> {
+  // User operations
+  // (IMPORTANT) these user operations are mandatory for Replit Auth.
+
+  async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user;
-  }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db.insert(users).values(insertUser).returning();
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
     return user;
   }
 
