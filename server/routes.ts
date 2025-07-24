@@ -178,11 +178,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User management routes (admin only)
   app.get('/api/admin/users', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
-      const users = await storage.getAllUsers();
+      const { search, statusFilter, roleFilter, sortBy, sortOrder } = req.query;
+      const users = await storage.getAllUsers({
+        search: search as string,
+        statusFilter: statusFilter as 'all' | 'active' | 'inactive',
+        roleFilter: roleFilter as 'all' | 'user' | 'admin',
+        sortBy: sortBy as 'createdAt' | 'lastLoginAt' | 'email' | 'firstName',
+        sortOrder: sortOrder as 'asc' | 'desc',
+      });
       res.json(users);
     } catch (error) {
       console.error("Error fetching users:", error);
       res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.get('/api/admin/users/statistics', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const stats = await storage.getUserStatistics();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching user statistics:", error);
+      res.status(500).json({ message: "Failed to fetch statistics" });
+    }
+  });
+
+  app.get('/api/admin/users/export', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { search, statusFilter, roleFilter, sortBy, sortOrder } = req.query;
+      const users = await storage.getAllUsers({
+        search: search as string,
+        statusFilter: statusFilter as 'all' | 'active' | 'inactive',
+        roleFilter: roleFilter as 'all' | 'user' | 'admin',
+        sortBy: sortBy as 'createdAt' | 'lastLoginAt' | 'email' | 'firstName',
+        sortOrder: sortOrder as 'asc' | 'desc',
+      });
+      
+      // Generate CSV content
+      const csvHeader = 'ID,Email,First Name,Last Name,Role,Status,Created At,Last Login At,Updated At\n';
+      const csvRows = users.map(user => {
+        const formatDate = (date: Date | null) => date ? date.toISOString() : '';
+        return [
+          user.id,
+          user.email || '',
+          user.firstName || '',
+          user.lastName || '',
+          user.role,
+          user.isActive ? 'Active' : 'Inactive',
+          formatDate(user.createdAt),
+          formatDate(user.lastLoginAt),
+          formatDate(user.updatedAt)
+        ].map(field => `"${String(field).replace(/"/g, '""')}"`).join(',');
+      }).join('\n');
+      
+      const csvContent = csvHeader + csvRows;
+      
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="users-${new Date().toISOString().split('T')[0]}.csv"`);
+      res.send(csvContent);
+    } catch (error) {
+      console.error("Error exporting users:", error);
+      res.status(500).json({ message: "Failed to export users" });
     }
   });
 

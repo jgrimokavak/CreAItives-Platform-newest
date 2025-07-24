@@ -1,6 +1,6 @@
 import { users, images, videos, projects, type User, type UpsertUser, type GeneratedImage, type Video, type InsertVideo, type Project, type InsertProject } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, isNull, isNotNull, and, ilike, lt } from "drizzle-orm";
+import { eq, desc, isNull, isNotNull, and, ilike, lt, sql, or } from "drizzle-orm";
 import * as fs from "fs";
 import * as path from "path";
 import { push } from "./ws";
@@ -12,7 +12,19 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   // User management operations
-  getAllUsers(): Promise<User[]>;
+  getAllUsers(options?: {
+    search?: string;
+    statusFilter?: 'all' | 'active' | 'inactive';
+    roleFilter?: 'all' | 'user' | 'admin';
+    sortBy?: 'createdAt' | 'lastLoginAt' | 'email' | 'firstName';
+    sortOrder?: 'asc' | 'desc';
+  }): Promise<User[]>;
+  getUserStatistics(): Promise<{
+    totalUsers: number;
+    activeUsers: number;
+    adminUsers: number;
+    recentLogins: number; // logins in last 7 days
+  }>;
   updateUserStatus(userId: string, isActive: boolean): Promise<User | undefined>;
   updateUserRole(userId: string, role: 'user' | 'admin'): Promise<User | undefined>;
   updateUserLastLogin(userId: string): Promise<User | undefined>;
@@ -110,8 +122,87 @@ export class DatabaseStorage implements IStorage {
   }
 
   // User management methods
-  async getAllUsers(): Promise<User[]> {
-    return await db.select().from(users).orderBy(users.createdAt);
+  async getAllUsers(options: {
+    search?: string;
+    statusFilter?: 'all' | 'active' | 'inactive';
+    roleFilter?: 'all' | 'user' | 'admin';
+    sortBy?: 'createdAt' | 'lastLoginAt' | 'email' | 'firstName';
+    sortOrder?: 'asc' | 'desc';
+  } = {}): Promise<User[]> {
+    const conditions = [];
+    
+    // Apply search filter
+    if (options.search) {
+      const searchTerm = `%${options.search}%`;
+      conditions.push(
+        or(
+          ilike(users.email, searchTerm),
+          ilike(users.firstName, searchTerm),
+          ilike(users.lastName, searchTerm)
+        )
+      );
+    }
+    
+    // Apply status filter
+    if (options.statusFilter === 'active') {
+      conditions.push(eq(users.isActive, true));
+    } else if (options.statusFilter === 'inactive') {
+      conditions.push(eq(users.isActive, false));
+    }
+    
+    // Apply role filter
+    if (options.roleFilter && options.roleFilter !== 'all') {
+      conditions.push(eq(users.role, options.roleFilter));
+    }
+    
+    // Build the query
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+    
+    // Apply sorting
+    const sortBy = options.sortBy || 'createdAt';
+    const sortOrder = options.sortOrder || 'desc';
+    
+    let query = db.select().from(users);
+    
+    if (whereClause) {
+      query = query.where(whereClause);
+    }
+    
+    if (sortOrder === 'asc') {
+      query = query.orderBy(users[sortBy]);
+    } else {
+      query = query.orderBy(desc(users[sortBy]));
+    }
+    
+    return await query;
+  }
+
+  async getUserStatistics(): Promise<{
+    totalUsers: number;
+    activeUsers: number;
+    adminUsers: number;
+    recentLogins: number;
+  }> {
+    const [totalUsers] = await db.select({ count: sql`count(*)` }).from(users);
+    const [activeUsers] = await db.select({ count: sql`count(*)` }).from(users).where(eq(users.isActive, true));
+    const [adminUsers] = await db.select({ count: sql`count(*)` }).from(users).where(eq(users.role, 'admin'));
+    
+    // Recent logins (last 7 days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const [recentLogins] = await db.select({ count: sql`count(*)` }).from(users).where(
+      and(
+        isNotNull(users.lastLoginAt),
+        sql`${users.lastLoginAt} >= ${sevenDaysAgo}`
+      )
+    );
+    
+    return {
+      totalUsers: Number(totalUsers.count),
+      activeUsers: Number(activeUsers.count),
+      adminUsers: Number(adminUsers.count),
+      recentLogins: Number(recentLogins.count),
+    };
   }
 
   async updateUserStatus(userId: string, isActive: boolean): Promise<User | undefined> {
