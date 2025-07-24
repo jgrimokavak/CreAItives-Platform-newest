@@ -136,7 +136,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not found" });
       }
       
-      res.json(user);
+      // Update last login time every time user data is fetched (indicates active session)
+      await storage.updateUserLastLogin(userId);
+      
+      // Get updated user data with new login time
+      const updatedUser = await storage.getUser(userId);
+      res.json(updatedUser);
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });

@@ -15,6 +15,7 @@ export interface IStorage {
   getAllUsers(): Promise<User[]>;
   updateUserStatus(userId: string, isActive: boolean): Promise<User | undefined>;
   updateUserRole(userId: string, role: 'user' | 'admin'): Promise<User | undefined>;
+  updateUserLastLogin(userId: string): Promise<User | undefined>;
   saveImage(image: GeneratedImage): Promise<GeneratedImage>;
   getAllImages(options?: { starred?: boolean; trash?: boolean; limit?: number; cursor?: string; searchQuery?: string }): Promise<{ 
     items: GeneratedImage[]; 
@@ -68,6 +69,7 @@ export class DatabaseStorage implements IStorage {
             firstName: userData.firstName,
             lastName: userData.lastName,
             profileImageUrl: userData.profileImageUrl,
+            lastLoginAt: userData.lastLoginAt || new Date(),
             updatedAt: new Date(),
           },
         })
@@ -93,6 +95,7 @@ export class DatabaseStorage implements IStorage {
               firstName: userData.firstName,
               lastName: userData.lastName,
               profileImageUrl: userData.profileImageUrl,
+              lastLoginAt: userData.lastLoginAt || new Date(),
               updatedAt: new Date(),
             })
             .where(eq(users.email, userData.email!))
@@ -124,6 +127,15 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db
       .update(users)
       .set({ role, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  async updateUserLastLogin(userId: string): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({ lastLoginAt: new Date(), updatedAt: new Date() })
       .where(eq(users.id, userId))
       .returning();
     return user;
