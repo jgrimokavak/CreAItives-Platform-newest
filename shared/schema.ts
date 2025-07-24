@@ -232,3 +232,21 @@ export interface EmailContent {
   subject: string;
   components: EmailComponent[];
 }
+
+// Page Settings Schema
+export const pageSettings = pgTable("page_settings", {
+  id: serial("id").primaryKey(),
+  pageKey: varchar("page_key", { length: 50 }).notNull().unique(),
+  pageName: varchar("page_name", { length: 100 }).notNull(),
+  isEnabled: boolean("is_enabled").default(true).notNull(),
+  description: text("description"),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertPageSettingsSchema = createInsertSchema(pageSettings).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export type InsertPageSettings = z.infer<typeof insertPageSettingsSchema>;
+export type PageSettings = typeof pageSettings.$inferSelect;

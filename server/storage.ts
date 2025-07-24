@@ -1,4 +1,4 @@
-import { users, images, videos, projects, type User, type UpsertUser, type GeneratedImage, type Video, type InsertVideo, type Project, type InsertProject } from "@shared/schema";
+import { users, images, videos, projects, pageSettings, type User, type UpsertUser, type GeneratedImage, type Video, type InsertVideo, type Project, type InsertProject, type PageSettings, type InsertPageSettings } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, isNull, isNotNull, and, ilike, lt, sql, or } from "drizzle-orm";
 import * as fs from "fs";
@@ -46,6 +46,10 @@ export interface IStorage {
   getProjectById(id: string): Promise<Project | undefined>;
   updateProject(id: string, updates: Partial<Project>): Promise<Project | undefined>;
   deleteProject(id: string): Promise<void>;
+  // Page settings operations
+  getAllPageSettings(): Promise<PageSettings[]>;
+  updatePageSetting(pageKey: string, isEnabled: boolean): Promise<PageSettings | undefined>;
+  initializePageSettings(): Promise<void>;
 }
 
 // Database storage implementation
@@ -694,6 +698,50 @@ export class DatabaseStorage implements IStorage {
       .where(eq(videos.id, id))
       .returning();
     return updatedVideo;
+  }
+
+  // Page settings methods
+  async getAllPageSettings(): Promise<PageSettings[]> {
+    return await db.select().from(pageSettings).orderBy(pageSettings.pageName);
+  }
+
+  async updatePageSetting(pageKey: string, isEnabled: boolean): Promise<PageSettings | undefined> {
+    const [updated] = await db
+      .update(pageSettings)
+      .set({ 
+        isEnabled, 
+        updatedAt: new Date() 
+      })
+      .where(eq(pageSettings.pageKey, pageKey))
+      .returning();
+    return updated;
+  }
+
+  async initializePageSettings(): Promise<void> {
+    // Default pages with their configurations
+    const defaultPages = [
+      { pageKey: 'create', pageName: 'Create', description: 'Main image creation page' },
+      { pageKey: 'car', pageName: 'Car Creation', description: 'Car-specific image creation' },
+      { pageKey: 'video', pageName: 'Video Creation', description: 'Video generation using Vertex AI' },
+      { pageKey: 'gallery', pageName: 'Gallery', description: 'View and manage generated images' },
+      { pageKey: 'upscale', pageName: 'Upscale', description: 'Image upscaling functionality' },
+      { pageKey: 'email-builder', pageName: 'Email CreAItor', description: 'MJML email builder' },
+      { pageKey: 'trash', pageName: 'Trash', description: 'Deleted images management' },
+    ];
+
+    // Check if any page settings exist
+    const existingSettings = await db.select().from(pageSettings).limit(1);
+    
+    if (existingSettings.length === 0) {
+      // Initialize with default settings
+      await db.insert(pageSettings).values(
+        defaultPages.map(page => ({
+          ...page,
+          isEnabled: true,
+        }))
+      );
+      console.log('Initialized page settings with default configuration');
+    }
   }
 }
 

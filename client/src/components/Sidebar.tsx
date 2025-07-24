@@ -13,10 +13,12 @@ import {
   Mail,
   VideoIcon,
   Users,
-  Shield
+  Shield,
+  Settings
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/useAuth';
+import { useEnabledPages } from '@/hooks/useEnabledPages';
 import { UserMenu } from './UserMenu';
 import kavakLogo from '@assets/LOGO_W (low quality)-01.png';
 
@@ -57,6 +59,7 @@ const Sidebar = ({ children }: SidebarProps) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const isMobile = useIsMobile();
   const { user } = useAuth();
+  const { isPageEnabled, isLoading: isLoadingPages } = useEnabledPages();
 
   return (
     <div className="flex min-h-screen">
@@ -84,27 +87,41 @@ const Sidebar = ({ children }: SidebarProps) => {
         </div>
         
         <nav className="flex-1 px-6 py-4 space-y-1">
-          <SidebarLink to="/create" icon={<Sparkles size={18} />}>
-            Create
-          </SidebarLink>
-          <SidebarLink to="/car" icon={<CarFront size={18} />}>
-            Car Creation
-          </SidebarLink>
-          <SidebarLink to="/video" icon={<VideoIcon size={18} />}>
-            Video Creation
-          </SidebarLink>
-          <SidebarLink to="/gallery" icon={<Images size={18} />}>
-            Gallery
-          </SidebarLink>
-          <SidebarLink to="/upscale" icon={<ImageUpscale size={18} />}>
-            Upscale
-          </SidebarLink>
-          <SidebarLink to="/email-builder" icon={<Mail size={18} />}>
-            Email CreAItor
-          </SidebarLink>
-          <SidebarLink to="/trash" icon={<Trash2 size={18} />}>
-            Trash
-          </SidebarLink>
+          {isPageEnabled('create') && (
+            <SidebarLink to="/create" icon={<Sparkles size={18} />}>
+              Create
+            </SidebarLink>
+          )}
+          {isPageEnabled('car') && (
+            <SidebarLink to="/car" icon={<CarFront size={18} />}>
+              Car Creation
+            </SidebarLink>
+          )}
+          {isPageEnabled('video') && (
+            <SidebarLink to="/video" icon={<VideoIcon size={18} />}>
+              Video Creation
+            </SidebarLink>
+          )}
+          {isPageEnabled('gallery') && (
+            <SidebarLink to="/gallery" icon={<Images size={18} />}>
+              Gallery
+            </SidebarLink>
+          )}
+          {isPageEnabled('upscale') && (
+            <SidebarLink to="/upscale" icon={<ImageUpscale size={18} />}>
+              Upscale
+            </SidebarLink>
+          )}
+          {isPageEnabled('email-builder') && (
+            <SidebarLink to="/email-builder" icon={<Mail size={18} />}>
+              Email CreAItor
+            </SidebarLink>
+          )}
+          {isPageEnabled('trash') && (
+            <SidebarLink to="/trash" icon={<Trash2 size={18} />}>
+              Trash
+            </SidebarLink>
+          )}
           
           {/* Admin Section - Only show for joaquin.grimoldi@kavak.com */}
           {user?.email === 'joaquin.grimoldi@kavak.com' && user?.role === 'admin' && (
@@ -116,6 +133,9 @@ const Sidebar = ({ children }: SidebarProps) => {
               </div>
               <SidebarLink to="/admin/users" icon={<Users size={18} />}>
                 User Management
+              </SidebarLink>
+              <SidebarLink to="/admin/page-settings" icon={<Settings size={18} />}>
+                Page Settings
               </SidebarLink>
             </>
           )}

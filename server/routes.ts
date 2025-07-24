@@ -1203,6 +1203,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Page settings routes (admin only)
+  app.get('/api/admin/page-settings', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const pageSettings = await storage.getAllPageSettings();
+      res.json(pageSettings);
+    } catch (error) {
+      console.error("Error fetching page settings:", error);
+      res.status(500).json({ message: "Failed to fetch page settings" });
+    }
+  });
+
+  // Public endpoint to get enabled pages for sidebar
+  app.get('/api/page-settings/enabled', async (req: any, res) => {
+    try {
+      const pageSettings = await storage.getAllPageSettings();
+      const enabledPages = pageSettings
+        .filter(setting => setting.isEnabled)
+        .map(setting => setting.pageKey);
+      res.json({ enabledPages });
+    } catch (error) {
+      console.error("Error fetching enabled pages:", error);
+      res.status(500).json({ message: "Failed to fetch enabled pages" });
+    }
+  });
+
+  app.patch('/api/admin/page-settings/:pageKey', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { pageKey } = req.params;
+      const { isEnabled } = req.body;
+      
+      if (typeof isEnabled !== 'boolean') {
+        return res.status(400).json({ message: "isEnabled must be a boolean" });
+      }
+      
+      const setting = await storage.updatePageSetting(pageKey, isEnabled);
+      if (!setting) {
+        return res.status(404).json({ message: "Page setting not found" });
+      }
+      
+      res.json(setting);
+    } catch (error) {
+      console.error("Error updating page setting:", error);
+      res.status(500).json({ message: "Failed to update page setting" });
+    }
+  });
+
   // Create HTTP server
   const httpServer = createServer(app);
   
@@ -1219,6 +1265,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Initialize car data auto-refresh
   setupCarDataAutoRefresh();
+  
+  // Initialize page settings
+  await storage.initializePageSettings();
   
   return httpServer;
 }
