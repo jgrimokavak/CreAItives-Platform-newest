@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is a full-stack application that combines an AI-powered image generation platform with a sophisticated email builder. The system includes multiple image generation models (OpenAI GPT-Image-1, Replicate Imagen-3, Flux-Pro), batch processing capabilities, and a complete email building system with MJML support. The application now features secure Replit Auth authentication with company-specific access control, restricting access to users with @kavak.com email addresses only.
+This is a full-stack application that combines an AI-powered image generation platform with a sophisticated email builder. The system includes multiple image generation models (OpenAI GPT-Image-1, Replicate Imagen-3, Flux-Pro), batch processing capabilities, and a complete email building system with MJML support.
 
 ## User Preferences
 
@@ -86,13 +86,6 @@ Preferred communication style: Simple, everyday language.
 - **Replicate API**: Alternative models (Imagen-3, Flux-Pro)
 - **Topaz Labs**: Image upscaling and enhancement
 
-### Authentication & Security
-- **Replit Auth**: OpenID Connect authentication provider with company-specific access control
-- **Email Domain Restriction**: Only @kavak.com email addresses are allowed access
-- **Passport.js**: Authentication middleware with OpenID Connect strategy
-- **Express Session**: Secure session management with PostgreSQL storage and static session secret
-- **Access Control**: Landing page for unauthenticated users, dedicated access denied page for unauthorized domains
-
 ### Infrastructure
 - **Neon Database**: Serverless PostgreSQL hosting
 - **AWS S3**: Object storage for images and files
@@ -122,20 +115,6 @@ Preferred communication style: Simple, everyday language.
 - Vite dev server for frontend
 - Replit-specific plugins for development environment
 - WebSocket connection handling for local vs production
-- Authentication system with session storage in PostgreSQL
-- Company-specific access control implemented
-
-## Recent Changes
-
-### July 24, 2025 - Authentication System Implementation
-- ✓ Implemented Replit Auth with OpenID Connect integration
-- ✓ Added PostgreSQL-based session storage for scalability
-- ✓ Created email domain restriction for @kavak.com users only
-- ✓ Built landing page for unauthenticated users
-- ✓ Created authenticated home page with user profile display
-- ✓ Added access denied page for unauthorized email domains
-- ✓ Integrated authentication middleware into existing API routes
-- ✓ Set up static session secret for production stability
 
 ## Key Architectural Decisions
 
