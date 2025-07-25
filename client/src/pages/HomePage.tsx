@@ -137,7 +137,7 @@ export default function HomePage() {
                 <div className="flex flex-col sm:flex-row gap-4 items-center justify-center lg:justify-start lg:items-start">
                   {isAuthenticated ? (
                     <>
-                      <Link to="/create">
+                      <Link to="/car">
                         <Button size="lg" className="bg-[#001dd1] hover:bg-blue-800 text-white font-medium flex items-center gap-2">
                           Get Started <ArrowRight className="h-4 w-4" />
                         </Button>
