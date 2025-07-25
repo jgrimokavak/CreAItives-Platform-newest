@@ -134,7 +134,7 @@ export default function HomePage() {
                   Transform your creative vision into stunning AI-generated<br />
                   imagery with our powerful suite of creation tools.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                <div className="flex flex-col sm:flex-row gap-4 items-center justify-center lg:justify-start lg:items-start">
                   {isAuthenticated ? (
                     <>
                       <Link to="/create">
