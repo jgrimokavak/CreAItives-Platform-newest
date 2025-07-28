@@ -467,6 +467,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate request body
       const validationResult = generateImageSchema.safeParse(req.body);
       if (!validationResult.success) {
+        console.error("Validation failed for /api/generate:", JSON.stringify({
+          body: req.body,
+          errors: validationResult.error.errors
+        }, null, 2));
         return res.status(400).json({ 
           message: "Invalid request data", 
           errors: validationResult.error.errors 
