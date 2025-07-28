@@ -64,6 +64,7 @@ export const generateImageSchema = z.object({
   // Images for editing (base64 encoded)
   images: z.array(z.string()).optional(), // For image editing
   mask: z.string().optional(), // For image editing mask
+  input_image: z.string().optional(), // For flux-kontext-max single image input
   // KAVAK style toggle
   kavakStyle: z.boolean().optional().default(false)
 });
@@ -91,13 +92,12 @@ export const modelFormSchemas = {
   }),
   "flux-kontext-max": z.object({
     prompt: z.string().min(1).max(32000),
-    aspect_ratio: z.enum(["match_input_image", "1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3", "4:5", "5:4", "21:9", "9:21", "2:1", "1:2"]),
+    input_image: z.string().optional(),
+    aspect_ratio: z.enum(["match_input_image", "1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3", "4:5", "5:4", "21:9", "9:21", "2:1", "1:2"]).optional(),
+    output_format: z.enum(["png", "jpg"]).optional(),
+    safety_tolerance: z.number().int().min(0).max(2).optional(),
     seed: z.number().int().optional(),
     prompt_upsampling: z.boolean().optional(),
-    safety_tolerance: z.number().int().min(0).max(6).optional(),
-    output_format: z.enum(["png", "jpg"]).optional(),
-    images: z.array(z.string()).optional(),
-    mask: z.string().optional(),
   })
 };
 

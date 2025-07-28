@@ -62,7 +62,7 @@ export const modelDefaults = {
     aspect_ratio: "match_input_image",
     seed: undefined,
     prompt_upsampling: false,
-    safety_tolerance: 0, // Hardcoded as per requirements
+    safety_tolerance: 2, // Hardcoded as per requirements
     output_format: "png", // Hardcoded as per requirements
     kavakStyle: false,
   },

@@ -216,7 +216,7 @@ export default function EditForm({
       // Hardcode values for flux-kontext-max
       if (modelKey === "flux-kontext-max") {
         filteredValues.output_format = "png";
-        filteredValues.safety_tolerance = 0;
+        filteredValues.safety_tolerance = 2;
       }
       
       // Convert selected files to base64 for API
@@ -231,15 +231,28 @@ export default function EditForm({
       }
       
       // Prepare the request payload
-      const payload = {
-        ...filteredValues,
-        images,
-        mask: selectedMask ? await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.readAsDataURL(selectedMask);
-        }) : null
+      const payload: Record<string, any> = {
+        ...filteredValues
       };
+      
+      // Handle model-specific image handling
+      if (modelKey === "flux-kontext-max") {
+        // For flux-kontext-max, send single input_image (no mask support)
+        if (images.length > 0) {
+          payload.input_image = images[0]; // Use first image only
+        }
+        // Do not include mask field at all for flux-kontext-max
+      } else {
+        // For other models (like gpt-image-1), use images array and mask
+        payload.images = images;
+        if (selectedMask) {
+          payload.mask = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.readAsDataURL(selectedMask);
+          });
+        }
+      }
       
       // Use the generic generate API with edit context
       const response = await fetch("/api/generate", {
