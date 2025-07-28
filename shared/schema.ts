@@ -45,7 +45,7 @@ export const generateImageSchema = z.object({
   // Common fields for all models
   prompt: z.string().min(1).max(32000),
   // Updated to match the new model keys
-  modelKey: z.enum(["gpt-image-1", "imagen-3", "imagen-4", "flux-pro"]),
+  modelKey: z.enum(["gpt-image-1", "imagen-3", "imagen-4", "flux-pro", "flux-kontext-max"]),
   // OpenAI-specific parameters (only validated when OpenAI model is selected)
   size: z.enum(["auto", "1024x1024", "1536x1024", "1024x1536", "1792x1024", "1024x1792"]).optional(),
   quality: z.enum(["auto", "standard", "hd", "high", "medium", "low"]).optional(),
@@ -83,6 +83,14 @@ export const modelFormSchemas = {
     prompt: z.string().min(1).max(32000),
     aspect_ratio: z.enum(["1:1", "3:2", "2:3", "16:9", "9:16"]),
     seed: z.number().int().optional(),
+  }),
+  "flux-kontext-max": z.object({
+    prompt: z.string().min(1).max(32000),
+    aspect_ratio: z.enum(["match_input_image", "1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3", "4:5", "5:4", "21:9", "9:21", "2:1", "1:2"]),
+    seed: z.number().int().optional(),
+    prompt_upsampling: z.boolean().optional(),
+    safety_tolerance: z.number().int().min(0).max(2).optional(),
+    output_format: z.enum(["png", "jpg"]).optional(),
   })
 };
 

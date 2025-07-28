@@ -26,6 +26,13 @@ export const modelSchemas = {
     aspect_ratio: z.enum(["1:1", "16:9", "9:16", "3:2", "2:3", "4:5", "5:4", "3:4", "4:3"]),
     seed: z.number().int().optional(),
   }),
+  "flux-kontext-max": commonSchema.extend({
+    aspect_ratio: z.enum(["match_input_image", "1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3", "4:5", "5:4", "21:9", "9:21", "2:1", "1:2"]),
+    seed: z.number().int().optional(),
+    prompt_upsampling: z.boolean().optional().default(false),
+    safety_tolerance: z.number().int().min(0).max(6).optional().default(2),
+    output_format: z.enum(["jpg", "png"]).optional().default("png"),
+  }),
 };
 
 // Default values for each model
@@ -51,6 +58,14 @@ export const modelDefaults = {
     seed: undefined,
     kavakStyle: false,
   },
+  "flux-kontext-max": {
+    aspect_ratio: "match_input_image",
+    seed: undefined,
+    prompt_upsampling: false,
+    safety_tolerance: 2,
+    output_format: "png",
+    kavakStyle: false,
+  },
 };
 
 // Type helper to get the correct schema type based on model key
@@ -65,5 +80,8 @@ export type GenericFormValues = z.infer<typeof commonSchema> & {
   aspect_ratio?: string;
   negative_prompt?: string;
   seed?: number;
+  prompt_upsampling?: boolean;
+  safety_tolerance?: number;
+  output_format?: string;
   kavakStyle?: boolean;
 };

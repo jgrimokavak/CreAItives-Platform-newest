@@ -54,6 +54,18 @@ export const models: ModelConfig[] = [
     },
     visible: ["prompt", "aspect_ratio", "seed"],
     description: "Flux‑Pro 1.1 – fast, creative, high‑quality; less prompt‑accurate."
+  },
+  {
+    key: "flux-kontext-max",
+    provider: "replicate",
+    slug: "black-forest-labs/flux-fill-pro",
+    defaults: {
+      output_format: "png",
+      prompt_upsampling: false,
+      safety_tolerance: 2
+    },
+    visible: ["prompt", "aspect_ratio", "seed", "prompt_upsampling", "safety_tolerance", "output_format"],
+    description: "Flux‑Kontext‑Max – advanced image editing with contextual understanding."
   }
 ];
 

@@ -5,25 +5,17 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { FaMagic, FaUpload, FaTrash } from "react-icons/fa";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { GeneratedImage } from "@/types/image";
-import { editImageSchema } from "@shared/schema";
 import { useEditor } from "@/context/EditorContext";
 import { Progress } from "@/components/ui/progress";
-
-type EditFormValues = {
-  prompt: string;
-  size: string;
-  quality: string;
-  n: number;
-  kavakStyle: boolean;
-};
+import { ModelKey, modelCatalog } from "@/lib/modelCatalog";
+import { modelSchemas, modelDefaults, GenericFormValues } from "@/lib/formSchemas";
+import AIModelSelector from "@/components/AIModelSelector";
+import DynamicForm from "@/components/DynamicForm";
 
 interface EditFormProps {
   onEditStart: () => void;
@@ -43,10 +35,20 @@ export default function EditForm({
   const [previews, setPreviews] = useState<Record<string, string>>({});
   const [maskPreview, setMaskPreview] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
+  const [modelKey, setModelKey] = useState<ModelKey>("gpt-image-1");
   
   const imageInputRef = useRef<HTMLInputElement>(null);
   const maskInputRef = useRef<HTMLInputElement>(null);
   const { sourceImages, setSourceImages } = useEditor();
+
+  // Update form when model changes
+  useEffect(() => {
+    // Reset form with default values for the selected model
+    const defaults = modelDefaults[modelKey] || {};
+    Object.entries(defaults).forEach(([key, value]) => {
+      form.setValue(key as any, value);
+    });
+  }, [modelKey]);
 
   // Function to load image from data URL
   const presetFiles = async (dataURLs: string[]) => {
@@ -94,22 +96,11 @@ export default function EditForm({
     }
   }, [sourceImages, toast, setSourceImages]);
 
-  const form = useForm<EditFormValues>({
-    resolver: zodResolver(
-      z.object({
-        prompt: z.string().min(1, "Prompt is required").max(32000),
-        size: z.enum(["auto", "1024x1024", "1536x1024", "1024x1536"]),
-        quality: z.enum(["auto", "high", "medium", "low"]),
-        n: z.coerce.number().int().min(1).max(10),
-        kavakStyle: z.boolean().default(false),
-      })
-    ),
+  const form = useForm<GenericFormValues>({
+    resolver: zodResolver(modelSchemas[modelKey]),
     defaultValues: {
       prompt: "",
-      size: "1024x1024",
-      quality: "high",
-      n: 1,
-      kavakStyle: false,
+      ...modelDefaults[modelKey]
     },
   });
 
@@ -203,93 +194,117 @@ export default function EditForm({
     }
   };
 
-  const editMutation = useMutation<{images: GeneratedImage[]}, Error, EditFormValues>({
-    mutationFn: async (values: EditFormValues) => {
+  const editMutation = useMutation<{images: GeneratedImage[]}, Error, GenericFormValues>({
+    mutationFn: async (values: GenericFormValues) => {
       if (selectedFiles.length === 0) {
         throw new Error("Please select at least one image");
-      }
-      
-      // Create FormData object for multipart/form-data upload
-      const formData = new FormData();
-      formData.append("prompt", values.prompt);
-      formData.append("size", values.size);
-      formData.append("quality", values.quality);
-      formData.append("n", values.n.toString());
-      formData.append("kavakStyle", values.kavakStyle.toString());
-      
-      // Append all selected images
-      selectedFiles.forEach(file => {
-        formData.append("image", file);
-      });
-      
-      // Append mask if selected
-      if (selectedMask) {
-        formData.append("mask", selectedMask);
       }
       
       // Reset progress
       setProgress(0);
       
-      // Use fetch directly for FormData to submit the job
-      const response = await fetch("/api/edit-image", {
+      // Only send values that are applicable to the current model
+      const visibleFields = modelCatalog[modelKey].visible;
+      const filteredValues: Record<string, any> = { modelKey };
+      
+      visibleFields.forEach(field => {
+        if (values[field as keyof GenericFormValues] !== undefined) {
+          filteredValues[field] = values[field as keyof GenericFormValues];
+        }
+      });
+      
+      // Convert selected files to base64 for API
+      const images: string[] = [];
+      for (const file of selectedFiles) {
+        const reader = new FileReader();
+        const base64 = await new Promise<string>((resolve) => {
+          reader.onload = () => resolve(reader.result as string);
+          reader.readAsDataURL(file);
+        });
+        images.push(base64);
+      }
+      
+      // Prepare the request payload
+      const payload = {
+        ...filteredValues,
+        images,
+        mask: selectedMask ? await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.readAsDataURL(selectedMask);
+        }) : null
+      };
+      
+      // Use the generic generate API with edit context
+      const response = await fetch("/api/generate", {
         method: "POST",
-        body: formData
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload)
       });
       
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to start image edit job");
+        throw new Error(errorData.message || "Failed to edit images");
       }
       
-      // Get the job ID from the response
-      const { jobId } = await response.json();
+      // For async jobs, get job ID and poll
+      const result = await response.json();
+      if (result.jobId) {
+        const { jobId } = result;
       
-      // Set initial progress
-      setProgress(10);
-      
-      // Poll for job completion
-      return new Promise<{images: GeneratedImage[]}>((resolve, reject) => {
-        // Create a progress indicator (10-95)
-        let currentProgress = 10;
+        // Set initial progress
+        setProgress(10);
         
-        const pollInterval = setInterval(async () => {
-          try {
-            // Increment progress for UI feedback (up to 95%)
-            if (currentProgress < 95) {
-              // Slow down progress as we get higher to avoid reaching 95 too quickly
-              const increment = currentProgress < 30 ? 10 : 
-                               currentProgress < 60 ? 5 : 3;
+        // Poll for job completion
+        return new Promise<{images: GeneratedImage[]}>((resolve, reject) => {
+          // Create a progress indicator (10-95)
+          let currentProgress = 10;
+          
+          const pollInterval = setInterval(async () => {
+            try {
+              // Increment progress for UI feedback (up to 95%)
+              if (currentProgress < 95) {
+                // Slow down progress as we get higher to avoid reaching 95 too quickly
+                const increment = currentProgress < 30 ? 10 : 
+                                 currentProgress < 60 ? 5 : 3;
+                
+                currentProgress = Math.min(95, currentProgress + increment);
+                setProgress(currentProgress);
+              }
               
-              currentProgress = Math.min(95, currentProgress + increment);
-              setProgress(currentProgress);
-            }
-            
-            // Get job status
-            const jobResponse = await fetch(`/api/job/${jobId}`);
-            
-            if (!jobResponse.ok) {
+              // Get job status
+              const jobResponse = await fetch(`/api/job/${jobId}`);
+              
+              if (!jobResponse.ok) {
+                clearInterval(pollInterval);
+                reject(new Error("Failed to check job status"));
+                return;
+              }
+              
+              const job = await jobResponse.json();
+              
+              if (job.status === "done") {
+                setProgress(100);
+                clearInterval(pollInterval);
+                resolve({ images: job.result });
+              } else if (job.status === "error") {
+                clearInterval(pollInterval);
+                reject(new Error(job.error || "Failed to edit images"));
+              }
+              // Otherwise continue polling
+            } catch (error: any) {
               clearInterval(pollInterval);
-              reject(new Error("Failed to check job status"));
-              return;
+              reject(new Error(`Error polling job: ${error.message}`));
             }
-            
-            const job = await jobResponse.json();
-            
-            if (job.status === "done") {
-              setProgress(100);
-              clearInterval(pollInterval);
-              resolve({ images: job.result });
-            } else if (job.status === "error") {
-              clearInterval(pollInterval);
-              reject(new Error(job.error || "Failed to edit images"));
-            }
-            // Otherwise continue polling
-          } catch (error: any) {
-            clearInterval(pollInterval);
-            reject(new Error(`Error polling job: ${error.message}`));
-          }
-        }, 2000); // Poll every 2 seconds
-      });
+          }, 2000); // Poll every 2 seconds
+        });
+      } else {
+        // Direct response with images
+        setProgress(100);
+        return { images: result.images };
+      }
     },
     onSuccess: (data) => {
       setIsSubmitting(false);
@@ -311,7 +326,7 @@ export default function EditForm({
     },
   });
 
-  const onSubmit = async (values: EditFormValues) => {
+  const onSubmit = async (values: GenericFormValues) => {
     setIsSubmitting(true);
     setProgress(0);
     onEditStart();
@@ -341,6 +356,15 @@ export default function EditForm({
       <div className="p-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+            {/* Model Selection */}
+            <div className="space-y-3">
+              <FormLabel className="text-sm font-medium">AI Model</FormLabel>
+              <AIModelSelector 
+                value={modelKey} 
+                onChange={setModelKey}
+              />
+            </div>
+
             <FormField
               control={form.control}
               name="prompt"
@@ -405,136 +429,13 @@ export default function EditForm({
               </div>
             </div>
             
+            {/* Dynamic form fields based on selected model */}
             <div className="bg-muted/40 p-4 rounded-lg border border-border/50">
-              <h2 className="text-lg font-semibold text-foreground mb-1">Image Settings</h2>
+              <h2 className="text-lg font-semibold text-foreground mb-1">Edit Settings</h2>
               <p className="text-xs text-muted-foreground mb-4">
                 Configure your image editing options
               </p>
-              <div className="grid grid-cols-1 gap-5">
-                <FormField
-                control={form.control}
-                name="size"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium">Aspect Ratio</FormLabel>
-                    <div className="flex items-center gap-3">
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="flex-grow">
-                            <SelectValue placeholder="Select aspect ratio" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="auto">Auto (Recommended)</SelectItem>
-                          <SelectItem value="1024x1024">1:1 (Square)</SelectItem>
-                          <SelectItem value="1536x1024">16:9 (Landscape)</SelectItem>
-                          <SelectItem value="1024x1536">9:16 (Portrait)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      
-                      {/* Visual aspect ratio indicator */}
-                      {field.value && (
-                        <div className="bg-primary/5 rounded p-1.5 border border-primary/10 flex items-center justify-center">
-                          {field.value === "1024x1024" && (
-                            <div className="w-8 h-8 bg-primary/20 rounded"></div>
-                          )}
-                          {field.value === "1536x1024" && (
-                            <div className="w-10 h-6 bg-primary/20 rounded"></div>
-                          )}
-                          {field.value === "1024x1536" && (
-                            <div className="w-6 h-10 bg-primary/20 rounded"></div>
-                          )}
-                          {field.value === "auto" && (
-                            <div className="w-8 h-8 bg-primary/20 rounded"></div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Choose the dimensions that best suit your needs
-                    </p>
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="quality"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium">Quality</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select quality" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="auto">Auto</SelectItem>
-                        <SelectItem value="high">High</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="low">Low</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="n"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium">Number of Outputs</FormLabel>
-                    <Select
-                      onValueChange={(value) => field.onChange(parseInt(value))}
-                      defaultValue={field.value.toString()}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Count" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {[1, 2, 3, 4].map((num) => (
-                          <SelectItem key={num} value={num.toString()}>
-                            {num} {num === 1 ? 'Image' : 'Images'}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormItem>
-                )}
-              />
-              </div>
-              
-              <FormField
-                control={form.control}
-                name="kavakStyle"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm space-y-0 mt-4 bg-gradient-to-r from-violet-50 to-indigo-50">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-sm font-medium">KAVAK Style</FormLabel>
-                      <p className="text-xs text-muted-foreground">
-                        Apply professional product photography style with dramatic lighting
-                      </p>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        className="data-[state=checked]:bg-violet-600"
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+              <DynamicForm modelKey={modelKey} form={form} />
             </div>
 
             <div className="flex justify-center pt-2">

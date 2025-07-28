@@ -1,5 +1,5 @@
 import React from "react";
-import { ModelKey, modelCatalog, fluxAspectRatios, imagenAspectRatios } from "@/lib/modelCatalog";
+import { ModelKey, modelCatalog, fluxAspectRatios, imagenAspectRatios, fluxKontextAspectRatios } from "@/lib/modelCatalog";
 import {
   FormField,
   FormItem,
@@ -43,7 +43,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form }) => {
               <div className="flex items-center gap-3">
                 <Select
                   onValueChange={field.onChange}
-                  defaultValue={field.value}
+                  defaultValue={field.value as string}
                 >
                   <FormControl>
                     <SelectTrigger className="h-9 text-sm flex-grow">
@@ -97,7 +97,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form }) => {
                   <FormLabel className="text-sm font-medium">Number of Images</FormLabel>
                   <Select
                     onValueChange={field.onChange}
-                    defaultValue={field.value}
+                    defaultValue={field.value as string}
                   >
                     <FormControl>
                       <SelectTrigger className="h-9 text-sm">
@@ -128,7 +128,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form }) => {
                   <FormLabel className="text-sm font-medium">Quality Level</FormLabel>
                   <Select
                     onValueChange={field.onChange}
-                    defaultValue={field.value}
+                    defaultValue={field.value as string}
                   >
                     <FormControl>
                       <SelectTrigger className="h-9 text-sm">
@@ -160,7 +160,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form }) => {
               <div className="flex items-center gap-3">
                 <Select
                   onValueChange={field.onChange}
-                  defaultValue={field.value || "1:1"}
+                  defaultValue={(field.value as string) || "1:1"}
                 >
                   <FormControl>
                     <SelectTrigger className="h-9 text-sm flex-grow">
@@ -175,6 +175,17 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form }) => {
                           {ratio} {ratio === "1:1" ? "(Square)" : 
                                   ratio === "16:9" ? "(Landscape)" : 
                                   ratio === "9:16" ? "(Portrait)" : ""}
+                        </SelectItem>
+                      ))
+                    ) : modelKey === "flux-kontext-max" ? (
+                      fluxKontextAspectRatios.map(ratio => (
+                        <SelectItem key={ratio} value={ratio}>
+                          {ratio === "match_input_image" ? "Match Input Image" :
+                           ratio === "1:1" ? "1:1 (Square)" : 
+                           ratio === "16:9" ? "16:9 (Landscape)" : 
+                           ratio === "9:16" ? "9:16 (Portrait)" : 
+                           ratio === "4:3" ? "4:3 (Classic)" : 
+                           ratio === "3:4" ? "3:4 (Portrait)" : ratio}
                         </SelectItem>
                       ))
                     ) : (
@@ -241,7 +252,8 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form }) => {
                 <Textarea
                   placeholder="Specify what you don't want in the image (e.g., blurry, low quality, distorted faces)"
                   className="resize-none min-h-[80px] text-sm"
-                  {...field}
+                  value={field.value as string || ''}
+                  onChange={field.onChange}
                 />
               </FormControl>
               <p className="text-xs text-muted-foreground">
@@ -252,7 +264,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form }) => {
         />
       )}
 
-      {/* Seed field for Flux-Pro */}
+      {/* Seed field for Flux-Pro and Flux-Kontext-Max */}
       {fields.includes("seed") && (
         <FormField
           control={form.control}
@@ -269,7 +281,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form }) => {
                   max="2147483647"
                   placeholder="Leave empty for random results"
                   className="h-9 text-sm"
-                  value={field.value !== undefined ? field.value : ''}
+                  value={field.value !== undefined ? field.value.toString() : ''}
                   onChange={(e) => {
                     const value = e.target.value ? parseInt(e.target.value) : undefined;
                     field.onChange(value);
@@ -278,6 +290,91 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form }) => {
               </FormControl>
               <p className="text-xs text-muted-foreground">
                 Use the same seed to create variations of similar images
+              </p>
+            </FormItem>
+          )}
+        />
+      )}
+
+      {/* Prompt Upsampling field for Flux-Kontext-Max */}
+      {fields.includes("prompt_upsampling") && (
+        <FormField
+          control={form.control}
+          name={"prompt_upsampling" as FormFieldName}
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm space-y-0">
+              <div className="space-y-0.5">
+                <FormLabel className="text-sm font-medium">Prompt Upsampling</FormLabel>
+                <p className="text-xs text-muted-foreground">
+                  Automatically improve and enhance your prompt
+                </p>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value as boolean}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+      )}
+
+      {/* Safety Tolerance field for Flux-Kontext-Max */}
+      {fields.includes("safety_tolerance") && (
+        <FormField
+          control={form.control}
+          name={"safety_tolerance" as FormFieldName}
+          render={({ field }) => (
+            <FormItem className="space-y-1.5">
+              <FormLabel className="text-sm font-medium">Safety Tolerance</FormLabel>
+              <Select
+                onValueChange={(value) => field.onChange(parseInt(value))}
+                defaultValue={(field.value as number)?.toString() || "2"}
+              >
+                <FormControl>
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue placeholder="Select safety level" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="0">0 - Most Strict</SelectItem>
+                  <SelectItem value="1">1 - Very Strict</SelectItem>
+                  <SelectItem value="2">2 - Strict (Default)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Safety tolerance from 0 (most strict) to 2 (maximum allowed for image editing)
+              </p>
+            </FormItem>
+          )}
+        />
+      )}
+
+      {/* Output Format field for Flux-Kontext-Max */}
+      {fields.includes("output_format") && (
+        <FormField
+          control={form.control}
+          name={"output_format" as FormFieldName}
+          render={({ field }) => (
+            <FormItem className="space-y-1.5">
+              <FormLabel className="text-sm font-medium">Output Format</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={(field.value as string) || "png"}
+              >
+                <FormControl>
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue placeholder="Select format" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="png">PNG (Lossless)</SelectItem>
+                  <SelectItem value="jpg">JPG (Smaller file size)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Choose the output image format
               </p>
             </FormItem>
           )}
@@ -299,7 +396,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form }) => {
               </div>
               <FormControl>
                 <Switch
-                  checked={field.value}
+                  checked={field.value as boolean}
                   onCheckedChange={field.onChange}
                   className="data-[state=checked]:bg-violet-600"
                 />

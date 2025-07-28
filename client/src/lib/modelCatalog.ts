@@ -18,6 +18,11 @@ export const modelCatalog = {
     label: "Flux-Pro (Black-forest-labs)",
     description: "Fast, creative, high-quality; less prompt-accurate.",
     visible: ["prompt", "aspect_ratio", "seed", "kavakStyle"] as string[]
+  },
+  "flux-kontext-max": {
+    label: "Flux-Kontext-Max (Black-forest-labs)",
+    description: "Advanced image editing with contextual understanding.",
+    visible: ["prompt", "aspect_ratio", "seed", "prompt_upsampling", "safety_tolerance", "output_format"] as string[]
   }
 };
 
@@ -25,6 +30,9 @@ export type ModelKey = keyof typeof modelCatalog;
 
 // Aspect ratio options for Flux-Pro (no custom options)
 export const fluxAspectRatios = ["1:1", "16:9", "9:16", "3:2", "2:3", "4:5", "5:4", "3:4", "4:3"];
+
+// Aspect ratio options for Flux-Kontext-Max
+export const fluxKontextAspectRatios = ["match_input_image", "1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3", "4:5", "5:4", "21:9", "9:21", "2:1", "1:2"];
 
 // Aspect ratio options for Imagen-3 and Imagen-4 (includes custom options)
 export const imagenAspectRatios = ["1:1", "16:9", "9:16", "4:3", "3:4"];
