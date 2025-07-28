@@ -51,14 +51,19 @@ export const generateImageSchema = z.object({
   quality: z.enum(["auto", "standard", "hd", "high", "medium", "low"]).optional(),
   style: z.enum(["vivid", "natural"]).optional(),
   n: z.number().int().min(1).max(10).optional(),
-  output_format: z.enum(["url", "b64_json"]).optional(),
+  output_format: z.enum(["url", "b64_json", "png", "jpg"]).optional(),
   background: z.enum(["auto", "transparent", "opaque"]).optional(),
   // Replicate-specific parameters
   aspect_ratio: z.union([
-    z.enum(["1:1", "16:9", "9:16", "4:3", "3:4"]),
+    z.enum(["match_input_image", "1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3", "4:5", "5:4", "21:9", "9:21", "2:1", "1:2"]),
     z.string()
-  ]).optional(), // For Imagen-3, Imagen-4, and Flux-Pro
-  seed: z.number().int().optional(),   // For Flux-Pro
+  ]).optional(), // For Imagen-3, Imagen-4, Flux-Pro, and Flux-Kontext-Max
+  seed: z.number().int().optional(),   // For Flux-Pro and Flux-Kontext-Max
+  prompt_upsampling: z.boolean().optional(), // For Flux-Kontext-Max
+  safety_tolerance: z.number().int().min(0).max(6).optional(), // For Flux-Kontext-Max
+  // Images for editing (base64 encoded)
+  images: z.array(z.string()).optional(), // For image editing
+  mask: z.string().optional(), // For image editing mask
   // KAVAK style toggle
   kavakStyle: z.boolean().optional().default(false)
 });
@@ -89,8 +94,10 @@ export const modelFormSchemas = {
     aspect_ratio: z.enum(["match_input_image", "1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3", "4:5", "5:4", "21:9", "9:21", "2:1", "1:2"]),
     seed: z.number().int().optional(),
     prompt_upsampling: z.boolean().optional(),
-    safety_tolerance: z.number().int().min(0).max(2).optional(),
+    safety_tolerance: z.number().int().min(0).max(6).optional(),
     output_format: z.enum(["png", "jpg"]).optional(),
+    images: z.array(z.string()).optional(),
+    mask: z.string().optional(),
   })
 };
 
