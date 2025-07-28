@@ -22,10 +22,12 @@ import { GenericFormValues } from "@/lib/formSchemas";
 interface DynamicFormProps {
   modelKey: ModelKey;
   form: UseFormReturn<GenericFormValues>;
+  availableModels?: Record<string, any>;
 }
 
-const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form }) => {
-  const fields = modelCatalog[modelKey].visible;
+const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form, availableModels }) => {
+  const modelsToUse = availableModels || modelCatalog;
+  const fields = modelsToUse[modelKey].visible;
   
   // Type to allow any form field name as a valid input
   type FormFieldName = keyof GenericFormValues;

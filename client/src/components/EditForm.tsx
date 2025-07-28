@@ -12,7 +12,7 @@ import { queryClient } from "@/lib/queryClient";
 import { GeneratedImage } from "@/types/image";
 import { useEditor } from "@/context/EditorContext";
 import { Progress } from "@/components/ui/progress";
-import { ModelKey, modelCatalog } from "@/lib/modelCatalog";
+import { ModelKey, editModelCatalog } from "@/lib/modelCatalog";
 import { modelSchemas, modelDefaults, GenericFormValues } from "@/lib/formSchemas";
 import AIModelSelector from "@/components/AIModelSelector";
 import DynamicForm from "@/components/DynamicForm";
@@ -35,7 +35,7 @@ export default function EditForm({
   const [previews, setPreviews] = useState<Record<string, string>>({});
   const [maskPreview, setMaskPreview] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
-  const [modelKey, setModelKey] = useState<ModelKey>("gpt-image-1");
+  const [modelKey, setModelKey] = useState<"gpt-image-1" | "flux-kontext-max">("gpt-image-1");
   
   const imageInputRef = useRef<HTMLInputElement>(null);
   const maskInputRef = useRef<HTMLInputElement>(null);
@@ -204,7 +204,7 @@ export default function EditForm({
       setProgress(0);
       
       // Only send values that are applicable to the current model
-      const visibleFields = modelCatalog[modelKey].visible;
+      const visibleFields = editModelCatalog[modelKey].visible;
       const filteredValues: Record<string, any> = { modelKey };
       
       visibleFields.forEach(field => {
@@ -212,6 +212,12 @@ export default function EditForm({
           filteredValues[field] = values[field as keyof GenericFormValues];
         }
       });
+      
+      // Hardcode values for flux-kontext-max
+      if (modelKey === "flux-kontext-max") {
+        filteredValues.output_format = "png";
+        filteredValues.safety_tolerance = 0;
+      }
       
       // Convert selected files to base64 for API
       const images: string[] = [];
@@ -361,7 +367,8 @@ export default function EditForm({
               <FormLabel className="text-sm font-medium">AI Model</FormLabel>
               <AIModelSelector 
                 value={modelKey} 
-                onChange={setModelKey}
+                onChange={(value) => setModelKey(value as "gpt-image-1" | "flux-kontext-max")}
+                availableModels={editModelCatalog}
               />
             </div>
 
@@ -435,7 +442,7 @@ export default function EditForm({
               <p className="text-xs text-muted-foreground mb-4">
                 Configure your image editing options
               </p>
-              <DynamicForm modelKey={modelKey} form={form} />
+              <DynamicForm modelKey={modelKey} form={form} availableModels={editModelCatalog} />
             </div>
 
             <div className="flex justify-center pt-2">

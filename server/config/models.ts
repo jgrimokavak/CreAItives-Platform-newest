@@ -58,11 +58,11 @@ export const models: ModelConfig[] = [
   {
     key: "flux-kontext-max",
     provider: "replicate",
-    slug: "black-forest-labs/flux-fill-pro",
+    slug: "black-forest-labs/flux-kontext-max",
     defaults: {
       output_format: "png",
       prompt_upsampling: false,
-      safety_tolerance: 2
+      safety_tolerance: 0
     },
     visible: ["prompt", "aspect_ratio", "seed", "prompt_upsampling", "safety_tolerance", "output_format"],
     description: "Flux‑Kontext‑Max – advanced image editing with contextual understanding."

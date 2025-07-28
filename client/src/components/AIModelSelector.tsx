@@ -14,7 +14,7 @@ import {
 const getProviderName = (modelKey: ModelKey): string => {
   if (modelKey === "gpt-image-1") return "OpenAI";
   if (modelKey.startsWith("imagen-")) return "Google";
-  if (modelKey === "flux-pro") return "Black Forest Labs";
+  if (modelKey === "flux-pro" || modelKey === "flux-kontext-max") return "Black Forest Labs";
   return "AI";
 };
 
@@ -24,6 +24,7 @@ const getVersionLabel = (modelKey: ModelKey): string => {
     case "imagen-4": return "v4";
     case "imagen-3": return "v3";
     case "flux-pro": return "v1.1";
+    case "flux-kontext-max": return "Max";
     case "gpt-image-1": return "v1";
     default: return "";
   }
@@ -42,6 +43,7 @@ const getFeatureHighlight = (modelKey: ModelKey): string => {
     case "imagen-4": return "Best quality";
     case "imagen-3": return "Balanced";
     case "flux-pro": return "Fast, creative";
+    case "flux-kontext-max": return "Advanced editing";
     default: return "";
   }
 };
@@ -50,10 +52,14 @@ interface AIModelSelectorProps {
   value: ModelKey;
   onChange: (value: ModelKey) => void;
   className?: string;
+  availableModels?: Record<string, any>;
 }
 
-export default function AIModelSelector({ value, onChange, className }: AIModelSelectorProps) {
+export default function AIModelSelector({ value, onChange, className, availableModels }: AIModelSelectorProps) {
   const [open, setOpen] = React.useState(false);
+  
+  // Use availableModels if provided, otherwise use full modelCatalog
+  const modelsToUse = availableModels || modelCatalog;
   
   // Get selected model data
   const colors = getModelColors(value);
@@ -146,7 +152,7 @@ export default function AIModelSelector({ value, onChange, className }: AIModelS
           align="start" 
           className="w-[min(300px,calc(100vw-2rem))]"
         >
-          {Object.entries(modelCatalog).map(([key, info]) => {
+          {Object.entries(modelsToUse).map(([key, info]) => {
             const modelKey = key as ModelKey;
             const isSelected = value === modelKey;
             const modelColors = getModelColors(modelKey);

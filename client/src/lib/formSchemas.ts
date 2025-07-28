@@ -29,9 +29,6 @@ export const modelSchemas = {
   "flux-kontext-max": commonSchema.extend({
     aspect_ratio: z.enum(["match_input_image", "1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3", "4:5", "5:4", "21:9", "9:21", "2:1", "1:2"]),
     seed: z.number().int().optional(),
-    prompt_upsampling: z.boolean().optional().default(false),
-    safety_tolerance: z.number().int().min(0).max(6).optional().default(2),
-    output_format: z.enum(["jpg", "png"]).optional().default("png"),
   }),
 };
 
@@ -61,9 +58,6 @@ export const modelDefaults = {
   "flux-kontext-max": {
     aspect_ratio: "match_input_image",
     seed: undefined,
-    prompt_upsampling: false,
-    safety_tolerance: 2,
-    output_format: "png",
     kavakStyle: false,
   },
 };

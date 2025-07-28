@@ -22,8 +22,14 @@ export const modelCatalog = {
   "flux-kontext-max": {
     label: "Flux-Kontext-Max (Black-forest-labs)",
     description: "Advanced image editing with contextual understanding.",
-    visible: ["prompt", "aspect_ratio", "seed", "prompt_upsampling", "safety_tolerance", "output_format"] as string[]
+    visible: ["prompt", "aspect_ratio", "seed"] as string[]
   }
+};
+
+// Edit-specific model catalog with restricted models
+export const editModelCatalog = {
+  "gpt-image-1": modelCatalog["gpt-image-1"],
+  "flux-kontext-max": modelCatalog["flux-kontext-max"]
 };
 
 export type ModelKey = keyof typeof modelCatalog;
