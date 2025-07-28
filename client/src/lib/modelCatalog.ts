@@ -22,7 +22,7 @@ export const modelCatalog = {
   "flux-kontext-max": {
     label: "Flux-Kontext-Max (Black-forest-labs)",
     description: "Advanced image editing with contextual understanding.",
-    visible: ["prompt", "aspect_ratio", "seed", "prompt_upsampling"] as string[]
+    visible: ["prompt", "aspect_ratio", "seed", "prompt_upsampling", "safety_tolerance", "output_format"] as string[]
   }
 };
 

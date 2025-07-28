@@ -14,7 +14,7 @@ import { useEditor } from "@/context/EditorContext";
 import { Progress } from "@/components/ui/progress";
 import { ModelKey, modelCatalog } from "@/lib/modelCatalog";
 import { modelSchemas, modelDefaults, GenericFormValues } from "@/lib/formSchemas";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import AIModelSelector from "@/components/AIModelSelector";
 import DynamicForm from "@/components/DynamicForm";
 
 interface EditFormProps {
@@ -235,8 +235,8 @@ export default function EditForm({
         }) : null
       };
       
-      // Use the dedicated edit API endpoint
-      const response = await fetch("/api/edit-image", {
+      // Use the generic generate API with edit context
+      const response = await fetch("/api/generate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -356,28 +356,13 @@ export default function EditForm({
       <div className="p-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-            {/* Model Selection - Only GPT-Image-1 and Flux-Kontext-Max for editing */}
+            {/* Model Selection */}
             <div className="space-y-3">
               <FormLabel className="text-sm font-medium">AI Model</FormLabel>
-              <Select value={modelKey} onValueChange={(value: ModelKey) => setModelKey(value)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select AI model" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="gpt-image-1">
-                    <div className="flex flex-col items-start">
-                      <span className="font-medium">GPT-Image-1 (OpenAI)</span>
-                      <span className="text-xs text-muted-foreground">Most accurate, but slow</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="flux-kontext-max">
-                    <div className="flex flex-col items-start">
-                      <span className="font-medium">Flux-Kontext-Max (Black Forest Labs)</span>
-                      <span className="text-xs text-muted-foreground">Advanced image editing with contextual understanding</span>
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+              <AIModelSelector 
+                value={modelKey} 
+                onChange={setModelKey}
+              />
             </div>
 
             <FormField

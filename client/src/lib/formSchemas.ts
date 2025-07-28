@@ -62,6 +62,8 @@ export const modelDefaults = {
     aspect_ratio: "match_input_image",
     seed: undefined,
     prompt_upsampling: false,
+    safety_tolerance: 2,
+    output_format: "png",
     kavakStyle: false,
   },
 };
