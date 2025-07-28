@@ -35,7 +35,7 @@ export default function EditForm({
   const [previews, setPreviews] = useState<Record<string, string>>({});
   const [maskPreview, setMaskPreview] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
-  const [modelKey, setModelKey] = useState<"gpt-image-1" | "flux-kontext-max">("gpt-image-1");
+  const [modelKey, setModelKey] = useState<"gpt-image-1" | "flux-kontext-max">("flux-kontext-max");
   
   const imageInputRef = useRef<HTMLInputElement>(null);
   const maskInputRef = useRef<HTMLInputElement>(null);
@@ -49,6 +49,14 @@ export default function EditForm({
       form.setValue(key as any, value);
     });
   }, [modelKey]);
+
+  // Set initial default values on component mount
+  useEffect(() => {
+    const defaults = modelDefaults[modelKey] || {};
+    Object.entries(defaults).forEach(([key, value]) => {
+      form.setValue(key as any, value);
+    });
+  }, []); // Run once on mount
 
   // Function to load image from data URL
   const presetFiles = async (dataURLs: string[]) => {
