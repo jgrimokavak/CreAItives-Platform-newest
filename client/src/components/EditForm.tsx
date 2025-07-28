@@ -240,6 +240,14 @@ export default function EditForm({
         // For flux-kontext-max, send single input_image (no mask support)
         if (images.length > 0) {
           payload.input_image = images[0]; // Use first image only
+          console.log("🔍 EditForm: Set input_image for flux-kontext-max:", {
+            modelKey,
+            hasInputImage: !!payload.input_image,
+            inputImageLength: payload.input_image?.length,
+            inputImagePrefix: payload.input_image?.substring(0, 50) + "..."
+          });
+        } else {
+          console.error("🚨 EditForm: No images available for flux-kontext-max");
         }
         // Do not include mask field at all for flux-kontext-max
       } else {
@@ -253,6 +261,13 @@ export default function EditForm({
           });
         }
       }
+      
+      console.log("🔍 EditForm: Final payload keys:", Object.keys(payload));
+      console.log("🔍 EditForm: Payload for model", modelKey, ":", {
+        ...payload,
+        input_image: payload.input_image ? `[base64 string: ${payload.input_image.length} chars]` : undefined,
+        images: payload.images ? `[${payload.images.length} images]` : undefined
+      });
       
       // Use the generic generate API with edit context
       const response = await fetch("/api/generate", {

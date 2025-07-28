@@ -74,13 +74,23 @@ export async function generateWithReplicate(modelKey: string, inputs: any): Prom
   // Combine default inputs with user inputs
   const body = { ...(model.defaults || {}), ...inputs };
   
+  console.log("🔍 Replicate API call for", modelKey, "with body:", {
+    ...body,
+    input_image: body.input_image ? `[base64 string: ${body.input_image.length} chars]` : undefined,
+    prompt: body.prompt ? `${body.prompt.substring(0, 50)}...` : undefined
+  });
+  
   log({
     ts: new Date().toISOString(),
     direction: "request",
     payload: {
       type: "replicate_generate",
       modelKey,
-      inputs: { ...body, prompt: body.prompt ? `${body.prompt.substring(0, 50)}...` : undefined }
+      inputs: { 
+        ...body, 
+        input_image: body.input_image ? `[base64 present: ${body.input_image.length} chars]` : undefined,
+        prompt: body.prompt ? `${body.prompt.substring(0, 50)}...` : undefined 
+      }
     }
   });
   

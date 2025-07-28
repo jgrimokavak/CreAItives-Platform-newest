@@ -464,11 +464,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API endpoint to generate images (async with job queue) - Protected
   app.post("/api/generate", isAuthenticated, async (req, res) => {
     try {
+      // Log the incoming request payload
+      console.log("🔍 /api/generate received payload:", {
+        modelKey: req.body.modelKey,
+        hasInputImage: !!req.body.input_image,
+        hasImages: !!req.body.images,
+        inputImageLength: req.body.input_image?.length,
+        imagesCount: req.body.images?.length,
+        otherFields: Object.keys(req.body).filter(k => !['input_image', 'images', 'prompt'].includes(k))
+      });
+
       // Validate request body
       const validationResult = generateImageSchema.safeParse(req.body);
       if (!validationResult.success) {
         console.error("Validation failed for /api/generate:", JSON.stringify({
-          body: req.body,
+          modelKey: req.body.modelKey,
+          bodyKeys: Object.keys(req.body),
           errors: validationResult.error.errors
         }, null, 2));
         return res.status(400).json({ 
@@ -476,6 +487,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           errors: validationResult.error.errors 
         });
       }
+      
+      console.log("🔍 Validation passed, validated data:", {
+        modelKey: validationResult.data.modelKey,
+        hasInputImage: !!validationResult.data.input_image,
+        hasImages: !!validationResult.data.images,
+        validatedFields: Object.keys(validationResult.data)
+      });
       
       // Create a new job
       const jobId = crypto.randomUUID();
