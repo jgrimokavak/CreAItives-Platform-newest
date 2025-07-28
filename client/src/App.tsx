@@ -24,13 +24,18 @@ function Router() {
   // Set up WebSocket connection for real-time updates
   useWebSocket();
 
+  // If still loading authentication, don't render anything to prevent unwanted redirects
+  if (isLoading) {
+    return null; // or a loading spinner if you prefer
+  }
+
   return (
     <Switch>
       {/* Public route - always accessible */}
       <Route path="/home" component={HomePage} />
       
       {/* Protected routes */}
-      {isLoading || !isAuthenticated ? (
+      {!isAuthenticated ? (
         // If not authenticated, redirect all protected routes to home
         <>
           <Route path="/" component={() => <Redirect to="/home" />} />
