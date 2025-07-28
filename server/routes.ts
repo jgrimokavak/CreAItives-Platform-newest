@@ -311,7 +311,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       job.status = "processing";
       
-      const { prompt, modelKey, size, quality, n, style, background, output_format, aspect_ratio, seed, kavakStyle } = data;
+      const { prompt, modelKey, size, quality, n, style, background, output_format, aspect_ratio, seed, kavakStyle, input_image, images, mask, prompt_upsampling, safety_tolerance } = data;
       
       // Import the KAVAK style prompt if needed
       let finalPrompt = prompt;
@@ -437,13 +437,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       // Handle Replicate models
       else if (modelInfo.provider === 'replicate') {
-        const inputs = {
-          prompt: finalPrompt,
-          aspect_ratio,
-          seed
+        // Build inputs object dynamically based on available data
+        const inputs: any = {
+          prompt: finalPrompt
         };
         
-        console.log(`Job ${jobId}: Sending Replicate generation request with model ${modelKey} and inputs:`, JSON.stringify(inputs));
+        // Add optional fields if they exist
+        if (aspect_ratio !== undefined) inputs.aspect_ratio = aspect_ratio;
+        if (seed !== undefined) inputs.seed = seed;
+        if (output_format !== undefined) inputs.output_format = output_format;
+        if (prompt_upsampling !== undefined) inputs.prompt_upsampling = prompt_upsampling;
+        if (safety_tolerance !== undefined) inputs.safety_tolerance = safety_tolerance;
+        
+        // Add image-related fields for editing models
+        if (input_image !== undefined) inputs.input_image = input_image;
+        if (images !== undefined && images.length > 0) inputs.images = images;
+        if (mask !== undefined) inputs.mask = mask;
+        
+        console.log(`Job ${jobId}: Sending Replicate generation request with model ${modelKey} and inputs:`, {
+          ...inputs,
+          input_image: inputs.input_image ? `[base64 string: ${inputs.input_image.length} chars]` : undefined,
+          images: inputs.images ? `[${inputs.images.length} images]` : undefined
+        });
         
         // Call the Replicate generation function
         generatedImages = await generateWithReplicate(modelKey, inputs);
