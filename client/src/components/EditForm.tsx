@@ -175,6 +175,17 @@ export default function EditForm({
 
   const enhancePrompt = () => {
     if (isEnhancing) return;
+    
+    // Check if user has uploaded an image
+    if (selectedFiles.length === 0) {
+      toast({
+        title: "Image required",
+        description: "Please upload an image to enhance the prompt",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsEnhancing(true);
     enhancePromptMutation.mutate();
   };
@@ -501,7 +512,7 @@ export default function EditForm({
                           className="h-8 bg-gradient-to-r from-violet-50 to-indigo-50 border-purple-200 ring-1 ring-inset ring-purple-100/70 hover:ring-purple-300 shadow-sm hover:shadow text-sm px-3 text-purple-800"
                           title="Enhance Edit Instructions (Ctrl+Space)"
                           onClick={enhancePrompt}
-                          disabled={isEnhancing || field.value?.length < 3}
+                          disabled={isEnhancing || field.value?.length < 3 || selectedFiles.length === 0}
                         >
                           <div className="flex items-center space-x-1.5">
                             {isEnhancing ? (
