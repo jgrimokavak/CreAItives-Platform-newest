@@ -64,7 +64,7 @@ export const models: ModelConfig[] = [
       prompt_upsampling: false,
       safety_tolerance: 2
     },
-    visible: ["prompt", "aspect_ratio", "seed", "prompt_upsampling", "safety_tolerance", "output_format"],
+    visible: ["prompt", "aspect_ratio", "seed", "prompt_upsampling"],
     description: "Flux‑Kontext‑Max – advanced image editing with contextual understanding."
   }
 ];
