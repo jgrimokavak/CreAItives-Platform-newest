@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { FaMagic, FaUpload, FaTrash } from "react-icons/fa";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { GeneratedImage } from "@/types/image";
 import { useEditor } from "@/context/EditorContext";
 import { Progress } from "@/components/ui/progress";
@@ -16,6 +16,7 @@ import { ModelKey, editModelCatalog } from "@/lib/modelCatalog";
 import { modelSchemas, modelDefaults, GenericFormValues } from "@/lib/formSchemas";
 import AIModelSelector from "@/components/AIModelSelector";
 import DynamicForm from "@/components/DynamicForm";
+import { useHotkeys } from "react-hotkeys-hook";
 
 interface EditFormProps {
   onEditStart: () => void;
@@ -36,6 +37,7 @@ export default function EditForm({
   const [maskPreview, setMaskPreview] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [modelKey, setModelKey] = useState<"gpt-image-1" | "flux-kontext-max">("flux-kontext-max");
+  const [isEnhancing, setIsEnhancing] = useState(false);
   
   const imageInputRef = useRef<HTMLInputElement>(null);
   const maskInputRef = useRef<HTMLInputElement>(null);
@@ -110,6 +112,77 @@ export default function EditForm({
       prompt: "",
       ...modelDefaults[modelKey]
     },
+  });
+
+  // AI Enhance prompt mutation
+  const enhancePromptMutation = useMutation({
+    mutationFn: async () => {
+      const currentPrompt = form.getValues("prompt");
+      
+      if (currentPrompt.length < 3) {
+        throw new Error("Prompt must be at least 3 characters long");
+      }
+      
+      // Get the first selected image for context
+      let imageData = null;
+      if (selectedFiles.length > 0) {
+        const reader = new FileReader();
+        imageData = await new Promise<string>((resolve) => {
+          reader.onload = () => resolve(reader.result as string);
+          reader.readAsDataURL(selectedFiles[0]);
+        });
+      }
+      
+      const response = await apiRequest("/api/enhance-edit-prompt", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          text: currentPrompt,
+          model: modelKey,
+          image: imageData,
+        }),
+      });
+      
+      return response;
+    },
+    onSuccess: (data) => {
+      // Update the form with the enhanced prompt
+      form.setValue("prompt" as keyof GenericFormValues, data.prompt);
+      
+      // If negative prompt exists and is applicable
+      if (data.negativePrompt && 
+          editModelCatalog[modelKey].visible.includes("negative_prompt" as any)) {
+        form.setValue("negative_prompt" as keyof GenericFormValues, data.negativePrompt);
+      }
+      
+      setIsEnhancing(false);
+      toast({
+        title: "Edit prompt enhanced!",
+        description: "Your editing instructions have been improved for better results",
+      });
+    },
+    onError: (error) => {
+      setIsEnhancing(false);
+      toast({
+        title: "Couldn't enhance prompt",
+        description: "API error: " + (error.message || "Unknown error"),
+        variant: "destructive",
+      });
+    }
+  });
+
+  const enhancePrompt = () => {
+    if (isEnhancing) return;
+    setIsEnhancing(true);
+    enhancePromptMutation.mutate();
+  };
+
+  // Set up keyboard shortcut
+  useHotkeys("ctrl+space", (event) => {
+    event.preventDefault();
+    enhancePrompt();
   });
 
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -415,11 +488,38 @@ export default function EditForm({
                 <FormItem className="space-y-1.5">
                   <FormLabel className="text-sm font-medium">Edit Instructions</FormLabel>
                   <FormControl>
-                    <Textarea
-                      placeholder="Describe what changes you want to make to the image"
-                      className="resize-none min-h-[80px] text-sm"
-                      {...field}
-                    />
+                    <div>
+                      <Textarea
+                        placeholder="Describe what changes you want to make to the image"
+                        className="resize-none min-h-[80px] text-sm"
+                        {...field}
+                      />
+                      <div className="flex justify-end mt-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="h-8 bg-gradient-to-r from-violet-50 to-indigo-50 border-purple-200 ring-1 ring-inset ring-purple-100/70 hover:ring-purple-300 shadow-sm hover:shadow text-sm px-3 text-purple-800"
+                          title="Enhance Edit Instructions (Ctrl+Space)"
+                          onClick={enhancePrompt}
+                          disabled={isEnhancing || field.value?.length < 3}
+                        >
+                          <div className="flex items-center space-x-1.5">
+                            {isEnhancing ? (
+                              <svg className="animate-spin h-3.5 w-3.5 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                            ) : (
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-purple-600">
+                                <path d="M12 1V5M12 19V23M4.22 4.22L7.05 7.05M16.95 16.95L19.78 19.78M1 12H5M19 12H23M4.22 19.78L7.05 16.95M16.95 7.05L19.78 4.22" 
+                                  stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            )}
+                            <span className="font-medium">AI Enhance</span>
+                          </div>
+                        </Button>
+                      </div>
+                    </div>
                   </FormControl>
                   <p className="text-xs text-muted-foreground">
                     Be specific about what to add, remove, or change in the image

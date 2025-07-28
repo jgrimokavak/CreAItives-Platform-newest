@@ -22,6 +22,7 @@ import { models } from "./config/models";
 import modelRoutes, { initializeModels } from "./routes/model-routes";
 import upscaleRoutes from "./routes/upscale-routes";
 import enhancePromptRouter from "./routes/enhancePrompt";
+import enhanceEditPromptRouter from "./routes/enhanceEditPrompt";
 import promptSuggestionsRouter from "./routes/promptSuggestions";
 import videoRoutes from "./routes/video-routes";
 import projectRoutes from "./routes/project-routes";
@@ -910,6 +911,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Add prompt enhancement routes
   app.use('/api', enhancePromptRouter);
+  
+  // Add edit prompt enhancement routes
+  app.use('/api', enhanceEditPromptRouter);
   
   // Add prompt suggestions routes
   app.use('/api', promptSuggestionsRouter);
