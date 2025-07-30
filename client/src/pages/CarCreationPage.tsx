@@ -840,22 +840,137 @@ const CarCreationPage: React.FC = () => {
                       {/* Car Angle selection */}
                       <div className="space-y-2">
                         <Label htmlFor="car_angle">Car Angle</Label>
-                        <Select
-                          value={form.watch('car_angle') || 'default'}
-                          onValueChange={(value) => setValue('car_angle', value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select viewing angle" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="default">Default (35° front-left)</SelectItem>
-                            <SelectItem value="directly facing the camera in a symmetrical front view">Front view</SelectItem>
-                            <SelectItem value="at a 35-degree front three-quarter angle showing the front grille and right side">Front 3/4 right</SelectItem>
-                            <SelectItem value="at a 45-degree rear three-quarter angle showcasing the taillights and left side">Rear 3/4 left</SelectItem>
-                            <SelectItem value="in a perfect side profile view showing the full length of the car from the left">Left side profile</SelectItem>
-                            <SelectItem value="captured from a high rear-top angle emphasizing the roofline and rear details">Rear aerial view</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <div className="flex items-center gap-3">
+                          <Select
+                            value={form.watch('car_angle') || 'default'}
+                            onValueChange={(value) => setValue('car_angle', value)}
+                          >
+                            <SelectTrigger className="flex-1">
+                              <SelectValue placeholder="Select viewing angle" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="default">Default (35° front-left)</SelectItem>
+                              <SelectItem value="directly facing the camera in a symmetrical front view">Front view</SelectItem>
+                              <SelectItem value="at a 35-degree front three-quarter angle showing the front grille and right side">Front 3/4 right</SelectItem>
+                              <SelectItem value="at a 35-degree front three-quarter angle showing the front grille and left side">Front 3/4 left</SelectItem>
+                              <SelectItem value="in a perfect side profile view showing the full length of the car from the left">Left side profile</SelectItem>
+                              <SelectItem value="in a perfect side profile view showing the full length of the car from the right">Right side profile</SelectItem>
+                              <SelectItem value="at a 45-degree rear three-quarter angle showcasing the taillights and left side">Rear 3/4 left</SelectItem>
+                              <SelectItem value="at a 45-degree rear three-quarter angle showcasing the taillights and right side">Rear 3/4 right</SelectItem>
+                              <SelectItem value="directly from behind in a symmetrical rear view showing the taillights and rear styling">Rear view</SelectItem>
+                              <SelectItem value="captured from a high front-top angle emphasizing the hood, roof, and front styling">Front aerial view</SelectItem>
+                              <SelectItem value="captured from a high rear-top angle emphasizing the roofline and rear details">Rear aerial view</SelectItem>
+                              <SelectItem value="captured from directly above showing the complete roofline and vehicle proportions">Top-down view</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          
+                          {/* Visual angle preview */}
+                          <div className="bg-primary/10 rounded p-2 border border-primary/10 flex items-center justify-center w-16 h-12">
+                            {(() => {
+                              const angle = form.watch('car_angle') || 'default';
+                              const getAngleIcon = () => {
+                                if (angle === 'default' || angle.includes('front three-quarter angle showing the front grille and right side')) {
+                                  // Default front 3/4 right
+                                  return (
+                                    <svg width="40" height="24" viewBox="0 0 40 24" className="text-primary/60">
+                                      <rect x="8" y="8" width="24" height="8" rx="2" fill="currentColor" opacity="0.7"/>
+                                      <rect x="6" y="10" width="4" height="4" rx="1" fill="currentColor"/>
+                                      <rect x="30" y="10" width="4" height="4" rx="1" fill="currentColor"/>
+                                      <rect x="12" y="6" width="16" height="2" rx="1" fill="currentColor" opacity="0.5"/>
+                                    </svg>
+                                  );
+                                } else if (angle.includes('directly facing the camera in a symmetrical front view')) {
+                                  // Front view
+                                  return (
+                                    <svg width="40" height="24" viewBox="0 0 40 24" className="text-primary/60">
+                                      <rect x="12" y="8" width="16" height="8" rx="2" fill="currentColor" opacity="0.7"/>
+                                      <rect x="10" y="10" width="3" height="4" rx="1" fill="currentColor"/>
+                                      <rect x="27" y="10" width="3" height="4" rx="1" fill="currentColor"/>
+                                      <rect x="16" y="6" width="8" height="2" rx="1" fill="currentColor" opacity="0.5"/>
+                                    </svg>
+                                  );
+                                } else if (angle.includes('front three-quarter angle showing the front grille and left side')) {
+                                  // Front 3/4 left
+                                  return (
+                                    <svg width="40" height="24" viewBox="0 0 40 24" className="text-primary/60">
+                                      <rect x="8" y="8" width="24" height="8" rx="2" fill="currentColor" opacity="0.7"/>
+                                      <rect x="6" y="10" width="4" height="4" rx="1" fill="currentColor"/>
+                                      <rect x="30" y="10" width="4" height="4" rx="1" fill="currentColor"/>
+                                      <rect x="12" y="6" width="16" height="2" rx="1" fill="currentColor" opacity="0.5"/>
+                                    </svg>
+                                  );
+                                } else if (angle.includes('perfect side profile view')) {
+                                  // Side profile
+                                  return (
+                                    <svg width="40" height="24" viewBox="0 0 40 24" className="text-primary/60">
+                                      <rect x="6" y="9" width="28" height="6" rx="2" fill="currentColor" opacity="0.7"/>
+                                      <rect x="8" y="12" width="3" height="3" rx="1" fill="currentColor"/>
+                                      <rect x="29" y="12" width="3" height="3" rx="1" fill="currentColor"/>
+                                      <rect x="10" y="7" width="20" height="2" rx="1" fill="currentColor" opacity="0.5"/>
+                                    </svg>
+                                  );
+                                } else if (angle.includes('rear three-quarter angle')) {
+                                  // Rear 3/4
+                                  return (
+                                    <svg width="40" height="24" viewBox="0 0 40 24" className="text-primary/60">
+                                      <rect x="8" y="8" width="24" height="8" rx="2" fill="currentColor" opacity="0.7"/>
+                                      <rect x="6" y="10" width="4" height="4" rx="1" fill="currentColor"/>
+                                      <rect x="30" y="10" width="4" height="4" rx="1" fill="currentColor"/>
+                                      <rect x="12" y="16" width="16" height="2" rx="1" fill="currentColor" opacity="0.5"/>
+                                    </svg>
+                                  );
+                                } else if (angle.includes('directly from behind')) {
+                                  // Rear view
+                                  return (
+                                    <svg width="40" height="24" viewBox="0 0 40 24" className="text-primary/60">
+                                      <rect x="12" y="8" width="16" height="8" rx="2" fill="currentColor" opacity="0.7"/>
+                                      <rect x="10" y="10" width="3" height="4" rx="1" fill="currentColor"/>
+                                      <rect x="27" y="10" width="3" height="4" rx="1" fill="currentColor"/>
+                                      <rect x="16" y="16" width="8" height="2" rx="1" fill="currentColor" opacity="0.5"/>
+                                    </svg>
+                                  );
+                                } else if (angle.includes('high front-top angle')) {
+                                  // Front aerial
+                                  return (
+                                    <svg width="40" height="24" viewBox="0 0 40 24" className="text-primary/60">
+                                      <rect x="10" y="6" width="20" height="12" rx="3" fill="currentColor" opacity="0.7"/>
+                                      <rect x="8" y="8" width="3" height="3" rx="1" fill="currentColor"/>
+                                      <rect x="29" y="8" width="3" height="3" rx="1" fill="currentColor"/>
+                                      <rect x="8" y="13" width="3" height="3" rx="1" fill="currentColor"/>
+                                      <rect x="29" y="13" width="3" height="3" rx="1" fill="currentColor"/>
+                                    </svg>
+                                  );
+                                } else if (angle.includes('high rear-top angle')) {
+                                  // Rear aerial
+                                  return (
+                                    <svg width="40" height="24" viewBox="0 0 40 24" className="text-primary/60">
+                                      <rect x="10" y="6" width="20" height="12" rx="3" fill="currentColor" opacity="0.7"/>
+                                      <rect x="8" y="8" width="3" height="3" rx="1" fill="currentColor"/>
+                                      <rect x="29" y="8" width="3" height="3" rx="1" fill="currentColor"/>
+                                      <rect x="8" y="13" width="3" height="3" rx="1" fill="currentColor"/>
+                                      <rect x="29" y="13" width="3" height="3" rx="1" fill="currentColor"/>
+                                      <rect x="16" y="15" width="8" height="1" rx="0.5" fill="currentColor" opacity="0.5"/>
+                                    </svg>
+                                  );
+                                } else if (angle.includes('directly above')) {
+                                  // Top-down
+                                  return (
+                                    <svg width="40" height="24" viewBox="0 0 40 24" className="text-primary/60">
+                                      <rect x="8" y="4" width="24" height="16" rx="3" fill="currentColor" opacity="0.7"/>
+                                      <rect x="6" y="6" width="3" height="3" rx="1" fill="currentColor"/>
+                                      <rect x="31" y="6" width="3" height="3" rx="1" fill="currentColor"/>
+                                      <rect x="6" y="15" width="3" height="3" rx="1" fill="currentColor"/>
+                                      <rect x="31" y="15" width="3" height="3" rx="1" fill="currentColor"/>
+                                      <rect x="14" y="10" width="12" height="4" rx="1" fill="currentColor" opacity="0.3"/>
+                                    </svg>
+                                  );
+                                }
+                                return null;
+                              };
+                              return getAngleIcon();
+                            })()}
+                          </div>
+                        </div>
                         <p className="text-xs text-muted-foreground">
                           Choose the camera angle for your car image. Default uses the standard automotive photography angle.
                         </p>
