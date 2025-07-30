@@ -864,110 +864,255 @@ const CarCreationPage: React.FC = () => {
                             </SelectContent>
                           </Select>
                           
-                          {/* Visual angle preview */}
-                          <div className="bg-primary/10 rounded p-2 border border-primary/10 flex items-center justify-center w-16 h-12">
+                          {/* Enhanced Visual angle preview */}
+                          <div className="bg-gradient-to-b from-slate-50 to-slate-100 rounded-lg p-3 border border-slate-200 flex items-center justify-center w-20 h-16 shadow-sm">
                             {(() => {
                               const angle = form.watch('car_angle') || 'default';
-                              const getAngleIcon = () => {
+                              const getEnhancedAngleIcon = () => {
                                 if (angle === 'default' || angle.includes('front three-quarter angle showing the front grille and right side')) {
-                                  // Default front 3/4 right
+                                  // Enhanced front 3/4 right view
                                   return (
-                                    <svg width="40" height="24" viewBox="0 0 40 24" className="text-primary/60">
-                                      <rect x="8" y="8" width="24" height="8" rx="2" fill="currentColor" opacity="0.7"/>
-                                      <rect x="6" y="10" width="4" height="4" rx="1" fill="currentColor"/>
-                                      <rect x="30" y="10" width="4" height="4" rx="1" fill="currentColor"/>
-                                      <rect x="12" y="6" width="16" height="2" rx="1" fill="currentColor" opacity="0.5"/>
+                                    <svg width="52" height="32" viewBox="0 0 52 32" className="drop-shadow-sm">
+                                      {/* Car shadow */}
+                                      <ellipse cx="26" cy="28" rx="20" ry="3" fill="#000" opacity="0.1"/>
+                                      {/* Main body with gradient */}
+                                      <defs>
+                                        <linearGradient id="carBody1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                          <stop offset="0%" stopColor="#4F46E5"/>
+                                          <stop offset="100%" stopColor="#312E81"/>
+                                        </linearGradient>
+                                        <linearGradient id="roof1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                          <stop offset="0%" stopColor="#6366F1"/>
+                                          <stop offset="100%" stopColor="#4F46E5"/>
+                                        </linearGradient>
+                                      </defs>
+                                      {/* Car body - 3D perspective */}
+                                      <path d="M8 18 L35 18 L38 15 L38 10 L35 8 L15 8 L12 10 L8 15 Z" fill="url(#carBody1)"/>
+                                      {/* Roof */}
+                                      <path d="M15 8 L35 8 L32 5 L18 5 Z" fill="url(#roof1)"/>
+                                      {/* Side window */}
+                                      <path d="M16 10 L30 10 L28 8 L18 8 Z" fill="#E5E7EB" opacity="0.8"/>
+                                      {/* Wheels with rims */}
+                                      <circle cx="16" cy="20" r="3.5" fill="#374151"/>
+                                      <circle cx="16" cy="20" r="2.5" fill="#9CA3AF"/>
+                                      <circle cx="32" cy="20" r="3.5" fill="#374151"/>
+                                      <circle cx="32" cy="20" r="2.5" fill="#9CA3AF"/>
+                                      {/* Headlight */}
+                                      <ellipse cx="8" cy="12" rx="1.5" ry="2" fill="#FEF3C7"/>
+                                      {/* Front details */}
+                                      <rect x="6" y="14" width="4" height="1" fill="#374151" opacity="0.6"/>
                                     </svg>
                                   );
                                 } else if (angle.includes('directly facing the camera in a symmetrical front view')) {
-                                  // Front view
+                                  // Enhanced front view
                                   return (
-                                    <svg width="40" height="24" viewBox="0 0 40 24" className="text-primary/60">
-                                      <rect x="12" y="8" width="16" height="8" rx="2" fill="currentColor" opacity="0.7"/>
-                                      <rect x="10" y="10" width="3" height="4" rx="1" fill="currentColor"/>
-                                      <rect x="27" y="10" width="3" height="4" rx="1" fill="currentColor"/>
-                                      <rect x="16" y="6" width="8" height="2" rx="1" fill="currentColor" opacity="0.5"/>
+                                    <svg width="52" height="32" viewBox="0 0 52 32" className="drop-shadow-sm">
+                                      <defs>
+                                        <linearGradient id="carBody2" x1="0%" y1="0%" x2="0%" y2="100%">
+                                          <stop offset="0%" stopColor="#4F46E5"/>
+                                          <stop offset="100%" stopColor="#312E81"/>
+                                        </linearGradient>
+                                      </defs>
+                                      {/* Shadow */}
+                                      <ellipse cx="26" cy="28" rx="18" ry="3" fill="#000" opacity="0.1"/>
+                                      {/* Main body - symmetrical front */}
+                                      <rect x="14" y="10" width="24" height="12" rx="3" fill="url(#carBody2)"/>
+                                      {/* Roof */}
+                                      <rect x="16" y="6" width="20" height="6" rx="2" fill="#6366F1"/>
+                                      {/* Windshield */}
+                                      <rect x="18" y="8" width="16" height="4" rx="1" fill="#E5E7EB" opacity="0.8"/>
+                                      {/* Wheels */}
+                                      <circle cx="19" cy="24" r="3" fill="#374151"/>
+                                      <circle cx="19" cy="24" r="2" fill="#9CA3AF"/>
+                                      <circle cx="33" cy="24" r="3" fill="#374151"/>
+                                      <circle cx="33" cy="24" r="2" fill="#9CA3AF"/>
+                                      {/* Headlights */}
+                                      <circle cx="16" cy="14" r="2" fill="#FEF3C7"/>
+                                      <circle cx="36" cy="14" r="2" fill="#FEF3C7"/>
+                                      {/* Grille */}
+                                      <rect x="20" y="16" width="12" height="3" rx="1" fill="#374151" opacity="0.6"/>
                                     </svg>
                                   );
                                 } else if (angle.includes('front three-quarter angle showing the front grille and left side')) {
-                                  // Front 3/4 left
+                                  // Enhanced front 3/4 left view
                                   return (
-                                    <svg width="40" height="24" viewBox="0 0 40 24" className="text-primary/60">
-                                      <rect x="8" y="8" width="24" height="8" rx="2" fill="currentColor" opacity="0.7"/>
-                                      <rect x="6" y="10" width="4" height="4" rx="1" fill="currentColor"/>
-                                      <rect x="30" y="10" width="4" height="4" rx="1" fill="currentColor"/>
-                                      <rect x="12" y="6" width="16" height="2" rx="1" fill="currentColor" opacity="0.5"/>
+                                    <svg width="52" height="32" viewBox="0 0 52 32" className="drop-shadow-sm">
+                                      <defs>
+                                        <linearGradient id="carBody3" x1="100%" y1="0%" x2="0%" y2="100%">
+                                          <stop offset="0%" stopColor="#4F46E5"/>
+                                          <stop offset="100%" stopColor="#312E81"/>
+                                        </linearGradient>
+                                      </defs>
+                                      {/* Shadow */}
+                                      <ellipse cx="26" cy="28" rx="20" ry="3" fill="#000" opacity="0.1"/>
+                                      {/* Main body - left perspective */}
+                                      <path d="M44 18 L17 18 L14 15 L14 10 L17 8 L37 8 L40 10 L44 15 Z" fill="url(#carBody3)"/>
+                                      {/* Roof */}
+                                      <path d="M37 8 L17 8 L20 5 L34 5 Z" fill="#6366F1"/>
+                                      {/* Side window */}
+                                      <path d="M36 10 L22 10 L24 8 L34 8 Z" fill="#E5E7EB" opacity="0.8"/>
+                                      {/* Wheels */}
+                                      <circle cx="20" cy="20" r="3.5" fill="#374151"/>
+                                      <circle cx="20" cy="20" r="2.5" fill="#9CA3AF"/>
+                                      <circle cx="36" cy="20" r="3.5" fill="#374151"/>
+                                      <circle cx="36" cy="20" r="2.5" fill="#9CA3AF"/>
+                                      {/* Headlight */}
+                                      <ellipse cx="44" cy="12" rx="1.5" ry="2" fill="#FEF3C7"/>
                                     </svg>
                                   );
                                 } else if (angle.includes('perfect side profile view')) {
-                                  // Side profile
+                                  // Enhanced side profile
                                   return (
-                                    <svg width="40" height="24" viewBox="0 0 40 24" className="text-primary/60">
-                                      <rect x="6" y="9" width="28" height="6" rx="2" fill="currentColor" opacity="0.7"/>
-                                      <rect x="8" y="12" width="3" height="3" rx="1" fill="currentColor"/>
-                                      <rect x="29" y="12" width="3" height="3" rx="1" fill="currentColor"/>
-                                      <rect x="10" y="7" width="20" height="2" rx="1" fill="currentColor" opacity="0.5"/>
+                                    <svg width="52" height="32" viewBox="0 0 52 32" className="drop-shadow-sm">
+                                      <defs>
+                                        <linearGradient id="carBody4" x1="0%" y1="0%" x2="0%" y2="100%">
+                                          <stop offset="0%" stopColor="#4F46E5"/>
+                                          <stop offset="100%" stopColor="#312E81"/>
+                                        </linearGradient>
+                                      </defs>
+                                      {/* Shadow */}
+                                      <ellipse cx="26" cy="28" rx="22" ry="2" fill="#000" opacity="0.1"/>
+                                      {/* Main body - perfect side profile */}
+                                      <rect x="6" y="12" width="40" height="10" rx="2" fill="url(#carBody4)"/>
+                                      {/* Roof line */}
+                                      <path d="M10 12 L42 12 L38 6 L14 6 Z" fill="#6366F1"/>
+                                      {/* Windows */}
+                                      <rect x="12" y="8" width="8" height="6" rx="1" fill="#E5E7EB" opacity="0.8"/>
+                                      <rect x="22" y="8" width="8" height="6" rx="1" fill="#E5E7EB" opacity="0.8"/>
+                                      <rect x="32" y="8" width="8" height="6" rx="1" fill="#E5E7EB" opacity="0.8"/>
+                                      {/* Wheels */}
+                                      <circle cx="14" cy="24" r="4" fill="#374151"/>
+                                      <circle cx="14" cy="24" r="3" fill="#9CA3AF"/>
+                                      <circle cx="38" cy="24" r="4" fill="#374151"/>
+                                      <circle cx="38" cy="24" r="3" fill="#9CA3AF"/>
+                                      {/* Door handles */}
+                                      <rect x="18" y="16" width="2" height="1" rx="0.5" fill="#374151"/>
+                                      <rect x="28" y="16" width="2" height="1" rx="0.5" fill="#374151"/>
                                     </svg>
                                   );
                                 } else if (angle.includes('rear three-quarter angle')) {
-                                  // Rear 3/4
+                                  // Enhanced rear 3/4 view
                                   return (
-                                    <svg width="40" height="24" viewBox="0 0 40 24" className="text-primary/60">
-                                      <rect x="8" y="8" width="24" height="8" rx="2" fill="currentColor" opacity="0.7"/>
-                                      <rect x="6" y="10" width="4" height="4" rx="1" fill="currentColor"/>
-                                      <rect x="30" y="10" width="4" height="4" rx="1" fill="currentColor"/>
-                                      <rect x="12" y="16" width="16" height="2" rx="1" fill="currentColor" opacity="0.5"/>
+                                    <svg width="52" height="32" viewBox="0 0 52 32" className="drop-shadow-sm">
+                                      <defs>
+                                        <linearGradient id="carBody5" x1="0%" y1="100%" x2="100%" y2="0%">
+                                          <stop offset="0%" stopColor="#312E81"/>
+                                          <stop offset="100%" stopColor="#4F46E5"/>
+                                        </linearGradient>
+                                      </defs>
+                                      {/* Shadow */}
+                                      <ellipse cx="26" cy="28" rx="20" ry="3" fill="#000" opacity="0.1"/>
+                                      {/* Main body - rear perspective */}
+                                      <path d="M8 18 L35 18 L38 15 L38 10 L35 8 L15 8 L12 10 L8 15 Z" fill="url(#carBody5)"/>
+                                      {/* Roof */}
+                                      <path d="M15 8 L35 8 L32 5 L18 5 Z" fill="#6366F1"/>
+                                      {/* Rear window */}
+                                      <path d="M16 10 L30 10 L28 8 L18 8 Z" fill="#E5E7EB" opacity="0.8"/>
+                                      {/* Wheels */}
+                                      <circle cx="16" cy="20" r="3.5" fill="#374151"/>
+                                      <circle cx="16" cy="20" r="2.5" fill="#9CA3AF"/>
+                                      <circle cx="32" cy="20" r="3.5" fill="#374151"/>
+                                      <circle cx="32" cy="20" r="2.5" fill="#9CA3AF"/>
+                                      {/* Taillight */}
+                                      <ellipse cx="38" cy="12" rx="1.5" ry="2" fill="#EF4444"/>
+                                      {/* Rear details */}
+                                      <rect x="34" y="14" width="4" height="1" fill="#374151" opacity="0.6"/>
                                     </svg>
                                   );
                                 } else if (angle.includes('directly from behind')) {
-                                  // Rear view
+                                  // Enhanced rear view
                                   return (
-                                    <svg width="40" height="24" viewBox="0 0 40 24" className="text-primary/60">
-                                      <rect x="12" y="8" width="16" height="8" rx="2" fill="currentColor" opacity="0.7"/>
-                                      <rect x="10" y="10" width="3" height="4" rx="1" fill="currentColor"/>
-                                      <rect x="27" y="10" width="3" height="4" rx="1" fill="currentColor"/>
-                                      <rect x="16" y="16" width="8" height="2" rx="1" fill="currentColor" opacity="0.5"/>
+                                    <svg width="52" height="32" viewBox="0 0 52 32" className="drop-shadow-sm">
+                                      <defs>
+                                        <linearGradient id="carBody6" x1="0%" y1="100%" x2="0%" y2="0%">
+                                          <stop offset="0%" stopColor="#312E81"/>
+                                          <stop offset="100%" stopColor="#4F46E5"/>
+                                        </linearGradient>
+                                      </defs>
+                                      {/* Shadow */}
+                                      <ellipse cx="26" cy="28" rx="18" ry="3" fill="#000" opacity="0.1"/>
+                                      {/* Main body - rear view */}
+                                      <rect x="14" y="10" width="24" height="12" rx="3" fill="url(#carBody6)"/>
+                                      {/* Roof */}
+                                      <rect x="16" y="6" width="20" height="6" rx="2" fill="#6366F1"/>
+                                      {/* Rear window */}
+                                      <rect x="18" y="8" width="16" height="4" rx="1" fill="#E5E7EB" opacity="0.8"/>
+                                      {/* Wheels */}
+                                      <circle cx="19" cy="24" r="3" fill="#374151"/>
+                                      <circle cx="19" cy="24" r="2" fill="#9CA3AF"/>
+                                      <circle cx="33" cy="24" r="3" fill="#374151"/>
+                                      <circle cx="33" cy="24" r="2" fill="#9CA3AF"/>
+                                      {/* Taillights */}
+                                      <circle cx="16" cy="14" r="2" fill="#EF4444"/>
+                                      <circle cx="36" cy="14" r="2" fill="#EF4444"/>
+                                      {/* License plate area */}
+                                      <rect x="20" y="19" width="12" height="2" rx="1" fill="#374151" opacity="0.6"/>
                                     </svg>
                                   );
-                                } else if (angle.includes('high front-top angle')) {
-                                  // Front aerial
+                                } else if (angle.includes('high front-top angle') || angle.includes('high rear-top angle')) {
+                                  // Enhanced aerial view
                                   return (
-                                    <svg width="40" height="24" viewBox="0 0 40 24" className="text-primary/60">
-                                      <rect x="10" y="6" width="20" height="12" rx="3" fill="currentColor" opacity="0.7"/>
-                                      <rect x="8" y="8" width="3" height="3" rx="1" fill="currentColor"/>
-                                      <rect x="29" y="8" width="3" height="3" rx="1" fill="currentColor"/>
-                                      <rect x="8" y="13" width="3" height="3" rx="1" fill="currentColor"/>
-                                      <rect x="29" y="13" width="3" height="3" rx="1" fill="currentColor"/>
-                                    </svg>
-                                  );
-                                } else if (angle.includes('high rear-top angle')) {
-                                  // Rear aerial
-                                  return (
-                                    <svg width="40" height="24" viewBox="0 0 40 24" className="text-primary/60">
-                                      <rect x="10" y="6" width="20" height="12" rx="3" fill="currentColor" opacity="0.7"/>
-                                      <rect x="8" y="8" width="3" height="3" rx="1" fill="currentColor"/>
-                                      <rect x="29" y="8" width="3" height="3" rx="1" fill="currentColor"/>
-                                      <rect x="8" y="13" width="3" height="3" rx="1" fill="currentColor"/>
-                                      <rect x="29" y="13" width="3" height="3" rx="1" fill="currentColor"/>
-                                      <rect x="16" y="15" width="8" height="1" rx="0.5" fill="currentColor" opacity="0.5"/>
+                                    <svg width="52" height="32" viewBox="0 0 52 32" className="drop-shadow-sm">
+                                      <defs>
+                                        <linearGradient id="carBody7" x1="0%" y1="0%" x2="100%" y2="100%">
+                                          <stop offset="0%" stopColor="#6366F1"/>
+                                          <stop offset="100%" stopColor="#312E81"/>
+                                        </linearGradient>
+                                      </defs>
+                                      {/* Shadow */}
+                                      <ellipse cx="26" cy="29" rx="16" ry="2" fill="#000" opacity="0.15"/>
+                                      {/* Main body - aerial perspective */}
+                                      <rect x="14" y="8" width="24" height="16" rx="4" fill="url(#carBody7)"/>
+                                      {/* Roof details */}
+                                      <rect x="16" y="10" width="20" height="12" rx="2" fill="#4F46E5" opacity="0.8"/>
+                                      {/* Sunroof */}
+                                      <rect x="20" y="13" width="12" height="6" rx="1" fill="#E5E7EB" opacity="0.3"/>
+                                      {/* Wheels - aerial view */}
+                                      <rect x="11" y="10" width="4" height="4" rx="2" fill="#374151"/>
+                                      <rect x="37" y="10" width="4" height="4" rx="2" fill="#374151"/>
+                                      <rect x="11" y="18" width="4" height="4" rx="2" fill="#374151"/>
+                                      <rect x="37" y="18" width="4" height="4" rx="2" fill="#374151"/>
+                                      {/* Hood/trunk line */}
+                                      <rect x="18" y="6" width="16" height="2" rx="1" fill="#374151" opacity="0.3"/>
                                     </svg>
                                   );
                                 } else if (angle.includes('directly above')) {
-                                  // Top-down
+                                  // Enhanced top-down view
                                   return (
-                                    <svg width="40" height="24" viewBox="0 0 40 24" className="text-primary/60">
-                                      <rect x="8" y="4" width="24" height="16" rx="3" fill="currentColor" opacity="0.7"/>
-                                      <rect x="6" y="6" width="3" height="3" rx="1" fill="currentColor"/>
-                                      <rect x="31" y="6" width="3" height="3" rx="1" fill="currentColor"/>
-                                      <rect x="6" y="15" width="3" height="3" rx="1" fill="currentColor"/>
-                                      <rect x="31" y="15" width="3" height="3" rx="1" fill="currentColor"/>
-                                      <rect x="14" y="10" width="12" height="4" rx="1" fill="currentColor" opacity="0.3"/>
+                                    <svg width="52" height="32" viewBox="0 0 52 32" className="drop-shadow-sm">
+                                      <defs>
+                                        <linearGradient id="carBody8" x1="50%" y1="0%" x2="50%" y2="100%">
+                                          <stop offset="0%" stopColor="#6366F1"/>
+                                          <stop offset="50%" stopColor="#4F46E5"/>
+                                          <stop offset="100%" stopColor="#312E81"/>
+                                        </linearGradient>
+                                      </defs>
+                                      {/* Shadow */}
+                                      <ellipse cx="26" cy="28" rx="20" ry="2" fill="#000" opacity="0.1"/>
+                                      {/* Main body - perfect top-down */}
+                                      <rect x="10" y="4" width="32" height="20" rx="4" fill="url(#carBody8)"/>
+                                      {/* Roof sections */}
+                                      <rect x="12" y="6" width="28" height="4" rx="2" fill="#4F46E5" opacity="0.9"/>
+                                      <rect x="12" y="11" width="28" height="6" rx="1" fill="#6366F1" opacity="0.7"/>
+                                      <rect x="12" y="18" width="28" height="4" rx="2" fill="#4F46E5" opacity="0.9"/>
+                                      {/* Door lines */}
+                                      <line x1="18" y1="6" x2="18" y2="22" stroke="#312E81" strokeWidth="0.5"/>
+                                      <line x1="26" y1="6" x2="26" y2="22" stroke="#312E81" strokeWidth="0.5"/>
+                                      <line x1="34" y1="6" x2="34" y2="22" stroke="#312E81" strokeWidth="0.5"/>
+                                      {/* Wheels - top view */}
+                                      <rect x="7" y="7" width="4" height="3" rx="1.5" fill="#374151"/>
+                                      <rect x="41" y="7" width="4" height="3" rx="1.5" fill="#374151"/>
+                                      <rect x="7" y="16" width="4" height="3" rx="1.5" fill="#374151"/>
+                                      <rect x="41" y="16" width="4" height="3" rx="1.5" fill="#374151"/>
+                                      {/* Mirrors */}
+                                      <circle cx="8" cy="11" r="1" fill="#374151"/>
+                                      <circle cx="44" cy="11" r="1" fill="#374151"/>
                                     </svg>
                                   );
                                 }
                                 return null;
                               };
-                              return getAngleIcon();
+                              return getEnhancedAngleIcon();
                             })()}
                           </div>
                         </div>
