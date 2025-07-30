@@ -36,7 +36,8 @@ const carGenerationSchema = z.object({
   color: z.string().optional(),
   wheel_color: z.string().optional(),
   has_adventure_cladding: z.boolean().optional(),
-  background: z.enum(["white", "hub"]).default("white")
+  background: z.enum(["white", "hub"]).default("white"),
+  car_angle: z.string().optional()
 });
 
 type CarGenerationFormValues = z.infer<typeof carGenerationSchema>;
@@ -75,7 +76,8 @@ const CarCreationPage: React.FC = () => {
       color: 'silver', // Set default color to silver
       wheel_color: 'silver', // Set default wheel color to silver
       has_adventure_cladding: false, // Set default adventure cladding to false
-      background: 'hub'
+      background: 'hub',
+      car_angle: 'default' // Default to 'default' for default angle
     }
   });
 
@@ -833,6 +835,30 @@ const CarCreationPage: React.FC = () => {
                             </div>
                           </div>
                         )}
+                      </div>
+                      
+                      {/* Car Angle selection */}
+                      <div className="space-y-2">
+                        <Label htmlFor="car_angle">Car Angle</Label>
+                        <Select
+                          value={form.watch('car_angle') || 'default'}
+                          onValueChange={(value) => setValue('car_angle', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select viewing angle" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="default">Default (35° front-left)</SelectItem>
+                            <SelectItem value="directly facing the camera in a symmetrical front view">Front view</SelectItem>
+                            <SelectItem value="at a 35-degree front three-quarter angle showing the front grille and right side">Front 3/4 right</SelectItem>
+                            <SelectItem value="at a 45-degree rear three-quarter angle showcasing the taillights and left side">Rear 3/4 left</SelectItem>
+                            <SelectItem value="in a perfect side profile view showing the full length of the car from the left">Left side profile</SelectItem>
+                            <SelectItem value="captured from a high rear-top angle emphasizing the roofline and rear details">Rear aerial view</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">
+                          Choose the camera angle for your car image. Default uses the standard automotive photography angle.
+                        </p>
                       </div>
                       
                       {/* Aspect ratio with visual representations */}
