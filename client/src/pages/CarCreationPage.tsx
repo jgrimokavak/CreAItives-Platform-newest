@@ -25,6 +25,20 @@ import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
 import { useEditor } from '@/context/EditorContext';
 
+// Import car angle SVG assets
+import defaultSvg from '@/assets/car-angles/default.svg';
+import frontViewSvg from '@/assets/car-angles/front-view.svg';
+import frontQuarterLeftSvg from '@/assets/car-angles/front-quarter-left.svg';
+import frontQuarterRightSvg from '@/assets/car-angles/front-quarter-right.svg';
+import sideProfileLeftSvg from '@/assets/car-angles/side-profile-left.svg';
+import sideProfileRightSvg from '@/assets/car-angles/side-profile-right.svg';
+import rearQuarterLeftSvg from '@/assets/car-angles/rear-quarter-left.svg';
+import rearQuarterRightSvg from '@/assets/car-angles/rear-quarter-right.svg';
+import rearViewSvg from '@/assets/car-angles/rear-view.svg';
+import frontAerialSvg from '@/assets/car-angles/front-aerial.svg';
+import rearAerialSvg from '@/assets/car-angles/rear-aerial.svg';
+import topDownSvg from '@/assets/car-angles/top-down.svg';
+
 // Car generation form schema
 const carGenerationSchema = z.object({
   year: z.string().optional(),
@@ -41,6 +55,22 @@ const carGenerationSchema = z.object({
 });
 
 type CarGenerationFormValues = z.infer<typeof carGenerationSchema>;
+
+// SVG mapping for car angle previews
+const carAngleSvgMap: Record<string, string> = {
+  'default': defaultSvg,
+  'front-view': frontViewSvg,
+  'front-quarter-left': frontQuarterLeftSvg,
+  'front-quarter-right': frontQuarterRightSvg,
+  'side-profile-left': sideProfileLeftSvg,
+  'side-profile-right': sideProfileRightSvg,
+  'rear-quarter-left': rearQuarterLeftSvg,
+  'rear-quarter-right': rearQuarterRightSvg,
+  'rear-view': rearViewSvg,
+  'front-aerial': frontAerialSvg,
+  'rear-aerial': rearAerialSvg,
+  'top-down': topDownSvg
+};
 
 const CarCreationPage: React.FC = () => {
   const { toast } = useToast();
@@ -864,242 +894,49 @@ const CarCreationPage: React.FC = () => {
                             </SelectContent>
                           </Select>
                           
-                          {/* Refined Visual angle preview */}
+                          {/* Custom SVG angle preview */}
                           <div className="flex items-center justify-center p-2 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-md border border-blue-100 h-12">
                             {(() => {
                               const angle = form.watch('car_angle') || 'default';
-                              const getRefinedAngleIcon = () => {
+                              
+                              // Map angle descriptions to SVG keys
+                              const getAngleSvgKey = () => {
                                 if (angle === 'default' || angle.includes('front three-quarter angle showing the front grille and right side')) {
-                                  // Refined front 3/4 right view
-                                  return (
-                                    <svg width="36" height="20" viewBox="0 0 36 20" className="drop-shadow-sm">
-                                      <defs>
-                                        <linearGradient id="car1" x1="0%" y1="0%" x2="100%" y2="100%">
-                                          <stop offset="0%" stopColor="#3B82F6"/>
-                                          <stop offset="100%" stopColor="#1E40AF"/>
-                                        </linearGradient>
-                                      </defs>
-                                      {/* Shadow */}
-                                      <ellipse cx="18" cy="18" rx="14" ry="1.5" fill="#000" opacity="0.15"/>
-                                      {/* Car body - 3D perspective */}
-                                      <path d="M6 12 L26 12 L28 10 L28 7 L26 6 L12 6 L9 7 L6 10 Z" fill="url(#car1)"/>
-                                      {/* Roof */}
-                                      <path d="M12 6 L26 6 L24 4 L14 4 Z" fill="#60A5FA"/>
-                                      {/* Window */}
-                                      <path d="M13 7 L22 7 L21 6 L14 6 Z" fill="#E2E8F0" opacity="0.9"/>
-                                      {/* Wheels */}
-                                      <circle cx="12" cy="14" r="2.2" fill="#374151"/>
-                                      <circle cx="12" cy="14" r="1.5" fill="#9CA3AF"/>
-                                      <circle cx="24" cy="14" r="2.2" fill="#374151"/>
-                                      <circle cx="24" cy="14" r="1.5" fill="#9CA3AF"/>
-                                      {/* Headlight */}
-                                      <circle cx="6" cy="9" r="1" fill="#FDE047"/>
-                                    </svg>
-                                  );
+                                  return 'default';
                                 } else if (angle.includes('directly facing the camera in a symmetrical front view')) {
-                                  // Refined front view
-                                  return (
-                                    <svg width="36" height="20" viewBox="0 0 36 20" className="drop-shadow-sm">
-                                      <defs>
-                                        <linearGradient id="car2" x1="0%" y1="0%" x2="0%" y2="100%">
-                                          <stop offset="0%" stopColor="#3B82F6"/>
-                                          <stop offset="100%" stopColor="#1E40AF"/>
-                                        </linearGradient>
-                                      </defs>
-                                      {/* Shadow */}
-                                      <ellipse cx="18" cy="18" rx="12" ry="1.5" fill="#000" opacity="0.15"/>
-                                      {/* Main body - symmetrical front */}
-                                      <rect x="10" y="7" width="16" height="8" rx="2" fill="url(#car2)"/>
-                                      {/* Roof */}
-                                      <rect x="11" y="4" width="14" height="4" rx="1.5" fill="#60A5FA"/>
-                                      {/* Windshield */}
-                                      <rect x="12" y="5" width="12" height="3" rx="1" fill="#E2E8F0" opacity="0.9"/>
-                                      {/* Wheels */}
-                                      <circle cx="13" cy="16" r="2" fill="#374151"/>
-                                      <circle cx="13" cy="16" r="1.3" fill="#9CA3AF"/>
-                                      <circle cx="23" cy="16" r="2" fill="#374151"/>
-                                      <circle cx="23" cy="16" r="1.3" fill="#9CA3AF"/>
-                                      {/* Headlights */}
-                                      <circle cx="11" cy="10" r="1.2" fill="#FDE047"/>
-                                      <circle cx="25" cy="10" r="1.2" fill="#FDE047"/>
-                                      {/* Grille */}
-                                      <rect x="14" y="12" width="8" height="2" rx="0.5" fill="#374151" opacity="0.6"/>
-                                    </svg>
-                                  );
+                                  return 'front-view';
                                 } else if (angle.includes('front three-quarter angle showing the front grille and left side')) {
-                                  // Refined front 3/4 left view
-                                  return (
-                                    <svg width="36" height="20" viewBox="0 0 36 20" className="drop-shadow-sm">
-                                      <defs>
-                                        <linearGradient id="car8" x1="100%" y1="0%" x2="0%" y2="100%">
-                                          <stop offset="0%" stopColor="#3B82F6"/>
-                                          <stop offset="100%" stopColor="#1E40AF"/>
-                                        </linearGradient>
-                                      </defs>
-                                      {/* Shadow */}
-                                      <ellipse cx="18" cy="18" rx="14" ry="1.5" fill="#000" opacity="0.15"/>
-                                      {/* Main body - left perspective */}
-                                      <path d="M30 12 L10 12 L8 10 L8 7 L10 6 L26 6 L28 7 L30 10 Z" fill="url(#car8)"/>
-                                      {/* Roof */}
-                                      <path d="M26 6 L10 6 L12 4 L22 4 Z" fill="#60A5FA"/>
-                                      {/* Window */}
-                                      <path d="M23 7 L14 7 L15 6 L22 6 Z" fill="#E2E8F0" opacity="0.9"/>
-                                      {/* Wheels */}
-                                      <circle cx="12" cy="14" r="2.2" fill="#374151"/>
-                                      <circle cx="12" cy="14" r="1.5" fill="#9CA3AF"/>
-                                      <circle cx="24" cy="14" r="2.2" fill="#374151"/>
-                                      <circle cx="24" cy="14" r="1.5" fill="#9CA3AF"/>
-                                      {/* Headlight */}
-                                      <circle cx="30" cy="9" r="1" fill="#FDE047"/>
-                                    </svg>
-                                  );
-                                } else if (angle.includes('perfect side profile view')) {
-                                  // Refined side profile
-                                  return (
-                                    <svg width="36" height="20" viewBox="0 0 36 20" className="drop-shadow-sm">
-                                      <defs>
-                                        <linearGradient id="car3" x1="0%" y1="0%" x2="0%" y2="100%">
-                                          <stop offset="0%" stopColor="#3B82F6"/>
-                                          <stop offset="100%" stopColor="#1E40AF"/>
-                                        </linearGradient>
-                                      </defs>
-                                      {/* Shadow */}
-                                      <ellipse cx="18" cy="18" rx="15" ry="1" fill="#000" opacity="0.15"/>
-                                      {/* Main body - perfect side profile */}
-                                      <rect x="4" y="8" width="28" height="6" rx="1.5" fill="url(#car3)"/>
-                                      {/* Roof line */}
-                                      <path d="M7 8 L29 8 L27 4 L9 4 Z" fill="#60A5FA"/>
-                                      {/* Windows */}
-                                      <rect x="8" y="5" width="5" height="4" rx="0.5" fill="#E2E8F0" opacity="0.9"/>
-                                      <rect x="15" y="5" width="5" height="4" rx="0.5" fill="#E2E8F0" opacity="0.9"/>
-                                      <rect x="22" y="5" width="5" height="4" rx="0.5" fill="#E2E8F0" opacity="0.9"/>
-                                      {/* Wheels */}
-                                      <circle cx="9" cy="15" r="2.5" fill="#374151"/>
-                                      <circle cx="9" cy="15" r="1.8" fill="#9CA3AF"/>
-                                      <circle cx="27" cy="15" r="2.5" fill="#374151"/>
-                                      <circle cx="27" cy="15" r="1.8" fill="#9CA3AF"/>
-                                      {/* Door handles */}
-                                      <rect x="12" y="10" width="1" height="0.5" rx="0.25" fill="#374151"/>
-                                      <rect x="20" y="10" width="1" height="0.5" rx="0.25" fill="#374151"/>
-                                    </svg>
-                                  );
-                                } else if (angle.includes('rear three-quarter angle')) {
-                                  // Refined rear 3/4 view
-                                  return (
-                                    <svg width="36" height="20" viewBox="0 0 36 20" className="drop-shadow-sm">
-                                      <defs>
-                                        <linearGradient id="car4" x1="0%" y1="100%" x2="100%" y2="0%">
-                                          <stop offset="0%" stopColor="#1E40AF"/>
-                                          <stop offset="100%" stopColor="#3B82F6"/>
-                                        </linearGradient>
-                                      </defs>
-                                      {/* Shadow */}
-                                      <ellipse cx="18" cy="18" rx="14" ry="1.5" fill="#000" opacity="0.15"/>
-                                      {/* Main body - rear perspective */}
-                                      <path d="M6 12 L26 12 L28 10 L28 7 L26 6 L12 6 L9 7 L6 10 Z" fill="url(#car4)"/>
-                                      {/* Roof */}
-                                      <path d="M12 6 L26 6 L24 4 L14 4 Z" fill="#60A5FA"/>
-                                      {/* Rear window */}
-                                      <path d="M13 7 L22 7 L21 6 L14 6 Z" fill="#E2E8F0" opacity="0.9"/>
-                                      {/* Wheels */}
-                                      <circle cx="12" cy="14" r="2.2" fill="#374151"/>
-                                      <circle cx="12" cy="14" r="1.5" fill="#9CA3AF"/>
-                                      <circle cx="24" cy="14" r="2.2" fill="#374151"/>
-                                      <circle cx="24" cy="14" r="1.5" fill="#9CA3AF"/>
-                                      {/* Taillight */}
-                                      <circle cx="28" cy="9" r="0.8" fill="#EF4444"/>
-                                    </svg>
-                                  );
+                                  return 'front-quarter-left';
+                                } else if (angle.includes('perfect side profile view') && angle.includes('left side')) {
+                                  return 'side-profile-left';
+                                } else if (angle.includes('perfect side profile view') && angle.includes('right side')) {
+                                  return 'side-profile-right';
+                                } else if (angle.includes('rear three-quarter angle') && angle.includes('left side')) {
+                                  return 'rear-quarter-left';
+                                } else if (angle.includes('rear three-quarter angle') && angle.includes('right side')) {
+                                  return 'rear-quarter-right';
                                 } else if (angle.includes('directly from behind')) {
-                                  // Refined rear view
-                                  return (
-                                    <svg width="36" height="20" viewBox="0 0 36 20" className="drop-shadow-sm">
-                                      <defs>
-                                        <linearGradient id="car5" x1="0%" y1="100%" x2="0%" y2="0%">
-                                          <stop offset="0%" stopColor="#1E40AF"/>
-                                          <stop offset="100%" stopColor="#3B82F6"/>
-                                        </linearGradient>
-                                      </defs>
-                                      {/* Shadow */}
-                                      <ellipse cx="18" cy="18" rx="12" ry="1.5" fill="#000" opacity="0.15"/>
-                                      {/* Main body - rear view */}
-                                      <rect x="10" y="7" width="16" height="8" rx="2" fill="url(#car5)"/>
-                                      {/* Roof */}
-                                      <rect x="11" y="4" width="14" height="4" rx="1.5" fill="#60A5FA"/>
-                                      {/* Rear window */}
-                                      <rect x="12" y="5" width="12" height="3" rx="1" fill="#E2E8F0" opacity="0.9"/>
-                                      {/* Wheels */}
-                                      <circle cx="13" cy="16" r="2" fill="#374151"/>
-                                      <circle cx="13" cy="16" r="1.3" fill="#9CA3AF"/>
-                                      <circle cx="23" cy="16" r="2" fill="#374151"/>
-                                      <circle cx="23" cy="16" r="1.3" fill="#9CA3AF"/>
-                                      {/* Taillights */}
-                                      <circle cx="11" cy="10" r="1" fill="#EF4444"/>
-                                      <circle cx="25" cy="10" r="1" fill="#EF4444"/>
-                                    </svg>
-                                  );
-                                } else if (angle.includes('high front-top angle') || angle.includes('high rear-top angle')) {
-                                  // Refined aerial view
-                                  return (
-                                    <svg width="36" height="20" viewBox="0 0 36 20" className="drop-shadow-sm">
-                                      <defs>
-                                        <linearGradient id="car6" x1="0%" y1="0%" x2="100%" y2="100%">
-                                          <stop offset="0%" stopColor="#60A5FA"/>
-                                          <stop offset="100%" stopColor="#1E40AF"/>
-                                        </linearGradient>
-                                      </defs>
-                                      {/* Shadow */}
-                                      <ellipse cx="18" cy="18" rx="12" ry="1.5" fill="#000" opacity="0.15"/>
-                                      {/* Main body - aerial perspective */}
-                                      <rect x="10" y="5" width="16" height="10" rx="2.5" fill="url(#car6)"/>
-                                      {/* Roof details */}
-                                      <rect x="11" y="6" width="14" height="8" rx="1.5" fill="#3B82F6" opacity="0.8"/>
-                                      {/* Sunroof */}
-                                      <rect x="14" y="8" width="8" height="4" rx="1" fill="#E2E8F0" opacity="0.3"/>
-                                      {/* Wheels - aerial view */}
-                                      <rect x="8" y="7" width="2.5" height="2.5" rx="1.25" fill="#374151"/>
-                                      <rect x="25.5" y="7" width="2.5" height="2.5" rx="1.25" fill="#374151"/>
-                                      <rect x="8" y="10.5" width="2.5" height="2.5" rx="1.25" fill="#374151"/>
-                                      <rect x="25.5" y="10.5" width="2.5" height="2.5" rx="1.25" fill="#374151"/>
-                                    </svg>
-                                  );
+                                  return 'rear-view';
+                                } else if (angle.includes('high front-top angle')) {
+                                  return 'front-aerial';
+                                } else if (angle.includes('high rear-top angle')) {
+                                  return 'rear-aerial';
                                 } else if (angle.includes('directly above')) {
-                                  // Refined top-down view
-                                  return (
-                                    <svg width="36" height="20" viewBox="0 0 36 20" className="drop-shadow-sm">
-                                      <defs>
-                                        <linearGradient id="car7" x1="50%" y1="0%" x2="50%" y2="100%">
-                                          <stop offset="0%" stopColor="#60A5FA"/>
-                                          <stop offset="50%" stopColor="#3B82F6"/>
-                                          <stop offset="100%" stopColor="#1E40AF"/>
-                                        </linearGradient>
-                                      </defs>
-                                      {/* Shadow */}
-                                      <ellipse cx="18" cy="18" rx="14" ry="1.5" fill="#000" opacity="0.15"/>
-                                      {/* Main body - perfect top-down */}
-                                      <rect x="7" y="3" width="22" height="12" rx="2.5" fill="url(#car7)"/>
-                                      {/* Roof sections */}
-                                      <rect x="8" y="4" width="20" height="2.5" rx="1.25" fill="#3B82F6" opacity="0.9"/>
-                                      <rect x="8" y="7" width="20" height="4" rx="0.5" fill="#60A5FA" opacity="0.7"/>
-                                      <rect x="8" y="11.5" width="20" height="2.5" rx="1.25" fill="#3B82F6" opacity="0.9"/>
-                                      {/* Door lines */}
-                                      <line x1="13" y1="4" x2="13" y2="14" stroke="#1E40AF" strokeWidth="0.3"/>
-                                      <line x1="18" y1="4" x2="18" y2="14" stroke="#1E40AF" strokeWidth="0.3"/>
-                                      <line x1="23" y1="4" x2="23" y2="14" stroke="#1E40AF" strokeWidth="0.3"/>
-                                      {/* Wheels - top view */}
-                                      <rect x="5" y="5" width="2.5" height="2" rx="1" fill="#374151"/>
-                                      <rect x="28.5" y="5" width="2.5" height="2" rx="1" fill="#374151"/>
-                                      <rect x="5" y="11" width="2.5" height="2" rx="1" fill="#374151"/>
-                                      <rect x="28.5" y="11" width="2.5" height="2" rx="1" fill="#374151"/>
-                                      {/* Mirrors */}
-                                      <circle cx="6" cy="8" r="0.6" fill="#374151"/>
-                                      <circle cx="30" cy="8" r="0.6" fill="#374151"/>
-                                    </svg>
-                                  );
+                                  return 'top-down';
                                 }
-                                return null;
+                                return 'default'; // Fallback
                               };
-                              return getRefinedAngleIcon();
+
+                              const svgKey = getAngleSvgKey();
+                              const svgPath = carAngleSvgMap[svgKey] || carAngleSvgMap['default'];
+                              
+                              return (
+                                <img 
+                                  src={svgPath}
+                                  alt="Car angle preview"
+                                  className="w-9 h-5 drop-shadow-sm"
+                                />
+                              );
                             })()}
                           </div>
                         </div>
