@@ -895,36 +895,40 @@ const CarCreationPage: React.FC = () => {
                           </Select>
                           
                           {/* Custom SVG angle preview */}
-                          <div className="flex items-center justify-center p-3 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-md border border-blue-100 h-16">
+                          <div className="flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-200 min-h-[80px]">
                             {(() => {
                               const angle = form.watch('car_angle') || 'default';
                               
-                              // Map angle descriptions to SVG keys
+                              // Map exact angle descriptions to SVG keys
                               const getAngleSvgKey = () => {
-                                if (angle === 'default' || angle.includes('front three-quarter angle showing the front grille and right side')) {
-                                  return 'default';
-                                } else if (angle.includes('directly facing the camera in a symmetrical front view')) {
-                                  return 'front-view';
-                                } else if (angle.includes('front three-quarter angle showing the front grille and left side')) {
-                                  return 'front-quarter-left';
-                                } else if (angle.includes('perfect side profile view') && angle.includes('left side')) {
-                                  return 'side-profile-left';
-                                } else if (angle.includes('perfect side profile view') && angle.includes('right side')) {
-                                  return 'side-profile-right';
-                                } else if (angle.includes('rear three-quarter angle') && angle.includes('left side')) {
-                                  return 'rear-quarter-left';
-                                } else if (angle.includes('rear three-quarter angle') && angle.includes('right side')) {
-                                  return 'rear-quarter-right';
-                                } else if (angle.includes('directly from behind')) {
-                                  return 'rear-view';
-                                } else if (angle.includes('high front-top angle')) {
-                                  return 'front-aerial';
-                                } else if (angle.includes('high rear-top angle')) {
-                                  return 'rear-aerial';
-                                } else if (angle.includes('directly above')) {
-                                  return 'top-down';
+                                switch (angle) {
+                                  case 'default':
+                                    return 'default';
+                                  case 'directly facing the camera in a symmetrical front view':
+                                    return 'front-view';
+                                  case 'at a 35-degree front three-quarter angle showing the front grille and right side':
+                                    return 'front-quarter-right';
+                                  case 'at a 35-degree front three-quarter angle showing the front grille and left side':
+                                    return 'front-quarter-left';
+                                  case 'in a perfect side profile view showing the full length of the car from the left':
+                                    return 'side-profile-left';
+                                  case 'in a perfect side profile view showing the full length of the car from the right':
+                                    return 'side-profile-right';
+                                  case 'at a 45-degree rear three-quarter angle showcasing the taillights and left side':
+                                    return 'rear-quarter-left';
+                                  case 'at a 45-degree rear three-quarter angle showcasing the taillights and right side':
+                                    return 'rear-quarter-right';
+                                  case 'directly from behind in a symmetrical rear view showing the taillights and rear styling':
+                                    return 'rear-view';
+                                  case 'captured from a high front-top angle emphasizing the hood, roof, and front styling':
+                                    return 'front-aerial';
+                                  case 'captured from a high rear-top angle emphasizing the roofline and rear details':
+                                    return 'rear-aerial';
+                                  case 'captured from directly above showing the complete roofline and vehicle proportions':
+                                    return 'top-down';
+                                  default:
+                                    return 'default';
                                 }
-                                return 'default'; // Fallback
                               };
 
                               const svgKey = getAngleSvgKey();
@@ -934,7 +938,8 @@ const CarCreationPage: React.FC = () => {
                                 <img 
                                   src={svgPath}
                                   alt="Car angle preview"
-                                  className="w-16 h-10 drop-shadow-sm"
+                                  className="w-20 h-12 drop-shadow-md"
+                                  style={{ maxWidth: '100px', maxHeight: '60px' }}
                                 />
                               );
                             })()}
