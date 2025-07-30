@@ -895,7 +895,7 @@ const CarCreationPage: React.FC = () => {
                           </Select>
                           
                           {/* Custom SVG angle preview */}
-                          <div className="flex items-center justify-center p-2 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-md border border-blue-100 h-12">
+                          <div className="flex items-center justify-center p-3 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-md border border-blue-100 h-16">
                             {(() => {
                               const angle = form.watch('car_angle') || 'default';
                               
@@ -934,7 +934,7 @@ const CarCreationPage: React.FC = () => {
                                 <img 
                                   src={svgPath}
                                   alt="Car angle preview"
-                                  className="w-9 h-5 drop-shadow-sm"
+                                  className="w-16 h-10 drop-shadow-sm"
                                 />
                               );
                             })()}
