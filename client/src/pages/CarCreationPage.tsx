@@ -794,7 +794,7 @@ const CarCreationPage: React.FC = () => {
                         </Select>
                         
                         {/* Custom color input */}
-                        {(showCustomColor || form.watch('color') === 'custom') && (
+                        {showCustomColor && (
                           <div className="space-y-2 mt-2 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
                             <Label htmlFor="custom_color" className="text-sm font-medium text-blue-800 dark:text-blue-200">
                               Enter Custom Color Name
@@ -818,6 +818,7 @@ const CarCreationPage: React.FC = () => {
                                   setShowCustomColor(false);
                                   setCustomColor("");
                                   setValue('color', '');
+                                  // Reset dropdown to empty state
                                 }}
                                 className="text-xs"
                               >
@@ -828,8 +829,8 @@ const CarCreationPage: React.FC = () => {
                                 size="sm"
                                 onClick={() => {
                                   if (customColor.trim()) {
-                                    setValue('color', customColor);
-                                    setShowCustomColor(false);
+                                    setValue('color', customColor.trim());
+                                    // Keep showCustomColor true so input stays visible
                                   }
                                 }}
                                 disabled={!customColor.trim()}
