@@ -8,7 +8,7 @@ const cache = new NodeCache({ stdTTL: 120 });   // 2 min
 let lastFetchTime: Date | null = null;
 
 type Row = { make:string; model:string; body_style:string; trim:string };
-type ColorRow = { color: string };
+type ColorRow = { "Color List": string };
 
 // Color Sheets configuration
 const COLOR_SHEET_ID = "1ftpeFWjClvZINpJMxae1qrNRS1a7XPKAC0FUGizfgzs";
@@ -186,14 +186,15 @@ export async function loadColorData(forceRefresh: boolean = false): Promise<Colo
 
 export async function listColors(): Promise<string[]> {
   const rows = await loadColorData();
-  const colorSet = new Set<string>();
+  const colors: string[] = [];
   rows.forEach(r => {
-    if (r.color && r.color.trim()) {
-      colorSet.add(r.color.trim());
+    const colorValue = r["Color List"];
+    if (colorValue && colorValue.trim()) {
+      colors.push(colorValue.trim());
     }
   });
-  // Return colors in the order they appear in the sheet (color wheel order)
-  return Array.from(colorSet);
+  // Return colors in the order they appear in the sheet (maintaining color wheel order)
+  return colors;
 }
 
 export function flushCarCache() { 
