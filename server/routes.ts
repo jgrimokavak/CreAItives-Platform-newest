@@ -933,7 +933,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/cars/models", async (req, res) => res.json(await listModels(req.query.make as string)));
   app.get("/api/cars/bodyStyles", async (req, res) => res.json(await listBodyStyles(req.query.make as string, req.query.model as string)));
   app.get("/api/cars/trims", async (req, res) => res.json(await listTrims(req.query.make as string, req.query.model as string, req.query.bodyStyle as string)));
-  app.get("/api/cars/colors", async (_req, res) => res.json(await listColors()));
+  app.get("/api/cars/colors", async (_req, res) => {
+    // Disable caching for this endpoint to ensure fresh color data
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    
+    const colors = await listColors();
+    res.json(colors);
+  });
   
   // Endpoint to manually refresh car data
   app.post("/api/cars/refresh", async (_req, res) => { 

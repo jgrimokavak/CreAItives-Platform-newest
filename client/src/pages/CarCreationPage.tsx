@@ -157,7 +157,7 @@ const CarCreationPage: React.FC = () => {
         throw new Error(`Failed to fetch colors: ${response.status} ${response.statusText}`);
       }
       const data = await response.json();
-      // Only update colors if we got data from the API, otherwise keep fallback colors
+      // Update colors with data from Google Sheets, fallback to existing if empty
       if (data && data.length > 0) {
         setColors(data);
       }

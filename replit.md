@@ -135,6 +135,9 @@ Preferred communication style: Simple, everyday language.
   - Integrated with existing car data refresh system
   - Maintains "✏️ Custom Color..." option at top of dropdown
   - Fallback to preset colors if sheets unavailable
+  - HTTP caching disabled on colors endpoint to ensure fresh data
+  - Column mapping: reads "Color List" column from Google Sheets
+  - **Status**: ✅ Fully implemented and working (July 31, 2025)
 
 ### Car Creation Form Enhancement (July 31, 2025)
 - **Problem Solved**: Form fields were blocked when car data had missing values (empty body_style or trim fields)
