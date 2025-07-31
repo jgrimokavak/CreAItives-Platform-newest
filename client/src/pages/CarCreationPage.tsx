@@ -82,12 +82,12 @@ const CarCreationPage: React.FC = () => {
   const [bodyStyles, setBodyStyles] = useState<string[]>([]);
   const [trims, setTrims] = useState<string[]>([]);
   const [colors, setColors] = useState<string[]>([
-    // Fallback colors if Google Sheets is unavailable
-    'silver', 'black', 'white', 'red', 'blue', 'green', 'yellow', 'orange', 'gray', 'brown',
-    'burgundy', 'navy blue', 'gold', 'bronze', 'pearl white', 'metallic blue', 'electric blue',
-    'electric red', 'electric orange', 'dark grey', 'light grey', 'charcoal', 'midnight blue',
-    'forest green', 'champagne', 'matte black', 'matte gray', 'satin silver', 'sage green',
-    'ceramic gray', 'volcanic gray', 'beige', 'tan', 'cherry red', 'royal blue', 'deep Ultramarine Blue'
+    // Fallback colors if Google Sheets is unavailable (capitalized to match Google Sheets format)
+    'Silver', 'Black', 'White', 'Red', 'Blue', 'Green', 'Yellow', 'Orange', 'Gray', 'Brown',
+    'Burgundy', 'Navy blue', 'Gold', 'Bronze', 'Pearl white', 'Metallic blue', 'Electric blue',
+    'Electric red', 'Electric orange', 'Dark grey', 'Light grey', 'Charcoal', 'Midnight blue',
+    'Forest green', 'Champagne', 'Matte black', 'Matte gray', 'Satin silver', 'Sage green',
+    'Ceramic gray', 'Volcanic gray', 'Beige', 'Tan', 'Cherry red', 'Royal blue', 'Deep Ultramarine Blue'
   ]);
   const [bg, setBg] = useState<"white" | "hub">("hub");
   const [progress, setProgress] = useState<number | null>(null);
@@ -119,8 +119,8 @@ const CarCreationPage: React.FC = () => {
       model: 'None',
       body_style: 'None',
       trim: 'None',
-      color: 'silver', // Set default color to silver
-      wheel_color: 'silver', // Set default wheel color to silver
+      color: 'Silver', // Set default color to Silver (matches Google Sheets)
+      wheel_color: 'Silver', // Set default wheel color to Silver
       has_adventure_cladding: false, // Set default adventure cladding to false
       background: 'hub',
       car_angle: 'default' // Default to 'default' for default angle
@@ -728,31 +728,44 @@ const CarCreationPage: React.FC = () => {
                       <div className="space-y-2">
                         <Label htmlFor="color">Color</Label>
                         <div className="grid grid-cols-8 gap-2 mb-1.5">
-                          {['silver', 'black', 'white', 'red', 'blue', 'green', 'yellow', 'orange'].map(color => (
+                          {[
+                            { key: 'silver', sheetColor: 'Silver' },
+                            { key: 'black', sheetColor: 'Black' },
+                            { key: 'white', sheetColor: 'White' },
+                            { key: 'red', sheetColor: 'Red' },
+                            { key: 'blue', sheetColor: 'Blue' },
+                            { key: 'green', sheetColor: 'Green' },
+                            { key: 'yellow', sheetColor: 'Yellow' },
+                            { key: 'orange', sheetColor: 'Orange' }
+                          ].map(({ key, sheetColor }) => (
                             <div 
-                              key={color}
+                              key={key}
                               className={`h-8 w-8 rounded-full cursor-pointer transition-all border-2 ${
-                                form.watch('color') === color 
+                                form.watch('color') === sheetColor 
                                   ? 'border-primary scale-110' 
                                   : 'border-transparent hover:border-primary/50'
                               }`}
                               style={{ 
                                 background: 
-                                  color === 'silver' ? 'linear-gradient(135deg, #D8D8D8, #A8A8A8)' : 
-                                  color === 'white' ? 'linear-gradient(135deg, #FFFFFF, #F0F0F0)' :
-                                  color === 'black' ? 'linear-gradient(135deg, #333333, #111111)' :
-                                  color === 'red' ? 'linear-gradient(135deg, #AF2A2A, #8B0000)' :
-                                  color === 'blue' ? 'linear-gradient(135deg, #1E5AA8, #0A3B75)' :
-                                  color === 'green' ? 'linear-gradient(135deg, #2E7D32, #1B5E20)' :
-                                  color === 'yellow' ? 'linear-gradient(135deg, #E4C157, #C6A03E)' :
-                                  color === 'orange' ? 'linear-gradient(135deg, #DC7633, #BA6125)' :
-                                  color,
-                                boxShadow: form.watch('color') === color 
+                                  key === 'silver' ? 'linear-gradient(135deg, #D8D8D8, #A8A8A8)' : 
+                                  key === 'white' ? 'linear-gradient(135deg, #FFFFFF, #F0F0F0)' :
+                                  key === 'black' ? 'linear-gradient(135deg, #333333, #111111)' :
+                                  key === 'red' ? 'linear-gradient(135deg, #AF2A2A, #8B0000)' :
+                                  key === 'blue' ? 'linear-gradient(135deg, #1E5AA8, #0A3B75)' :
+                                  key === 'green' ? 'linear-gradient(135deg, #2E7D32, #1B5E20)' :
+                                  key === 'yellow' ? 'linear-gradient(135deg, #E4C157, #C6A03E)' :
+                                  key === 'orange' ? 'linear-gradient(135deg, #DC7633, #BA6125)' :
+                                  key,
+                                boxShadow: form.watch('color') === sheetColor 
                                   ? '0 0 0 2px rgba(0,0,0,0.1), inset 0 0 10px rgba(255,255,255,0.2)' 
                                   : 'inset 0 0 5px rgba(0,0,0,0.1)'
                               }}
-                              onClick={() => setValue('color', color)}
-                              title={color.charAt(0).toUpperCase() + color.slice(1)}
+                              onClick={() => {
+                                setValue('color', sheetColor);
+                                setShowCustomColor(false);
+                                setCustomColor('');
+                              }}
+                              title={sheetColor}
                             />
                           ))}
                         </div>
@@ -764,7 +777,7 @@ const CarCreationPage: React.FC = () => {
                             if (showCustomColor) return 'custom';
                             if (currentColor && presetColors.includes(currentColor)) return currentColor;
                             if (currentColor && !presetColors.includes(currentColor)) return 'custom';
-                            return '';
+                            return currentColor || 'Silver'; // Default to Silver if no color selected
                           })()}
                           onValueChange={(value) => {
                             if (value === 'custom') {
