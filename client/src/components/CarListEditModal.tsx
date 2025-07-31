@@ -18,11 +18,11 @@ export default function CarListEditModal({ open, onOpenChange }: CarListEditModa
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="w-[95vw] max-w-lg sm:w-full mx-4">
         <DialogHeader className="space-y-3">
-          <DialogTitle className="flex items-center gap-3 text-xl">
-            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30">
-              <Database className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+          <DialogTitle className="flex items-center gap-3 text-lg sm:text-xl">
+            <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-blue-100 dark:bg-blue-900/30">
+              <Database className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400" />
             </div>
             <span>Edit Car Database</span>
           </DialogTitle>
@@ -53,7 +53,7 @@ export default function CarListEditModal({ open, onOpenChange }: CarListEditModa
                 <h3 className="font-semibold text-blue-800 dark:text-blue-200">
                   Required Columns
                 </h3>
-                <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-blue-400"></div>
                     <span className="text-blue-700 dark:text-blue-300">Make</span>
@@ -113,13 +113,13 @@ export default function CarListEditModal({ open, onOpenChange }: CarListEditModa
           </div>
         </div>
         
-        <DialogFooter className="flex gap-3 pt-4 border-t">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
+        <DialogFooter className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1 min-h-[44px]">
             Cancel
           </Button>
-          <Button onClick={handleOpenSheet} className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700">
+          <Button onClick={handleOpenSheet} className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 min-h-[44px]">
             <ExternalLink className="h-4 w-4" />
-            Open Google Sheet
+            <span className="whitespace-nowrap">Open Google Sheet</span>
           </Button>
         </DialogFooter>
       </DialogContent>

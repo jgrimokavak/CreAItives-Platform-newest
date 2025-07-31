@@ -526,26 +526,26 @@ const CarCreationPage: React.FC = () => {
       )}
       
       <div className="container max-w-6xl mx-auto py-6">
-        <div className="flex items-center justify-between mb-2">
-          <h1 className="text-3xl font-bold">Car Creation</h1>
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0 mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold">Car Creation</h1>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
             <Button 
               variant="outline" 
               onClick={() => setShowEditModal(true)}
               disabled={generateMutation.isPending || isUploadingBatch}
-              className="flex items-center gap-2"
+              className="flex items-center justify-center gap-2 text-sm sm:text-base min-h-[40px] sm:min-h-[36px]"
             >
-              <ExternalLink className="h-4 w-4" />
-              Edit Car List
+              <ExternalLink className="h-4 w-4 flex-shrink-0" />
+              <span className="whitespace-nowrap">Edit Car List</span>
             </Button>
             <Button 
               variant="outline" 
               onClick={refreshData}
               disabled={generateMutation.isPending || isUploadingBatch}
-              className="flex items-center gap-2"
+              className="flex items-center justify-center gap-2 text-sm sm:text-base min-h-[40px] sm:min-h-[36px]"
             >
-              <RefreshCw className="h-4 w-4" />
-              Refresh Car Data
+              <RefreshCw className="h-4 w-4 flex-shrink-0" />
+              <span className="whitespace-nowrap">Refresh Car Data</span>
             </Button>
           </div>
         </div>
