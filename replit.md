@@ -116,6 +116,18 @@ Preferred communication style: Simple, everyday language.
 - Replit-specific plugins for development environment
 - WebSocket connection handling for local vs production
 
+## Recent Changes
+
+### Car Creation Form Enhancement (July 31, 2025)
+- **Problem Solved**: Form fields were blocked when car data had missing values (empty body_style or trim fields)
+- **Solution Implemented**: 
+  - Modified backend API to include "None" options when empty values exist in dataset
+  - Updated car data functions to detect missing values and add "None" as first option
+  - Fixed frontend to use API-returned options instead of hardcoded values
+  - Enhanced user experience with proper placeholders instead of showing raw "None" values
+- **Impact**: Users can now access all car variants including those with missing intermediate values (e.g., cars with empty body_style but valid trim values)
+- **Technical Details**: API endpoints now return "None" at the beginning of arrays when empty values are detected, allowing complete data accessibility
+
 ## Key Architectural Decisions
 
 ### Database Strategy

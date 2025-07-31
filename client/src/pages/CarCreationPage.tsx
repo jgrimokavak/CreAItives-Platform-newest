@@ -575,7 +575,9 @@ const CarCreationPage: React.FC = () => {
                           onValueChange={(value) => setValue('make', value)}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Select make" />
+                            <SelectValue placeholder="Select make">
+                              {watchMake === 'None' ? <span className="text-muted-foreground">Select make</span> : watchMake}
+                            </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="None">None</SelectItem>
@@ -594,7 +596,9 @@ const CarCreationPage: React.FC = () => {
                           disabled={!models.length}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Select model" />
+                            <SelectValue placeholder="Select model">
+                              {watchModel === 'None' ? <span className="text-muted-foreground">Select model</span> : watchModel}
+                            </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="None">None</SelectItem>
@@ -613,7 +617,9 @@ const CarCreationPage: React.FC = () => {
                           disabled={!bodyStyles.length}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Select body style" />
+                            <SelectValue placeholder="Select body style">
+                              {watchBodyStyle === 'None' ? <span className="text-muted-foreground">Select body style</span> : watchBodyStyle}
+                            </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
                             {bodyStyles.map(style => (
@@ -631,7 +637,9 @@ const CarCreationPage: React.FC = () => {
                           disabled={!trims.length}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Select trim" />
+                            <SelectValue placeholder="Select trim">
+                              {form.watch('trim') === 'None' ? <span className="text-muted-foreground">Select trim</span> : form.watch('trim')}
+                            </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
                             {trims.map(trim => (
