@@ -1155,14 +1155,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const template = TEMPLATES[background === "hub" ? "hub" : "white"];
       
+      // Convert "None" values to empty strings for prompt generation
+      const cleanValue = (val: string) => (!val || val === "None") ? "" : val;
+      
       let prompt = template
-        .replace("{{year}}", year || "")
-        .replace("{{make}}", make || "")
-        .replace("{{model}}", model || "")
-        .replace("{{body_style}}", body_style || "")
-        .replace("{{trim}}", trim || "")
-        .replace("{{color}}", color || "")
-        .replace("{{wheel_color}}", wheel_color || "")
+        .replace("{{year}}", cleanValue(year))
+        .replace("{{make}}", cleanValue(make))
+        .replace("{{model}}", cleanValue(model))
+        .replace("{{body_style}}", cleanValue(body_style))
+        .replace("{{trim}}", cleanValue(trim))
+        .replace("{{color}}", cleanValue(color))
+        .replace("{{wheel_color}}", cleanValue(wheel_color))
         .replace(/\s+/g, " ").trim();
       
       // Replace car angle with appropriate text based on background and selection
@@ -1177,9 +1180,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const adventureCladdingText = " Equipped with an adventure-spec matte-black composite cladding package fully integrated into the front fascia, wheel arches, rocker panels, and lower door sections—including fog-lamp bezels and lower grille inserts in rugged textured finish—creating a sharply segmented two-tone look that visually dominates the vehicle's entire lower body.";
         
         // Inject after wheel color mention
+        const cleanWheelColor = cleanValue(wheel_color);
         prompt = prompt.replace(
-          `with ${wheel_color || ""} alloy wheels.`,
-          `with ${wheel_color || ""} alloy wheels.${adventureCladdingText}`
+          `with ${cleanWheelColor} alloy wheels.`,
+          `with ${cleanWheelColor} alloy wheels.${adventureCladdingText}`
         );
       }
       

@@ -87,19 +87,58 @@ export async function listModels(make:string): Promise<string[]> {
 export async function listBodyStyles(make:string, model:string): Promise<string[]> {
   const rows = await loadCarData();
   const bodyStyleSet = new Set<string>();
+  let hasEmptyBodyStyle = false;
+  
   rows.filter(r => r.make === make && r.model === model).forEach(r => {
-    if (r.body_style) bodyStyleSet.add(r.body_style);
+    if (r.body_style && r.body_style.trim()) {
+      bodyStyleSet.add(r.body_style);
+    } else {
+      hasEmptyBodyStyle = true;
+    }
   });
-  return Array.from(bodyStyleSet);
+  
+  const result = Array.from(bodyStyleSet).sort();
+  
+  // Add "None" at the beginning if there are cars with empty body_style
+  if (hasEmptyBodyStyle) {
+    result.unshift("None");
+  }
+  
+  return result;
 }
 
 export async function listTrims(make:string, model:string, body_style:string): Promise<string[]> {
   const rows = await loadCarData();
   const trimSet = new Set<string>();
-  rows.filter(r => r.make === make && r.model === model && r.body_style === body_style).forEach(r => {
-    if (r.trim) trimSet.add(r.trim);
+  let hasEmptyTrim = false;
+  
+  // Handle "None" body_style as filter for empty body_style values
+  const bodyStyleFilter = body_style === "None" ? "" : body_style;
+  
+  rows.filter(r => {
+    const matchesMake = r.make === make;
+    const matchesModel = r.model === model;
+    const matchesBodyStyle = body_style === "None" 
+      ? (!r.body_style || !r.body_style.trim()) 
+      : r.body_style === body_style;
+    
+    return matchesMake && matchesModel && matchesBodyStyle;
+  }).forEach(r => {
+    if (r.trim && r.trim.trim()) {
+      trimSet.add(r.trim);
+    } else {
+      hasEmptyTrim = true;
+    }
   });
-  return Array.from(trimSet);
+  
+  const result = Array.from(trimSet).sort();
+  
+  // Add "None" at the beginning if there are cars with empty trim
+  if (hasEmptyTrim) {
+    result.unshift("None");
+  }
+  
+  return result;
 }
 
 export function flushCarCache() { 

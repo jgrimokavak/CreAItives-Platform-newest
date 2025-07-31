@@ -175,7 +175,7 @@ const CarCreationPage: React.FC = () => {
 
   // Fetch trims for selected make, model and body style
   const fetchTrims = async (make: string, model: string, bodyStyle: string) => {
-    if (make === 'None' || model === 'None' || bodyStyle === 'None') {
+    if (make === 'None' || model === 'None') {
       setTrims([]);
       return;
     }
@@ -229,7 +229,7 @@ const CarCreationPage: React.FC = () => {
     if (
       watchMake && watchMake !== 'None' && 
       watchModel && watchModel !== 'None' && 
-      watchBodyStyle && watchBodyStyle !== 'None'
+      watchBodyStyle
     ) {
       fetchTrims(watchMake, watchModel, watchBodyStyle);
       setValue('trim', 'None');
@@ -616,7 +616,6 @@ const CarCreationPage: React.FC = () => {
                             <SelectValue placeholder="Select body style" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="None">None</SelectItem>
                             {bodyStyles.map(style => (
                               <SelectItem key={style} value={style}>{style}</SelectItem>
                             ))}
@@ -635,7 +634,6 @@ const CarCreationPage: React.FC = () => {
                             <SelectValue placeholder="Select trim" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="None">None</SelectItem>
                             {trims.map(trim => (
                               <SelectItem key={trim} value={trim}>{trim}</SelectItem>
                             ))}
