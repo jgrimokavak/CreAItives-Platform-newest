@@ -729,12 +729,19 @@ const CarCreationPage: React.FC = () => {
                           ))}
                         </div>
                         <Select
-                          value={form.watch('color') && !showCustomColor && form.watch('color') !== 'custom' ? form.watch('color') : (showCustomColor || form.watch('color') === 'custom' ? 'custom' : '')}
+                          value={(() => {
+                            const currentColor = form.watch('color');
+                            const presetColors = ['silver', 'black', 'white', 'red', 'blue', 'green', 'yellow', 'orange', 'gray', 'brown', 'burgundy', 'navy blue', 'gold', 'bronze', 'pearl white', 'metallic blue', 'electric blue', 'electric red', 'electric orange', 'dark grey', 'light grey', 'charcoal', 'midnight blue', 'forest green', 'champagne', 'matte black', 'matte gray', 'satin silver', 'sage green', 'ceramic gray', 'volcanic gray', 'beige', 'tan', 'cherry red', 'royal blue', 'deep Ultramarine Blue'];
+                            
+                            if (showCustomColor) return 'custom';
+                            if (currentColor && presetColors.includes(currentColor)) return currentColor;
+                            if (currentColor && !presetColors.includes(currentColor)) return 'custom';
+                            return '';
+                          })()}
                           onValueChange={(value) => {
                             if (value === 'custom') {
                               setShowCustomColor(true);
-                              setCustomColor('');
-                              setValue('color', '');
+                              setCustomColor(form.watch('color') || '');
                             } else {
                               setShowCustomColor(false);
                               setCustomColor('');
@@ -746,6 +753,7 @@ const CarCreationPage: React.FC = () => {
                             <SelectValue placeholder="Select color" />
                           </SelectTrigger>
                           <SelectContent>
+                            <SelectItem value="custom">✏️ Custom Color...</SelectItem>
                             <SelectItem value="silver">Silver</SelectItem>
                             <SelectItem value="black">Black</SelectItem>
                             <SelectItem value="white">White</SelectItem>
@@ -782,7 +790,6 @@ const CarCreationPage: React.FC = () => {
                             <SelectItem value="cherry red">Cherry Red</SelectItem>
                             <SelectItem value="royal blue">Royal Blue</SelectItem>
                             <SelectItem value="deep Ultramarine Blue">Deep Ultramarine Blue</SelectItem>
-                            <SelectItem value="custom">✏️ Custom Color...</SelectItem>
                           </SelectContent>
                         </Select>
                         
