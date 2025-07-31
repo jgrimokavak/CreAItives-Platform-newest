@@ -12,7 +12,7 @@ import CSVUpload from '@/components/CSVUpload';
 import BatchProgress from '@/components/BatchProgress';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { CarFront, RefreshCw, CheckCircle, AlertCircle, Download, Pencil, Maximize2, ImageIcon } from 'lucide-react';
+import { CarFront, RefreshCw, CheckCircle, AlertCircle, Download, Pencil, Maximize2, ImageIcon, ExternalLink } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 // Import the local GeneratedImage type used by ImageCard
@@ -21,6 +21,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import CarImageCard from '@/components/CarImageCard';
 import ImageModal from '@/components/ImageModal';
+import CarListEditModal from '@/components/CarListEditModal';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
 import { useEditor } from '@/context/EditorContext';
@@ -89,6 +90,9 @@ const CarCreationPage: React.FC = () => {
   const [carCreationMode, setCarCreationMode] = useState<"single" | "batch">("single");
   const [batchJobId, setBatchJobId] = useState<string | null>(null);
   const [isUploadingBatch, setIsUploadingBatch] = useState<boolean>(false);
+  
+  // Modal state
+  const [showEditModal, setShowEditModal] = useState<boolean>(false);
   
   // Generate years from 1990 to current year
   const currentYear = new Date().getFullYear();
@@ -524,15 +528,26 @@ const CarCreationPage: React.FC = () => {
       <div className="container max-w-6xl mx-auto py-6">
         <div className="flex items-center justify-between mb-2">
           <h1 className="text-3xl font-bold">Car Creation</h1>
-          <Button 
-            variant="outline" 
-            onClick={refreshData}
-            disabled={generateMutation.isPending || isUploadingBatch}
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Refresh Car Data
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowEditModal(true)}
+              disabled={generateMutation.isPending || isUploadingBatch}
+              className="flex items-center gap-2"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Edit Car List
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={refreshData}
+              disabled={generateMutation.isPending || isUploadingBatch}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Refresh Car Data
+            </Button>
+          </div>
         </div>
         <p className="text-muted-foreground mb-6">
           Generate car images one at a time or in batch mode using a CSV file with up to 50 cars.
@@ -1412,6 +1427,12 @@ const CarCreationPage: React.FC = () => {
             </div>
           </TabsContent>
         </Tabs>
+        
+        {/* Car List Edit Modal */}
+        <CarListEditModal 
+          open={showEditModal} 
+          onOpenChange={setShowEditModal} 
+        />
       </div>
     </>
   );
