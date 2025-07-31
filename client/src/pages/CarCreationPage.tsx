@@ -119,7 +119,7 @@ const CarCreationPage: React.FC = () => {
       model: 'None',
       body_style: 'None',
       trim: 'None',
-      color: 'Silver', // Set default color to Silver (matches Google Sheets)
+      color: 'Red', // Set default color to Red
       wheel_color: 'Silver', // Set default wheel color to Silver
       has_adventure_cladding: false, // Set default adventure cladding to false
       background: 'hub',
