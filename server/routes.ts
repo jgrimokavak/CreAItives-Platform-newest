@@ -27,7 +27,7 @@ import promptSuggestionsRouter from "./routes/promptSuggestions";
 import videoRoutes from "./routes/video-routes";
 import projectRoutes from "./routes/project-routes";
 import { compileMjml, testMjmlCompilation } from "./routes/email-routes";
-import { listMakes, listModels, listBodyStyles, listTrims, flushCarCache, loadCarData, getLastFetchTime, setupCarDataAutoRefresh } from "./carData";
+import { listMakes, listModels, listBodyStyles, listTrims, listColors, flushCarCache, loadCarData, loadColorData, getLastFetchTime, setupCarDataAutoRefresh } from "./carData";
 import axios from "axios";
 import Papa from "papaparse";
 import cron from "node-cron";
@@ -933,6 +933,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/cars/models", async (req, res) => res.json(await listModels(req.query.make as string)));
   app.get("/api/cars/bodyStyles", async (req, res) => res.json(await listBodyStyles(req.query.make as string, req.query.model as string)));
   app.get("/api/cars/trims", async (req, res) => res.json(await listTrims(req.query.make as string, req.query.model as string, req.query.bodyStyle as string)));
+  app.get("/api/cars/colors", async (_req, res) => res.json(await listColors()));
   
   // Endpoint to manually refresh car data
   app.post("/api/cars/refresh", async (_req, res) => { 
@@ -941,10 +942,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Force refresh data from source
     try {
       const rows = await loadCarData(true);
+      const colors = await loadColorData(true);
       res.json({
         success: true, 
-        message: 'Car data refreshed successfully',
-        count: rows.length,
+        message: 'Car data and colors refreshed successfully',
+        carCount: rows.length,
+        colorCount: colors.length,
         lastFetch: getLastFetchTime()
       });
     } catch (error) {

@@ -81,6 +81,14 @@ const CarCreationPage: React.FC = () => {
   const [models, setModels] = useState<string[]>([]);
   const [bodyStyles, setBodyStyles] = useState<string[]>([]);
   const [trims, setTrims] = useState<string[]>([]);
+  const [colors, setColors] = useState<string[]>([
+    // Fallback colors if Google Sheets is unavailable
+    'silver', 'black', 'white', 'red', 'blue', 'green', 'yellow', 'orange', 'gray', 'brown',
+    'burgundy', 'navy blue', 'gold', 'bronze', 'pearl white', 'metallic blue', 'electric blue',
+    'electric red', 'electric orange', 'dark grey', 'light grey', 'charcoal', 'midnight blue',
+    'forest green', 'champagne', 'matte black', 'matte gray', 'satin silver', 'sage green',
+    'ceramic gray', 'volcanic gray', 'beige', 'tan', 'cherry red', 'royal blue', 'deep Ultramarine Blue'
+  ]);
   const [bg, setBg] = useState<"white" | "hub">("hub");
   const [progress, setProgress] = useState<number | null>(null);
   const [image, setImage] = useState<GeneratedImage | null>(null);
@@ -138,6 +146,24 @@ const CarCreationPage: React.FC = () => {
     } catch (error) {
       console.error('Error fetching makes:', error);
       setMakes([]);
+    }
+  };
+
+  // Fetch colors
+  const fetchColors = async () => {
+    try {
+      const response = await fetch('/api/cars/colors');
+      if (!response.ok) {
+        throw new Error(`Failed to fetch colors: ${response.status} ${response.statusText}`);
+      }
+      const data = await response.json();
+      // Only update colors if we got data from the API, otherwise keep fallback colors
+      if (data && data.length > 0) {
+        setColors(data);
+      }
+    } catch (error) {
+      console.error('Error fetching colors:', error);
+      // Keep existing fallback colors on error
     }
   };
 
@@ -201,9 +227,10 @@ const CarCreationPage: React.FC = () => {
     }
   };
 
-  // Load makes on component mount
+  // Load makes and colors on component mount
   useEffect(() => {
     fetchMakes();
+    fetchColors();
   }, []);
 
   // Fetch models when make changes
@@ -263,9 +290,10 @@ const CarCreationPage: React.FC = () => {
     fetch('/api/cars/refresh', { method: 'POST' })
       .then(() => {
         fetchMakes();
+        fetchColors();
         toast({
           title: "Data refreshed",
-          description: "Car data has been updated successfully",
+          description: "Car data and colors have been updated successfully",
         });
       })
       .catch(err => {
@@ -731,7 +759,7 @@ const CarCreationPage: React.FC = () => {
                         <Select
                           value={(() => {
                             const currentColor = form.watch('color');
-                            const presetColors = ['silver', 'black', 'white', 'red', 'blue', 'green', 'yellow', 'orange', 'gray', 'brown', 'burgundy', 'navy blue', 'gold', 'bronze', 'pearl white', 'metallic blue', 'electric blue', 'electric red', 'electric orange', 'dark grey', 'light grey', 'charcoal', 'midnight blue', 'forest green', 'champagne', 'matte black', 'matte gray', 'satin silver', 'sage green', 'ceramic gray', 'volcanic gray', 'beige', 'tan', 'cherry red', 'royal blue', 'deep Ultramarine Blue'];
+                            const presetColors = colors;
                             
                             if (showCustomColor) return 'custom';
                             if (currentColor && presetColors.includes(currentColor)) return currentColor;
@@ -754,42 +782,11 @@ const CarCreationPage: React.FC = () => {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="custom">✏️ Custom Color...</SelectItem>
-                            <SelectItem value="silver">Silver</SelectItem>
-                            <SelectItem value="black">Black</SelectItem>
-                            <SelectItem value="white">White</SelectItem>
-                            <SelectItem value="red">Red</SelectItem>
-                            <SelectItem value="blue">Blue</SelectItem>
-                            <SelectItem value="green">Green</SelectItem>
-                            <SelectItem value="yellow">Yellow</SelectItem>
-                            <SelectItem value="orange">Orange</SelectItem>
-                            <SelectItem value="gray">Gray</SelectItem>
-                            <SelectItem value="brown">Brown</SelectItem>
-                            <SelectItem value="burgundy">Burgundy</SelectItem>
-                            <SelectItem value="navy blue">Navy Blue</SelectItem>
-                            <SelectItem value="gold">Gold</SelectItem>
-                            <SelectItem value="bronze">Bronze</SelectItem>
-                            <SelectItem value="pearl white">Pearl White</SelectItem>
-                            <SelectItem value="metallic blue">Metallic Blue</SelectItem>
-                            <SelectItem value="electric blue">Electric Blue</SelectItem>
-                            <SelectItem value="electric red">Electric Red</SelectItem>
-                            <SelectItem value="electric orange">Electric Orange</SelectItem>
-                            <SelectItem value="dark grey">Dark Grey</SelectItem>
-                            <SelectItem value="light grey">Light Grey</SelectItem>
-                            <SelectItem value="charcoal">Charcoal</SelectItem>
-                            <SelectItem value="midnight blue">Midnight Blue</SelectItem>
-                            <SelectItem value="forest green">Forest Green</SelectItem>
-                            <SelectItem value="champagne">Champagne</SelectItem>
-                            <SelectItem value="matte black">Matte Black</SelectItem>
-                            <SelectItem value="matte gray">Matte Gray</SelectItem>
-                            <SelectItem value="satin silver">Satin Silver</SelectItem>
-                            <SelectItem value="sage green">Sage Green</SelectItem>
-                            <SelectItem value="ceramic gray">Ceramic Gray</SelectItem>
-                            <SelectItem value="volcanic gray">Volcanic Gray</SelectItem>
-                            <SelectItem value="beige">Beige</SelectItem>
-                            <SelectItem value="tan">Tan</SelectItem>
-                            <SelectItem value="cherry red">Cherry Red</SelectItem>
-                            <SelectItem value="royal blue">Royal Blue</SelectItem>
-                            <SelectItem value="deep Ultramarine Blue">Deep Ultramarine Blue</SelectItem>
+                            {colors.map((color) => (
+                              <SelectItem key={color} value={color}>
+                                {color.charAt(0).toUpperCase() + color.slice(1)}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                         

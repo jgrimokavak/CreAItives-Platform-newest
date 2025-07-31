@@ -8,17 +8,24 @@ const cache = new NodeCache({ stdTTL: 120 });   // 2 min
 let lastFetchTime: Date | null = null;
 
 type Row = { make:string; model:string; body_style:string; trim:string };
+type ColorRow = { color: string };
 
-// Setup auto-refresh of car data every 5 minutes
+// Color Sheets configuration
+const COLOR_SHEET_ID = "1ftpeFWjClvZINpJMxae1qrNRS1a7XPKAC0FUGizfgzs";
+const COLOR_SHEET_GID = "1643991184";
+
+// Setup auto-refresh of car data and colors every 5 minutes
 export function setupCarDataAutoRefresh(): void {
   // Immediately fetch the data once
   loadCarData(true).catch(err => console.error("Initial car data load failed:", err));
+  loadColorData(true).catch(err => console.error("Initial color data load failed:", err));
   
   // Schedule refresh every 5 minutes
   cron.schedule('*/5 * * * *', async () => {
     console.log('Auto-refreshing car data from Google Sheets...');
     try {
       await loadCarData(true);
+      await loadColorData(true);
       console.log('Car data refreshed successfully at', new Date().toISOString());
     } catch (error) {
       console.error('Error during scheduled car data refresh:', error);
@@ -141,9 +148,57 @@ export async function listTrims(make:string, model:string, body_style:string): P
   return result;
 }
 
+// Color data loading
+export async function loadColorData(forceRefresh: boolean = false): Promise<ColorRow[]> {
+  const cached = cache.get<ColorRow[]>("colorRows");
+  if (cached && !forceRefresh) return cached;
+
+  try {
+    // Build CSV export URL for Google Sheets with specific gid
+    const colorSheetUrl = `https://docs.google.com/spreadsheets/d/${COLOR_SHEET_ID}/export?format=csv&gid=${COLOR_SHEET_GID}`;
+    
+    console.log(`Fetching color data from ${forceRefresh ? 'source (forced refresh)' : 'source (cache expired)'}`);
+    const response = await axios.get(colorSheetUrl, { 
+      responseType: "text",
+      params: { _t: Date.now() }
+    });
+    
+    const csvText = response.data as string;
+    
+    const parseResult = Papa.parse<ColorRow>(csvText, { 
+      header: true, 
+      skipEmptyLines: true 
+    });
+    
+    if (parseResult.errors && parseResult.errors.length > 0) {
+      console.warn("Color CSV parsing errors:", parseResult.errors);
+    }
+    
+    const rows = parseResult.data || [];
+    cache.set("colorRows", rows);
+    console.log(`Color data refreshed: ${rows.length} colors loaded`);
+    return rows;
+  } catch (error) {
+    console.error("Error loading color data:", error);
+    return cached || [];
+  }
+}
+
+export async function listColors(): Promise<string[]> {
+  const rows = await loadColorData();
+  const colorSet = new Set<string>();
+  rows.forEach(r => {
+    if (r.color && r.color.trim()) {
+      colorSet.add(r.color.trim());
+    }
+  });
+  // Return colors in the order they appear in the sheet (color wheel order)
+  return Array.from(colorSet);
+}
+
 export function flushCarCache() { 
   cache.flushAll(); 
-  console.log('Car data cache flushed, will be fetched fresh on next request');
+  console.log('Car data and color cache flushed, will be fetched fresh on next request');
 }
 
 export function getLastFetchTime(): Date | null {

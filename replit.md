@@ -118,6 +118,24 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### Google Sheets Color Integration (July 31, 2025)
+- **Feature Added**: Dynamic color management via Google Sheets integration
+- **Implementation**: 
+  - Added new Google Sheets data source for colors (ID: 1ftpeFWjClvZINpJMxae1qrNRS1a7XPKAC0FUGizfgzs, GID: 1643991184)
+  - Created `/api/cars/colors` endpoint that fetches colors from Google Sheets
+  - Updated frontend to load colors dynamically instead of hardcoded list
+  - Colors refresh hourly with car data and via manual refresh button
+  - Custom color input system preserved and enhanced to stay visible when selected
+- **Benefits**: 
+  - Users can now add new colors anytime by editing the Google Sheets
+  - Colors are ordered by color wheel in the sheet for better UX
+  - No need to redeploy app to add new colors
+- **Technical Details**: 
+  - Colors cached in-memory with 2-minute TTL
+  - Integrated with existing car data refresh system
+  - Maintains "✏️ Custom Color..." option at top of dropdown
+  - Fallback to preset colors if sheets unavailable
+
 ### Car Creation Form Enhancement (July 31, 2025)
 - **Problem Solved**: Form fields were blocked when car data had missing values (empty body_style or trim fields)
 - **Solution Implemented**: 
