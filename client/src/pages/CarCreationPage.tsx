@@ -94,6 +94,10 @@ const CarCreationPage: React.FC = () => {
   // Modal state
   const [showEditModal, setShowEditModal] = useState<boolean>(false);
   
+  // Custom color state
+  const [showCustomColor, setShowCustomColor] = useState<boolean>(false);
+  const [customColor, setCustomColor] = useState<string>("");
+  
   // Generate years from 1990 to current year
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: currentYear - 1990 + 1 }, (_, i) => String(currentYear - i));
@@ -725,8 +729,18 @@ const CarCreationPage: React.FC = () => {
                           ))}
                         </div>
                         <Select
-                          value={form.watch('color')}
-                          onValueChange={(value) => setValue('color', value)}
+                          value={form.watch('color') && !showCustomColor && form.watch('color') !== 'custom' ? form.watch('color') : (showCustomColor || form.watch('color') === 'custom' ? 'custom' : '')}
+                          onValueChange={(value) => {
+                            if (value === 'custom') {
+                              setShowCustomColor(true);
+                              setCustomColor('');
+                              setValue('color', '');
+                            } else {
+                              setShowCustomColor(false);
+                              setCustomColor('');
+                              setValue('color', value);
+                            }
+                          }}
                         >
                           <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select color" />
@@ -767,8 +781,61 @@ const CarCreationPage: React.FC = () => {
                             <SelectItem value="tan">Tan</SelectItem>
                             <SelectItem value="cherry red">Cherry Red</SelectItem>
                             <SelectItem value="royal blue">Royal Blue</SelectItem>
+                            <SelectItem value="deep Ultramarine Blue">Deep Ultramarine Blue</SelectItem>
+                            <SelectItem value="custom">✏️ Custom Color...</SelectItem>
                           </SelectContent>
                         </Select>
+                        
+                        {/* Custom color input */}
+                        {(showCustomColor || form.watch('color') === 'custom') && (
+                          <div className="space-y-2 mt-2 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                            <Label htmlFor="custom_color" className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                              Enter Custom Color Name
+                            </Label>
+                            <Input
+                              id="custom_color"
+                              placeholder="e.g., midnight pearl, copper metallic, forest green..."
+                              value={customColor}
+                              onChange={(e) => {
+                                setCustomColor(e.target.value);
+                                setValue('color', e.target.value);
+                              }}
+                              className="bg-white dark:bg-gray-900 border-blue-300 dark:border-blue-700 focus:border-blue-500"
+                            />
+                            <div className="flex gap-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setShowCustomColor(false);
+                                  setCustomColor("");
+                                  setValue('color', '');
+                                }}
+                                className="text-xs"
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={() => {
+                                  if (customColor.trim()) {
+                                    setValue('color', customColor);
+                                    setShowCustomColor(false);
+                                  }
+                                }}
+                                disabled={!customColor.trim()}
+                                className="text-xs"
+                              >
+                                Apply
+                              </Button>
+                            </div>
+                            <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                              Tip: Be descriptive for best results (e.g., "metallic dark green" instead of just "green")
+                            </p>
+                          </div>
+                        )}
                       </div>
                       
                       {/* Wheel Color selector */}
