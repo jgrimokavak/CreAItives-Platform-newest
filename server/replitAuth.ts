@@ -12,10 +12,16 @@ if (!process.env.REPLIT_DOMAINS) {
   throw new Error("Environment variable REPLIT_DOMAINS not provided");
 }
 
-// Helper function to check if user is from @kavak.com
+// Helper function to check if user is from @kavak.com or special exception
 function isKavakUser(email: string | null): boolean {
   if (!email) return false;
-  return email.toLowerCase().endsWith('@kavak.com');
+  const normalizedEmail = email.toLowerCase();
+  
+  // Special access exceptions (hardcoded for security)
+  const specialAccess = ['joacogrimoldi@gmail.com'];
+  if (specialAccess.includes(normalizedEmail)) return true;
+  
+  return normalizedEmail.endsWith('@kavak.com');
 }
 
 const getOidcConfig = memoize(
@@ -193,7 +199,11 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     // Check if user email is from @kavak.com domain
     const userEmail = user.claims?.email;
     if (!isKavakUser(userEmail)) {
-      console.log(`Access denied for non-Kavak user: ${userEmail}`);
+      // Minimize logging for security (don't log special access users)
+      const specialEmails = ['joacogrimoldi@gmail.com'];
+      if (!specialEmails.includes(userEmail?.toLowerCase() || '')) {
+        console.log(`Access denied for non-Kavak user: ${userEmail}`);
+      }
       return res.status(401).json({ message: "Access restricted to @kavak.com users only" });
     }
     
@@ -225,7 +235,11 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     // Re-check domain after token refresh
     const userEmail = user.claims?.email;
     if (!isKavakUser(userEmail)) {
-      console.log(`Access denied for non-Kavak user after token refresh: ${userEmail}`);
+      // Minimize logging for security (don't log special access users)
+      const specialEmails = ['joacogrimoldi@gmail.com'];
+      if (!specialEmails.includes(userEmail?.toLowerCase() || '')) {
+        console.log(`Access denied for non-Kavak user after token refresh: ${userEmail}`);
+      }
       return res.status(401).json({ message: "Access restricted to @kavak.com users only" });
     }
     
