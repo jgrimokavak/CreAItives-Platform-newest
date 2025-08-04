@@ -17,6 +17,7 @@ import {
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { GeneratedImage } from "@/types/image";
+import MobileDownloadButton from "@/components/MobileDownloadButton";
 
 interface ImageCardProps {
   image: GeneratedImage;
@@ -50,6 +51,19 @@ export default function ImageCard({
   selectionMode = 'none'
 }: ImageCardProps) {
   const [isHovered, setIsHovered] = useState(false);
+
+  const generateFilename = (image: GeneratedImage): string => {
+    if (!image.prompt) return 'car-image.png';
+    
+    const cleaned = image.prompt
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/\s+/g, '_')
+      .replace(/_+/g, '_')
+      .substring(0, 50);
+    
+    return `${cleaned || 'car-image'}.png`;
+  };
 
   return (
     <div 
@@ -145,24 +159,18 @@ export default function ImageCard({
               </Tooltip>
             </TooltipProvider>
             
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDownload?.(image);
-                    }}
-                  >
-                    <DownloadIcon className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Download</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <div
+              onClick={(e) => e.stopPropagation()}
+            >
+              <MobileDownloadButton
+                imageUrl={image.fullUrl || image.url}
+                filename={generateFilename(image)}
+                prompt={image.prompt}
+                className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background/95 border border-border"
+                variant="outline"
+                size="icon"
+              />
+            </div>
             
             {mode === 'gallery' && onStar && (
               <TooltipProvider>

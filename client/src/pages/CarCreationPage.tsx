@@ -25,6 +25,7 @@ import CarListEditModal from '@/components/CarListEditModal';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
 import { useEditor } from '@/context/EditorContext';
+import { downloadImageMobile } from '@/utils/mobileDownload';
 
 // Import car angle SVG assets
 import defaultSvg from '@/assets/car-angles/default.svg';
@@ -404,33 +405,12 @@ const CarCreationPage: React.FC = () => {
     }
   });
 
-  // Image download handler
+  // Enhanced mobile download handler
   const handleDownload = async (image: GeneratedImage) => {
     try {
-      let url;
       const imageUrl = image.fullUrl || image.url;
       
-      // If the URL is a data URL (base64), use it directly
-      if (imageUrl.startsWith('data:')) {
-        url = imageUrl;
-      } else {
-        // Otherwise, fetch the image from the URL
-        const response = await fetch(imageUrl);
-        
-        if (!response.ok) {
-          throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
-        }
-        
-        const blob = await response.blob();
-        url = window.URL.createObjectURL(blob);
-      }
-      
-      // Create a download link
-      const a = document.createElement("a");
-      a.style.display = "none";
-      a.href = url;
-      
-      // Generate a safe filename, handling the case where prompt might be undefined
+      // Generate a safe filename based on car details or prompt
       let filename = 'car-image';
       
       // First try to use car details for the filename
@@ -457,28 +437,35 @@ const CarCreationPage: React.FC = () => {
           filename = cleanPrompt;
         }
       }
-      
-      a.download = `${filename}.png`;
-      
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      
-      // Clean up the URL only if it was created from a blob
-      if (!imageUrl.startsWith('data:')) {
-        window.URL.revokeObjectURL(url);
-      }
-      
-      toast({
-        title: "Image downloaded",
-        description: "Car image has been downloaded successfully"
+
+      // Use enhanced mobile download with fallback options
+      const result = await downloadImageMobile(imageUrl, `${filename}.png`, {
+        fallbackToShare: true,
+        title: "Save Car Image",
+        text: image.prompt ? `${image.prompt.substring(0, 100)}...` : "Save this car image to your gallery"
       });
+
+      if (result.success) {
+        toast({
+          title: "Image ready",
+          description: result.message,
+          duration: result.method.includes('share') ? 8000 : 4000,
+        });
+      } else if (result.method !== 'web-share-cancelled' && result.method !== 'file-system-cancelled') {
+        // Don't show error for user cancellation, show fallback instructions
+        toast({
+          title: "Alternative download method",
+          description: "Long-press the image and select 'Save to Photos' (iOS) or 'Download image' (Android)",
+          duration: 8000,
+        });
+      }
     } catch (error) {
       console.error("Download error:", error);
       toast({
         title: "Download failed",
-        description: "Failed to download the image. Error: " + (error instanceof Error ? error.message : String(error)),
-        variant: "destructive"
+        description: "Try long-pressing the image and selecting 'Save to Photos' or 'Download image'",
+        variant: "destructive",
+        duration: 8000,
       });
     }
   };
