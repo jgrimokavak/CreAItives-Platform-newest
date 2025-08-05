@@ -51,11 +51,13 @@ export class ReplicateProvider extends BaseProvider {
     
     // Field mapping for flux-krea-dev
     if (modelKey === 'flux-krea-dev') {
+      console.log('🔍 flux-krea-dev input before mapping:', JSON.stringify(body, null, 2));
       // Map "Image" to "image" (frontend uses capital I, backend expects lowercase)
       if (body.Image !== undefined) {
         body.image = body.Image;
         delete body.Image;
       }
+      console.log('🔍 flux-krea-dev input after mapping:', JSON.stringify(body, null, 2));
     }
     
     log({

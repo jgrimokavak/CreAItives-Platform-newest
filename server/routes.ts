@@ -340,8 +340,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         modelKey: req.body.modelKey,
         hasInputImage: !!req.body.input_image,
         hasImages: !!req.body.images,
+        hasImage: !!req.body.Image,
         inputImageLength: req.body.input_image?.length,
         imagesCount: req.body.images?.length,
+        ImageLength: req.body.Image?.length,
         otherFields: Object.keys(req.body).filter(k => !['input_image', 'images', 'prompt'].includes(k))
       });
 
@@ -363,7 +365,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         modelKey: validationResult.data.modelKey,
         hasInputImage: !!validationResult.data.input_image,
         hasImages: !!validationResult.data.images,
-        validatedFields: Object.keys(validationResult.data)
+        validatedFields: Object.keys(validationResult.data),
+        fullData: validationResult.data
       });
       
       // Create a new job
