@@ -86,6 +86,17 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (August 2025)
 
+### Download Experience Fix for Windows PC
+- **Date**: August 5, 2025
+- **Change**: Fixed download issues on Windows PC where share dialogs and file picker were appearing instead of direct downloads
+- **Details**:
+  - Modified MobileDownloadManager to detect desktop environments and bypass mobile-specific features
+  - Desktop/PC now uses traditional download method directly, avoiding Web Share API and File System Access API
+  - Removed mobile-specific attributes (target="_blank") for desktop downloads
+  - Created simpleDownload.ts utility as an alternative for desktop-first download experiences
+- **Architecture Impact**: Downloads now properly differentiate between mobile and desktop platforms
+- **Key Insight**: Mobile optimizations were interfering with desktop experience - platform detection now prioritizes appropriate download method
+
 ### WAN-2.2 Model Integration - Complete Implementation
 - **Date**: August 5, 2025
 - **Change**: Successfully integrated WAN-2.2 (PrunaAI) model with full backend and frontend support

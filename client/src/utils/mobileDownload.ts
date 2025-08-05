@@ -40,6 +40,11 @@ class MobileDownloadManager {
     const { filename = 'image.png', showToast = true, fallbackToShare = true } = options;
 
     try {
+      // For desktop/PC, always use traditional download to avoid share dialogs and file picker
+      if (!this.isMobile) {
+        return await this.enhancedTraditionalDownload(imageUrl, filename);
+      }
+
       // Method 1: Try Web Share API for files (best mobile experience)
       if (this.hasWebShare && fallbackToShare) {
         const shareResult = await this.tryWebShareFile(imageUrl, filename, shareOptions);
@@ -49,12 +54,13 @@ class MobileDownloadManager {
       }
 
       // Method 2: Try File System Access API (Chromium desktop/mobile)
-      if (this.hasFileSystemAccess) {
-        const fsResult = await this.tryFileSystemAccess(imageUrl, filename);
-        if (fsResult.success) {
-          return fsResult;
-        }
-      }
+      // Skip this for now as it causes file picker popup on desktop
+      // if (this.hasFileSystemAccess) {
+      //   const fsResult = await this.tryFileSystemAccess(imageUrl, filename);
+      //   if (fsResult.success) {
+      //     return fsResult;
+      //   }
+      // }
 
       // Method 3: Enhanced traditional download with mobile optimizations
       return await this.enhancedTraditionalDownload(imageUrl, filename);
@@ -197,17 +203,19 @@ class MobileDownloadManager {
         shouldRevoke = true;
       }
 
-      // Create download link with mobile-optimized attributes
+      // Create download link
       const link = document.createElement('a');
       link.style.display = 'none';
       link.href = url;
       link.download = filename;
       
-      // Add mobile-specific attributes
-      link.setAttribute('target', '_blank');
-      if (this.isIOS) {
-        // iOS Safari specific handling
-        link.setAttribute('rel', 'noopener');
+      // Only add mobile-specific attributes for mobile devices
+      if (this.isMobile) {
+        link.setAttribute('target', '_blank');
+        if (this.isIOS) {
+          // iOS Safari specific handling
+          link.setAttribute('rel', 'noopener');
+        }
       }
 
       document.body.appendChild(link);
