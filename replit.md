@@ -22,9 +22,9 @@ Preferred communication style: Simple, everyday language.
 ### Key Components and Technical Implementations
 
 #### AI Image Generation
-- **Models**: OpenAI GPT-Image-1, Replicate Imagen-3 (for cars), Replicate Flux-Pro 1.1, Replicate Flux-Kontext-Max (for editing), Topaz Labs Upscale API.
-- **Features**: Text-to-image, advanced image editing with masks, professional upscaling, car-specific generation with database attributes, batch processing (up to 50 cars), real-time progress via WebSocket, localized AI disclaimers, KAVAK-style photography effects.
-- **Architecture**: Unified provider adapter pattern for frictionless model addition - new models can be added with minimal configuration changes.
+- **Models**: OpenAI GPT-Image-1, Replicate Imagen-3 (for cars), Replicate Flux-Pro 1.1, Replicate Flux-Kontext-Max (for editing), Replicate Flux-Krea-Dev (img2img), Topaz Labs Upscale API.
+- **Features**: Text-to-image, image-to-image generation with reference images, advanced image editing with masks, professional upscaling, car-specific generation with database attributes, batch processing (up to 50 cars), real-time progress via WebSocket, localized AI disclaimers, KAVAK-style photography effects.
+- **Architecture**: Unified provider adapter pattern for frictionless model addition - new models can be added with minimal configuration changes. Enhanced UI components provide consistent file upload experiences across models.
 
 #### AI Video Generation
 - **Engine**: Google Vertex AI Veo models (Veo 3, Veo 3 Fast, Veo 2).
@@ -62,7 +62,7 @@ Preferred communication style: Simple, everyday language.
 
 ### AI Services
 - **OpenAI API**: GPT-Image-1, GPT-4o (for prompt enhancement and vision-based editing).
-- **Replicate API**: Imagen-3, Flux-Pro 1.1, Flux-Kontext-Max, Topaz Labs Upscale API.
+- **Replicate API**: Imagen-3, Flux-Pro 1.1, Flux-Kontext-Max, Flux-Krea-Dev, Topaz Labs Upscale API.
 - **Google Vertex AI**: Veo video generation models (Veo 2, Veo 3, Veo 3 Fast).
 - **Google Cloud Storage**: For video file storage and management.
 
@@ -83,3 +83,17 @@ Preferred communication style: Simple, everyday language.
 - **Archiver**: ZIP file creation.
 - **Sharp**: Server-side image processing.
 - **Node-Cron**: Scheduling automated tasks.
+
+## Recent Changes (August 2025)
+
+### AI Model Integration Process Documentation
+- **Date**: August 5, 2025
+- **Change**: Successfully integrated Flux-Krea-Dev model after debugging complete integration process
+- **Details**: 
+  - Fixed TypeScript errors in replicate provider by properly typing body objects as `Record<string, any>`
+  - Added missing flux-krea-dev schema and defaults to `client/src/lib/formSchemas.ts`
+  - Updated GenericFormValues type to include model-specific fields (Image, aspect_ratio, etc.)
+  - Resolved field mapping between frontend "Image" field and backend "image" field
+  - Created enhanced ReferenceImageUpload component based on EditForm source images with drag-and-drop functionality
+- **Architecture Impact**: Created comprehensive model integration guide (`docs/AI_Model_Integration_Guide.md`) documenting exact process for future model additions
+- **Key Insight**: Models require dual configuration in both server config and frontend form schemas, with exact field name mapping between frontend and backend
