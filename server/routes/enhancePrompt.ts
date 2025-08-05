@@ -14,7 +14,7 @@ const promptCache = new NodeCache({
 // Schema for the request body
 const bodySchema = z.object({
   text: z.string().min(3),
-  model: z.enum(["gpt-image-1", "imagen-3", "imagen-4", "flux-pro"]),
+  model: z.enum(["gpt-image-1", "imagen-3", "imagen-4", "flux-pro", "flux-kontext-max", "flux-krea-dev"]),
 });
 
 // Model-specific templates
