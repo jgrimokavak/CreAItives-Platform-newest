@@ -33,6 +33,13 @@ export const modelSchemas = {
     safety_tolerance: z.number().int().min(0).max(6).optional(),
     output_format: z.enum(["png", "jpg"]).optional(),
   }),
+  "flux-krea-dev": commonSchema.extend({
+    aspect_ratio: z.enum(["1:1", "16:9", "21:9", "3:2", "2:3", "4:5", "5:4", "3:4", "4:3", "9:16", "9:21"]),
+    Image: z.string().optional(), // For img2img mode (capital I as per model spec)
+    seed: z.number().int().optional(),
+    num_outputs: z.number().int().min(1).max(4).optional(),
+    go_fast: z.boolean().optional(),
+  }),
 };
 
 // Default values for each model
@@ -66,6 +73,14 @@ export const modelDefaults = {
     output_format: "png", // Hardcoded as per requirements
     kavakStyle: false,
   },
+  "flux-krea-dev": {
+    aspect_ratio: "1:1",
+    Image: undefined,
+    seed: undefined,
+    num_outputs: 1,
+    go_fast: false,
+    kavakStyle: false,
+  },
 };
 
 // Type helper to get the correct schema type based on model key
@@ -84,4 +99,8 @@ export type GenericFormValues = z.infer<typeof commonSchema> & {
   safety_tolerance?: number;
   output_format?: string;
   kavakStyle?: boolean;
+  // flux-krea-dev specific fields
+  Image?: string;
+  num_outputs?: number;
+  go_fast?: boolean;
 };

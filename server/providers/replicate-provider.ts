@@ -33,7 +33,7 @@ export class ReplicateProvider extends BaseProvider {
     }
     
     // Combine defaults with user inputs
-    const body = { 
+    const body: Record<string, any> = { 
       ...this.getDefaults(modelKey),
       ...params,
       prompt 
@@ -149,7 +149,7 @@ export class ReplicateProvider extends BaseProvider {
     }
     
     // For flux-kontext-max, we need to pass the input_image parameter
-    const body = {
+    const body: Record<string, any> = {
       ...this.getDefaults(modelKey),
       ...params,
       prompt,
