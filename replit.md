@@ -86,6 +86,19 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (August 2025)
 
+### WAN-2.2 Model Integration - Complete Implementation
+- **Date**: August 5, 2025
+- **Change**: Successfully integrated WAN-2.2 (PrunaAI) model with full backend and frontend support
+- **Details**: 
+  - Added wan-2.2 to all backend validation schemas (shared/schema.ts, enhancePrompt.ts, promptSuggestions.ts)
+  - Implemented frontend form schema with aspect_ratio and juiced parameter support
+  - Created distinct visual styling: Film icon, sky blue color scheme, "PrunaAI" provider branding
+  - Added cinematic-focused AI prompt enhancement guidance
+  - Implemented "Juiced" toggle with detailed description for cinematic enhancements
+  - Fixed validation errors across generate, enhance-prompt, and prompt-suggestions APIs
+- **Architecture Impact**: Demonstrates mature model integration pipeline - all validation points automatically updated
+- **Key Insight**: Systematic validation schema updates across all API endpoints critical for new model functionality
+
 ### AI Model Integration Process Documentation
 - **Date**: August 5, 2025
 - **Change**: Successfully integrated Flux-Krea-Dev model after debugging complete integration process

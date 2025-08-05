@@ -488,7 +488,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form, availableMode
                 <Switch
                   checked={field.value as boolean}
                   onCheckedChange={field.onChange}
-                  className="data-[state=checked]:bg-blue-600"
+                  className="data-[state=checked]:bg-sky-500"
                 />
               </FormControl>
             </FormItem>
