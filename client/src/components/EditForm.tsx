@@ -1,4 +1,4 @@
-import { useState, useRef, ChangeEvent, useEffect } from "react";
+import { useState, useRef, ChangeEvent, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,11 +12,12 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { GeneratedImage } from "@/types/image";
 import { useEditor } from "@/context/EditorContext";
 import { Progress } from "@/components/ui/progress";
-import { ModelKey, editModelCatalog } from "@/lib/modelCatalog";
+import { ModelKey, editModelCatalog, modelCatalog } from "@/lib/modelCatalog";
 import { modelSchemas, modelDefaults, GenericFormValues } from "@/lib/formSchemas";
 import AIModelSelector from "@/components/AIModelSelector";
 import DynamicForm from "@/components/DynamicForm";
 import { useHotkeys } from "react-hotkeys-hook";
+import { useQuery } from "@tanstack/react-query";
 
 interface EditFormProps {
   onEditStart: () => void;
@@ -36,12 +37,37 @@ export default function EditForm({
   const [previews, setPreviews] = useState<Record<string, string>>({});
   const [maskPreview, setMaskPreview] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
-  const [modelKey, setModelKey] = useState<"gpt-image-1" | "flux-kontext-max">("flux-kontext-max");
+  const [modelKey, setModelKey] = useState<ModelKey>("flux-kontext-max" as ModelKey);
   const [isEnhancing, setIsEnhancing] = useState(false);
   
   const imageInputRef = useRef<HTMLInputElement>(null);
   const maskInputRef = useRef<HTMLInputElement>(null);
   const { sourceImages, setSourceImages } = useEditor();
+  
+  // Fetch models from API and filter for edit-capable models
+  const { data: modelsData } = useQuery({
+    queryKey: ['/api/models'],
+  });
+  
+  // Create edit model catalog from API response
+  const dynamicEditModelCatalog = useMemo(() => {
+    if (!modelsData) return editModelCatalog;
+    
+    const editCapableModels: Record<string, any> = {};
+    modelsData.forEach((model: any) => {
+      if (model.supportsEdit) {
+        // Use the description from API or fall back to catalog
+        editCapableModels[model.key] = {
+          label: modelCatalog[model.key as ModelKey]?.label || model.key,
+          description: model.description || modelCatalog[model.key as ModelKey]?.description || '',
+          visible: model.visible || []
+        };
+      }
+    });
+    
+    // Return the dynamic catalog if we have models, otherwise use the static one
+    return Object.keys(editCapableModels).length > 0 ? editCapableModels : editModelCatalog;
+  }, [modelsData]);
 
   // Update form when model changes
   useEffect(() => {
@@ -296,7 +322,7 @@ export default function EditForm({
       setProgress(0);
       
       // Only send values that are applicable to the current model
-      const visibleFields = editModelCatalog[modelKey].visible;
+      const visibleFields = dynamicEditModelCatalog[modelKey]?.visible || [];
       const filteredValues: Record<string, any> = { modelKey };
       
       visibleFields.forEach(field => {
@@ -322,52 +348,32 @@ export default function EditForm({
         images.push(base64);
       }
       
-      // Prepare the request payload
-      const payload: Record<string, any> = {
-        ...filteredValues
-      };
+
       
-      // Handle model-specific image handling
-      if (modelKey === "flux-kontext-max") {
-        // For flux-kontext-max, send single input_image (no mask support)
-        if (images.length > 0) {
-          payload.input_image = images[0]; // Use first image only
-          console.log("🔍 EditForm: Set input_image for flux-kontext-max:", {
-            modelKey,
-            hasInputImage: !!payload.input_image,
-            inputImageLength: payload.input_image?.length,
-            inputImagePrefix: payload.input_image?.substring(0, 50) + "..."
-          });
-        } else {
-          console.error("🚨 EditForm: No images available for flux-kontext-max");
-        }
-        // Do not include mask field at all for flux-kontext-max
-      } else {
-        // For other models (like gpt-image-1), use images array and mask
-        payload.images = images;
-        if (selectedMask) {
-          payload.mask = await new Promise<string>((resolve) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result as string);
-            reader.readAsDataURL(selectedMask);
-          });
-        }
-      }
+      // Create FormData for multipart upload
+      const formData = new FormData();
       
-      console.log("🔍 EditForm: Final payload keys:", Object.keys(payload));
-      console.log("🔍 EditForm: Payload for model", modelKey, ":", {
-        ...payload,
-        input_image: payload.input_image ? `[base64 string: ${payload.input_image.length} chars]` : undefined,
-        images: payload.images ? `[${payload.images.length} images]` : undefined
+      // Add text fields
+      Object.entries(filteredValues).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          formData.append(key, String(value));
+        }
       });
       
-      // Use the generic generate API with edit context
-      const response = await fetch("/api/generate", {
+      // Add image files
+      for (const file of selectedFiles) {
+        formData.append('image', file);
+      }
+      
+      // Add mask file if present
+      if (selectedMask) {
+        formData.append('mask', selectedMask);
+      }
+      
+      // Use the edit-image API endpoint
+      const response = await fetch("/api/edit-image", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload)
+        body: formData
       });
       
       if (!response.ok) {
@@ -487,8 +493,8 @@ export default function EditForm({
               <FormLabel className="text-sm font-medium">AI Model</FormLabel>
               <AIModelSelector 
                 value={modelKey} 
-                onChange={(value) => setModelKey(value as "gpt-image-1" | "flux-kontext-max")}
-                availableModels={editModelCatalog}
+                onChange={(value) => setModelKey(value as ModelKey)}
+                availableModels={dynamicEditModelCatalog}
               />
             </div>
 
@@ -589,7 +595,7 @@ export default function EditForm({
               <p className="text-xs text-muted-foreground mb-4">
                 Configure your image editing options
               </p>
-              <DynamicForm modelKey={modelKey} form={form} availableModels={editModelCatalog} />
+              <DynamicForm modelKey={modelKey} form={form} availableModels={dynamicEditModelCatalog} />
             </div>
 
             <div className="flex justify-center pt-2">

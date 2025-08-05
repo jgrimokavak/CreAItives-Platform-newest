@@ -312,159 +312,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       job.status = "processing";
       
-      const { prompt, modelKey, size, quality, n, style, background, output_format, aspect_ratio, seed, kavakStyle, input_image, images, mask, prompt_upsampling, safety_tolerance } = data;
+      // Import the unified handler
+      const { handleImageGeneration } = await import('./handlers/unified-image-handler');
       
-      // Import the KAVAK style prompt if needed
-      let finalPrompt = prompt;
-      if (kavakStyle) {
-        const { KAVAK_STYLE_PROMPT } = await import('../shared/constants/stylePrompts');
-        finalPrompt = prompt + " " + KAVAK_STYLE_PROMPT;
-        console.log(`Job ${jobId}: Using KAVAK style - original prompt length: ${prompt.length}, final prompt length: ${finalPrompt.length}`);
-      }
+      console.log(`Job ${jobId}: Processing image generation with model: ${data.modelKey}`);
       
-      console.log(`Job ${jobId}: Processing image generation with model: ${modelKey}`);
-      
-      // Import the generateWithReplicate function dynamically to avoid circular imports
-      const { generateWithReplicate } = await import('./routes/replicate-routes');
-      
-      // Determine provider based on model key
-      const modelInfo = models.find(m => m.key === modelKey);
-      if (!modelInfo) {
-        throw new Error(`Unknown model: ${modelKey}`);
-      }
-      
-      let generatedImages: GeneratedImage[] = [];
-      
-      // Handle OpenAI models
-      if (modelInfo.provider === 'openai') {
-        // Call OpenAI to generate images based on the model
-        // For DALL-E 3, only one image can be generated at a time
-        const numImages = modelKey === 'dall-e-3' ? 1 : (n || 1);
-        
-        // Create the base request object
-        const requestParams: any = {
-          model: modelKey,
-          prompt: finalPrompt,
-          n: numImages,
-          size: size || '1024x1024',
-        };
-        
-        // DALL-E models support response_format but GPT-Image-1 doesn't
-        if (modelKey !== "gpt-image-1") {
-          requestParams.response_format = "b64_json";
-        }
-        
-        // Add model-specific parameters
-        if (modelKey === 'dall-e-3') {
-          // DALL-E 3 specific parameters
-          requestParams.quality = quality === 'hd' || quality === 'standard' ? quality : 'standard';
-          if (style) requestParams.style = style;
-          if (output_format) requestParams.response_format = output_format;
-        } else if (modelKey === 'gpt-image-1') {
-          // GPT-Image-1 specific parameters
-          if (quality === 'high' || quality === 'medium' || quality === 'low' || quality === 'auto') {
-            requestParams.quality = quality || 'high';
-          } else {
-            requestParams.quality = 'high'; // Default to high quality
-          }
-          if (background) requestParams.background = background;
-          // GPT-Image-1 doesn't support response_format
-        } else {
-          // DALL-E 2 specific parameters - No quality parameter, it's not supported
-          if (output_format) requestParams.response_format = output_format;
-        }
-        
-        console.log(`Job ${jobId}: Sending OpenAI image generation request with params:`, JSON.stringify(requestParams));
-        const response = await openai.images.generate(requestParams);
-        console.log(`Job ${jobId}: OpenAI API response:`, JSON.stringify(response, null, 2));
-        
-        // Check if response has data
-        if (!response.data || response.data.length === 0) {
-          throw new Error("No images were generated");
-        }
-        
-        // Process and store the response
-        generatedImages = response.data.map((image, index) => {
-          // Log image data for debugging
-          console.log(`Job ${jobId}: Image ${index} response data:`, 
-            JSON.stringify({
-              url: image.url ? "url exists" : "no url",
-              revised_prompt: image.revised_prompt ? "revised_prompt exists" : "no revised_prompt",
-              b64_json: image.b64_json ? "b64_json exists" : "no b64_json"
-            })
-          );
-          
-          // Check if we have a valid URL or base64 image data
-          let imageUrl = "";
-          let fullUrl = "";
-          let thumbUrl = "";
-          
-          if (image.url) {
-            imageUrl = image.url;
-            fullUrl = image.url;
-            thumbUrl = image.url;
-            console.log(`Job ${jobId}: Using direct URL from OpenAI:`, imageUrl.substring(0, 50) + "...");
-          } else if (image.b64_json) {
-            imageUrl = `data:image/png;base64,${image.b64_json}`;
-            fullUrl = imageUrl;
-            thumbUrl = imageUrl; 
-            console.log(`Job ${jobId}: Using base64 image data from OpenAI`);
-          } else {
-            console.warn(`Job ${jobId}: No image URL or base64 data found in OpenAI response`);
-          }
-
-          // Create ID based on the prompt for better readability
-          const promptBasedId = `img_${createFileSafeNameFromPrompt(prompt)}_${index}`;
-          
-          const newImage: GeneratedImage = {
-            id: promptBasedId,
-            url: imageUrl,
-            fullUrl: fullUrl,
-            thumbUrl: thumbUrl,
-            prompt: prompt,
-            size: size || '1024x1024',
-            model: modelKey,
-            createdAt: new Date().toISOString(),
-            // Include aspect ratio exactly as selected by the user (for improved display in cards)
-            aspectRatio: aspect_ratio || undefined,
-            quality: quality || undefined,
-          };
-          
-          // Store the image in our storage
-          storage.saveImage(newImage);
-          
-          return newImage;
-        });
-      }
-      // Handle Replicate models
-      else if (modelInfo.provider === 'replicate') {
-        // Build inputs object dynamically based on available data
-        const inputs: any = {
-          prompt: finalPrompt
-        };
-        
-        // Add optional fields if they exist
-        if (aspect_ratio !== undefined) inputs.aspect_ratio = aspect_ratio;
-        if (seed !== undefined) inputs.seed = seed;
-        if (output_format !== undefined) inputs.output_format = output_format;
-        if (prompt_upsampling !== undefined) inputs.prompt_upsampling = prompt_upsampling;
-        if (safety_tolerance !== undefined) inputs.safety_tolerance = safety_tolerance;
-        
-        // Add image-related fields for editing models
-        if (input_image !== undefined) inputs.input_image = input_image;
-        if (images !== undefined && images.length > 0) inputs.images = images;
-        if (mask !== undefined) inputs.mask = mask;
-        
-        console.log(`Job ${jobId}: Sending Replicate generation request with model ${modelKey} and inputs:`, {
-          ...inputs,
-          input_image: inputs.input_image ? `[base64 string: ${inputs.input_image.length} chars]` : undefined,
-          images: inputs.images ? `[${inputs.images.length} images]` : undefined
-        });
-        
-        // Call the Replicate generation function
-        generatedImages = await generateWithReplicate(modelKey, inputs);
-        console.log(`Job ${jobId}: Generated ${generatedImages.length} images with Replicate`);
-      }
+      // Use the unified handler
+      const generatedImages = await handleImageGeneration(data);
+      console.log(`Job ${jobId}: Generated ${generatedImages.length} images`);
       
       // Update job with results
       job.status = "done";
@@ -559,18 +414,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Access form data fields
       const prompt = req.body.prompt;
+      const modelKey = req.body.modelKey || "gpt-image-1"; // Default to gpt-image-1 for backward compatibility
       const size = req.body.size || "1024x1024";
       const quality = req.body.quality || "high";
       const n = parseInt(req.body.n || "1");
       const kavakStyle = req.body.kavakStyle === "true" || req.body.kavakStyle === true;
-      
-      // Apply KAVAK style if enabled
-      let finalPrompt = prompt;
-      if (kavakStyle) {
-        const { KAVAK_STYLE_PROMPT } = await import('../shared/constants/stylePrompts');
-        finalPrompt = prompt + " " + KAVAK_STYLE_PROMPT;
-        console.log(`Job ${jobId}: Using KAVAK style for edit - original prompt length: ${prompt.length}, final prompt length: ${finalPrompt.length}`);
-      }
       
       // Get uploaded files
       const imgFiles = (req.files as any)?.image as Express.Multer.File[] || [];
@@ -590,221 +438,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return;
       }
       
-      // Track if user provided a mask
-      const userProvidedMask = !!maskFile;
-      
-      // Create temp directory for image processing
-      const tmpDir = path.join(__dirname, "../temp");
-      fs.mkdirSync(tmpDir, { recursive: true });
-      
-      try {
-        // Process uploaded files
-        const imgPaths: string[] = [];
-        
-        // Save uploaded images to temp directory
-        for (let i = 0; i < imgFiles.length; i++) {
-          const file = imgFiles[i];
-          const filePath = path.join(tmpDir, `img_${Date.now()}_${i}${path.extname(file.originalname)}`);
-          fs.writeFileSync(filePath, file.buffer);
-          imgPaths.push(filePath);
-        }
-        
-        // Create a 128px thumbnail and save the full source image
-        let sourceThumb: string | undefined;
-        let sourceImage: string | undefined;
-        try {
-          if (imgPaths.length > 0) {
-            // Create thumbnail for display in card
-            const thumbBuf = await sharp(imgPaths[0])
-              .resize(128)
-              .png()
-              .toBuffer();
-            sourceThumb = `data:image/png;base64,${thumbBuf.toString("base64")}`;
-            
-            // Also save the full image as base64 for full-screen view
-            const fullImageBuf = await fs.promises.readFile(imgPaths[0]);
-            sourceImage = `data:image/png;base64,${fullImageBuf.toString("base64")}`;
-            
-            console.log("Created source thumbnail and image for edit:", {
-              thumbSize: sourceThumb.length,
-              fullSize: sourceImage.length,
-              sourcePath: imgPaths[0]
-            });
-          }
-        } catch (err) {
-          console.warn("Failed to create source thumbnail or image:", err);
-        }
-        
-        // Save mask file if provided
-        let maskPath: string | undefined;
-        if (userProvidedMask && maskFile) {
-          maskPath = path.join(tmpDir, `mask_${Date.now()}${path.extname(maskFile.originalname)}`);
-          fs.writeFileSync(maskPath, maskFile.buffer);
-        }
-        
-        // Helper function to create uploadable files with correct MIME type
-        const toUploadable = (p: string) => {
-          const ext = path.extname(p).toLowerCase();
-          const mime = ext === ".jpg" || ext === ".jpeg"
-            ? "image/jpeg"
-            : ext === ".webp"
-              ? "image/webp"
-              : "image/png";
-          return toFile(fs.createReadStream(p), path.basename(p), { type: mime });
-        };
-        
-        // Build uploadables with proper MIME types
-        const uploadables = await Promise.all(imgPaths.map(toUploadable));
-        
-        // Log the request to our API logger
-        log({
-          ts: new Date().toISOString(),
-          direction: "request",
-          payload: {
-            model: "gpt-image-1",
-            images: imgPaths.map((p: string) => path.basename(p)),
-            usingMask: userProvidedMask,
-            prompt,
-            n,
-            size, 
-            quality,
-            uploadableInfo: uploadables.map((u: any) => ({
-              type: u.type,
-              name: u.name,
-              size: u.size
-            }))
-          }
-        });
-        
-        console.log("Sending image edit request with params:", {
-          model: "gpt-image-1",
-          images: `${imgFiles.length} images`,
-          usingMask: userProvidedMask ? "yes" : "no",
-          prompt,
-          n,
-          size,
-          quality
-        });
-        
-        // Build the edit params object
-        const editParams: any = {
-          model: "gpt-image-1",
-          image: uploadables,
-          prompt: finalPrompt,
-          n,
-          // Convert size to a compatible format for the API
-          size: size === "auto" ? "1024x1024" : size,
-          quality: (quality || "high") as "auto" | "high" | "medium" | "low"
-        };
-        
-        // Only include mask if user provided one
-        if (userProvidedMask && maskPath) {
-          const maskUpload = await toUploadable(maskPath);
-          editParams.mask = maskUpload;
-        }
-        
-        // OpenAI call
-        // @ts-ignore - The OpenAI SDK types don't include all supported sizes
-        const response = await openai.images.edit(editParams).catch(err => {
-          // Log error to our API logger
-          log({
-            ts: new Date().toISOString(),
-            direction: "error",
-            payload: {
-              message: err.message,
-              code: err.code,
-              param: err.param,
-              type: err.type,
-              status: err.status
-            }
-          });
-          throw err;
-        });
-        
-        // Log the response to our API logger
-        log({
-          ts: new Date().toISOString(),
-          direction: "response",
-          payload: {
-            status: response ? "ok" : "unknown",
-            created: response.created,
-            dataCount: response.data?.length || 0,
-            dataInfo: response.data?.map(d => ({
-              b64_json: d.b64_json ? `${d.b64_json.substring(0, 20)}... (${d.b64_json.length} bytes)` : null,
-              url: d.url ? `${d.url.substring(0, 30)}...` : null
-            })) || []
-          }
-        });
-        
-        console.log("OpenAI image edit API response:", JSON.stringify({
-          created: response.created,
-          data: response.data?.map((d: any) => ({
-            b64_json: d.b64_json ? "data exists" : "no data",
-            url: d.url ? "url exists" : "no url"
-          })) || []
-        }, null, 2));
-
-        // Check if response has data
-        if (!response.data || response.data.length === 0) {
-          throw new Error("No edited images were generated");
-        }
-        
-        // Process and store the response
-        const generatedImages = response.data.map((image: any, index: number) => {
-          // Use base64 data from response
-          const imageUrl = `data:image/png;base64,${image.b64_json}`;
-          
-          // Create ID based on the prompt for better readability
-          const promptBasedId = `img_${createFileSafeNameFromPrompt(prompt)}_${index}`;
-          
-          const newImage = {
-            id: promptBasedId,
-            url: imageUrl,
-            prompt: prompt,
-            size: size,
-            model: "gpt-image-1",
-            createdAt: new Date().toISOString(),
-            sourceThumb: sourceThumb,
-            sourceImage: sourceImage
-          };
-          
-          // Store the image in our storage
-          storage.saveImage(newImage);
-          
-          return newImage;
-        });
-        
-        // Update job with results
-        job.status = "done";
-        job.result = generatedImages;
-        console.log(`Job ${jobId} completed successfully with ${generatedImages.length} images`);
-        
-        // Cleanup temp files after a delay (10 minutes)
-        setTimeout(() => {
-          try {
-            for (const p of imgPaths) {
-              if (fs.existsSync(p)) {
-                fs.unlinkSync(p);
-              }
-            }
-            if (maskPath && fs.existsSync(maskPath)) {
-              fs.unlinkSync(maskPath);
-            }
-            console.log(`Job ${jobId}: Cleaned up temporary files`);
-          } catch (cleanupErr) {
-            console.error(`Job ${jobId}: Error during file cleanup:`, cleanupErr);
-          }
-        }, 10 * 60 * 1000); // 10 minutes
-        
-      } catch (error) {
-        // Make sure to clean up temp directory even if there's an error
-        if (fs.existsSync(tmpDir)) {
-          fs.readdirSync(tmpDir).forEach((file: string) => {
-            fs.unlinkSync(path.join(tmpDir, file));
-          });
-        }
-        throw error;
+      // Convert uploaded files to base64
+      const images: string[] = [];
+      for (const file of imgFiles) {
+        const base64 = `data:image/${file.mimetype.split('/')[1]};base64,${file.buffer.toString('base64')}`;
+        images.push(base64);
       }
+      
+      // Convert mask to base64 if provided
+      let mask: string | undefined;
+      if (maskFile) {
+        mask = `data:image/${maskFile.mimetype.split('/')[1]};base64,${maskFile.buffer.toString('base64')}`;
+      }
+      
+      // Import the unified handler
+      const { handleImageEdit } = await import('./handlers/unified-image-handler');
+      
+      console.log(`Job ${jobId}: Processing image edit with model: ${modelKey}`);
+      
+      // Build request data
+      const requestData = {
+        prompt,
+        modelKey,
+        images,
+        mask,
+        size,
+        quality,
+        n,
+        kavakStyle,
+        ...req.body // Include any other model-specific parameters
+      };
+      
+      // Use the unified handler
+      const generatedImages = await handleImageEdit(requestData);
+      console.log(`Job ${jobId}: Generated ${generatedImages.length} edited images`);
+      
+      // Update job with results
+      job.status = "done";
+      job.result = generatedImages;
+      
     } catch (error: any) {
       console.error(`Job ${jobId} error:`, error);
       job.status = "error";

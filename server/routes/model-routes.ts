@@ -1,7 +1,8 @@
 import { Router } from 'express';
-import { models, openaiSchema, ModelConfig } from '../config/models';
+import { models, openaiSchema, falSchema, ModelConfig } from '../config/models';
 import fetch from 'node-fetch';
 import { log } from '../logger';
+import { providerRegistry } from '../providers/provider-registry';
 
 const router = Router();
 
@@ -40,7 +41,7 @@ export async function initializeModels() {
           throw new Error(`Failed to fetch model schema: ${response.statusText}`);
         }
 
-        const data = await response.json();
+        const data = await response.json() as any;
         if (!data || !data.latest_version) {
           throw new Error(`Invalid response from Replicate API for model ${model.slug}`);
         }
@@ -100,6 +101,8 @@ router.get('/models', (req, res) => {
         } else if (model.provider === 'replicate') {
           const cached = modelCache.get(model.key);
           schema = cached?.schema || model.schema;
+        } else if (model.provider === 'fal') {
+          schema = falSchema;
         }
         
         return {
@@ -108,7 +111,8 @@ router.get('/models', (req, res) => {
           schema,
           visible: model.visible || [],
           defaults: model.defaults || {},
-          description: model.description || ''
+          description: model.description || '',
+          supportsEdit: providerRegistry.modelSupportsEdit(model.key)
         };
       });
     

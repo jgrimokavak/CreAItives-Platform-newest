@@ -3,7 +3,7 @@
 // Define the model interface
 export interface ModelConfig {
   key: string;
-  provider: 'openai' | 'replicate';
+  provider: 'openai' | 'replicate' | 'fal';
   visible: string[];
   description: string;
   slug?: string;
@@ -66,6 +66,40 @@ export const models: ModelConfig[] = [
     },
     visible: ["prompt", "aspect_ratio", "seed", "prompt_upsampling"],
     description: "Flux‑Kontext‑Max – advanced image editing with contextual understanding."
+  },
+  // fal.ai models
+  {
+    key: "flux-dev",
+    provider: "fal",
+    visible: ["prompt", "aspect_ratio", "steps", "guidance_scale", "seed"],
+    description: "Flux Dev – high-quality open model from Black Forest Labs via fal.ai",
+    defaults: {
+      steps: 25,
+      guidance_scale: 7.5,
+      safety_tolerance: 2
+    }
+  },
+  {
+    key: "stable-diffusion-xl",
+    provider: "fal",
+    visible: ["prompt", "aspect_ratio", "steps", "guidance_scale", "seed"],
+    description: "SDXL – Stable Diffusion XL for high-quality generation via fal.ai",
+    defaults: {
+      steps: 30,
+      guidance_scale: 7.5,
+      safety_tolerance: 2
+    }
+  },
+  {
+    key: "fast-sdxl",
+    provider: "fal",
+    visible: ["prompt", "aspect_ratio", "steps", "guidance_scale", "seed"],
+    description: "Fast SDXL – Lightning-fast image generation via fal.ai",
+    defaults: {
+      steps: 8,
+      guidance_scale: 2.5,
+      safety_tolerance: 2
+    }
   }
 ];
 
@@ -97,6 +131,39 @@ export const openaiSchema = {
       type: "string",
       enum: ["auto", "transparent", "opaque"],
       description: "Background transparency (GPT-Image-1 only)"
+    }
+  },
+  required: ["prompt"]
+};
+
+// Schema for fal.ai models
+export const falSchema = {
+  type: "object",
+  properties: {
+    prompt: {
+      type: "string",
+      description: "Text description of the desired image(s)"
+    },
+    aspect_ratio: {
+      type: "string",
+      enum: ["1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3"],
+      description: "Aspect ratio of the generated image"
+    },
+    steps: {
+      type: "integer",
+      minimum: 1,
+      maximum: 100,
+      description: "Number of inference steps"
+    },
+    guidance_scale: {
+      type: "number",
+      minimum: 1,
+      maximum: 20,
+      description: "Guidance scale for generation"
+    },
+    seed: {
+      type: "integer",
+      description: "Random seed for reproducible generation"
     }
   },
   required: ["prompt"]

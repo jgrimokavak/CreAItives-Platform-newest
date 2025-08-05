@@ -22,8 +22,9 @@ Preferred communication style: Simple, everyday language.
 ### Key Components and Technical Implementations
 
 #### AI Image Generation
-- **Models**: OpenAI GPT-Image-1, Replicate Imagen-3 (for cars), Replicate Flux-Pro 1.1, Replicate Flux-Kontext-Max (for editing), Topaz Labs Upscale API.
+- **Models**: OpenAI GPT-Image-1, Replicate Imagen-3 (for cars), Replicate Flux-Pro 1.1, Replicate Flux-Kontext-Max (for editing), Topaz Labs Upscale API, fal.ai Flux-Dev, fal.ai Stable Diffusion XL, fal.ai Fast SDXL.
 - **Features**: Text-to-image, advanced image editing with masks, professional upscaling, car-specific generation with database attributes, batch processing (up to 50 cars), real-time progress via WebSocket, localized AI disclaimers, KAVAK-style photography effects.
+- **Architecture**: Unified provider adapter pattern for frictionless model addition - new models can be added with minimal configuration changes.
 
 #### AI Video Generation
 - **Engine**: Google Vertex AI Veo models (Veo 3, Veo 3 Fast, Veo 2).
@@ -46,7 +47,12 @@ Preferred communication style: Simple, everyday language.
 
 #### Core Architectural Decisions
 - **Database**: Drizzle ORM with PostgreSQL for type-safe queries and flexible schema management.
-- **AI Model Integration**: Multi-provider approach with a unified API layer to reduce vendor lock-in and optimize model selection.
+- **AI Model Integration**: Multi-provider approach with a unified API layer to reduce vendor lock-in and optimize model selection. Provider adapter pattern enables frictionless model addition:
+  - New providers can be added by implementing the BaseProvider interface
+  - Models are centrally configured in server/config/models.ts
+  - Frontend automatically discovers available models via /api/models endpoint
+  - Dynamic form generation based on model schemas
+  - Unified image handler routes requests to appropriate providers
 - **Email Rendering**: MJML chosen for robust cross-client compatibility.
 - **Real-time Updates**: Custom WebSocket implementation for job progress and gallery updates, with session-based authentication for security.
 - **File Storage**: AWS S3 with presigned URLs for scalable and secure client uploads.
@@ -59,6 +65,7 @@ Preferred communication style: Simple, everyday language.
 - **Replicate API**: Imagen-3, Flux-Pro 1.1, Flux-Kontext-Max, Topaz Labs Upscale API.
 - **Google Vertex AI**: Veo video generation models (Veo 2, Veo 3, Veo 3 Fast).
 - **Google Cloud Storage**: For video file storage and management.
+- **fal.ai API**: Flux-Dev, Stable Diffusion XL, Fast SDXL (integrated via provider adapter pattern).
 
 ### Data Sources
 - **Google Sheets**: Live car database (14,584+ entries) and dynamic color management (41+ colors).
