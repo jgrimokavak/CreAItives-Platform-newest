@@ -1,9 +1,4 @@
 export const modelCatalog = {
-  "gpt-image-1": {
-    label: "GPT-Image-1 (OpenAI)",
-    description: "Most accurate, but slow.",
-    visible: ["prompt", "size", "quality", "n", "kavakStyle"] as string[]
-  },
   "imagen-4": {
     label: "Imagen-4 (Google)",
     description: "Latest Google model with improved quality and accuracy.",
@@ -14,25 +9,30 @@ export const modelCatalog = {
     description: "Accurate, fast, consistent, but not very creative.",
     visible: ["prompt", "aspect_ratio", "negative_prompt", "kavakStyle"] as string[]
   },
-  "flux-pro": {
-    label: "Flux-Pro (Black Forest Labs)",
-    description: "Fast, creative, high-quality; less prompt-accurate.",
-    visible: ["prompt", "aspect_ratio", "seed", "kavakStyle"] as string[]
+  "gpt-image-1": {
+    label: "GPT-Image-1 (OpenAI)",
+    description: "Most accurate, but slow.",
+    visible: ["prompt", "size", "quality", "n", "kavakStyle"] as string[]
   },
-  "flux-kontext-max": {
-    label: "Flux-Kontext-Max (Black Forest Labs)",
-    description: "Advanced image editing with contextual understanding.",
-    visible: ["prompt", "aspect_ratio", "seed", "prompt_upsampling"] as string[]
+  "wan-2.2": {
+    label: "WAN-2.2 (Pruna AI)",
+    description: "This model generates beautiful cinematic 2 megapixel images in 3-4 seconds",
+    visible: ["prompt", "aspect_ratio", "seed", "juiced"] as string[]
   },
   "flux-krea-dev": {
     label: "Flux-Krea-Dev (Black Forest Labs)",
     description: "FLUX.1 Krea [dev] is a new state-of-the-art open-weights model for text-to-image generation that overcomes the oversaturated 'AI look' to achieve new levels of photorealism with its distinctive aesthetic approach.",
     visible: ["prompt", "aspect_ratio", "Image", "seed", "num_outputs", "go_fast"] as string[]
   },
-  "wan-2.2": {
-    label: "WAN-2.2 (Pruna AI)",
-    description: "This model generates beautiful cinematic 2 megapixel images in 3-4 seconds",
-    visible: ["prompt", "aspect_ratio", "seed", "juiced"] as string[]
+  "flux-kontext-max": {
+    label: "Flux-Kontext-Max (Black Forest Labs)",
+    description: "Advanced image editing with contextual understanding.",
+    visible: ["prompt", "aspect_ratio", "seed", "prompt_upsampling"] as string[]
+  },
+  "flux-pro": {
+    label: "Flux-Pro (Black Forest Labs)",
+    description: "Fast, creative, high-quality; less prompt-accurate.",
+    visible: ["prompt", "aspect_ratio", "seed", "kavakStyle"] as string[]
   }
 };
 
