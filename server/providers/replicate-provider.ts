@@ -38,6 +38,20 @@ export class ReplicateProvider extends BaseProvider {
       ...params,
       prompt 
     };
+
+    // Type conversion for flux-kontext-max specific parameters
+    if (modelKey === 'flux-kontext-max') {
+      console.log(`[GENERATE] BEFORE type conversion - prompt_upsampling: ${body.prompt_upsampling} (${typeof body.prompt_upsampling}), safety_tolerance: ${body.safety_tolerance} (${typeof body.safety_tolerance})`);
+      
+      if (body.prompt_upsampling !== undefined) {
+        body.prompt_upsampling = body.prompt_upsampling === 'true' || body.prompt_upsampling === true;
+      }
+      if (body.safety_tolerance !== undefined) {
+        body.safety_tolerance = parseInt(body.safety_tolerance.toString());
+      }
+      
+      console.log(`[GENERATE] AFTER type conversion - prompt_upsampling: ${body.prompt_upsampling} (${typeof body.prompt_upsampling}), safety_tolerance: ${body.safety_tolerance} (${typeof body.safety_tolerance})`);
+    }
     
     log({
       ts: new Date().toISOString(),
@@ -135,6 +149,20 @@ export class ReplicateProvider extends BaseProvider {
       input_image: images[0], // flux-kontext-max only supports single image
       mask: mask
     };
+
+    // Type conversion for flux-kontext-max specific parameters
+    if (modelKey === 'flux-kontext-max') {
+      console.log(`[EDIT] BEFORE type conversion - prompt_upsampling: ${body.prompt_upsampling} (${typeof body.prompt_upsampling}), safety_tolerance: ${body.safety_tolerance} (${typeof body.safety_tolerance})`);
+      
+      if (body.prompt_upsampling !== undefined) {
+        body.prompt_upsampling = body.prompt_upsampling === 'true' || body.prompt_upsampling === true;
+      }
+      if (body.safety_tolerance !== undefined) {
+        body.safety_tolerance = parseInt(body.safety_tolerance.toString());
+      }
+      
+      console.log(`[EDIT] AFTER type conversion - prompt_upsampling: ${body.prompt_upsampling} (${typeof body.prompt_upsampling}), safety_tolerance: ${body.safety_tolerance} (${typeof body.safety_tolerance})`);
+    }
     
     log({
       ts: new Date().toISOString(),
