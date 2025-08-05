@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { UseFormReturn } from "react-hook-form";
 import { GenericFormValues } from "@/lib/formSchemas";
+import ReferenceImageUpload from "@/components/ReferenceImageUpload";
 
 interface DynamicFormProps {
   modelKey: ModelKey;
@@ -392,25 +393,11 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form, availableMode
             <FormItem className="space-y-1.5">
               <FormLabel className="text-sm font-medium">Reference Image (Optional)</FormLabel>
               <FormControl>
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      const reader = new FileReader();
-                      reader.onload = (event) => {
-                        field.onChange(event.target?.result as string);
-                      };
-                      reader.readAsDataURL(file);
-                    }
-                  }}
-                  className="h-9 text-sm file:mr-3 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                <ReferenceImageUpload
+                  value={field.value as string}
+                  onChange={field.onChange}
                 />
               </FormControl>
-              <p className="text-xs text-muted-foreground">
-                Upload an image to use as reference for img2img generation
-              </p>
             </FormItem>
           )}
         />
