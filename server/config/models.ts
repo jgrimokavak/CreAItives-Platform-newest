@@ -145,6 +145,7 @@ export const models: ModelConfig[] = [
     key: "flux-krea-dev",
     provider: "replicate",
     slug: "black-forest-labs/flux-krea-dev",
+    version: "ce472e62d34a1f4e5415eb704a032ecf118f067345ef4a9cc1913d01e369b7a3",
     schema: fluxKreaDevSchema,
     defaults: {
       prompt_strength: 0.8,

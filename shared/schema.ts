@@ -65,6 +65,10 @@ export const generateImageSchema = z.object({
   images: z.array(z.string()).optional(), // For image editing
   mask: z.string().optional(), // For image editing mask
   input_image: z.string().optional(), // For flux-kontext-max single image input
+  // Flux-krea-dev specific fields
+  Image: z.string().optional(), // For flux-krea-dev img2img (capital I as per spec)
+  num_outputs: z.number().int().min(1).max(4).optional(), // For flux-krea-dev
+  go_fast: z.boolean().optional(), // For flux-krea-dev
   // KAVAK style toggle
   kavakStyle: z.boolean().optional().default(false)
 });
