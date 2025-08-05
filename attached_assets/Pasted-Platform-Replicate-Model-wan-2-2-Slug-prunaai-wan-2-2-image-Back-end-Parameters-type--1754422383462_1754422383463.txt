@@ -1,0 +1,109 @@
+Platform: Replicate
+Model: wan-2.2
+Slug: prunaai/wan-2.2-image
+Back-end Parameters:
+{
+  "type": "object",
+  "title": "Input",
+  "required": [
+    "prompt"
+  ],
+  "properties": {
+    "seed": {
+      "type": "integer",
+      "title": "Seed",
+      "x-order": 4,
+      "nullable": true,
+      "description": "Random seed. Set for reproducible generation"
+    },
+    "juiced": {
+      "type": "boolean",
+      "title": "Juiced",
+      "default": false,
+      "x-order": 1,
+      "description": "Faster inference with additional optimizations."
+    },
+    "prompt": {
+      "type": "string",
+      "title": "Prompt",
+      "x-order": 0,
+      "description": "Text prompt for image generation"
+    },
+    "megapixels": {
+      "enum": [
+        1,
+        2
+      ],
+      "type": "integer",
+      "title": "megapixels",
+      "description": "Approximate number of megapixels for generated image",
+      "default": 2,
+      "x-order": 3
+    },
+    "aspect_ratio": {
+      "enum": [
+        "1:1",
+        "16:9",
+        "9:16",
+        "4:3",
+        "3:4",
+        "21:9"
+      ],
+      "type": "string",
+      "title": "aspect_ratio",
+      "description": "Aspect ratio for the generated image",
+      "default": "16:9",
+      "x-order": 2
+    },
+    "output_format": {
+      "enum": [
+        "png",
+        "jpg",
+        "webp"
+      ],
+      "type": "string",
+      "title": "output_format",
+      "description": "Format of the output images",
+      "default": "jpg",
+      "x-order": 5
+    },
+    "output_quality": {
+      "type": "integer",
+      "title": "Output Quality",
+      "default": 80,
+      "maximum": 100,
+      "minimum": 1,
+      "x-order": 6,
+      "description": "Quality when saving the output images, from 0 to 100. 100 is best quality, 0 is lowest quality. Not relevant for .png outputs"
+    }
+  }
+}
+
+
+Visible Front-end parameters: ["prompt", "aspect_ratio",  "seed", “juiced”]
+Defaults: 
+- megapixels: 2
+- output_format: png
+
+- Description: "This model generates beautiful cinematic 2 megapixel images in 3-4 seconds"
+
+More info:
+import { writeFile } from "fs/promises";
+import Replicate from "replicate";
+const replicate = new Replicate();
+
+const input = {
+    seed: 246764,
+    prompt: "A cinematic, photorealistic medium shot capturing the nostalgic warmth of a mid-2000s indie film. The focus is a cat with a messy cool platinum white fur, looking directly and intently into the camera lens with a knowing smirk, its head is looking up slightly. The cat wears an oversized band t-shirt that says “Wan can do Images\" in huge stylized text over a long-sleeved striped top and simple silver stud earrings. The lighting is soft, golden hour sunlight creating lens flare and illuminating dust motes in the air. The background shows a blurred outdoor urban setting with graffiti-covered walls (the graffiti says “WAN\" in stylized graffiti lettering), rendered with a shallow depth of field. Natural film grain, a warm, slightly muted color palette, and sharp focus on its expressive eyes enhance the intimate, authentic feel",
+    aspect_ratio: "4:3"
+};
+
+const output = await replicate.run("prunaai/wan-2.2-image", { input });
+
+// To access the file URL:
+console.log(output.url());
+//=> "https://replicate.delivery/.../output.jpeg"
+
+// To write the file to disk:
+await writeFile("output.jpeg", output);
+//=> output.jpeg written to disk

@@ -13,6 +13,47 @@ export interface ModelConfig {
   unavailable?: boolean;
 }
 
+// Replicate schema for wan-2.2
+export const wan22Schema = {
+  type: "object",
+  properties: {
+    prompt: {
+      type: "string",
+      description: "Text prompt for image generation"
+    },
+    aspect_ratio: {
+      type: "string",
+      enum: ["1:1", "16:9", "9:16", "4:3", "3:4", "21:9"],
+      description: "Aspect ratio for the generated image"
+    },
+    seed: {
+      type: "integer",
+      description: "Random seed. Set for reproducible generation"
+    },
+    juiced: {
+      type: "boolean",
+      description: "Faster inference with additional optimizations."
+    },
+    megapixels: {
+      type: "integer",
+      enum: [1, 2],
+      description: "Approximate number of megapixels for generated image"
+    },
+    output_format: {
+      type: "string",
+      enum: ["png", "jpg", "webp"],
+      description: "Format of the output images"
+    },
+    output_quality: {
+      type: "integer",
+      minimum: 1,
+      maximum: 100,
+      description: "Quality when saving the output images, from 0 to 100. 100 is best quality, 0 is lowest quality. Not relevant for .png outputs"
+    }
+  },
+  required: ["prompt"]
+};
+
 // Replicate schema for flux-krea-dev
 export const fluxKreaDevSchema = {
   type: "object",
@@ -155,6 +196,19 @@ export const models: ModelConfig[] = [
     },
     visible: ["prompt", "aspect_ratio", "Image", "seed", "num_outputs", "go_fast"],
     description: "FLUX.1 Krea [dev] is a new state-of-the-art open-weights model for text-to-image generation that overcomes the oversaturated 'AI look' to achieve new levels of photorealism with its distinctive aesthetic approach."
+  },
+  {
+    key: "wan-2.2",
+    provider: "replicate",
+    slug: "prunaai/wan-2.2-image",
+    schema: wan22Schema,
+    defaults: {
+      megapixels: 2,
+      output_format: "png",
+      output_quality: 80
+    },
+    visible: ["prompt", "aspect_ratio", "seed", "juiced"],
+    description: "This model generates beautiful cinematic 2 megapixel images in 3-4 seconds"
   }
 ];
 

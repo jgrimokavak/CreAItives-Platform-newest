@@ -40,6 +40,11 @@ export const modelSchemas = {
     num_outputs: z.number().int().min(1).max(4).optional(),
     go_fast: z.boolean().optional(),
   }),
+  "wan-2.2": commonSchema.extend({
+    aspect_ratio: z.enum(["1:1", "16:9", "9:16", "4:3", "3:4", "21:9"]),
+    seed: z.number().int().optional(),
+    juiced: z.boolean().optional(),
+  }),
 };
 
 // Default values for each model
@@ -81,6 +86,12 @@ export const modelDefaults = {
     go_fast: false,
     kavakStyle: false,
   },
+  "wan-2.2": {
+    aspect_ratio: "16:9",
+    seed: undefined,
+    juiced: false,
+    kavakStyle: false,
+  },
 };
 
 // Type helper to get the correct schema type based on model key
@@ -103,4 +114,6 @@ export type GenericFormValues = z.infer<typeof commonSchema> & {
   Image?: string;
   num_outputs?: number;
   go_fast?: boolean;
+  // wan-2.2 specific fields
+  juiced?: boolean;
 };

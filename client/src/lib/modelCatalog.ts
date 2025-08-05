@@ -28,6 +28,11 @@ export const modelCatalog = {
     label: "Flux-Krea-Dev (Black Forest Labs)",
     description: "FLUX.1 Krea [dev] is a new state-of-the-art open-weights model for text-to-image generation that overcomes the oversaturated 'AI look' to achieve new levels of photorealism with its distinctive aesthetic approach.",
     visible: ["prompt", "aspect_ratio", "Image", "seed", "num_outputs", "go_fast"] as string[]
+  },
+  "wan-2.2": {
+    label: "WAN-2.2 (Pruna AI)",
+    description: "This model generates beautiful cinematic 2 megapixel images in 3-4 seconds",
+    visible: ["prompt", "aspect_ratio", "seed", "juiced"] as string[]
   }
 };
 
@@ -50,3 +55,6 @@ export const imagenAspectRatios = ["1:1", "16:9", "9:16", "4:3", "3:4"];
 
 // Aspect ratio options for Flux-Krea-Dev
 export const fluxKreaDevAspectRatios = ["1:1", "16:9", "21:9", "3:2", "2:3", "4:5", "5:4", "3:4", "4:3", "9:16", "9:21"];
+
+// Aspect ratio options for WAN-2.2
+export const wan22AspectRatios = ["1:1", "16:9", "9:16", "4:3", "3:4", "21:9"];

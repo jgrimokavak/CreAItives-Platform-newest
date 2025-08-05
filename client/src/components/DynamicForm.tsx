@@ -1,5 +1,5 @@
 import React from "react";
-import { ModelKey, modelCatalog, fluxAspectRatios, imagenAspectRatios, fluxKontextAspectRatios } from "@/lib/modelCatalog";
+import { ModelKey, modelCatalog, fluxAspectRatios, imagenAspectRatios, fluxKontextAspectRatios, wan22AspectRatios } from "@/lib/modelCatalog";
 import {
   FormField,
   FormItem,
@@ -191,6 +191,17 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form, availableMode
                            ratio === "3:4" ? "3:4 (Portrait)" : ratio}
                         </SelectItem>
                       ))
+                    ) : modelKey === "wan-2.2" ? (
+                      wan22AspectRatios.map(ratio => (
+                        <SelectItem key={ratio} value={ratio}>
+                          {ratio} {ratio === "1:1" ? "(Square)" : 
+                                  ratio === "16:9" ? "(Landscape)" : 
+                                  ratio === "9:16" ? "(Portrait)" : 
+                                  ratio === "4:3" ? "(Classic)" : 
+                                  ratio === "3:4" ? "(Portrait)" : 
+                                  ratio === "21:9" ? "(Ultra-wide)" : ""}
+                        </SelectItem>
+                      ))
                     ) : (
                       imagenAspectRatios.map(ratio => (
                         <SelectItem key={ratio} value={ratio}>
@@ -234,6 +245,9 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form, availableMode
                     )}
                     {field.value === "4:5" && (
                       <div className="w-6 h-8 bg-primary/20 rounded"></div>
+                    )}
+                    {field.value === "21:9" && (
+                      <div className="w-12 h-4 bg-primary/20 rounded"></div>
                     )}
                   </div>
                 )}
@@ -450,6 +464,31 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form, availableMode
                   checked={field.value as boolean}
                   onCheckedChange={field.onChange}
                   className="data-[state=checked]:bg-purple-600"
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+      )}
+
+      {/* Juiced toggle for wan-2.2 */}
+      {fields.includes("juiced") && (
+        <FormField
+          control={form.control}
+          name={"juiced" as FormFieldName}
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm space-y-0 mt-3 bg-gradient-to-r from-blue-50 to-cyan-50">
+              <div className="space-y-0.5">
+                <FormLabel className="text-sm font-medium">Juiced</FormLabel>
+                <p className="text-xs text-muted-foreground">
+                  Faster inference with additional optimizations for cinematic quality
+                </p>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value as boolean}
+                  onCheckedChange={field.onChange}
+                  className="data-[state=checked]:bg-blue-600"
                 />
               </FormControl>
             </FormItem>
