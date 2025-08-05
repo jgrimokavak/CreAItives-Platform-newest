@@ -15,19 +15,19 @@ export const modelCatalog = {
     visible: ["prompt", "aspect_ratio", "negative_prompt", "kavakStyle"] as string[]
   },
   "flux-pro": {
-    label: "Flux-Pro (Black-forest-labs)",
+    label: "Flux-Pro (Black Forest Labs)",
     description: "Fast, creative, high-quality; less prompt-accurate.",
     visible: ["prompt", "aspect_ratio", "seed", "kavakStyle"] as string[]
   },
   "flux-kontext-max": {
-    label: "Flux-Kontext-Max (Black-forest-labs)",
+    label: "Flux-Kontext-Max (Black Forest Labs)",
     description: "Advanced image editing with contextual understanding.",
     visible: ["prompt", "aspect_ratio", "seed", "prompt_upsampling"] as string[]
   },
   "flux-krea-dev": {
-    label: "Flux-Krea-Dev (Black-forest-labs)",
+    label: "Flux-Krea-Dev (Black Forest Labs)",
     description: "State-of-the-art model that overcomes the oversaturated 'AI look' to achieve new levels of photorealism.",
-    visible: ["prompt", "aspect_ratio", "image", "seed", "num_outputs", "go_fast"] as string[]
+    visible: ["prompt", "aspect_ratio", "image", "seed", "n", "quality"] as string[]
   }
 };
 

@@ -14,7 +14,7 @@ import {
 const getProviderName = (modelKey: ModelKey): string => {
   if (modelKey === "gpt-image-1") return "OpenAI";
   if (modelKey.startsWith("imagen-")) return "Google";
-  if (modelKey === "flux-pro" || modelKey === "flux-kontext-max") return "Black Forest Labs";
+  if (modelKey === "flux-pro" || modelKey === "flux-kontext-max" || modelKey === "flux-krea-dev") return "Black Forest Labs";
   return "AI";
 };
 

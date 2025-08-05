@@ -34,7 +34,7 @@ export type User = typeof users.$inferSelect;
 
 // Image generation schema
 export const generateSchema = z.object({
-  modelKey: z.enum(["gpt-image-1", "imagen-3", "imagen-4", "flux-pro", "flux-kontext-max"]),
+  modelKey: z.enum(["gpt-image-1", "imagen-3", "imagen-4", "flux-pro", "flux-kontext-max", "flux-krea-dev"]),
   inputs: z.record(z.any())
 });
 
@@ -45,7 +45,7 @@ export const generateImageSchema = z.object({
   // Common fields for all models
   prompt: z.string().min(1).max(32000),
   // Updated to match the new model keys
-  modelKey: z.enum(["gpt-image-1", "imagen-3", "imagen-4", "flux-pro", "flux-kontext-max"]),
+  modelKey: z.enum(["gpt-image-1", "imagen-3", "imagen-4", "flux-pro", "flux-kontext-max", "flux-krea-dev"]),
   // OpenAI-specific parameters (only validated when OpenAI model is selected)
   size: z.enum(["auto", "1024x1024", "1536x1024", "1024x1536", "1792x1024", "1024x1792"]).optional(),
   quality: z.enum(["auto", "standard", "hd", "high", "medium", "low"]).optional(),
@@ -98,6 +98,14 @@ export const modelFormSchemas = {
     safety_tolerance: z.number().int().min(0).max(2).optional(),
     seed: z.number().int().optional(),
     prompt_upsampling: z.boolean().optional(),
+  }),
+  "flux-krea-dev": z.object({
+    prompt: z.string().min(1).max(32000),
+    aspect_ratio: z.enum(["1:1", "16:9", "21:9", "3:2", "2:3", "4:5", "5:4", "3:4", "4:3", "9:16", "9:21"]),
+    image: z.string().optional(), // For img2img mode
+    seed: z.number().int().optional(),
+    n: z.number().int().min(1).max(4).optional(), // Maps to num_outputs
+    quality: z.enum(["auto", "high", "medium", "low"]).optional(), // Maps to go_fast
   })
 };
 

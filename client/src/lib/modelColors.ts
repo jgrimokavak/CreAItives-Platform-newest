@@ -60,7 +60,7 @@ export const getModelColors = (modelKey: string) => {
     return providerColors["google-imagen-4"];
   } else if (modelKey === "imagen-3") {
     return providerColors["google-imagen-3"];
-  } else if (modelKey === "flux-pro") {
+  } else if (modelKey === "flux-pro" || modelKey === "flux-kontext-max" || modelKey === "flux-krea-dev") {
     return providerColors["black-forest-labs"];
   }
   
