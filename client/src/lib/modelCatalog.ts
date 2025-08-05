@@ -23,21 +23,6 @@ export const modelCatalog = {
     label: "Flux-Kontext-Max (Black-forest-labs)",
     description: "Advanced image editing with contextual understanding.",
     visible: ["prompt", "aspect_ratio", "seed", "prompt_upsampling"] as string[]
-  },
-  "flux-dev": {
-    label: "Flux Dev (fal.ai)",
-    description: "High-quality open model from Black Forest Labs via fal.ai",
-    visible: ["prompt", "aspect_ratio", "steps", "guidance_scale", "seed"] as string[]
-  },
-  "stable-diffusion-xl": {
-    label: "SDXL (fal.ai)",
-    description: "Stable Diffusion XL for high-quality generation via fal.ai",
-    visible: ["prompt", "aspect_ratio", "steps", "guidance_scale", "seed"] as string[]
-  },
-  "fast-sdxl": {
-    label: "Fast SDXL (fal.ai)",
-    description: "Lightning-fast image generation via fal.ai",
-    visible: ["prompt", "aspect_ratio", "steps", "guidance_scale", "seed"] as string[]
   }
 };
 

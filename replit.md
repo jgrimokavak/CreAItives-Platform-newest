@@ -22,7 +22,7 @@ Preferred communication style: Simple, everyday language.
 ### Key Components and Technical Implementations
 
 #### AI Image Generation
-- **Models**: OpenAI GPT-Image-1, Replicate Imagen-3 (for cars), Replicate Flux-Pro 1.1, Replicate Flux-Kontext-Max (for editing), Topaz Labs Upscale API, fal.ai Flux-Dev, fal.ai Stable Diffusion XL, fal.ai Fast SDXL.
+- **Models**: OpenAI GPT-Image-1, Replicate Imagen-3 (for cars), Replicate Flux-Pro 1.1, Replicate Flux-Kontext-Max (for editing), Topaz Labs Upscale API.
 - **Features**: Text-to-image, advanced image editing with masks, professional upscaling, car-specific generation with database attributes, batch processing (up to 50 cars), real-time progress via WebSocket, localized AI disclaimers, KAVAK-style photography effects.
 - **Architecture**: Unified provider adapter pattern for frictionless model addition - new models can be added with minimal configuration changes.
 
@@ -65,7 +65,7 @@ Preferred communication style: Simple, everyday language.
 - **Replicate API**: Imagen-3, Flux-Pro 1.1, Flux-Kontext-Max, Topaz Labs Upscale API.
 - **Google Vertex AI**: Veo video generation models (Veo 2, Veo 3, Veo 3 Fast).
 - **Google Cloud Storage**: For video file storage and management.
-- **fal.ai API**: Flux-Dev, Stable Diffusion XL, Fast SDXL (integrated via provider adapter pattern).
+
 
 ### Data Sources
 - **Google Sheets**: Live car database (14,584+ entries) and dynamic color management (41+ colors).

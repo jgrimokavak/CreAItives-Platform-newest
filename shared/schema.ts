@@ -34,7 +34,7 @@ export type User = typeof users.$inferSelect;
 
 // Image generation schema
 export const generateSchema = z.object({
-  modelKey: z.enum(["gpt-image-1", "imagen-3", "imagen-4", "flux-pro"]),
+  modelKey: z.enum(["gpt-image-1", "imagen-3", "imagen-4", "flux-pro", "flux-kontext-max"]),
   inputs: z.record(z.any())
 });
 

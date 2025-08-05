@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { models, openaiSchema, falSchema, ModelConfig } from '../config/models';
+import { models, openaiSchema, ModelConfig } from '../config/models';
 import fetch from 'node-fetch';
 import { log } from '../logger';
 import { providerRegistry } from '../providers/provider-registry';
@@ -101,8 +101,6 @@ router.get('/models', (req, res) => {
         } else if (model.provider === 'replicate') {
           const cached = modelCache.get(model.key);
           schema = cached?.schema || model.schema;
-        } else if (model.provider === 'fal') {
-          schema = falSchema;
         }
         
         return {

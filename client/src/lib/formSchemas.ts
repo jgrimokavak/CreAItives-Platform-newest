@@ -33,24 +33,6 @@ export const modelSchemas = {
     safety_tolerance: z.number().int().min(0).max(6).optional(),
     output_format: z.enum(["png", "jpg"]).optional(),
   }),
-  "flux-dev": commonSchema.extend({
-    aspect_ratio: z.enum(["1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3"]),
-    steps: z.number().int().min(1).max(100).optional(),
-    guidance_scale: z.number().min(1).max(20).optional(),
-    seed: z.number().int().optional(),
-  }),
-  "stable-diffusion-xl": commonSchema.extend({
-    aspect_ratio: z.enum(["1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3"]),
-    steps: z.number().int().min(1).max(100).optional(),
-    guidance_scale: z.number().min(1).max(20).optional(),
-    seed: z.number().int().optional(),
-  }),
-  "fast-sdxl": commonSchema.extend({
-    aspect_ratio: z.enum(["1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3"]),
-    steps: z.number().int().min(1).max(100).optional(),
-    guidance_scale: z.number().min(1).max(20).optional(),
-    seed: z.number().int().optional(),
-  }),
 };
 
 // Default values for each model
@@ -84,27 +66,6 @@ export const modelDefaults = {
     output_format: "png", // Hardcoded as per requirements
     kavakStyle: false,
   },
-  "flux-dev": {
-    aspect_ratio: "1:1",
-    steps: 25,
-    guidance_scale: 7.5,
-    seed: undefined,
-    kavakStyle: false,
-  },
-  "stable-diffusion-xl": {
-    aspect_ratio: "1:1",
-    steps: 30,
-    guidance_scale: 7.5,
-    seed: undefined,
-    kavakStyle: false,
-  },
-  "fast-sdxl": {
-    aspect_ratio: "1:1",
-    steps: 8,
-    guidance_scale: 2.5,
-    seed: undefined,
-    kavakStyle: false,
-  },
 };
 
 // Type helper to get the correct schema type based on model key
@@ -123,6 +84,4 @@ export type GenericFormValues = z.infer<typeof commonSchema> & {
   safety_tolerance?: number;
   output_format?: string;
   kavakStyle?: boolean;
-  steps?: number;
-  guidance_scale?: number;
 };
