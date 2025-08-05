@@ -1,6 +1,6 @@
 import { users, images, videos, projects, pageSettings, type User, type UpsertUser, type GeneratedImage, type Video, type InsertVideo, type Project, type InsertProject, type PageSettings, type InsertPageSettings } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, isNull, isNotNull, and, ilike, lt, sql, or, not } from "drizzle-orm";
+import { eq, desc, asc, isNull, isNotNull, and, ilike, lt, sql, or, not } from "drizzle-orm";
 import * as fs from "fs";
 import * as path from "path";
 import { push } from "./ws";
@@ -176,9 +176,9 @@ export class DatabaseStorage implements IStorage {
     }
     
     if (sortOrder === 'asc') {
-      query = query.orderBy(users[sortBy]);
+      query = query.orderBy(asc(users[sortBy as keyof typeof users]));
     } else {
-      query = query.orderBy(desc(users[sortBy]));
+      query = query.orderBy(desc(users[sortBy as keyof typeof users]));
     }
     
     return await query;
@@ -650,7 +650,7 @@ export class DatabaseStorage implements IStorage {
 
   // Video methods
   async createVideo(video: InsertVideo): Promise<Video> {
-    const [savedVideo] = await db.insert(videos).values(video).returning();
+    const [savedVideo] = await db.insert(videos).values([video]).returning();
     return savedVideo;
   }
 
@@ -670,7 +670,7 @@ export class DatabaseStorage implements IStorage {
 
   // Project methods
   async createProject(project: InsertProject): Promise<Project> {
-    const [created] = await db.insert(projects).values(project).returning();
+    const [created] = await db.insert(projects).values([project]).returning();
     return created;
   }
 
@@ -698,14 +698,7 @@ export class DatabaseStorage implements IStorage {
     await db.delete(projects).where(eq(projects.id, id));
   }
 
-  async updateVideo(id: string, updates: Partial<Video>): Promise<Video | undefined> {
-    const [updatedVideo] = await db
-      .update(videos)
-      .set(updates)
-      .where(eq(videos.id, id))
-      .returning();
-    return updatedVideo;
-  }
+
 
   // Page settings methods
   async getAllPageSettings(): Promise<PageSettings[]> {

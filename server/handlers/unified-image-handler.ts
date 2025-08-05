@@ -50,7 +50,8 @@ export async function handleImageGeneration(request: GenerateRequest): Promise<G
   
   // Convert to GeneratedImage format and save
   const generatedImages: GeneratedImage[] = result.images.map((image, index) => {
-    const promptBasedId = `img_${createFileSafeNameFromPrompt(prompt)}_${index}`;
+    const timestamp = Date.now();
+    const promptBasedId = `img_${timestamp}_${index}`;
     
     const newImage: GeneratedImage = {
       id: promptBasedId,
@@ -119,7 +120,8 @@ export async function handleImageEdit(request: EditRequest): Promise<GeneratedIm
   
   // Convert to GeneratedImage format and save
   const generatedImages: GeneratedImage[] = result.images.map((image, index) => {
-    const promptBasedId = `edit_${createFileSafeNameFromPrompt(prompt)}_${index}`;
+    const timestamp = Date.now();
+    const promptBasedId = `edit_${timestamp}_${index}`;
     
     const newImage: GeneratedImage = {
       id: promptBasedId,
