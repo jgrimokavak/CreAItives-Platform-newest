@@ -41,6 +41,15 @@ export const providerColors = {
     bgHover: "#e1bee7",
     text: "#7e57c2"
   },
+  // PrunaAI - Cinematic Blue/Teal color
+  "pruna-ai": {
+    light: "#0ea5e9", // Sky Blue
+    medium: "#0284c7",
+    dark: "#0369a1",
+    bg: "#e0f2fe",
+    bgHover: "#bae6fd",
+    text: "#0ea5e9"
+  },
   // Default colors (fallback)
   default: {
     light: "#6b7280", // Gray
@@ -62,6 +71,8 @@ export const getModelColors = (modelKey: string) => {
     return providerColors["google-imagen-3"];
   } else if (modelKey === "flux-pro" || modelKey === "flux-kontext-max" || modelKey === "flux-krea-dev") {
     return providerColors["black-forest-labs"];
+  } else if (modelKey === "wan-2.2") {
+    return providerColors["pruna-ai"];
   }
   
   return providerColors.default;

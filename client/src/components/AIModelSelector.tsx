@@ -1,5 +1,5 @@
 import React from "react";
-import { Check, Brain, Zap, Cpu, ChevronDown } from "lucide-react";
+import { Check, Brain, Zap, Cpu, ChevronDown, Film } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { modelCatalog, type ModelKey } from "@/lib/modelCatalog";
 import { getModelColors } from "@/lib/modelColors";
@@ -15,6 +15,7 @@ const getProviderName = (modelKey: ModelKey): string => {
   if (modelKey === "gpt-image-1") return "OpenAI";
   if (modelKey.startsWith("imagen-")) return "Google";
   if (modelKey === "flux-pro" || modelKey === "flux-kontext-max" || modelKey === "flux-krea-dev") return "Black Forest Labs";
+  if (modelKey === "wan-2.2") return "PrunaAI";
   return "AI";
 };
 
@@ -25,7 +26,9 @@ const getVersionLabel = (modelKey: ModelKey): string => {
     case "imagen-3": return "v3";
     case "flux-pro": return "v1.1";
     case "flux-kontext-max": return "Max";
+    case "flux-krea-dev": return "Dev";
     case "gpt-image-1": return "v1";
+    case "wan-2.2": return "v2.2";
     default: return "";
   }
 };
@@ -44,6 +47,8 @@ const getFeatureHighlight = (modelKey: ModelKey): string => {
     case "imagen-3": return "Balanced";
     case "flux-pro": return "Fast, creative";
     case "flux-kontext-max": return "Advanced editing";
+    case "flux-krea-dev": return "Photorealistic";
+    case "wan-2.2": return "Cinematic quality";
     default: return "";
   }
 };
@@ -101,6 +106,8 @@ export default function AIModelSelector({ value, onChange, className, availableM
                     <Brain className="h-4 w-4 text-white" />
                   ) : value.startsWith("imagen") ? (
                     <Zap className="h-4 w-4 text-white" />
+                  ) : value === "wan-2.2" ? (
+                    <Film className="h-4 w-4 text-white" />
                   ) : (
                     <Cpu className="h-4 w-4 text-white" />
                   )}
@@ -183,6 +190,8 @@ export default function AIModelSelector({ value, onChange, className, availableM
                       <Brain className="h-3.5 w-3.5 text-white" />
                     ) : modelKey.startsWith("imagen") ? (
                       <Zap className="h-3.5 w-3.5 text-white" />
+                    ) : modelKey === "wan-2.2" ? (
+                      <Film className="h-3.5 w-3.5 text-white" />
                     ) : (
                       <Cpu className="h-3.5 w-3.5 text-white" />
                     )}

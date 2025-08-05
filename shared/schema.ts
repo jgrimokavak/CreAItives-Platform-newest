@@ -34,7 +34,7 @@ export type User = typeof users.$inferSelect;
 
 // Image generation schema
 export const generateSchema = z.object({
-  modelKey: z.enum(["gpt-image-1", "imagen-3", "imagen-4", "flux-pro", "flux-kontext-max", "flux-krea-dev"]),
+  modelKey: z.enum(["gpt-image-1", "imagen-3", "imagen-4", "flux-pro", "flux-kontext-max", "flux-krea-dev", "wan-2.2"]),
   inputs: z.record(z.any())
 });
 
@@ -45,7 +45,7 @@ export const generateImageSchema = z.object({
   // Common fields for all models
   prompt: z.string().min(1).max(32000),
   // Updated to match the new model keys
-  modelKey: z.enum(["gpt-image-1", "imagen-3", "imagen-4", "flux-pro", "flux-kontext-max", "flux-krea-dev"]),
+  modelKey: z.enum(["gpt-image-1", "imagen-3", "imagen-4", "flux-pro", "flux-kontext-max", "flux-krea-dev", "wan-2.2"]),
   // OpenAI-specific parameters (only validated when OpenAI model is selected)
   size: z.enum(["auto", "1024x1024", "1536x1024", "1024x1536", "1792x1024", "1024x1792"]).optional(),
   quality: z.enum(["auto", "standard", "hd", "high", "medium", "low"]).optional(),
@@ -69,6 +69,8 @@ export const generateImageSchema = z.object({
   Image: z.string().optional(), // For flux-krea-dev img2img (capital I as per spec)
   num_outputs: z.number().int().min(1).max(4).optional(), // For flux-krea-dev
   go_fast: z.boolean().optional(), // For flux-krea-dev
+  // WAN-2.2 specific fields
+  juiced: z.boolean().optional(), // For wan-2.2
   // KAVAK style toggle
   kavakStyle: z.boolean().optional().default(false)
 });
@@ -110,6 +112,12 @@ export const modelFormSchemas = {
     seed: z.number().int().optional(),
     num_outputs: z.number().int().min(1).max(4).optional(),
     go_fast: z.boolean().optional(),
+  }),
+  "wan-2.2": z.object({
+    prompt: z.string().min(1).max(32000),
+    aspect_ratio: z.enum(["1:1", "16:9", "9:16", "4:3", "3:4", "21:9"]),
+    seed: z.number().int().optional(),
+    juiced: z.boolean().optional(),
   })
 };
 

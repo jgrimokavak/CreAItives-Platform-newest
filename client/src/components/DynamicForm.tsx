@@ -481,7 +481,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form, availableMode
               <div className="space-y-0.5">
                 <FormLabel className="text-sm font-medium">Juiced</FormLabel>
                 <p className="text-xs text-muted-foreground">
-                  Faster inference with additional optimizations for cinematic quality
+                  Apply bold cinematic enhancements: increased contrast, dramatic lighting, stylized color grading, and enhanced mood and atmosphere
                 </p>
               </div>
               <FormControl>

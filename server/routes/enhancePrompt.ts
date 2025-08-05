@@ -14,7 +14,7 @@ const promptCache = new NodeCache({
 // Schema for the request body
 const bodySchema = z.object({
   text: z.string().min(3),
-  model: z.enum(["gpt-image-1", "imagen-3", "imagen-4", "flux-pro", "flux-kontext-max", "flux-krea-dev"]),
+  model: z.enum(["gpt-image-1", "imagen-3", "imagen-4", "flux-pro", "flux-kontext-max", "flux-krea-dev", "wan-2.2"]),
 });
 
 // Model-specific templates
@@ -70,6 +70,15 @@ Return a JSON object with two keys:
       break;
     case "flux-pro":
       modelSpecificGuidance = "For Flux-Pro: Lean into lighting and realism enhancements. For car prompts, add \"modern car\" by default and include studio-like rendering terms if fitting (e.g. \"reflective floor\", \"white backdrop\").";
+      break;
+    case "flux-kontext-max":
+      modelSpecificGuidance = "For Flux-Kontext-Max: Focus on contextual editing and image-to-image transformations. Emphasize continuity with existing image elements while enhancing details and style.";
+      break;
+    case "flux-krea-dev":
+      modelSpecificGuidance = "For Flux-Krea-Dev: Prioritize photorealistic, non-oversaturated results. Add natural lighting, realistic textures, and avoid the typical 'AI look' with balanced composition and authentic colors.";
+      break;
+    case "wan-2.2":
+      modelSpecificGuidance = "For WAN-2.2: Focus on cinematic quality with dramatic lighting and mood. This model excels at creating beautiful, high-resolution images with rich atmospheric details. Emphasize visual drama, depth, and professional cinematography.";
       break;
     default:
       modelSpecificGuidance = "";
