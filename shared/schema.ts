@@ -102,10 +102,10 @@ export const modelFormSchemas = {
   "flux-krea-dev": z.object({
     prompt: z.string().min(1).max(32000),
     aspect_ratio: z.enum(["1:1", "16:9", "21:9", "3:2", "2:3", "4:5", "5:4", "3:4", "4:3", "9:16", "9:21"]),
-    image: z.string().optional(), // For img2img mode
+    Image: z.string().optional(), // For img2img mode (capital I as per spec)
     seed: z.number().int().optional(),
-    n: z.number().int().min(1).max(4).optional(), // Maps to num_outputs
-    quality: z.enum(["auto", "high", "medium", "low"]).optional(), // Maps to go_fast
+    num_outputs: z.number().int().min(1).max(4).optional(),
+    go_fast: z.boolean().optional(),
   })
 };
 

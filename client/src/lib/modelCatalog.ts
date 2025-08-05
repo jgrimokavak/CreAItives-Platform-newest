@@ -26,8 +26,8 @@ export const modelCatalog = {
   },
   "flux-krea-dev": {
     label: "Flux-Krea-Dev (Black Forest Labs)",
-    description: "State-of-the-art model that overcomes the oversaturated 'AI look' to achieve new levels of photorealism.",
-    visible: ["prompt", "aspect_ratio", "image", "seed", "n", "quality"] as string[]
+    description: "FLUX.1 Krea [dev] is a new state-of-the-art open-weights model for text-to-image generation that overcomes the oversaturated 'AI look' to achieve new levels of photorealism with its distinctive aesthetic approach.",
+    visible: ["prompt", "aspect_ratio", "Image", "seed", "num_outputs", "go_fast"] as string[]
   }
 };
 

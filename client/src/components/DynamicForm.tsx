@@ -384,10 +384,10 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form, availableMode
       )}
       
       {/* Image Upload for flux-krea-dev */}
-      {fields.includes("image") && (
+      {fields.includes("Image") && (
         <FormField
           control={form.control}
-          name={"image" as FormFieldName}
+          name={"Image" as FormFieldName}
           render={({ field }) => (
             <FormItem className="space-y-1.5">
               <FormLabel className="text-sm font-medium">Reference Image (Optional)</FormLabel>
@@ -411,6 +411,60 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form, availableMode
               <p className="text-xs text-muted-foreground">
                 Upload an image to use as reference for img2img generation
               </p>
+            </FormItem>
+          )}
+        />
+      )}
+
+      {/* Number of Outputs for flux-krea-dev */}
+      {fields.includes("num_outputs") && (
+        <FormField
+          control={form.control}
+          name={"num_outputs" as FormFieldName}
+          render={({ field }) => (
+            <FormItem className="space-y-1.5">
+              <FormLabel className="text-sm font-medium">Number of Outputs</FormLabel>
+              <Select
+                onValueChange={(value) => field.onChange(parseInt(value))}
+                defaultValue={field.value?.toString() || "1"}
+              >
+                <FormControl>
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue placeholder="How many images?" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="1">1 Image</SelectItem>
+                  <SelectItem value="2">2 Images</SelectItem>
+                  <SelectItem value="3">3 Images</SelectItem>
+                  <SelectItem value="4">4 Images</SelectItem>
+                </SelectContent>
+              </Select>
+            </FormItem>
+          )}
+        />
+      )}
+
+      {/* Go Fast toggle for flux-krea-dev */}
+      {fields.includes("go_fast") && (
+        <FormField
+          control={form.control}
+          name={"go_fast" as FormFieldName}
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm space-y-0 mt-3 bg-gradient-to-r from-purple-50 to-violet-50">
+              <div className="space-y-0.5">
+                <FormLabel className="text-sm font-medium">Go Fast</FormLabel>
+                <p className="text-xs text-muted-foreground">
+                  Run faster predictions with additional optimizations
+                </p>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value as boolean}
+                  onCheckedChange={field.onChange}
+                  className="data-[state=checked]:bg-purple-600"
+                />
+              </FormControl>
             </FormItem>
           )}
         />

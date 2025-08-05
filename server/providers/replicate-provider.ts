@@ -51,15 +51,10 @@ export class ReplicateProvider extends BaseProvider {
     
     // Field mapping for flux-krea-dev
     if (modelKey === 'flux-krea-dev') {
-      // Map "n" to "num_outputs"
-      if (body.n !== undefined) {
-        body.num_outputs = parseInt(body.n.toString());
-        delete body.n;
-      }
-      // Map "quality" to "go_fast" (higher quality = false for go_fast)
-      if (body.quality !== undefined) {
-        body.go_fast = body.quality === 'low' || body.quality === 'medium';
-        delete body.quality;
+      // Map "Image" to "image" (frontend uses capital I, backend expects lowercase)
+      if (body.Image !== undefined) {
+        body.image = body.Image;
+        delete body.Image;
       }
     }
     
