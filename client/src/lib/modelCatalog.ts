@@ -23,6 +23,11 @@ export const modelCatalog = {
     label: "Flux-Kontext-Max (Black-forest-labs)",
     description: "Advanced image editing with contextual understanding.",
     visible: ["prompt", "aspect_ratio", "seed", "prompt_upsampling"] as string[]
+  },
+  "flux-krea-dev": {
+    label: "Flux-Krea-Dev (Black-forest-labs)",
+    description: "State-of-the-art model that overcomes the oversaturated 'AI look' to achieve new levels of photorealism.",
+    visible: ["prompt", "aspect_ratio", "image", "seed", "num_outputs", "go_fast"] as string[]
   }
 };
 
@@ -42,3 +47,6 @@ export const fluxKontextAspectRatios = ["match_input_image", "1:1", "16:9", "9:1
 
 // Aspect ratio options for Imagen-3 and Imagen-4 (includes custom options)
 export const imagenAspectRatios = ["1:1", "16:9", "9:16", "4:3", "3:4"];
+
+// Aspect ratio options for Flux-Krea-Dev
+export const fluxKreaDevAspectRatios = ["1:1", "16:9", "21:9", "3:2", "2:3", "4:5", "5:4", "3:4", "4:3", "9:16", "9:21"];

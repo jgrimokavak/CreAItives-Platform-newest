@@ -43,13 +43,6 @@ export async function createPrediction(version: string, input: any): Promise<Rep
   
   console.log('FINAL REQUEST BODY to Replicate:', requestBody);
   
-  // Debug specific flux-kontext-max parameters
-  if (input.prompt_upsampling !== undefined || input.safety_tolerance !== undefined) {
-    console.log(`[FLUX-KONTEXT DEBUG] Final types before sending to Replicate:
-      - prompt_upsampling: ${input.prompt_upsampling} (${typeof input.prompt_upsampling})
-      - safety_tolerance: ${input.safety_tolerance} (${typeof input.safety_tolerance})`);
-  }
-  
   const response = await fetch('https://api.replicate.com/v1/predictions', {
     method: 'POST',
     headers: {

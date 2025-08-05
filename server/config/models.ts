@@ -13,6 +13,80 @@ export interface ModelConfig {
   unavailable?: boolean;
 }
 
+// Replicate schema for flux-krea-dev
+export const fluxKreaDevSchema = {
+  type: "object",
+  properties: {
+    prompt: {
+      type: "string",
+      description: "Prompt for generated image"
+    },
+    aspect_ratio: {
+      type: "string",
+      enum: ["1:1", "16:9", "21:9", "3:2", "2:3", "4:5", "5:4", "3:4", "4:3", "9:16", "9:21"],
+      description: "Aspect ratio for the generated image"
+    },
+    image: {
+      type: "string",
+      format: "uri",
+      description: "Input image for image to image mode. The aspect ratio of your output will match this image"
+    },
+    seed: {
+      type: "integer",
+      description: "Random seed. Set for reproducible generation"
+    },
+    num_outputs: {
+      type: "integer",
+      minimum: 1,
+      maximum: 4,
+      description: "Number of outputs to generate"
+    },
+    go_fast: {
+      type: "boolean",
+      description: "Run faster predictions with additional optimizations."
+    },
+    guidance: {
+      type: "number",
+      minimum: 0,
+      maximum: 10,
+      description: "Guidance for generated image. Lower values can give more realistic images. Good values to try are 2, 2.5, 3 and 3.5"
+    },
+    megapixels: {
+      type: "string",
+      enum: ["1", "0.25"],
+      description: "Approximate number of megapixels for generated image"
+    },
+    output_format: {
+      type: "string",
+      enum: ["webp", "jpg", "png"],
+      description: "Format of the output images"
+    },
+    output_quality: {
+      type: "integer",
+      minimum: 0,
+      maximum: 100,
+      description: "Quality when saving the output images, from 0 to 100. 100 is best quality, 0 is lowest quality. Not relevant for .png outputs"
+    },
+    prompt_strength: {
+      type: "number",
+      minimum: 0,
+      maximum: 1,
+      description: "Prompt strength when using img2img. 1.0 corresponds to full destruction of information in image"
+    },
+    num_inference_steps: {
+      type: "integer",
+      minimum: 1,
+      maximum: 50,
+      description: "Number of denoising steps. Recommended range is 28-50, and lower number of steps produce lower quality outputs, faster."
+    },
+    disable_safety_checker: {
+      type: "boolean",
+      description: "Disable safety checker for generated images."
+    }
+  },
+  required: ["prompt"]
+};
+
 export const models: ModelConfig[] = [
   {
     key: "gpt-image-1",
@@ -66,6 +140,20 @@ export const models: ModelConfig[] = [
     },
     visible: ["prompt", "aspect_ratio", "seed", "prompt_upsampling"],
     description: "Flux‑Kontext‑Max – advanced image editing with contextual understanding."
+  },
+  {
+    key: "flux-krea-dev",
+    provider: "replicate",
+    slug: "black-forest-labs/flux-krea-dev",
+    schema: fluxKreaDevSchema,
+    defaults: {
+      prompt_strength: 0.8,
+      num_inference_steps: 50,
+      guidance: 4.5,
+      output_format: "png"
+    },
+    visible: ["prompt", "aspect_ratio", "image", "seed", "num_outputs", "go_fast"],
+    description: "FLUX.1 Krea [dev] – state-of-the-art model that overcomes the oversaturated 'AI look' to achieve new levels of photorealism with its distinctive aesthetic approach."
   }
 ];
 
