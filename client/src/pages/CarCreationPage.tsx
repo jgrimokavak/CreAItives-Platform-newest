@@ -26,6 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
 import { useEditor } from '@/context/EditorContext';
 import { downloadImageMobile } from '@/utils/mobileDownload';
+import { useWebSocket } from '@/lib/websocket';
 
 // Import car angle SVG assets
 import defaultSvg from '@/assets/car-angles/default.svg';
@@ -78,6 +79,9 @@ const CarCreationPage: React.FC = () => {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const { setMode, setSourceImages } = useEditor();
+  
+  // Connect to WebSocket for real-time updates
+  useWebSocket();
   const [makes, setMakes] = useState<string[]>([]);
   const [models, setModels] = useState<string[]>([]);
   const [bodyStyles, setBodyStyles] = useState<string[]>([]);
@@ -134,6 +138,41 @@ const CarCreationPage: React.FC = () => {
   const watchBodyStyle = watch('body_style');
   const watchWheelColor = watch('wheel_color');
   const watchAdventureCladding = watch('has_adventure_cladding');
+  
+  // Listen for WebSocket gallery updates to refresh the image if it was just generated
+  useEffect(() => {
+    const handleGalleryUpdate = (event: CustomEvent) => {
+      if (event.detail?.type === 'created' && event.detail?.data?.image) {
+        const newImage = event.detail.data.image;
+        // If we just generated an image and it matches, update our local state
+        if (image && newImage.id === image.id) {
+          // Transform the WebSocket image data to match our GeneratedImage type
+          const transformedImage: GeneratedImage = {
+            id: newImage.id,
+            url: newImage.thumbUrl || newImage.url,
+            prompt: newImage.prompt,
+            size: newImage.size,
+            model: newImage.model,
+            createdAt: newImage.createdAt,
+            sourceThumb: undefined,
+            sourceImage: undefined,
+            width: newImage.width,
+            height: newImage.height,
+            thumbUrl: newImage.thumbUrl,
+            fullUrl: newImage.fullUrl,
+            starred: newImage.starred,
+            deletedAt: newImage.deletedAt
+          };
+          setImage(transformedImage);
+        }
+      }
+    };
+    
+    window.addEventListener('gallery-updated', handleGalleryUpdate as EventListener);
+    return () => {
+      window.removeEventListener('gallery-updated', handleGalleryUpdate as EventListener);
+    };
+  }, [image]);
 
   // Fetch makes
   const fetchMakes = async () => {

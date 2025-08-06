@@ -8,6 +8,7 @@ import EmptyState from "@/components/EmptyState";
 import { GeneratedImage } from "@/types/image";
 import NavTabs, { TabContent } from "@/components/NavTabs";
 import { useEditor } from "@/context/EditorContext";
+import { useWebSocket } from "@/lib/websocket";
 
 export default function Home() {
   // Get initial mode from URL
@@ -21,6 +22,9 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { mode: editorMode } = useEditor();
+  
+  // Connect to WebSocket for real-time updates
+  useWebSocket();
   
   // Listen for URL changes to update the mode
   useEffect(() => {
@@ -37,6 +41,39 @@ export default function Home() {
     return () => {
       window.removeEventListener('popstate', handleUrlChange);
       window.removeEventListener('urlchange', handleUrlChange);
+    };
+  }, []);
+  
+  // Listen for WebSocket gallery updates to refresh images
+  useEffect(() => {
+    const handleGalleryUpdate = (event: CustomEvent) => {
+      if (event.detail?.type === 'created' && event.detail?.data?.image) {
+        const newImage = event.detail.data.image;
+        // Transform the WebSocket image data to match our GeneratedImage type
+        const transformedImage: GeneratedImage = {
+          id: newImage.id,
+          url: newImage.thumbUrl || newImage.url,
+          prompt: newImage.prompt,
+          size: newImage.size,
+          model: newImage.model,
+          createdAt: newImage.createdAt,
+          sourceThumb: undefined,
+          sourceImage: undefined,
+          width: newImage.width,
+          height: newImage.height,
+          thumbUrl: newImage.thumbUrl,
+          fullUrl: newImage.fullUrl,
+          starred: newImage.starred,
+          deletedAt: newImage.deletedAt
+        };
+        // Add the new image to the list
+        setImages(prev => [transformedImage, ...prev.filter(img => img.id !== transformedImage.id)]);
+      }
+    };
+    
+    window.addEventListener('gallery-updated', handleGalleryUpdate as EventListener);
+    return () => {
+      window.removeEventListener('gallery-updated', handleGalleryUpdate as EventListener);
     };
   }, []);
 
