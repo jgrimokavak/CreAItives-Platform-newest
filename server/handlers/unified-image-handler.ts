@@ -66,8 +66,8 @@ export async function handleImageGeneration(request: GenerateRequest): Promise<G
       quality: params.quality || undefined,
     };
     
-    // Store the image
-    storage.saveImage(newImage);
+    // Note: Image is already stored by the provider via persistImage()
+    // No need to store again to avoid duplicate entries
     
     return newImage;
   });
@@ -138,8 +138,8 @@ export async function handleImageEdit(request: EditRequest): Promise<GeneratedIm
       sourceImage
     };
     
-    // Store the image
-    storage.saveImage(newImage);
+    // Note: Image is already stored by the provider via persistImage()
+    // No need to store again to avoid duplicate entries
     
     return newImage;
   });
