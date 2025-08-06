@@ -1,0 +1,50 @@
+index-Cz4Y16PJ.js:497 SW registered:  ServiceWorkerRegistration
+/create:1 <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">
+index-Cz4Y16PJ.js:497 WebSocket connected
+index-Cz4Y16PJ.js:497 WebSocket connected
+index-Cz4Y16PJ.js:477 ImageModal: No image URL provided, not rendering modal
+index-Cz4Y16PJ.js:477 ImageModal: No image URL provided, not rendering modal
+index-Cz4Y16PJ.js:477 ImageModal: Rendering with image URL: /uploads/full/img_1754505314840_0.png
+index-Cz4Y16PJ.js:477 ImageModal: No image URL provided, not rendering modal
+index-Cz4Y16PJ.js:497 WebSocket connected
+index-Cz4Y16PJ.js:477 ImageModal: No image URL provided, not rendering modal
+index-Cz4Y16PJ.js:477 ImageModal: No image URL provided, not rendering modal
+index-Cz4Y16PJ.js:477 ImageModal: Rendering with image URL: /uploads/full/img_1754505349161_0.png
+index-Cz4Y16PJ.js:477 ImageModal: No image URL provided, not rendering modal
+index-Cz4Y16PJ.js:477 ImageModal: No image URL provided, not rendering modal
+index-Cz4Y16PJ.js:477 ImageModal: No image URL provided, not rendering modal
+index-Cz4Y16PJ.js:477 ImageModal: No image URL provided, not rendering modal
+index-Cz4Y16PJ.js:477 ImageModal: No image URL provided, not rendering modal
+index-Cz4Y16PJ.js:477 ImageModal: No image URL provided, not rendering modal
+index-Cz4Y16PJ.js:477 ImageModal: No image URL provided, not rendering modal
+index-Cz4Y16PJ.js:477 ImageModal: No image URL provided, not rendering modal
+index-Cz4Y16PJ.js:477 ImageModal: No image URL provided, not rendering modal
+index-Cz4Y16PJ.js:477 ImageModal: Rendering with image URL: /uploads/full/edit_1754505423430_0.png
+index-Cz4Y16PJ.js:477 ImageModal: Rendering with image URL: /uploads/full/edit_1754505423430_0.png
+index-Cz4Y16PJ.js:477 ImageModal: No image URL provided, not rendering modal
+index-Cz4Y16PJ.js:477 ImageModal: Rendering with image URL: /uploads/full/edit_1754505423430_0.png
+index-Cz4Y16PJ.js:477 ImageModal: No image URL provided, not rendering modal
+index-Cz4Y16PJ.js:477 ImageModal: Rendering with image URL: /uploads/full/edit_1754505423430_0.png
+index-Cz4Y16PJ.js:477 ImageModal: Rendering with image URL: /uploads/full/edit_1754505423430_0.png
+index-Cz4Y16PJ.js:477 ImageModal: No image URL provided, not rendering modal
+index-Cz4Y16PJ.js:477 ImageModal: No image URL provided, not rendering modal
+index-Cz4Y16PJ.js:477 ImageModal: No image URL provided, not rendering modal
+index-Cz4Y16PJ.js:477 ImageModal: No image URL provided, not rendering modal
+create?mode=edit:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+create?mode=edit:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+create?mode=edit:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+create?mode=edit:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+create?mode=edit:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+create?mode=edit:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+create?mode=edit:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+create?mode=edit:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+index-Cz4Y16PJ.js:477 ImageModal: Rendering with image URL: /uploads/full/edit_1754505423430_0.png
+index-Cz4Y16PJ.js:477 ImageModal: No image URL provided, not rendering modal
+index-Cz4Y16PJ.js:477 ImageModal: No image URL provided, not rendering modal
+index-Cz4Y16PJ.js:477 ImageModal: No image URL provided, not rendering modal
+index-Cz4Y16PJ.js:477 ImageModal: Rendering with image URL: /uploads/full/edit_1754505568071_0.png
+index-Cz4Y16PJ.js:477 ImageModal: No image URL provided, not rendering modal
+index-Cz4Y16PJ.js:497 WebSocket connected
+index-Cz4Y16PJ.js:477 ImageModal: Rendering with image URL: /uploads/full/edit_1754505568071_0.png
+index-Cz4Y16PJ.js:477 ImageModal: No image URL provided, not rendering modal
+index-Cz4Y16PJ.js:477 ImageModal: Rendering with image URL: /uploads/full/edit_1754505568071_0.png
