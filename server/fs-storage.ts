@@ -96,8 +96,29 @@ export async function persistImage(b64: string, meta: ImageMetadata, customId?: 
       };
       
       // Insert the record properly
-      await db.insert(images).values(record).returning();
+      const [savedImage] = await db.insert(images).values(record).returning();
       console.log(`Successfully inserted image record with Object Storage URLs: ${id}`);
+      
+      // ✅ CRITICAL FIX: Send WebSocket notification to refresh frontend gallery
+      push('imageCreated', {
+        image: {
+          id: savedImage.id,
+          url: savedImage.fullUrl,
+          prompt: savedImage.prompt,
+          size: savedImage.size,
+          model: savedImage.model,
+          createdAt: savedImage.createdAt ? new Date(savedImage.createdAt).toISOString() : new Date().toISOString(),
+          width: savedImage.width || '1024',
+          height: savedImage.height || '1024',
+          fullUrl: savedImage.fullUrl,
+          thumbUrl: savedImage.thumbUrl,
+          starred: savedImage.starred === "true",
+          aspectRatio: savedImage.aspectRatio,
+          quality: savedImage.quality,
+          deletedAt: savedImage.deletedAt ? new Date(savedImage.deletedAt).toISOString() : null
+        }
+      });
+      
     } catch (error) {
       console.error('Error inserting image record:', error);
       // Continue even if database insertion fails - image is still in Object Storage
