@@ -226,6 +226,31 @@ export class ObjectStorageService {
       nextCursor: result.nextCursor,
     };
   }
+
+  /**
+   * Wipe all images from Object Storage (dev environment only)
+   */
+  async wipeAllImages(): Promise<void> {
+    const envPrefix = this.getEnvironmentPrefix();
+    
+    try {
+      // List all objects in the environment prefix
+      const result = await this.client.list({ prefix: envPrefix });
+      
+      if (result && result.ok && result.data && result.data.length > 0) {
+        // Delete all objects
+        for (const obj of result.data) {
+          await this.client.delete(obj.key);
+        }
+        console.log(`Wiped ${result.data.length} objects from Object Storage (${envPrefix})`);
+      } else {
+        console.log(`No objects found to wipe in Object Storage (${envPrefix})`);
+      }
+    } catch (error) {
+      console.error('Error wiping Object Storage:', error);
+      throw error;
+    }
+  }
 }
 
 // Export singleton instance

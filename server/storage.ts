@@ -258,62 +258,23 @@ export class DatabaseStorage implements IStorage {
   }
 
   async saveImage(image: GeneratedImage): Promise<GeneratedImage> {
-    // First try to extract base64 data from image URL if present
-    let base64Data: string | null = null;
-    
-    if (image.url && image.url.startsWith('data:image')) {
-      base64Data = image.url.split(',')[1];
-    }
-    
-    // Create directory structure if it doesn't exist
-    const fullDir = path.join(this.uploadsDir, 'full');
-    const thumbDir = path.join(this.uploadsDir, 'thumb');
-    
-    if (!fs.existsSync(fullDir)) {
-      fs.mkdirSync(fullDir, { recursive: true });
-    }
-    
-    if (!fs.existsSync(thumbDir)) {
-      fs.mkdirSync(thumbDir, { recursive: true });
-    }
-    
-    // Generate file paths
-    const fileName = `${image.id}.png`;
-    const thumbName = `${image.id}_thumb.png`;
-    const filePath = path.join(fullDir, fileName);
-    const thumbPath = path.join(thumbDir, thumbName);
-    
-    // Save image file if we have base64 data
-    if (base64Data) {
-      fs.writeFileSync(filePath, Buffer.from(base64Data, 'base64'));
-      
-      // For now, just use the same image for thumbnail
-      fs.writeFileSync(thumbPath, Buffer.from(base64Data, 'base64'));
-    }
-    
-    // Parse size to get width and height
-    const [width, height] = image.size.split('x');
-    
-    // Prepare database object
+    // Note: This method is deprecated - image persistence now handled by fs-storage.ts using Object Storage
+    // Direct database insertion for metadata only
     const dbImage = {
       id: image.id,
       url: image.url,
       prompt: image.prompt,
       size: image.size,
       model: image.model,
-      // Set width and height
-      width: width || "1024",
-      height: height || "1024",
-      // Set environment-aware paths for URLs using Replit deployment detection
-      fullUrl: `/uploads/${process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev'}/full/${fileName}`,
-      thumbUrl: `/uploads/${process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev'}/thumb/${thumbName}`,
+      width: image.width || "1024",
+      height: image.height || "1024",
+      fullUrl: image.fullUrl,
+      thumbUrl: image.thumbUrl,
       sourceThumb: image.sourceThumb || null,
-      sourceImage: image.sourceImage || null, // Add sourceImage to database
+      sourceImage: image.sourceImage || null,
       starred: "false",
-      // Store user-selected parameters for enhanced display
       aspectRatio: image.aspectRatio || null,
       quality: image.quality || null,
-      // Don't set deletedAt - it's null by default
     };
     
     // Save to database

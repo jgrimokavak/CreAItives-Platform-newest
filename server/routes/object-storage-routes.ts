@@ -60,4 +60,24 @@ router.get('/object-storage/gallery', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * Wipe all images from Object Storage (dev environment only)
+ * Route: POST /api/object-storage/wipe-all
+ */
+router.post('/object-storage/wipe-all', async (req: Request, res: Response) => {
+  try {
+    const isProduction = process.env.REPLIT_DEPLOYMENT === '1';
+    
+    if (isProduction) {
+      return res.status(403).json({ error: 'Wipe operation not allowed in production' });
+    }
+
+    await objectStorage.wipeAllImages();
+    res.json({ message: 'All images wiped from Object Storage successfully' });
+  } catch (error) {
+    console.error('Error wiping Object Storage:', error);
+    res.status(500).json({ error: 'Failed to wipe Object Storage' });
+  }
+});
+
 export default router;
