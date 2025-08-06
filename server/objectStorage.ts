@@ -234,18 +234,36 @@ export class ObjectStorageService {
     const envPrefix = this.getEnvironmentPrefix();
     
     try {
-      // List all objects in the environment prefix
-      const result = await this.client.list({ prefix: envPrefix });
+      // List all objects in the bucket
+      const listResult = await this.client.list();
       
-      if (result && result.ok && result.data && result.data.length > 0) {
-        // Delete all objects
-        for (const obj of result.data) {
-          await this.client.delete(obj.key);
-        }
-        console.log(`Wiped ${result.data.length} objects from Object Storage (${envPrefix})`);
-      } else {
-        console.log(`No objects found to wipe in Object Storage (${envPrefix})`);
+      if (!listResult || !listResult.ok) {
+        console.log('Failed to list objects from Object Storage');
+        return;
       }
+      
+      const objects = listResult.value || [];
+      
+      if (objects.length > 0) {
+        console.log(`Wiping ${objects.length} objects from Object Storage...`);
+        
+        // Delete all objects
+        for (const obj of objects) {
+          const objPath = obj.name || obj.path || obj.key;
+          if (objPath) {
+            try {
+              await this.client.delete(objPath);
+            } catch (deleteError) {
+              console.error(`Failed to delete ${objPath}:`, deleteError);
+            }
+          }
+        }
+        
+        console.log(`Wiped ${objects.length} objects from Object Storage`);
+      } else {
+        console.log('No objects found in Object Storage to wipe');
+      }
+      
     } catch (error) {
       console.error('Error wiping Object Storage:', error);
       throw error;
