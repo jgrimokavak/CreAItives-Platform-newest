@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { models, ModelConfig } from '../config/models';
 import { createPrediction, waitForPrediction } from '../replicate';
 import { log } from '../logger';
+import { getCachedIsoTime } from '../utils/dateCache';
 import { GeneratedImage } from '@shared/schema';
 import { storage } from '../storage';
 import fetch from 'node-fetch';
@@ -81,7 +82,7 @@ export async function generateWithReplicate(modelKey: string, inputs: any): Prom
   });
   
   log({
-    ts: new Date().toISOString(),
+    ts: getCachedIsoTime(),
     direction: "request",
     payload: {
       type: "replicate_generate",
@@ -102,7 +103,7 @@ export async function generateWithReplicate(modelKey: string, inputs: any): Prom
   const result = await waitForPrediction(prediction.id);
   
   log({
-    ts: new Date().toISOString(),
+    ts: getCachedIsoTime(),
     direction: "response",
     payload: {
       type: "replicate_generate",

@@ -4,6 +4,7 @@ import { eq, desc, asc, isNull, isNotNull, and, ilike, lt, sql, or, not } from "
 import * as fs from "fs";
 import * as path from "path";
 import { push } from "./ws";
+import crypto from "crypto";
 
 // Define storage interface
 export interface IStorage {
@@ -460,7 +461,9 @@ export class DatabaseStorage implements IStorage {
       const mappedItems = items.map(item => {
         // This is important - make sure we properly convert the string "true"/"false" to boolean
         const starredStatus = item.starred === "true";
-        console.log(`Image ${item.id} starred status: "${item.starred}" -> ${starredStatus}`);
+        if (process.env.NODE_ENV !== 'production') {
+          console.log(`Image ${item.id} starred status: "${item.starred}" -> ${starredStatus}`);
+        }
         
         return {
           id: item.id,
@@ -487,11 +490,13 @@ export class DatabaseStorage implements IStorage {
       
       // Log a sample image for debugging
       if (mappedItems.length > 0) {
-        console.log(`Sample image data:`, {
-          id: mappedItems[0].id,
-          starred: mappedItems[0].starred,
-          deletedAt: mappedItems[0].deletedAt
-        });
+        if (process.env.NODE_ENV !== 'production') {
+          console.log(`Sample image data:`, {
+            id: mappedItems[0].id,
+            starred: mappedItems[0].starred,
+            deletedAt: mappedItems[0].deletedAt
+          });
+        }
       }
       
       return {
@@ -668,7 +673,12 @@ export class DatabaseStorage implements IStorage {
 
   // Video methods
   async createVideo(video: InsertVideo): Promise<Video> {
-    const [savedVideo] = await db.insert(videos).values(video).returning();
+    const videoWithDefaults = {
+      id: crypto.randomUUID(),
+      ...video,
+      created_at: new Date()
+    };
+    const [savedVideo] = await db.insert(videos).values(videoWithDefaults).returning();
     return savedVideo;
   }
 
@@ -688,7 +698,14 @@ export class DatabaseStorage implements IStorage {
 
   // Project methods
   async createProject(project: InsertProject): Promise<Project> {
-    const [created] = await db.insert(projects).values(project).returning();
+    const projectWithDefaults = {
+      id: crypto.randomUUID(),
+      ...project,
+      video_count: 0,
+      created_at: new Date(),
+      updated_at: new Date()
+    };
+    const [created] = await db.insert(projects).values(projectWithDefaults).returning();
     return created;
   }
 

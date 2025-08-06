@@ -33,11 +33,13 @@ router.get('/gallery', galleryRateLimit, async (req, res) => {
     
     // Log a few sample images for debugging
     if (items.length > 0) {
-      console.log(`Sample image data:`, {
-        id: items[0].id,
-        starred: items[0].starred,
-        deletedAt: items[0].deletedAt
-      });
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`Sample image data:`, {
+          id: items[0].id,
+          starred: items[0].starred,
+          deletedAt: items[0].deletedAt
+        });
+      }
     }
     
     res.json({
@@ -58,7 +60,7 @@ router.get('/gallery', galleryRateLimit, async (req, res) => {
     // Return generic 500 error for other issues
     res.status(500).json({ 
       error: 'Failed to fetch gallery images',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined 
+      details: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined 
     });
   }
 });
