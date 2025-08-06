@@ -79,7 +79,7 @@ function Router() {
           )} />
           <Route path="/trash" component={() => (
             <Sidebar>
-              <SimpleGalleryPage />
+              <SimpleGalleryPage mode='trash' />
             </Sidebar>
           )} />
           <Route path="/car" component={() => (

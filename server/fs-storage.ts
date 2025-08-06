@@ -41,11 +41,7 @@ export async function persistImage(b64: string, meta: ImageMetadata, customId?: 
       .toBuffer();
 
     // Upload both full image and thumbnail to Object Storage
-    console.log(`[TRACE] Uploading image to Object Storage with id: ${id}`);
     const { fullUrl, thumbUrl } = await objectStorage.uploadImage(imgBuf, id, 'png');
-    console.log(`[TRACE] Object Storage upload complete:
-      - Full URL: ${fullUrl}
-      - Thumb URL: ${thumbUrl}`);
 
     // Format params for database storage
     const sizeStr = `${width || 1024}x${height || 1024}`;

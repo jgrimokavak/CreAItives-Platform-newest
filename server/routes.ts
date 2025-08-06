@@ -623,33 +623,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(404).json({ message: "API logs have been disabled" });
   });
 
-  // Environment-aware static file serving using Replit deployment detection
-  const isDeployed = process.env.REPLIT_DEPLOYMENT === '1';
-  const env = isDeployed ? 'production' : 'development';
-  const envPrefix = isDeployed ? 'prod' : 'dev';
-  const uploadsBasePath = path.join(path.dirname(new URL(import.meta.url).pathname), '../uploads');
-  const environmentUploadsPath = path.join(uploadsBasePath, envPrefix);
-
-  if (!fs.existsSync(environmentUploadsPath)) {
-    fs.mkdirSync(environmentUploadsPath, { recursive: true });
-    
-    // Create subdirectories for this environment
-    const fullDir = path.join(environmentUploadsPath, 'full');
-    const thumbDir = path.join(environmentUploadsPath, 'thumb');
-    
-    if (!fs.existsSync(fullDir)) {
-      fs.mkdirSync(fullDir, { recursive: true });
-    }
-    
-    if (!fs.existsSync(thumbDir)) {
-      fs.mkdirSync(thumbDir, { recursive: true });
-    }
-  }
-  
-  console.log(`Serving ${env} uploads from: /uploads/${envPrefix} → ${environmentUploadsPath}`);
-  
-  // Use express.static with environment-specific path and cache settings
-  app.use(`/uploads/${envPrefix}`, express.static(environmentUploadsPath, { maxAge: '7d' }));
+  // Note: Object Storage is now used for image storage instead of local uploads directory
 
   // Add gallery routes
   app.use('/api', galleryRoutes);

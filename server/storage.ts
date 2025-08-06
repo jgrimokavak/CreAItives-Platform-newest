@@ -55,16 +55,8 @@ export interface IStorage {
 
 // Database storage implementation
 export class DatabaseStorage implements IStorage {
-  private uploadsDir: string;
-  
   constructor() {
-    // Environment-aware uploads directory using Replit deployment detection
-    const isDeployed = process.env.REPLIT_DEPLOYMENT === '1';
-    const envPrefix = isDeployed ? 'prod' : 'dev';
-    this.uploadsDir = path.join(process.cwd(), 'uploads', envPrefix);
-    if (!fs.existsSync(this.uploadsDir)) {
-      fs.mkdirSync(this.uploadsDir, { recursive: true });
-    }
+    // Object Storage is now used for image storage instead of local uploads directory
   }
 
   // User operations
@@ -575,51 +567,21 @@ export class DatabaseStorage implements IStorage {
 
   async deleteImage(id: string, permanent: boolean = false): Promise<void> {
     if (permanent) {
-      // Get image paths before deleting
+      // Get image data before deleting
       const [image] = await db.select().from(images).where(eq(images.id, id));
       
       if (image) {
         try {
-          // Extract actual paths from URLs
-          const getPathFromUrl = (url: string | null) => {
-            if (!url) return null;
-            // Extract path component from URL, e.g. /uploads/full/img_123.png -> full/img_123.png
-            const match = url.match(/\/uploads\/(.+)$/);
-            return match ? match[1] : null;
-          };
+          // Delete from Object Storage
+          const { ObjectStorageService } = await import('./objectStorage');
+          const objectStorage = new ObjectStorageService();
+          const envPrefix = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
           
-          // Support various potential file formats (png, webp)
-          const possibleFullPaths = [
-            path.join(this.uploadsDir, 'full', `${id}.png`),
-            path.join(this.uploadsDir, getPathFromUrl(image.fullUrl) || '')
-          ];
-          
-          const possibleThumbPaths = [
-            path.join(this.uploadsDir, 'thumb', `${id}.webp`),
-            path.join(this.uploadsDir, 'thumb', `${id}.png`),
-            path.join(this.uploadsDir, 'thumb', `${id}_thumb.png`),
-            path.join(this.uploadsDir, getPathFromUrl(image.thumbUrl) || '')
-          ];
-          
-          // Delete full image if any of the possible paths exist
-          for (const fullPath of possibleFullPaths) {
-            if (fs.existsSync(fullPath)) {
-              console.log(`Deleting full image at: ${fullPath}`);
-              fs.unlinkSync(fullPath);
-              break; // Only delete one matching file
-            }
-          }
-          
-          // Delete thumbnail if any of the possible paths exist
-          for (const thumbPath of possibleThumbPaths) {
-            if (fs.existsSync(thumbPath)) {
-              console.log(`Deleting thumbnail at: ${thumbPath}`);
-              fs.unlinkSync(thumbPath);
-              break; // Only delete one matching file
-            }
-          }
+          // Delete both full image and thumbnail from Object Storage
+          await objectStorage.deleteImage(`${envPrefix}/${id}.png`);
+          await objectStorage.deleteImage(`${envPrefix}/thumb/${id}.webp`);
         } catch (err) {
-          console.error(`Error deleting image files for ${id}:`, err);
+          console.error(`Error deleting image files from Object Storage for ${id}:`, err);
           // Continue with database deletion even if file deletion fails
         }
         
@@ -628,12 +590,10 @@ export class DatabaseStorage implements IStorage {
         
         // Notify clients about permanent deletion
         push('imageDeleted', { id });
-        console.log(`Permanently deleted image ${id}`);
       }
     } else {
       // Soft delete - mark as deleted
       await this.updateImage(id, { deletedAt: new Date().toISOString() });
-      console.log(`Soft deleted image ${id} (moved to trash)`);
     }
   }
 

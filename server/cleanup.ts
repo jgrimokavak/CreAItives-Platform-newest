@@ -24,20 +24,49 @@ export const setupCleanupJob = () => {
       let filesDeleted = 0;
       let dbRecordsDeleted = 0;
       
-      // Step 1: Clean up database records older than 30 days
+      // Step 1: Permanently delete images that have been in trash for 30+ days
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       
       try {
-        const result = await db.delete(images).where(lt(images.createdAt, thirtyDaysAgo));
+        const { and, isNotNull } = await import('drizzle-orm');
+        
+        // First, get the IDs of images to be permanently deleted (for Object Storage cleanup)
+        const imagesToDelete = await db.select({ id: images.id })
+          .from(images)
+          .where(and(
+            isNotNull(images.deletedAt),
+            lt(images.deletedAt, thirtyDaysAgo)
+          ));
+        
+        // Delete images from Object Storage
+        if (imagesToDelete.length > 0) {
+          const { ObjectStorageService } = await import('./objectStorage');
+          const objectStorage = new ObjectStorageService();
+          
+          for (const image of imagesToDelete) {
+            try {
+              const envPrefix = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
+              await objectStorage.deleteImage(`${envPrefix}/${image.id}.png`);
+              await objectStorage.deleteImage(`${envPrefix}/thumb/${image.id}.webp`);
+            } catch (storageErr) {
+              console.error(`Failed to delete ${image.id} from Object Storage:`, storageErr);
+            }
+          }
+        }
+        
+        // Delete records from database
+        const result = await db.delete(images).where(and(
+          isNotNull(images.deletedAt),
+          lt(images.deletedAt, thirtyDaysAgo)
+        ));
         dbRecordsDeleted = result.rowCount || 0;
-        console.log(`Deleted ${dbRecordsDeleted} old database records`);
+        console.log(`Permanently deleted ${dbRecordsDeleted} images from trash (30+ days old)`);
       } catch (dbErr) {
-        console.error('Error cleaning database records:', dbErr);
+        console.error('Error cleaning trash records:', dbErr);
       }
       
-      // Step 2: Clean up files in uploads directory, but skip full and thumb directories
-      // (Let database-driven cleanup handle image files)
+      // Step 2: Clean up temporary files (downloads, temp files)
       const tempDirs = ['/tmp', path.join(process.cwd(), 'downloads')];
       
       for (const tempDir of tempDirs) {
