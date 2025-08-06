@@ -74,7 +74,10 @@ router.post('/upscale', upload.single('image'), async (req, res) => {
       const upscaleFactor = req.body.upscale_factor || '4x';
       const faceEnhancement = req.body.face_enhancement === 'true';
       
-      console.log(`Upscaling with parameters: enhance_model=${enhanceModel}, upscale_factor=${upscaleFactor}, face_enhancement=${faceEnhancement}`);
+      // Remove verbose parameter logging in production
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`Upscaling with parameters: enhance_model=${enhanceModel}, upscale_factor=${upscaleFactor}, face_enhancement=${faceEnhancement}`);
+      }
       
       // Prepare input for Topaz Labs model
       // Note: adapt parameter names according to the model requirements
@@ -90,18 +93,21 @@ router.post('/upscale', upload.single('image'), async (req, res) => {
         face_enhancement_strength: 1
       };
       
-      console.log('Sending request to Replicate with model: topazlabs/image-upscale');
-      
-      // For the Replicate API, we'll use the predictions create/get pattern for better control
-      // First create the prediction
-      console.log('Creating prediction for model: topazlabs/image-upscale');
+      // Remove verbose API logging in production
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('Sending request to Replicate with model: topazlabs/image-upscale');
+        console.log('Creating prediction for model: topazlabs/image-upscale');
+      }
       const prediction = await replicate.predictions.create({
         model: "topazlabs/image-upscale",
         input: input,
       });
       
-      console.log('Prediction created with id:', prediction.id);
-      console.log('Prediction initial status:', prediction.status);
+      // Remove verbose prediction logging in production
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('Prediction created with id:', prediction.id);
+        console.log('Prediction initial status:', prediction.status);
+      }
       
       // The prediction might not complete immediately, we need to poll for status
       let output;
@@ -113,11 +119,17 @@ router.post('/upscale', upload.single('image'), async (req, res) => {
         
         // Get the latest prediction status
         const currentPrediction = await replicate.predictions.get(prediction.id);
-        console.log(`Polling attempt ${attempts}/${maxAttempts}, status: ${currentPrediction.status}`);
+        
+        // PERFORMANCE OPTIMIZATION: Remove polling logs in production (runs every 3 seconds)
+        if (process.env.NODE_ENV !== 'production') {
+          console.log(`Polling attempt ${attempts}/${maxAttempts}, status: ${currentPrediction.status}`);
+        }
         
         if (currentPrediction.status === 'succeeded') {
           output = currentPrediction.output;
-          console.log('Prediction completed successfully');
+          if (process.env.NODE_ENV !== 'production') {
+            console.log('Prediction completed successfully');
+          }
           break;
         } else if (currentPrediction.status === 'failed' || currentPrediction.status === 'canceled') {
           throw new Error(`Prediction ${currentPrediction.status}: ${currentPrediction.error || 'Unknown error'}`);
@@ -134,17 +146,23 @@ router.post('/upscale', upload.single('image'), async (req, res) => {
       // Delete the temporary file
       fs.unlinkSync(filePath);
       
-      // Log output type for debugging
-      console.log('Replicate output type:', typeof output);
-      console.log('Replicate output full value:', JSON.stringify(output));
+      // Remove verbose output debugging in production
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('Replicate output type:', typeof output);
+        console.log('Replicate output full value:', JSON.stringify(output));
+      }
       
       // Additional checks for debugging
       if (typeof output === 'object' && output !== null) {
-        console.log('Object keys:', Object.keys(output));
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('Object keys:', Object.keys(output));
+        }
         
         // If it's an empty object but the request was successful, the model might still be processing
         if (Object.keys(output).length === 0) {
-          console.log('Empty output object received. The image might still be processing.');
+          if (process.env.NODE_ENV !== 'production') {
+            console.log('Empty output object received. The image might still be processing.');
+          }
           
           // We need to handle this case differently - the job is still processing
           // Instead of marking it as done, we should keep it in processing state
@@ -160,10 +178,14 @@ router.post('/upscale', upload.single('image'), async (req, res) => {
       
       if (typeof output === 'string') {
         resultUrl = output;
-        console.log('Output is a direct URL string');
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('Output is a direct URL string');
+        }
       } else if (Array.isArray(output) && output.length > 0) {
         resultUrl = output[0];
-        console.log('Output is an array, using first item');
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('Output is an array, using first item');
+        }
       } else if (typeof output === 'object' && output !== null) {
         // Try to find a URL property in the object
         const possibleUrlKeys = ['url', 'output', 'result', 'image'];
@@ -172,7 +194,9 @@ router.post('/upscale', upload.single('image'), async (req, res) => {
             const value = (output as any)[key];
             if (typeof value === 'string' && value.startsWith('http')) {
               resultUrl = value;
-              console.log(`Found URL in object with key: ${key}`);
+              if (process.env.NODE_ENV !== 'production') {
+                console.log(`Found URL in object with key: ${key}`);
+              }
               break;
             } else if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'string') {
               resultUrl = value[0];

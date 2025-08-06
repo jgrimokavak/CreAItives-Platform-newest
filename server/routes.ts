@@ -13,7 +13,7 @@ import sharp from "sharp";
 import { log, getLogs } from "./logger";
 import multer from "multer";
 import crypto from "crypto";
-import { GeneratedImage } from "@shared/schema";
+import { GeneratedImage, User } from "@shared/schema";
 import galleryRoutes from "./gallery-routes";
 import { attachWS, setPush } from "./ws";
 import { setupCleanupJob } from "./cleanup";
@@ -32,6 +32,7 @@ import axios from "axios";
 import Papa from "papaparse";
 import cron from "node-cron";
 import { jobs as batchJobs, queue, processBatch, cleanupOldZips, type Row as BatchRow } from "./batch";
+import NodeCache from "node-cache";
 
 // Helper function to create a file-safe name from prompt text
 export function createFileSafeNameFromPrompt(prompt: string, maxLength: number = 50): string {
@@ -83,6 +84,32 @@ interface Job {
 // In-memory job store
 const jobs = new Map<string, Job>();
 
+// PERFORMANCE OPTIMIZATION: User authentication cache
+// Cache user data for 5 minutes to reduce database lookups
+const userCache = new NodeCache({ stdTTL: 300 }); // 5 minutes TTL
+
+// Cached user lookup function
+async function getCachedUser(userId: string): Promise<User | undefined> {
+  const cacheKey = `user_${userId}`;
+  let user = userCache.get<User>(cacheKey);
+  
+  if (!user) {
+    // Cache miss - fetch from database
+    user = await storage.getUser(userId);
+    if (user) {
+      userCache.set(cacheKey, user);
+    }
+  }
+  
+  return user;
+}
+
+// Function to invalidate user cache (call on logout or user updates)
+function invalidateUserCache(userId: string) {
+  const cacheKey = `user_${userId}`;
+  userCache.del(cacheKey);
+}
+
 // Cleanup old jobs periodically (jobs older than 30 minutes)
 setInterval(() => {
   const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
@@ -132,17 +159,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Unauthorized" });
       }
       
-      const user = await storage.getUser(userId);
+      // Use cached user lookup to reduce database calls
+      const user = await getCachedUser(userId);
       if (!user) {
         return res.status(401).json({ message: "User not found" });
       }
       
-      // Update last login time every time user data is fetched (indicates active session)
-      await storage.updateUserLastLogin(userId);
+      // OPTIMIZATION: Only update last login time every 5 minutes to reduce DB writes
+      // Check if last login was more than 5 minutes ago
+      const now = new Date();
+      const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
       
-      // Get updated user data with new login time
-      const updatedUser = await storage.getUser(userId);
-      res.json(updatedUser);
+      if (!user.lastLoginAt || user.lastLoginAt < fiveMinutesAgo) {
+        // Update login time and invalidate cache to get fresh data
+        await storage.updateUserLastLogin(userId);
+        invalidateUserCache(userId);
+        // Get fresh user data with updated login time
+        const updatedUser = await getCachedUser(userId);
+        res.json(updatedUser);
+      } else {
+        // Use cached user data without unnecessary DB update
+        res.json(user);
+      }
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
@@ -164,7 +202,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Admin access restricted to authorized personnel only" });
       }
       
-      const user = await storage.getUser(userId);
+      // Use cached user lookup to reduce database calls
+      const user = await getCachedUser(userId);
       if (!user || user.role !== 'admin') {
         return res.status(403).json({ message: "Admin access required" });
       }
@@ -248,7 +287,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { userId } = req.params;
       const { isActive } = req.body;
       
-      console.log(`Admin status update request for user ${userId}:`, { isActive, body: req.body });
+      // Remove verbose admin request logging in production
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`Admin status update request for user ${userId}:`, { isActive, body: req.body });
+      }
       
       if (typeof isActive !== 'boolean') {
         console.log(`Invalid isActive value: ${isActive}, type: ${typeof isActive}`);
@@ -259,6 +301,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
+      
+      // Invalidate cache after user update
+      invalidateUserCache(userId);
       
       console.log(`User ${userId} status updated successfully to: ${isActive}`);
       res.json(user);
@@ -273,7 +318,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { userId } = req.params;
       const { role } = req.body;
       
-      console.log(`Admin role update request for user ${userId}:`, { role, body: req.body });
+      // Remove verbose admin request logging in production
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`Admin role update request for user ${userId}:`, { role, body: req.body });
+      }
       
       if (role !== 'user' && role !== 'admin') {
         console.log(`Invalid role value: ${role}`);
@@ -295,6 +343,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
       
+      // Invalidate cache after user update
+      invalidateUserCache(userId);
+      
       console.log(`User ${userId} role updated successfully to: ${role}`);
       res.json(user);
     } catch (error) {
@@ -305,7 +356,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Helper function to run image generation job
   async function runGenerateJob(jobId: string, data: any) {
-    console.log(`Starting job ${jobId} for image generation`);
+    // Remove verbose job processing logs in production
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`Starting job ${jobId} for image generation`);
+    }
     const job = jobs.get(jobId);
     if (!job) return;
     
@@ -315,11 +369,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Import the unified handler
       const { handleImageGeneration } = await import('./handlers/unified-image-handler');
       
-      console.log(`Job ${jobId}: Processing image generation with model: ${data.modelKey}`);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`Job ${jobId}: Processing image generation with model: ${data.modelKey}`);
+      }
       
       // Use the unified handler
       const generatedImages = await handleImageGeneration(data);
-      console.log(`Job ${jobId}: Generated ${generatedImages.length} images`);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`Job ${jobId}: Generated ${generatedImages.length} images`);
+      }
       
       // Update job with results
       job.status = "done";
@@ -335,39 +393,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API endpoint to generate images (async with job queue) - Protected
   app.post("/api/generate", isAuthenticated, async (req, res) => {
     try {
-      // Log the incoming request payload
-      console.log("🔍 /api/generate received payload:", {
-        modelKey: req.body.modelKey,
-        hasInputImage: !!req.body.input_image,
-        hasImages: !!req.body.images,
-        hasImage: !!req.body.Image,
-        inputImageLength: req.body.input_image?.length,
-        imagesCount: req.body.images?.length,
-        ImageLength: req.body.Image?.length,
-        otherFields: Object.keys(req.body).filter(k => !['input_image', 'images', 'prompt'].includes(k))
-      });
+      // PERFORMANCE OPTIMIZATION: Remove verbose logging in production
+      if (process.env.NODE_ENV !== 'production') {
+        console.log("🔍 /api/generate received payload:", {
+          modelKey: req.body.modelKey,
+          hasInputImage: !!req.body.input_image,
+          hasImages: !!req.body.images,
+          hasImage: !!req.body.Image,
+          inputImageLength: req.body.input_image?.length,
+          imagesCount: req.body.images?.length,
+          ImageLength: req.body.Image?.length,
+          otherFields: Object.keys(req.body).filter(k => !['input_image', 'images', 'prompt'].includes(k))
+        });
+      }
 
       // Validate request body
       const validationResult = generateImageSchema.safeParse(req.body);
       if (!validationResult.success) {
-        console.error("Validation failed for /api/generate:", JSON.stringify({
-          modelKey: req.body.modelKey,
-          bodyKeys: Object.keys(req.body),
-          errors: validationResult.error.errors
-        }, null, 2));
+        // Keep error logging but remove verbose JSON serialization in production
+        if (process.env.NODE_ENV !== 'production') {
+          console.error("Validation failed for /api/generate:", JSON.stringify({
+            modelKey: req.body.modelKey,
+            bodyKeys: Object.keys(req.body),
+            errors: validationResult.error.errors
+          }, null, 2));
+        } else {
+          console.error("Validation failed for /api/generate:", validationResult.error.message);
+        }
         return res.status(400).json({ 
           message: "Invalid request data", 
           errors: validationResult.error.errors 
         });
       }
       
-      console.log("🔍 Validation passed, validated data:", {
-        modelKey: validationResult.data.modelKey,
-        hasInputImage: !!validationResult.data.input_image,
-        hasImages: !!validationResult.data.images,
-        validatedFields: Object.keys(validationResult.data),
-        fullData: validationResult.data
-      });
+      // Remove verbose validation logging in production
+      if (process.env.NODE_ENV !== 'production') {
+        console.log("🔍 Validation passed, validated data:", {
+          modelKey: validationResult.data.modelKey,
+          hasInputImage: !!validationResult.data.input_image,
+          hasImages: !!validationResult.data.images,
+          validatedFields: Object.keys(validationResult.data),
+          fullData: validationResult.data
+        });
+      }
       
       // Create a new job
       const jobId = crypto.randomUUID();
@@ -898,8 +966,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       };
       
-      // Log the exact request being sent
-      console.log("DIRECT REPLICATE REQUEST:", JSON.stringify(requestData, null, 2));
+      // Remove verbose request logging in production
+      if (process.env.NODE_ENV !== 'production') {
+        console.log("DIRECT REPLICATE REQUEST:", JSON.stringify(requestData, null, 2));
+      }
       
       // Replicate call with specific version
       const response = await axios.post("https://api.replicate.com/v1/predictions", 

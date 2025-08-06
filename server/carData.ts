@@ -14,21 +14,24 @@ type ColorRow = { "Color List": string };
 const COLOR_SHEET_ID = "1ftpeFWjClvZINpJMxae1qrNRS1a7XPKAC0FUGizfgzs";
 const COLOR_SHEET_GID = "1643991184";
 
-// Setup auto-refresh of car data and colors every 5 minutes
+// Setup initial car data load and optional daily refresh
 export function setupCarDataAutoRefresh(): void {
-  // Immediately fetch the data once
+  // Immediately fetch the data once on startup
   loadCarData(true).catch(err => console.error("Initial car data load failed:", err));
   loadColorData(true).catch(err => console.error("Initial color data load failed:", err));
   
-  // Schedule refresh every 5 minutes
-  cron.schedule('*/5 * * * *', async () => {
-    console.log('Auto-refreshing car data from Google Sheets...');
+  // REMOVED: 5-minute auto-refresh for performance optimization
+  // Manual refresh button will still work via direct function calls
+  
+  // Optional: Schedule refresh once per day at 2 AM to keep data fresh
+  cron.schedule('0 2 * * *', async () => {
+    console.log('Daily refresh of car data from Google Sheets...');
     try {
       await loadCarData(true);
       await loadColorData(true);
       console.log('Car data refreshed successfully at', new Date().toISOString());
     } catch (error) {
-      console.error('Error during scheduled car data refresh:', error);
+      console.error('Error during daily car data refresh:', error);
     }
   });
 }

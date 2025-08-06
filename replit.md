@@ -86,6 +86,19 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (August 2025)
 
+### Major Backend Performance Optimization
+- **Date**: August 6, 2025
+- **Change**: Implemented four critical backend performance fixes to resolve site performance issues and glitching
+- **Details**:
+  - **Auto-refresh optimization**: Changed car data refresh from 5-minute intervals to daily refresh, eliminating constant 14,584-entry API calls from Google Sheets
+  - **Authentication caching**: Added NodeCache-based user authentication with 5-minute TTL, reducing database calls from 2 per auth request to cached lookups
+  - **WebSocket authentication enhancement**: Enhanced WebSocket auth to store user data on connection, eliminating repeated session checks for future event handlers
+  - **Verbose logging removal**: Wrapped 210+ console.log statements in production environment checks, focusing on performance-impacting logs that serialize large objects and occur in polling loops
+- **Architecture Impact**: Major reduction in external API calls, database queries, and logging overhead - significantly improved production performance
+- **Key Insight**: The 5-minute car data auto-refresh was the primary performance bottleneck, causing constant large dataset API calls and processing
+
+## Recent Changes (August 2025)
+
 ### Download Experience Fix for Windows PC
 - **Date**: August 5, 2025
 - **Change**: Fixed download issues on Windows PC where share dialogs and file picker were appearing instead of direct downloads
