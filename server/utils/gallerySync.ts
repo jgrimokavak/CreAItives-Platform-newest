@@ -30,13 +30,30 @@ function getEnvironmentUploadDir(): string {
 /**
  * Check if an image file exists on the file system (environment-aware)
  */
-function imageFileExists(imageId: string): boolean {
-  const uploadsDir = getEnvironmentUploadDir();
-  const fullImagePath = path.join(uploadsDir, 'full', `${imageId}.png`);
-  const thumbPath = path.join(uploadsDir, 'thumb', `${imageId}.webp`);
-  
-  // Both files should exist for the image to be considered valid
-  return fs.existsSync(fullImagePath) && fs.existsSync(thumbPath);
+async function imageFileExists(imageId: string): Promise<boolean> {
+  try {
+    // For Object Storage, check if files exist in the Object Storage bucket
+    const { ObjectStorageService } = await import('../objectStorage');
+    const objectStorage = new ObjectStorageService();
+    
+    const envPrefix = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
+    const fullPath = `${envPrefix}/${imageId}.png`;
+    const thumbPath = `${envPrefix}/thumb/${imageId}.webp`;
+    
+    // Check if both full image and thumbnail exist in Object Storage
+    try {
+      await objectStorage.downloadImage(fullPath);
+      await objectStorage.downloadImage(thumbPath);
+      return true;
+    } catch (error) {
+      // If either file doesn't exist, consider the image invalid
+      console.log(`Image ${imageId} missing from Object Storage:`, error.message);
+      return false;
+    }
+  } catch (error) {
+    console.error(`Error checking Object Storage for image ${imageId}:`, error);
+    return false;
+  }
 }
 
 /**
@@ -50,7 +67,8 @@ export async function findOrphanedRecords(): Promise<string[]> {
     const orphanedIds: string[] = [];
     
     for (const image of allImages) {
-      if (!imageFileExists(image.id)) {
+      const exists = await imageFileExists(image.id);
+      if (!exists) {
         orphanedIds.push(image.id);
       }
     }
