@@ -66,18 +66,21 @@ const GalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => {
     queryKey: ['/api/gallery', { starred: showStarredOnly, trash: mode === 'trash' }],
     queryFn: async ({ pageParam = null }) => {
       const params = new URLSearchParams();
-      if (pageParam) params.append('cursor', pageParam);
+      if (pageParam) params.append('cursor', pageParam as string);
       if (showStarredOnly) params.append('starred', 'true');
       if (mode === 'trash') params.append('trash', 'true');
       
       return apiRequest(`/api/gallery?${params.toString()}`);
     },
-    getNextPageParam: (lastPage) => lastPage.nextCursor || undefined,
+    initialPageParam: null,
+    getNextPageParam: (lastPage: any) => lastPage?.nextCursor || undefined,
+    staleTime: 30000, // Consider data fresh for 30 seconds
+    refetchOnWindowFocus: false, // Disable automatic refetch on window focus
   });
   
   // Flatten pages of items into a single array
   const images = data ? 
-    data.pages.flatMap((page) => page.items) as GalleryImage[] : 
+    data.pages.flatMap((page: any) => page?.items || []) as GalleryImage[] : 
     [];
     
   // Calculate grid dimensions

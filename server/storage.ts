@@ -162,26 +162,45 @@ export class DatabaseStorage implements IStorage {
       conditions.push(eq(users.role, options.roleFilter));
     }
     
-    // Build the query
+    // Build the query directly
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
     
     // Apply sorting
     const sortBy = options.sortBy || 'createdAt';
     const sortOrder = options.sortOrder || 'desc';
     
-    let query = db.select().from(users);
+    // Get the correct column for sorting
+    let orderByColumn;
+    switch (sortBy) {
+      case 'email':
+        orderByColumn = users.email;
+        break;
+      case 'firstName':
+        orderByColumn = users.firstName;
+        break;
+      case 'lastLoginAt':
+        orderByColumn = users.lastLoginAt;
+        break;
+      default:
+        orderByColumn = users.createdAt;
+    }
+    
+    // Build and execute the query
+    const queryBuilder = db.select().from(users);
     
     if (whereClause) {
-      query = query.where(whereClause);
-    }
-    
-    if (sortOrder === 'asc') {
-      query = query.orderBy(asc(users[sortBy as keyof typeof users]));
+      if (sortOrder === 'asc') {
+        return await queryBuilder.where(whereClause).orderBy(asc(orderByColumn));
+      } else {
+        return await queryBuilder.where(whereClause).orderBy(desc(orderByColumn));
+      }
     } else {
-      query = query.orderBy(desc(users[sortBy as keyof typeof users]));
+      if (sortOrder === 'asc') {
+        return await queryBuilder.orderBy(asc(orderByColumn));
+      } else {
+        return await queryBuilder.orderBy(desc(orderByColumn));
+      }
     }
-    
-    return await query;
   }
 
   async getUserStatistics(): Promise<{
@@ -385,16 +404,8 @@ export class DatabaseStorage implements IStorage {
         }
       }
       
-      // Apply all conditions to the query
-      if (conditions.length === 1) {
-        query = query.where(conditions[0]);
-      } else if (conditions.length > 1) {
-        // For multiple conditions, use the 'and' operator
-        query = query.where(and(...conditions));
-      }
-      
-      // Order by createdAt (latest first)
-      query = query.orderBy(desc(images.createdAt));
+      // Build conditions array
+      let allConditions = [...conditions];
       
       // Apply cursor-based pagination if provided
       if (cursor) {
@@ -405,26 +416,33 @@ export class DatabaseStorage implements IStorage {
             .limit(1);
             
           if (cursorImage.length > 0) {
-            // Get the creation date of the cursor image for efficient pagination
-            query = query.where(
-              lt(images.createdAt, cursorImage[0].createdAt)
-            );
+            allConditions.push(lt(images.createdAt, cursorImage[0].createdAt));
           }
         } catch (err) {
           console.error('Error applying cursor pagination:', err);
         }
       }
       
-      // Apply pagination
-      query = query.limit(take + 1); // Get one extra to determine if there's more
-      
-      // Log the SQL for debugging
-      const sqlInfo = query.toSQL();
-      console.log("Generated SQL:", sqlInfo.sql);
-      console.log("SQL parameters:", sqlInfo.params);
-      
-      // Execute query
-      const results = await query;
+      // Build and execute the final query
+      let results;
+      if (allConditions.length === 0) {
+        results = await db.select()
+          .from(images)
+          .orderBy(desc(images.createdAt))
+          .limit(take + 1);
+      } else if (allConditions.length === 1) {
+        results = await db.select()
+          .from(images)
+          .where(allConditions[0])
+          .orderBy(desc(images.createdAt))
+          .limit(take + 1);
+      } else {
+        results = await db.select()
+          .from(images)
+          .where(and(...allConditions))
+          .orderBy(desc(images.createdAt))
+          .limit(take + 1);
+      }
       console.log(`Query returned ${results.length} results`);
       
       // Check if there are more results
@@ -650,7 +668,7 @@ export class DatabaseStorage implements IStorage {
 
   // Video methods
   async createVideo(video: InsertVideo): Promise<Video> {
-    const [savedVideo] = await db.insert(videos).values([video]).returning();
+    const [savedVideo] = await db.insert(videos).values(video).returning();
     return savedVideo;
   }
 
@@ -670,7 +688,7 @@ export class DatabaseStorage implements IStorage {
 
   // Project methods
   async createProject(project: InsertProject): Promise<Project> {
-    const [created] = await db.insert(projects).values([project]).returning();
+    const [created] = await db.insert(projects).values(project).returning();
     return created;
   }
 

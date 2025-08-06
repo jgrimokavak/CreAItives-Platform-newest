@@ -4,11 +4,12 @@ import { images } from '@shared/schema';
 import { eq, isNull, isNotNull, desc } from 'drizzle-orm';
 import { push } from './ws';
 import { storage } from './storage';
+import { galleryRateLimit } from './middleware/rateLimiter';
 
 const router = Router();
 
 // Get gallery images with pagination
-router.get('/gallery', async (req, res) => {
+router.get('/gallery', galleryRateLimit, async (req, res) => {
   try {
     const { cursor, limit = 50, starred, trash, q } = req.query;
     
@@ -45,7 +46,20 @@ router.get('/gallery', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching gallery:', error);
-    res.status(500).json({ error: 'Failed to fetch gallery images' });
+    
+    // Return specific error for rate limiting issues
+    if (error instanceof Error && error.message.includes('rate limit')) {
+      return res.status(429).json({ 
+        error: 'Too many requests. Please wait before retrying.',
+        retryAfter: 2
+      });
+    }
+    
+    // Return generic 500 error for other issues
+    res.status(500).json({ 
+      error: 'Failed to fetch gallery images',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined 
+    });
   }
 });
 
