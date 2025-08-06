@@ -4,10 +4,9 @@ import sharp from 'sharp';
 // Environment-aware Object Storage service for kavak-gallery bucket
 export class ObjectStorageService {
   private client: Client;
-  private readonly BUCKET_ID = 'replit-objstore-eb95d706-5f05-40ec-86a5-100095dae0f8';
 
   constructor() {
-    // Initialize client with the specific kavak-gallery bucket
+    // Initialize client - it will automatically use the default bucket
     this.client = new Client();
   }
 
@@ -17,20 +16,6 @@ export class ObjectStorageService {
   private getEnvironmentPrefix(): string {
     const isDeployed = process.env.REPLIT_DEPLOYMENT === '1';
     return isDeployed ? 'prod' : 'dev';
-  }
-
-  /**
-   * Get the private object directory path
-   */
-  private getPrivateObjectDir(): string {
-    return `/${this.BUCKET_ID}/.private`;
-  }
-
-  /**
-   * Get the public object search paths
-   */
-  private getPublicObjectSearchPaths(): string[] {
-    return [`/${this.BUCKET_ID}/public`];
   }
 
   /**
