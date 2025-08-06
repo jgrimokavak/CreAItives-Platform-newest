@@ -19,10 +19,19 @@ export interface SyncReport {
 }
 
 /**
- * Check if an image file exists on the file system
+ * Get environment-aware upload directory
+ */
+function getEnvironmentUploadDir(): string {
+  const env = process.env.NODE_ENV || 'development';
+  const envPrefix = env === 'production' ? 'prod' : 'dev';
+  return path.join(process.cwd(), 'uploads', envPrefix);
+}
+
+/**
+ * Check if an image file exists on the file system (environment-aware)
  */
 function imageFileExists(imageId: string): boolean {
-  const uploadsDir = path.join(process.cwd(), 'uploads');
+  const uploadsDir = getEnvironmentUploadDir();
   const fullImagePath = path.join(uploadsDir, 'full', `${imageId}.png`);
   const thumbPath = path.join(uploadsDir, 'thumb', `${imageId}.webp`);
   

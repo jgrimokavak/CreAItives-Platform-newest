@@ -621,15 +621,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(404).json({ message: "API logs have been disabled" });
   });
 
-  // Serve static uploads folder
-  const uploadsPath = path.join(path.dirname(new URL(import.meta.url).pathname), '../uploads');
-  
-  if (!fs.existsSync(uploadsPath)) {
-    fs.mkdirSync(uploadsPath, { recursive: true });
+  // Environment-aware static file serving
+  const env = process.env.NODE_ENV || 'development';
+  const envPrefix = env === 'production' ? 'prod' : 'dev';
+  const uploadsBasePath = path.join(path.dirname(new URL(import.meta.url).pathname), '../uploads');
+  const environmentUploadsPath = path.join(uploadsBasePath, envPrefix);
+
+  if (!fs.existsSync(environmentUploadsPath)) {
+    fs.mkdirSync(environmentUploadsPath, { recursive: true });
     
-    // Create subdirectories
-    const fullDir = path.join(uploadsPath, 'full');
-    const thumbDir = path.join(uploadsPath, 'thumb');
+    // Create subdirectories for this environment
+    const fullDir = path.join(environmentUploadsPath, 'full');
+    const thumbDir = path.join(environmentUploadsPath, 'thumb');
     
     if (!fs.existsSync(fullDir)) {
       fs.mkdirSync(fullDir, { recursive: true });
@@ -640,8 +643,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
   
-  // Use express.static with cache settings
-  app.use('/uploads', express.static(uploadsPath, { maxAge: '7d' }));
+  console.log(`Serving ${env} uploads from: /uploads/${envPrefix} → ${environmentUploadsPath}`);
+  
+  // Use express.static with environment-specific path and cache settings
+  app.use(`/uploads/${envPrefix}`, express.static(environmentUploadsPath, { maxAge: '7d' }));
 
   // Add gallery routes
   app.use('/api', galleryRoutes);

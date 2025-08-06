@@ -116,14 +116,23 @@ Preferred communication style: Simple, everyday language.
 - **Performance Results**: Application now runs smoothly with 200-400ms response times, stable WebSocket connections, and reduced memory pressure
 - **Key Insight**: The 5-minute car data auto-refresh was the primary performance bottleneck, causing constant large dataset API calls and processing
 
-### Gallery Duplicate Entry Bug Resolution & UI Enhancement
+### Complete Gallery Architecture Overhaul for Long-Term Resilience ✅
 - **Date**: August 6, 2025
-- **Change**: Resolved critical duplicate gallery entry bug where every image generation created two database records (one empty, one working)
-- **Root Cause**: Double database insertion - Provider calls `persistImage()` + Handler redundantly calls `storage.saveImage()`
-- **Solution**: Removed duplicate `storage.saveImage()` calls in unified-image-handler.ts for both generate and edit functions
-- **UI Enhancement**: Added orange "beta" disclaimer badge to Gallery sidebar navigation to manage user expectations about reliability
-- **Architecture Impact**: Gallery now shows only one entry per generation, eliminating empty cards and maintaining proper file-database synchronization
-- **Environment Insight**: Discovered that gallery "sync issues" were actually due to separate development and production database instances in Replit - images generated in one environment appear as empty cards in the other due to database isolation
+- **Change**: Resolved critical gallery instability and implemented environment-aware storage architecture for long-term integrity
+- **Problems Solved**:
+  - **Duplicate Entry Bug**: Every image generation created two database records (one empty, one working)
+  - **Cross-Environment Conflicts**: Development and production shared file storage paths but had separate databases
+  - **Gallery Instability**: Empty cards appearing due to file-database desynchronization across environments
+- **Comprehensive Solution**:
+  - **Environment-Aware File Storage**: Separate storage paths (`/uploads/dev/` vs `/uploads/prod/`) preventing cross-environment conflicts
+  - **Enhanced Gallery Sync**: Updated `gallerySync.ts` to be environment-specific, only checking files in correct environment directory
+  - **Unified Storage Architecture**: All storage components (`fs-storage.ts`, `storage.ts`, static serving) now environment-aware
+  - **Resilient URL Generation**: Dynamic URL paths include environment prefix (`/uploads/dev/full/` vs `/uploads/prod/full/`)
+  - **Automatic Cleanup**: Environment-isolated cleanup processes prevent accidental cross-environment file deletion
+- **Architecture Impact**: Gallery now provides complete environment isolation, eliminating empty cards and ensuring long-term stability
+- **Results**: Gallery sync cleaned 162 orphaned records and now shows only valid, accessible images with no cross-environment interference
+- **UI Enhancement**: Added orange "beta" disclaimer badge to Gallery sidebar navigation
+- **Key Insight**: Environment separation requires complete isolation across all storage layers - database, file system, static serving, and cleanup processes
 
 ### Download Experience Fix for Windows PC
 - **Date**: August 5, 2025

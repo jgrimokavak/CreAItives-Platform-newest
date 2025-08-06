@@ -58,8 +58,10 @@ export class DatabaseStorage implements IStorage {
   private uploadsDir: string;
   
   constructor() {
-    // Ensure uploads directory exists
-    this.uploadsDir = path.join(process.cwd(), 'uploads');
+    // Environment-aware uploads directory
+    const env = process.env.NODE_ENV || 'development';
+    const envPrefix = env === 'production' ? 'prod' : 'dev';
+    this.uploadsDir = path.join(process.cwd(), 'uploads', envPrefix);
     if (!fs.existsSync(this.uploadsDir)) {
       fs.mkdirSync(this.uploadsDir, { recursive: true });
     }
@@ -310,9 +312,9 @@ export class DatabaseStorage implements IStorage {
       // Set width and height
       width: width || "1024",
       height: height || "1024",
-      // Set paths for URLs
-      fullUrl: `/uploads/full/${fileName}`,
-      thumbUrl: `/uploads/thumb/${thumbName}`,
+      // Set environment-aware paths for URLs
+      fullUrl: `/uploads/${process.env.NODE_ENV === 'production' ? 'prod' : 'dev'}/full/${fileName}`,
+      thumbUrl: `/uploads/${process.env.NODE_ENV === 'production' ? 'prod' : 'dev'}/thumb/${thumbName}`,
       sourceThumb: image.sourceThumb || null,
       sourceImage: image.sourceImage || null, // Add sourceImage to database
       starred: "false",

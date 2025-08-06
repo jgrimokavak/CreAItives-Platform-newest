@@ -12,10 +12,18 @@ import { images } from '@shared/schema';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// Environment-aware directory creation
+const getEnvironmentPrefix = () => {
+  const env = process.env.NODE_ENV || 'development';
+  return env === 'production' ? 'prod' : 'dev';
+};
+
 // Create upload directories if they don't exist
 const initializeDirs = () => {
-  const root = path.join(__dirname, '../uploads');
+  const envPrefix = getEnvironmentPrefix();
+  const root = path.join(__dirname, '../uploads', envPrefix);
   ['full', 'thumb'].forEach(d => fs.mkdirSync(path.join(root, d), { recursive: true }));
+  console.log(`Initialized ${envPrefix} environment directories at ${root}`);
 };
 
 // Initialize directories on import
@@ -36,8 +44,9 @@ export async function persistImage(b64: string, meta: ImageMetadata, customId?: 
   // Use provided ID or generate a new one
   const id = customId || uuid();
   const imgBuf = Buffer.from(b64, 'base64');
-  // Use the same root path as in initializeDirs for consistency
-  const root = path.join(__dirname, '../uploads');
+  // Use environment-aware root path for consistency
+  const envPrefix = getEnvironmentPrefix();
+  const root = path.join(__dirname, '../uploads', envPrefix);
 
   // Get image metadata
   const { width, height } = await sharp(imgBuf).metadata();
@@ -116,8 +125,8 @@ export async function persistImage(b64: string, meta: ImageMetadata, customId?: 
       model: meta.params.model || 'gpt-image-1',
       width: widthStr,
       height: heightStr,
-      thumbUrl: `/uploads/${thumbPath}`,
-      fullUrl: `/uploads/${fullPath}`,
+      thumbUrl: `/uploads/${envPrefix}/${thumbPath}`,
+      fullUrl: `/uploads/${envPrefix}/${fullPath}`,
       starred: starredStr,
       aspectRatio,
       quality
@@ -133,9 +142,9 @@ export async function persistImage(b64: string, meta: ImageMetadata, customId?: 
     // The image files are still saved to disk
   }
 
-  // Create URLs for the image
-  const fullUrl = `/uploads/${fullPath}`;
-  const thumbUrl = `/uploads/${thumbPath}`;
+  // Create URLs for the image with environment prefix
+  const fullUrl = `/uploads/${envPrefix}/${fullPath}`;
+  const thumbUrl = `/uploads/${envPrefix}/${thumbPath}`;
 
   // We're no longer using WebSocket broadcast here
   // The routes.ts will handle notifying clients about new images when
