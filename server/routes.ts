@@ -621,9 +621,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(404).json({ message: "API logs have been disabled" });
   });
 
-  // Environment-aware static file serving
-  const env = process.env.NODE_ENV || 'development';
-  const envPrefix = env === 'production' ? 'prod' : 'dev';
+  // Environment-aware static file serving using Replit deployment detection
+  const isDeployed = process.env.REPLIT_DEPLOYMENT === '1';
+  const env = isDeployed ? 'production' : 'development';
+  const envPrefix = isDeployed ? 'prod' : 'dev';
   const uploadsBasePath = path.join(path.dirname(new URL(import.meta.url).pathname), '../uploads');
   const environmentUploadsPath = path.join(uploadsBasePath, envPrefix);
 

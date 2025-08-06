@@ -19,11 +19,11 @@ export interface SyncReport {
 }
 
 /**
- * Get environment-aware upload directory
+ * Get environment-aware upload directory using Replit deployment detection
  */
 function getEnvironmentUploadDir(): string {
-  const env = process.env.NODE_ENV || 'development';
-  const envPrefix = env === 'production' ? 'prod' : 'dev';
+  const isDeployed = process.env.REPLIT_DEPLOYMENT === '1';
+  const envPrefix = isDeployed ? 'prod' : 'dev';
   return path.join(process.cwd(), 'uploads', envPrefix);
 }
 

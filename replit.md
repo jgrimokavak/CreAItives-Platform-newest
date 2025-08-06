@@ -133,6 +133,7 @@ Preferred communication style: Simple, everyday language.
 - **Results**: Gallery sync cleaned 162 orphaned records and now shows only valid, accessible images with no cross-environment interference
 - **UI Enhancement**: Added orange "beta" disclaimer badge to Gallery sidebar navigation
 - **Key Insight**: Environment separation requires complete isolation across all storage layers - database, file system, static serving, and cleanup processes
+- **CRITICAL DEPLOYMENT DISCOVERY**: Replit deployments wipe all filesystem files on every deploy - `/uploads` directory will be deleted, requiring migration to Replit Object Storage for production persistence
 
 ### Download Experience Fix for Windows PC
 - **Date**: August 5, 2025

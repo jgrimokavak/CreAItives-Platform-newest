@@ -12,10 +12,10 @@ import { images } from '@shared/schema';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Environment-aware directory creation
+// Environment-aware directory creation using Replit's deployment detection
 const getEnvironmentPrefix = () => {
-  const env = process.env.NODE_ENV || 'development';
-  return env === 'production' ? 'prod' : 'dev';
+  const isDeployed = process.env.REPLIT_DEPLOYMENT === '1';
+  return isDeployed ? 'prod' : 'dev';
 };
 
 // Create upload directories if they don't exist

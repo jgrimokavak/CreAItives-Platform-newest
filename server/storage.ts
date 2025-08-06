@@ -58,9 +58,9 @@ export class DatabaseStorage implements IStorage {
   private uploadsDir: string;
   
   constructor() {
-    // Environment-aware uploads directory
-    const env = process.env.NODE_ENV || 'development';
-    const envPrefix = env === 'production' ? 'prod' : 'dev';
+    // Environment-aware uploads directory using Replit deployment detection
+    const isDeployed = process.env.REPLIT_DEPLOYMENT === '1';
+    const envPrefix = isDeployed ? 'prod' : 'dev';
     this.uploadsDir = path.join(process.cwd(), 'uploads', envPrefix);
     if (!fs.existsSync(this.uploadsDir)) {
       fs.mkdirSync(this.uploadsDir, { recursive: true });
@@ -312,9 +312,9 @@ export class DatabaseStorage implements IStorage {
       // Set width and height
       width: width || "1024",
       height: height || "1024",
-      // Set environment-aware paths for URLs
-      fullUrl: `/uploads/${process.env.NODE_ENV === 'production' ? 'prod' : 'dev'}/full/${fileName}`,
-      thumbUrl: `/uploads/${process.env.NODE_ENV === 'production' ? 'prod' : 'dev'}/thumb/${thumbName}`,
+      // Set environment-aware paths for URLs using Replit deployment detection
+      fullUrl: `/uploads/${process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev'}/full/${fileName}`,
+      thumbUrl: `/uploads/${process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev'}/thumb/${thumbName}`,
       sourceThumb: image.sourceThumb || null,
       sourceImage: image.sourceImage || null, // Add sourceImage to database
       starred: "false",
