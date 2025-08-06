@@ -116,6 +116,14 @@ Preferred communication style: Simple, everyday language.
 - **Performance Results**: Application now runs smoothly with 200-400ms response times, stable WebSocket connections, and reduced memory pressure
 - **Key Insight**: The 5-minute car data auto-refresh was the primary performance bottleneck, causing constant large dataset API calls and processing
 
+### Gallery Duplicate Entry Bug Resolution & UI Enhancement
+- **Date**: August 6, 2025
+- **Change**: Resolved critical duplicate gallery entry bug where every image generation created two database records (one empty, one working)
+- **Root Cause**: Double database insertion - Provider calls `persistImage()` + Handler redundantly calls `storage.saveImage()`
+- **Solution**: Removed duplicate `storage.saveImage()` calls in unified-image-handler.ts for both generate and edit functions
+- **UI Enhancement**: Added orange "beta" disclaimer badge to Gallery sidebar navigation to manage user expectations about reliability
+- **Architecture Impact**: Gallery now shows only one entry per generation, eliminating empty cards and maintaining proper file-database synchronization
+
 ### Download Experience Fix for Windows PC
 - **Date**: August 5, 2025
 - **Change**: Fixed download issues on Windows PC where share dialogs and file picker were appearing instead of direct downloads

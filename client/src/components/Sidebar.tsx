@@ -105,6 +105,9 @@ const Sidebar = ({ children }: SidebarProps) => {
           {isPageEnabled('gallery') && (
             <SidebarLink to="/gallery" icon={<Images size={18} />}>
               Gallery
+              <span className="ml-2 px-1.5 py-0.5 text-xs font-medium bg-orange-100 text-orange-700 rounded-md">
+                beta
+              </span>
             </SidebarLink>
           )}
           {isPageEnabled('upscale') && (
