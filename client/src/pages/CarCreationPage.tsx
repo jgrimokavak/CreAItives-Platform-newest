@@ -152,7 +152,7 @@ const CarCreationPage: React.FC = () => {
           // Transform the WebSocket image data to match our GeneratedImage type
           const transformedImage: GeneratedImage = {
             id: newImage.id,
-            url: newImage.thumbUrl || newImage.url,
+            url: newImage.fullUrl || newImage.url, // Use fullUrl instead of thumbUrl for now
             prompt: newImage.prompt,
             size: newImage.size,
             model: newImage.model,
@@ -166,6 +166,7 @@ const CarCreationPage: React.FC = () => {
             starred: newImage.starred,
             deletedAt: newImage.deletedAt
           };
+          console.log(`[TRACE CarCreationPage] Using fullUrl: ${newImage.fullUrl} instead of thumbUrl: ${newImage.thumbUrl}`);
           console.log('[TRACE CarCreationPage] Transformed image:', transformedImage);
           setImage(transformedImage);
         }

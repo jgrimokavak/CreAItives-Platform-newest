@@ -1,0 +1,25 @@
+client:536 WebSocket connection to 'wss://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/?token=klZekXhX1e7n' failed: 
+setupWebSocket @ client:536
+(anonymous) @ client:531
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=klZekXhX1e7n' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+setupWebSocket @ client:536
+fallback @ client:509
+(anonymous) @ client:555
+chunk-WERSD76P.js?v=44fc700f:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+main.tsx:13 SW registered:  ServiceWorkerRegistration {installing: null, waiting: null, active: ServiceWorker, navigationPreload: NavigationPreloadManager, scope: 'https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/', …}
+car:1 <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">
+websocket.ts:25 WebSocket connected
+websocket.ts:25 WebSocket connected
+websocket.ts:86 [TRACE] WebSocket received event: imageCreated with data: {image: {…}}
+websocket.ts:89 [TRACE] Processing imageCreated event, dispatching gallery-updated
+websocket.ts:94 [TRACE] Dispatching gallery-updated event: {type: 'created', data: {…}}
+CarCreationPage.tsx:145 [TRACE CarCreationPage] Received gallery-updated event: {type: 'created', data: {…}}
+CarCreationPage.tsx:148 [TRACE CarCreationPage] New image data: {id: '49ebe8fe-76b8-4235-b78f-95a98aacb8b2', url: '/api/object-storage/image/dev/49ebe8fe-76b8-4235-b78f-95a98aacb8b2.png', prompt: 'A hyper-realistic professional studio photograph o… rendering and professional retouching standards.', size: '1280x896', model: 'car-generator', …}
+websocket.ts:86 [TRACE] WebSocket received event: imageCreated with data: {image: {…}}
+websocket.ts:89 [TRACE] Processing imageCreated event, dispatching gallery-updated
+websocket.ts:94 [TRACE] Dispatching gallery-updated event: {type: 'created', data: {…}}
+CarCreationPage.tsx:145 [TRACE CarCreationPage] Received gallery-updated event: {type: 'created', data: {…}}
+CarCreationPage.tsx:148 [TRACE CarCreationPage] New image data: {id: '49ebe8fe-76b8-4235-b78f-95a98aacb8b2', url: '/api/object-storage/image/dev/49ebe8fe-76b8-4235-b78f-95a98aacb8b2.png', prompt: 'A hyper-realistic professional studio photograph o… rendering and professional retouching standards.', size: '1280x896', model: 'car-generator', …}

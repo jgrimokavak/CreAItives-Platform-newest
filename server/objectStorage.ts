@@ -1,4 +1,5 @@
 import { Client } from '@replit/object-storage';
+import sharp from 'sharp';
 
 // Environment-aware Object Storage service for kavak-gallery bucket
 export class ObjectStorageService {
@@ -37,9 +38,20 @@ export class ObjectStorageService {
       }
       console.log(`[TRACE] Full image uploaded successfully to: ${fullPath}`);
 
-      // Upload thumbnail using same image for now
+      // Create WebP thumbnail
+      console.log(`[TRACE] Creating thumbnail from image buffer (${imageBuffer.length} bytes)`);
+      const thumbnailBuffer = await sharp(imageBuffer)
+        .resize(400, 400, { 
+          fit: 'inside',
+          withoutEnlargement: true 
+        })
+        .webp({ quality: 80 })
+        .toBuffer();
+      console.log(`[TRACE] Thumbnail created: ${thumbnailBuffer.length} bytes`);
+
+      // Upload thumbnail
       console.log(`[TRACE] Uploading thumbnail to Object Storage key: ${thumbPath}`);
-      const uploadResult2 = await this.client.uploadFromBytes(thumbPath, imageBuffer);  
+      const uploadResult2 = await this.client.uploadFromBytes(thumbPath, thumbnailBuffer);  
       if (!uploadResult2.ok) {
         throw new Error('Failed to upload thumbnail');
       }
@@ -93,7 +105,7 @@ export class ObjectStorageService {
       console.log(`Listing images with prefix: ${envPrefix}/`);
       
       // Use correct API format: { ok: boolean, value: StorageObject[] }
-      const result = await this.client.list(`${envPrefix}/`);
+      const result = await this.client.list({ prefix: `${envPrefix}/` });
       console.log('List result:', { ok: result.ok, valueLength: result.value?.length || 0 });
       
       let objectList: any[] = [];

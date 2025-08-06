@@ -88,6 +88,27 @@ export default function ImageCard({
             alt={image.prompt}
             className="w-full h-full object-contain"
             loading="lazy"
+            onLoad={(e) => {
+              console.log(`[TRACE IMG] Image loaded successfully:`, {
+                src: e.currentTarget.src,
+                imageId: image.id,
+                naturalWidth: e.currentTarget.naturalWidth,
+                naturalHeight: e.currentTarget.naturalHeight,
+                complete: e.currentTarget.complete
+              });
+            }}
+            onError={(e) => {
+              console.error(`[TRACE IMG] Image failed to load:`, {
+                src: e.currentTarget.src,
+                imageId: image.id,
+                error: e.currentTarget.src
+              });
+              // Fallback to full URL if thumbnail fails
+              if (image.thumbUrl && e.currentTarget.src.includes(image.thumbUrl)) {
+                console.log(`[TRACE IMG] Falling back to full URL for image ${image.id}`);
+                e.currentTarget.src = image.fullUrl || image.url;
+              }
+            }}
           />
           
           {/* Selection highlight overlay */}
