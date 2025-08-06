@@ -123,6 +123,7 @@ Preferred communication style: Simple, everyday language.
 - **Solution**: Removed duplicate `storage.saveImage()` calls in unified-image-handler.ts for both generate and edit functions
 - **UI Enhancement**: Added orange "beta" disclaimer badge to Gallery sidebar navigation to manage user expectations about reliability
 - **Architecture Impact**: Gallery now shows only one entry per generation, eliminating empty cards and maintaining proper file-database synchronization
+- **Environment Insight**: Discovered that gallery "sync issues" were actually due to separate development and production database instances in Replit - images generated in one environment appear as empty cards in the other due to database isolation
 
 ### Download Experience Fix for Windows PC
 - **Date**: August 5, 2025
