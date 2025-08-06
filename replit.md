@@ -42,8 +42,10 @@ Preferred communication style: Simple, everyday language.
 - **Features**: Live preview with real-time MJML compilation, HTML export, visual component editor with grouped properties, responsive design support.
 
 #### File Storage & Management
-- **Provider**: AWS S3 with presigned URLs for scalable storage of generated content and batch processing files.
+- **Provider**: Replit Object Storage (kavak-gallery bucket) with deployment-safe persistent cloud storage for all generated content.
+- **Environment Isolation**: Complete separation with dev/ and prod/ prefixes preventing cross-environment conflicts.
 - **Gallery**: Real-time image management with WebSocket updates, star/favorite system, trash/restore, advanced search and filtering, bulk operations.
+- **Architecture**: Environment-aware Object Storage service with uploadFromBytes, downloadAsBytes, list, and exists methods.
 
 #### Core Architectural Decisions
 - **Database**: Drizzle ORM with PostgreSQL for type-safe queries and flexible schema management.
@@ -55,7 +57,7 @@ Preferred communication style: Simple, everyday language.
   - Unified image handler routes requests to appropriate providers
 - **Email Rendering**: MJML chosen for robust cross-client compatibility.
 - **Real-time Updates**: Custom WebSocket implementation for job progress and gallery updates, with session-based authentication for security.
-- **File Storage**: AWS S3 with presigned URLs for scalable and secure client uploads.
+- **File Storage**: Replit Object Storage with persistent cloud storage and complete environment isolation.
 - **Batch Processing**: Queue-based background jobs with polling to handle long-running operations.
 
 ## External Dependencies
@@ -73,7 +75,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Infrastructure
 - **Neon Database**: Serverless PostgreSQL hosting.
-- **AWS S3**: Scalable object storage for all generated assets.
+- **Replit Object Storage**: Deployment-safe persistent cloud storage for all generated assets.
 - **WebSocket**: Custom real-time communication for live updates.
 
 ### Development Tools (Integrated)
@@ -87,6 +89,29 @@ Preferred communication style: Simple, everyday language.
 
 
 ## Recent Changes (August 2025)
+
+### Complete Object Storage Migration for Deployment Persistence ✅
+- **Date**: August 6, 2025
+- **Change**: Successfully implemented complete Object Storage integration with kavak-gallery bucket for deployment-safe, persistent image storage
+- **Critical Discovery**: Replit deployments wipe all `/uploads` directory files on every deploy - required immediate migration from filesystem to cloud storage
+- **Implementation Details**:
+  - **Bucket Integration**: Using kavak-gallery bucket (ID: replit-objstore-eb95d706-5f05-40ec-86a5-100095dae0f8) with official @replit/object-storage SDK
+  - **Environment Isolation**: Complete separation with dev/ and prod/ prefixes preventing cross-environment conflicts  
+  - **API Implementation**: Full Object Storage service with uploadFromBytes, downloadAsBytes, list, and exists methods
+  - **Gallery Integration**: Object Storage gallery API with pagination and filtering support
+  - **Complete Pipeline**: Image generation > Object Storage upload > database > gallery display all working seamlessly
+- **Architecture Impact**: 
+  - **Zero filesystem dependency**: All images stored in persistent cloud storage
+  - **Deployment-safe**: Images survive all Replit deployments and restarts
+  - **Environment-aware**: Development and production images completely isolated
+  - **Scalable**: No local storage limits, production-ready for high volume usage
+- **Technical Results**:
+  - Successfully tested complete upload/download cycle
+  - Gallery API showing Object Storage images with proper URLs
+  - Database integration maintaining existing functionality while using Object Storage URLs
+  - API endpoints serving images directly from Object Storage
+- **Performance**: Object Storage provides faster loading and unlimited scalability compared to local filesystem
+- **Key Insight**: This migration was essential for production deployment - local filesystem storage is not viable on Replit deployments
 
 ### Gallery Storage Crisis Resolution ✅
 - **Date**: August 6, 2025

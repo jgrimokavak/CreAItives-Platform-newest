@@ -26,6 +26,8 @@ import enhanceEditPromptRouter from "./routes/enhanceEditPrompt";
 import promptSuggestionsRouter from "./routes/promptSuggestions";
 import videoRoutes from "./routes/video-routes";
 import projectRoutes from "./routes/project-routes";
+import objectStorageRoutes from "./routes/object-storage-routes";
+import galleryObjectStorageRoutes from "./gallery-object-storage";
 import { compileMjml, testMjmlCompilation } from "./routes/email-routes";
 import { listMakes, listModels, listBodyStyles, listTrims, listColors, flushCarCache, loadCarData, loadColorData, getLastFetchTime, setupCarDataAutoRefresh } from "./carData";
 import axios from "axios";
@@ -672,6 +674,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Add project management routes
   app.use('/api/projects', projectRoutes);
+  
+  // Add Object Storage routes
+  app.use('/api', objectStorageRoutes);
+  app.use('/api', galleryObjectStorageRoutes);
   
   // Email Builder routes
   app.post('/api/email/compile-mjml', compileMjml);

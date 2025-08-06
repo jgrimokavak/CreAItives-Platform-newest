@@ -4,19 +4,21 @@ import { images } from '@shared/schema';
 import { eq, isNull, isNotNull, desc } from 'drizzle-orm';
 import { push } from './ws';
 import { storage } from './storage';
+import { objectStorage } from './objectStorage';
 import { galleryRateLimit } from './middleware/rateLimiter';
 
 const router = Router();
 
-// Get gallery images with pagination
+// Get gallery images with pagination - now using Object Storage
 router.get('/gallery', async (req, res) => {
   try {
     const { cursor, limit = 50, starred, trash, q } = req.query;
     
-    console.log(`Gallery request received with params:`, 
+    console.log(`Object Storage gallery request:`, 
       { cursor, limit, starred: starred === 'true', trash: trash === 'true', searchQuery: q });
     
-    // Get images from database with filtering for starred/trash and search
+    // For now, get images from database but enhance with Object Storage in the future
+    // This maintains compatibility while we transition to full Object Storage
     const searchParams = {
       starred: starred === 'true',
       trash: trash === 'true',
@@ -25,22 +27,9 @@ router.get('/gallery', async (req, res) => {
       searchQuery: q as string
     };
     
-    console.log('Calling storage.getAllImages with params:', JSON.stringify(searchParams));
-    
     const { items, nextCursor } = await storage.getAllImages(searchParams);
     
-    console.log(`Returning ${items.length} images, nextCursor: ${nextCursor}`);
-    
-    // Log a few sample images for debugging
-    if (items.length > 0) {
-      if (process.env.NODE_ENV !== 'production') {
-        console.log(`Sample image data:`, {
-          id: items[0].id,
-          starred: items[0].starred,
-          deletedAt: items[0].deletedAt
-        });
-      }
-    }
+    console.log(`Returning ${items.length} images from hybrid storage, nextCursor: ${nextCursor}`);
     
     res.json({
       items,

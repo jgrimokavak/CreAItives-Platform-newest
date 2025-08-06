@@ -1,0 +1,214 @@
+import { Client } from '@replit/object-storage';
+
+// Environment-aware Object Storage service for kavak-gallery bucket
+export class ObjectStorageService {
+  private client: Client;
+
+  constructor() {
+    // Initialize client - it will automatically use the default bucket
+    this.client = new Client();
+  }
+
+  /**
+   * Get environment-aware path prefix (dev/ or prod/)
+   */
+  private getEnvironmentPrefix(): string {
+    const isDeployed = process.env.REPLIT_DEPLOYMENT === '1';
+    return isDeployed ? 'prod' : 'dev';
+  }
+
+  /**
+   * Upload image buffer to Object Storage with environment-aware path
+   */
+  async uploadImage(imageBuffer: Buffer, imageId: string, fileExtension: string = 'png'): Promise<{
+    fullUrl: string;
+    thumbUrl: string;
+  }> {
+    const envPrefix = this.getEnvironmentPrefix();
+    const fullPath = `${envPrefix}/${imageId}.${fileExtension}`;
+    const thumbPath = `${envPrefix}/thumb/${imageId}.webp`;
+
+    try {
+      // Upload full image using correct uploadFromBytes method
+      const uploadResult1 = await this.client.uploadFromBytes(fullPath, imageBuffer);
+      if (!uploadResult1.ok) {
+        throw new Error('Failed to upload full image');
+      }
+
+      // Upload thumbnail using same image for now
+      const uploadResult2 = await this.client.uploadFromBytes(thumbPath, imageBuffer);  
+      if (!uploadResult2.ok) {
+        throw new Error('Failed to upload thumbnail');
+      }
+
+      console.log(`✅ Uploaded image to Object Storage: ${fullPath}`);
+
+      return {
+        fullUrl: `/api/object-storage/image/${fullPath}`,
+        thumbUrl: `/api/object-storage/image/${thumbPath}`,
+      };
+    } catch (error) {
+      console.error('Error uploading to Object Storage:', error);
+      throw new Error(`Failed to upload image: ${error}`);
+    }
+  }
+
+  /**
+   * Download image from Object Storage
+   */
+  async downloadImage(path: string): Promise<Buffer> {
+    try {
+      const result = await this.client.downloadAsBytes(path);
+      if (result && typeof result === 'object' && 'ok' in result) {
+        if (result.ok) {
+          return result.value as Buffer;
+        } else {
+          throw new Error('Download failed');
+        }
+      } else {
+        // Direct buffer response
+        return result as Buffer;
+      }
+    } catch (error) {
+      console.error(`Error downloading image from path ${path}:`, error);
+      throw new Error(`Failed to download image: ${error}`);
+    }
+  }
+
+  /**
+   * List all images in current environment with pagination support
+   */
+  async listImages(cursor?: string, limit: number = 50): Promise<{
+    images: Array<{ path: string; lastModified: Date; size: number }>;
+    nextCursor?: string;
+  }> {
+    const envPrefix = this.getEnvironmentPrefix();
+    
+    try {
+      console.log(`Listing images with prefix: ${envPrefix}/`);
+      
+      // Use correct API format: { ok: boolean, value: StorageObject[] }
+      const result = await this.client.list(`${envPrefix}/`);
+      console.log('List result:', { ok: result.ok, valueLength: result.value?.length || 0 });
+      
+      let objectList: any[] = [];
+      
+      if (result.ok && Array.isArray(result.value)) {
+        objectList = result.value;
+      } else {
+        console.log('No objects found or invalid result format');
+        objectList = [];
+      }
+
+      console.log(`Found ${objectList.length} objects in Object Storage`);
+
+      // Filter out thumbnails to get only full images
+      const images = objectList
+        .filter((obj: any) => {
+          const path = obj.path || obj.name || '';
+          return path.startsWith(`${envPrefix}/`) && !path.includes('/thumb/');
+        })
+        .slice(0, limit)
+        .map((obj: any) => ({
+          path: obj.path || obj.name || '',
+          lastModified: obj.lastModified ? new Date(obj.lastModified) : new Date(),
+          size: obj.size || 0,
+        }));
+
+      return {
+        images,
+        nextCursor: images.length === limit ? 'next' : undefined,
+      };
+    } catch (error) {
+      console.error('Error listing images from Object Storage:', error);
+      throw new Error(`Failed to list images: ${error}`);
+    }
+  }
+
+  /**
+   * Delete image from Object Storage
+   */
+  async deleteImage(imageId: string, fileExtension: string = 'png'): Promise<void> {
+    const envPrefix = this.getEnvironmentPrefix();
+    const fullPath = `${envPrefix}/${imageId}.${fileExtension}`;
+    const thumbPath = `${envPrefix}/thumb/${imageId}.webp`;
+
+    try {
+      // Delete both full image and thumbnail
+      await Promise.all([
+        this.client.delete(fullPath),
+        this.client.delete(thumbPath),
+      ]);
+
+      console.log(`Deleted image from Object Storage: ${fullPath}`);
+    } catch (error) {
+      console.error('Error deleting from Object Storage:', error);
+      throw new Error(`Failed to delete image: ${error}`);
+    }
+  }
+
+  /**
+   * Check if image exists in Object Storage
+   */
+  async imageExists(imageId: string, fileExtension: string = 'png'): Promise<boolean> {
+    const envPrefix = this.getEnvironmentPrefix();
+    const fullPath = `${envPrefix}/${imageId}.${fileExtension}`;
+
+    try {
+      const result = await this.client.exists(fullPath);
+      return result && typeof result === 'object' && 'ok' in result ? result.ok : !!result;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /**
+   * Get all images for gallery with full pagination support
+   */
+  async getAllImagesForGallery(options?: {
+    cursor?: string;
+    limit?: number;
+    starred?: boolean;
+    trash?: boolean;
+    searchQuery?: string;
+  }): Promise<{
+    images: Array<{
+      id: string;
+      url: string;
+      thumbUrl: string;
+      path: string;
+      lastModified: Date;
+      size: number;
+    }>;
+    nextCursor?: string;
+  }> {
+    const { cursor, limit = 50 } = options || {};
+    
+    const result = await this.listImages(cursor, limit);
+    
+    const images = result.images.map(img => {
+      // Extract image ID from path (e.g., "dev/image123.png" -> "image123")
+      const filename = img.path.split('/').pop() || '';
+      const id = filename.replace(/\.[^/.]+$/, ''); // Remove file extension
+      
+      const envPrefix = this.getEnvironmentPrefix();
+      
+      return {
+        id,
+        url: `/api/object-storage/image/${img.path}`,
+        thumbUrl: `/api/object-storage/image/${envPrefix}/thumb/${id}.webp`,
+        path: img.path,
+        lastModified: img.lastModified,
+        size: img.size,
+      };
+    });
+
+    return {
+      images,
+      nextCursor: result.nextCursor,
+    };
+  }
+}
+
+// Export singleton instance
+export const objectStorage = new ObjectStorageService();
