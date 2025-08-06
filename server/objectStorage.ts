@@ -153,12 +153,20 @@ export class ObjectStorageService {
 
     try {
       // Delete both full image and thumbnail
-      await Promise.all([
+      const [fullResult, thumbResult] = await Promise.all([
         this.client.delete(fullPath),
         this.client.delete(thumbPath),
       ]);
 
-      console.log(`Deleted image from Object Storage: ${fullPath}`);
+      // Check if deletions were successful
+      if (!fullResult.ok) {
+        console.warn(`Failed to delete full image ${fullPath}:`, fullResult.error);
+      }
+      if (!thumbResult.ok) {
+        console.warn(`Failed to delete thumbnail ${thumbPath}:`, thumbResult.error);
+      }
+
+      console.log(`Deleted image from Object Storage: ${fullPath} and ${thumbPath}`);
     } catch (error) {
       console.error('Error deleting from Object Storage:', error);
       throw new Error(`Failed to delete image: ${error}`);

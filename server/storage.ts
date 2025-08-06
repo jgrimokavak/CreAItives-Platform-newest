@@ -534,13 +534,12 @@ export class DatabaseStorage implements IStorage {
       if (image) {
         try {
           // Delete from Object Storage
-          const { ObjectStorageService } = await import('./objectStorage');
-          const objectStorage = new ObjectStorageService();
-          const envPrefix = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
+          const { objectStorage } = await import('./objectStorage');
           
           // Delete both full image and thumbnail from Object Storage
-          await objectStorage.deleteImage(`${envPrefix}/${id}.png`);
-          await objectStorage.deleteImage(`${envPrefix}/thumb/${id}.webp`);
+          // The deleteImage method expects just the image ID, not the full path
+          await objectStorage.deleteImage(id, 'png');
+          console.log(`Successfully deleted image ${id} from Object Storage`);
         } catch (err) {
           console.error(`Error deleting image files from Object Storage for ${id}:`, err);
           // Continue with database deletion even if file deletion fails

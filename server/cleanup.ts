@@ -41,14 +41,13 @@ export const setupCleanupJob = () => {
         
         // Delete images from Object Storage
         if (imagesToDelete.length > 0) {
-          const { ObjectStorageService } = await import('./objectStorage');
-          const objectStorage = new ObjectStorageService();
+          const { objectStorage } = await import('./objectStorage');
           
           for (const image of imagesToDelete) {
             try {
-              const envPrefix = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
-              await objectStorage.deleteImage(`${envPrefix}/${image.id}.png`);
-              await objectStorage.deleteImage(`${envPrefix}/thumb/${image.id}.webp`);
+              // The deleteImage method expects just the image ID, not the full path
+              await objectStorage.deleteImage(image.id, 'png');
+              console.log(`Successfully deleted image ${image.id} from Object Storage during cleanup`);
             } catch (storageErr) {
               console.error(`Failed to delete ${image.id} from Object Storage:`, storageErr);
             }
