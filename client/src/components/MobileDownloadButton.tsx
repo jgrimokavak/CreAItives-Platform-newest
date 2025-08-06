@@ -63,7 +63,7 @@ export default function MobileDownloadButton({
 
       const options = {
         filename: cleanFilename,
-        fallbackToShare: method === 'share' || capabilities.platform === 'ios',
+        fallbackToShare: method === 'share' || (capabilities.platform === 'ios' && method !== 'download'),
         title: "Save Car Image",
         text: prompt ? `Check out this car: ${prompt.substring(0, 100)}...` : "Save this car image to your gallery"
       };
@@ -135,14 +135,22 @@ export default function MobileDownloadButton({
   };
 
   const getMainButtonIcon = () => {
-    if (capabilities.webShare && capabilities.platform !== 'desktop') {
+    // Always prioritize download icon on desktop (Windows, Mac, Linux)
+    if (capabilities.platform === 'desktop') {
+      return <DownloadIcon className="h-4 w-4" />;
+    }
+    // On mobile, show share icon if available
+    if (capabilities.webShare) {
       return <ShareIcon className="h-4 w-4" />;
     }
     return <DownloadIcon className="h-4 w-4" />;
   };
 
   const getMainButtonTooltip = () => {
-    if (capabilities.webShare && capabilities.platform !== 'desktop') {
+    if (capabilities.platform === 'desktop') {
+      return "Download image";
+    }
+    if (capabilities.webShare) {
       return "Share to save in gallery";
     }
     if (capabilities.platform === 'ios') {

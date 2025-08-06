@@ -1,0 +1,45 @@
+client:536 WebSocket connection to 'wss://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/?token=W8MrEYOjEj6G' failed: 
+setupWebSocket @ client:536
+(anonymous) @ client:531
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=W8MrEYOjEj6G' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+setupWebSocket @ client:536
+fallback @ client:509
+(anonymous) @ client:555
+chunk-WERSD76P.js?v=44fc700f:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+main.tsx:13 SW registered:  ServiceWorkerRegistration {installing: null, waiting: null, active: ServiceWorker, navigationPreload: NavigationPreloadManager, scope: 'https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/', …}
+gallery:1 <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">
+SimpleGalleryPage.tsx:77 fetchImages called with search term: ""
+SimpleGalleryPage.tsx:91 Fetching images with URL: /api/gallery?
+SimpleGalleryPage.tsx:542 Search term changed to: ""
+SimpleGalleryPage.tsx:77 fetchImages called with search term: ""
+SimpleGalleryPage.tsx:91 Fetching images with URL: /api/gallery?
+websocket.ts:25 WebSocket connected
+SimpleGalleryPage.tsx:107 Gallery data received: 2 images
+ImageCard.tsx:92 [TRACE IMG] Image loaded successfully: {src: 'https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w…v/thumb/20e2cf1d-0ded-42fe-b8e4-d0c2146eb53e.webp', imageId: '20e2cf1d-0ded-42fe-b8e4-d0c2146eb53e', naturalWidth: 400, naturalHeight: 280, complete: true}
+ImageCard.tsx:92 [TRACE IMG] Image loaded successfully: {src: 'https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w…-storage/image/dev/thumb/img_1754519755061_0.webp', imageId: 'img_1754519755061_0', naturalWidth: 400, naturalHeight: 400, complete: true}
+SimpleGalleryPage.tsx:107 Gallery data received: 2 images
+websocket.ts:25 WebSocket connected
+websocket.ts:86 [TRACE] WebSocket received event: imageCreated with data: {image: {…}}
+websocket.ts:89 [TRACE] Processing imageCreated event, dispatching gallery-updated
+websocket.ts:94 [TRACE] Dispatching gallery-updated event: {type: 'created', data: {…}}
+CarCreationPage.tsx:145 [TRACE CarCreationPage] Received gallery-updated event: {type: 'created', data: {…}}
+CarCreationPage.tsx:148 [TRACE CarCreationPage] New image data: {id: '4f30c91c-0ff4-44da-bcfb-93009b7fa509', url: '/api/object-storage/image/dev/4f30c91c-0ff4-44da-bcfb-93009b7fa509.png', prompt: 'A hyper-realistic professional studio photograph o… rendering and professional retouching standards.', size: '1280x896', model: 'car-generator', …}
+websocket.ts:86 [TRACE] WebSocket received event: imageCreated with data: {image: {…}}
+websocket.ts:89 [TRACE] Processing imageCreated event, dispatching gallery-updated
+websocket.ts:94 [TRACE] Dispatching gallery-updated event: {type: 'created', data: {…}}
+CarCreationPage.tsx:145 [TRACE CarCreationPage] Received gallery-updated event: {type: 'created', data: {…}}
+CarCreationPage.tsx:148 [TRACE CarCreationPage] New image data: {id: '4f30c91c-0ff4-44da-bcfb-93009b7fa509', url: '/api/object-storage/image/dev/4f30c91c-0ff4-44da-bcfb-93009b7fa509.png', prompt: 'A hyper-realistic professional studio photograph o… rendering and professional retouching standards.', size: '1280x896', model: 'car-generator', …}
+ImageModal.tsx:47 ImageModal: Rendering with image URL: /api/object-storage/image/dev/4f30c91c-0ff4-44da-bcfb-93009b7fa509.png
+SimpleGalleryPage.tsx:77 fetchImages called with search term: ""
+SimpleGalleryPage.tsx:91 Fetching images with URL: /api/gallery?
+SimpleGalleryPage.tsx:542 Search term changed to: ""
+SimpleGalleryPage.tsx:77 fetchImages called with search term: ""
+SimpleGalleryPage.tsx:91 Fetching images with URL: /api/gallery?
+SimpleGalleryPage.tsx:107 Gallery data received: 3 images
+ImageCard.tsx:92 [TRACE IMG] Image loaded successfully: {src: 'https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w…v/thumb/4f30c91c-0ff4-44da-bcfb-93009b7fa509.webp', imageId: '4f30c91c-0ff4-44da-bcfb-93009b7fa509', naturalWidth: 400, naturalHeight: 280, complete: true}
+ImageCard.tsx:92 [TRACE IMG] Image loaded successfully: {src: 'https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w…v/thumb/20e2cf1d-0ded-42fe-b8e4-d0c2146eb53e.webp', imageId: '20e2cf1d-0ded-42fe-b8e4-d0c2146eb53e', naturalWidth: 400, naturalHeight: 280, complete: true}
+ImageCard.tsx:92 [TRACE IMG] Image loaded successfully: {src: 'https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w…-storage/image/dev/thumb/img_1754519755061_0.webp', imageId: 'img_1754519755061_0', naturalWidth: 400, naturalHeight: 400, complete: true}
+SimpleGalleryPage.tsx:107 Gallery data received: 3 images
