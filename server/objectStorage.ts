@@ -231,41 +231,76 @@ export class ObjectStorageService {
    * Wipe all images from Object Storage (dev environment only)
    */
   async wipeAllImages(): Promise<void> {
-    const envPrefix = this.getEnvironmentPrefix();
-    
     try {
+      console.log('Starting Object Storage wipe...');
+      
       // List all objects in the bucket
       const listResult = await this.client.list();
+      console.log('List result structure:', {
+        ok: listResult?.ok,
+        hasValue: !!listResult?.value,
+        valueLength: listResult?.value?.length,
+        error: listResult?.error
+      });
       
-      if (!listResult || !listResult.ok) {
-        console.log('Failed to list objects from Object Storage');
-        return;
+      if (!listResult?.ok) {
+        console.error('Failed to list objects:', listResult?.error);
+        throw new Error(`Failed to list objects: ${listResult?.error}`);
       }
       
       const objects = listResult.value || [];
+      console.log(`Found ${objects.length} objects to delete`);
       
+      if (objects.length === 0) {
+        console.log('Bucket is already empty');
+        return;
+      }
+      
+      // Log sample object structure
       if (objects.length > 0) {
-        console.log(`Wiping ${objects.length} objects from Object Storage...`);
-        
-        // Delete all objects
-        for (const obj of objects) {
-          const objPath = obj.name || obj.path || obj.key;
-          if (objPath) {
-            try {
-              await this.client.delete(objPath);
-            } catch (deleteError) {
-              console.error(`Failed to delete ${objPath}:`, deleteError);
-            }
-          }
+        console.log('Sample object structure:', {
+          keys: Object.keys(objects[0]),
+          name: objects[0].name,
+          firstFew: objects.slice(0, 3).map(obj => obj.name)
+        });
+      }
+      
+      // Delete all objects with proper error handling
+      let deletedCount = 0;
+      let failedCount = 0;
+      
+      for (const obj of objects) {
+        const objName = obj.name;
+        if (!objName) {
+          console.warn('Object has no name property:', obj);
+          failedCount++;
+          continue;
         }
         
-        console.log(`Wiped ${objects.length} objects from Object Storage`);
-      } else {
-        console.log('No objects found in Object Storage to wipe');
+        try {
+          const deleteResult = await this.client.delete(objName);
+          
+          if (deleteResult?.ok) {
+            deletedCount++;
+            console.log(`✓ Deleted: ${objName}`);
+          } else {
+            failedCount++;
+            console.error(`✗ Failed to delete ${objName}:`, deleteResult?.error);
+          }
+        } catch (deleteError) {
+          failedCount++;
+          console.error(`✗ Exception deleting ${objName}:`, deleteError);
+        }
+      }
+      
+      console.log(`Wipe completed: ${deletedCount} deleted, ${failedCount} failed`);
+      
+      if (failedCount > 0) {
+        throw new Error(`Failed to delete ${failedCount} objects`);
       }
       
     } catch (error) {
-      console.error('Error wiping Object Storage:', error);
+      console.error('Error in wipeAllImages:', error);
       throw error;
     }
   }
