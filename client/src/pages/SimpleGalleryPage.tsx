@@ -90,10 +90,17 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       const url = `/api/gallery?${params.toString()}`;
       console.log('Fetching images with URL:', url);
       
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
       
       if (!response.ok) {
-        throw new Error(`Error fetching gallery: ${response.status}`);
+        const errorText = await response.text();
+        console.error(`Gallery fetch failed: ${response.status} ${response.statusText}`, errorText);
+        throw new Error(`Error fetching gallery: ${response.status} - ${errorText}`);
       }
       
       const data = await response.json();
@@ -109,11 +116,12 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       setImages(formattedImages);
     } catch (err) {
       console.error('Error fetching gallery:', err);
-      setError('Failed to load gallery images');
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      setError(`Failed to load gallery images: ${errorMessage}`);
       toast({
         variant: 'destructive',
         title: 'Gallery Error',
-        description: 'Failed to load images. Please try again.'
+        description: `Failed to load images: ${errorMessage}`
       });
     } finally {
       setLoading(false);

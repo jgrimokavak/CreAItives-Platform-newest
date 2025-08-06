@@ -9,7 +9,7 @@ import { galleryRateLimit } from './middleware/rateLimiter';
 const router = Router();
 
 // Get gallery images with pagination
-router.get('/gallery', galleryRateLimit, async (req, res) => {
+router.get('/gallery', async (req, res) => {
   try {
     const { cursor, limit = 50, starred, trash, q } = req.query;
     
