@@ -75,29 +75,20 @@ export class ObjectStorageService {
    */
   async downloadImage(path: string): Promise<Buffer> {
     try {
-      console.log(`[TRACE] Attempting to download from Object Storage: ${path}`);
       const result = await this.client.downloadAsBytes(path);
-      console.log(`[TRACE] Download result type:`, typeof result);
-      console.log(`[TRACE] Download result:`, result);
       
       if (result && typeof result === 'object' && 'ok' in result) {
-        console.log(`[TRACE] Result has 'ok' property:`, result.ok);
         if (result.ok) {
-          const buffer = result.value as Buffer;
-          console.log(`[TRACE] Successfully extracted buffer of size:`, buffer?.length || 'undefined');
-          return buffer;
+          return result.value[0] as Buffer;
         } else {
-          console.log(`[TRACE] Download result not ok:`, result);
           throw new Error('Download failed');
         }
       } else {
         // Direct buffer response
-        const buffer = result as Buffer;
-        console.log(`[TRACE] Direct buffer response size:`, buffer?.length || 'undefined');
-        return buffer;
+        return result as Buffer;
       }
     } catch (error) {
-      console.error(`[TRACE] Error downloading image from path ${path}:`, error);
+      console.error(`Error downloading image from path ${path}:`, error);
       throw new Error(`Failed to download image: ${error}`);
     }
   }
