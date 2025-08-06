@@ -41,7 +41,11 @@ export async function persistImage(b64: string, meta: ImageMetadata, customId?: 
       .toBuffer();
 
     // Upload both full image and thumbnail to Object Storage
+    console.log(`[TRACE] Uploading image to Object Storage with id: ${id}`);
     const { fullUrl, thumbUrl } = await objectStorage.uploadImage(imgBuf, id, 'png');
+    console.log(`[TRACE] Object Storage upload complete:
+      - Full URL: ${fullUrl}
+      - Thumb URL: ${thumbUrl}`);
 
     // Format params for database storage
     const sizeStr = `${width || 1024}x${height || 1024}`;
@@ -97,10 +101,14 @@ export async function persistImage(b64: string, meta: ImageMetadata, customId?: 
       
       // Insert the record properly
       const [savedImage] = await db.insert(images).values(record).returning();
-      console.log(`Successfully inserted image record with Object Storage URLs: ${id}`);
+      console.log(`[TRACE] DB record written:
+        - ID: ${savedImage.id}
+        - Full URL: ${savedImage.fullUrl}
+        - Thumb URL: ${savedImage.thumbUrl}
+        - Created At: ${savedImage.createdAt}`);
       
       // ✅ CRITICAL FIX: Send WebSocket notification to refresh frontend gallery
-      push('imageCreated', {
+      const wsPayload = {
         image: {
           id: savedImage.id,
           url: savedImage.fullUrl,
@@ -117,7 +125,9 @@ export async function persistImage(b64: string, meta: ImageMetadata, customId?: 
           quality: savedImage.quality,
           deletedAt: savedImage.deletedAt ? new Date(savedImage.deletedAt).toISOString() : null
         }
-      });
+      };
+      console.log(`[TRACE] Sending WebSocket imageCreated event:`, JSON.stringify(wsPayload));
+      push('imageCreated', wsPayload);
       
     } catch (error) {
       console.error('Error inserting image record:', error);

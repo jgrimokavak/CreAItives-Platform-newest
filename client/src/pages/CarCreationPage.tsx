@@ -142,10 +142,13 @@ const CarCreationPage: React.FC = () => {
   // Listen for WebSocket gallery updates to refresh the image if it was just generated
   useEffect(() => {
     const handleGalleryUpdate = (event: CustomEvent) => {
+      console.log('[TRACE CarCreationPage] Received gallery-updated event:', event.detail);
       if (event.detail?.type === 'created' && event.detail?.data?.image) {
         const newImage = event.detail.data.image;
+        console.log('[TRACE CarCreationPage] New image data:', newImage);
         // If we just generated an image and it matches, update our local state
         if (image && newImage.id === image.id) {
+          console.log('[TRACE CarCreationPage] Updating local image state with new data');
           // Transform the WebSocket image data to match our GeneratedImage type
           const transformedImage: GeneratedImage = {
             id: newImage.id,
@@ -163,6 +166,7 @@ const CarCreationPage: React.FC = () => {
             starred: newImage.starred,
             deletedAt: newImage.deletedAt
           };
+          console.log('[TRACE CarCreationPage] Transformed image:', transformedImage);
           setImage(transformedImage);
         }
       }

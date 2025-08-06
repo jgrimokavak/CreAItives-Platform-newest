@@ -83,12 +83,16 @@ export function useWebSocket() {
   
   // Handle WebSocket messages
   const handleMessage = (ev: string, data: any) => {
+    console.log('[TRACE] WebSocket received event:', ev, 'with data:', data);
     switch (ev) {
       case 'imageCreated':
+        console.log('[TRACE] Processing imageCreated event, dispatching gallery-updated');
         // Invalidate gallery queries when new images are created
         queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
         // Dispatch custom event for components listening for gallery updates
-        window.dispatchEvent(new CustomEvent('gallery-updated', { detail: { type: 'created', data } }));
+        const createEvent = new CustomEvent('gallery-updated', { detail: { type: 'created', data } });
+        console.log('[TRACE] Dispatching gallery-updated event:', createEvent.detail);
+        window.dispatchEvent(createEvent);
         break;
         
       case 'imageUpdated':

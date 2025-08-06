@@ -47,8 +47,10 @@ export default function Home() {
   // Listen for WebSocket gallery updates to refresh images
   useEffect(() => {
     const handleGalleryUpdate = (event: CustomEvent) => {
+      console.log('[TRACE Home] Received gallery-updated event:', event.detail);
       if (event.detail?.type === 'created' && event.detail?.data?.image) {
         const newImage = event.detail.data.image;
+        console.log('[TRACE Home] New image data:', newImage);
         // Transform the WebSocket image data to match our GeneratedImage type
         const transformedImage: GeneratedImage = {
           id: newImage.id,
@@ -66,8 +68,13 @@ export default function Home() {
           starred: newImage.starred,
           deletedAt: newImage.deletedAt
         };
+        console.log('[TRACE Home] Adding transformed image to list:', transformedImage);
         // Add the new image to the list
-        setImages(prev => [transformedImage, ...prev.filter(img => img.id !== transformedImage.id)]);
+        setImages(prev => {
+          const updated = [transformedImage, ...prev.filter(img => img.id !== transformedImage.id)];
+          console.log('[TRACE Home] Updated images list:', updated);
+          return updated;
+        });
       }
     };
     

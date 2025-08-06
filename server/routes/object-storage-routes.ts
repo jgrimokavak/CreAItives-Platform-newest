@@ -10,24 +10,34 @@ const router = Router();
 router.get('/object-storage/image/:path(*)', async (req: Request, res: Response) => {
   try {
     const imagePath = req.params.path;
+    console.log(`[TRACE] Image request received for path: ${imagePath}`);
     
     if (!imagePath) {
+      console.log('[TRACE] Image path is empty, returning 400');
       return res.status(400).json({ error: 'Image path is required' });
     }
 
     // Download image from Object Storage
+    console.log(`[TRACE] Downloading image from Object Storage: ${imagePath}`);
     const imageBuffer = await objectStorage.downloadImage(imagePath);
+    console.log(`[TRACE] Image downloaded successfully, buffer size: ${imageBuffer.length} bytes`);
+    
+    // Determine content type based on extension
+    const contentType = imagePath.endsWith('.webp') ? 'image/webp' : 
+                       imagePath.endsWith('.jpg') || imagePath.endsWith('.jpeg') ? 'image/jpeg' :
+                       'image/png';
     
     // Set appropriate headers
     res.set({
-      'Content-Type': 'image/png', // Default to PNG, can be enhanced to detect actual type
+      'Content-Type': contentType,
       'Content-Length': imageBuffer.length.toString(),
       'Cache-Control': 'public, max-age=86400', // 24 hour cache
     });
 
+    console.log(`[TRACE] Sending image response with Content-Type: ${contentType}`);
     res.send(imageBuffer);
   } catch (error) {
-    console.error('Error serving image from Object Storage:', error);
+    console.error('[TRACE] Error serving image from Object Storage:', error);
     res.status(404).json({ error: 'Image not found' });
   }
 });

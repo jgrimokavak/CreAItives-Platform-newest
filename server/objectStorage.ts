@@ -30,23 +30,28 @@ export class ObjectStorageService {
 
     try {
       // Upload full image using correct uploadFromBytes method
+      console.log(`[TRACE] Uploading to Object Storage key: ${fullPath}`);
       const uploadResult1 = await this.client.uploadFromBytes(fullPath, imageBuffer);
       if (!uploadResult1.ok) {
         throw new Error('Failed to upload full image');
       }
+      console.log(`[TRACE] Full image uploaded successfully to: ${fullPath}`);
 
       // Upload thumbnail using same image for now
+      console.log(`[TRACE] Uploading thumbnail to Object Storage key: ${thumbPath}`);
       const uploadResult2 = await this.client.uploadFromBytes(thumbPath, imageBuffer);  
       if (!uploadResult2.ok) {
         throw new Error('Failed to upload thumbnail');
       }
+      console.log(`[TRACE] Thumbnail uploaded successfully to: ${thumbPath}`);
 
-      console.log(`✅ Uploaded image to Object Storage: ${fullPath}`);
-
-      return {
+      const urls = {
         fullUrl: `/api/object-storage/image/${fullPath}`,
         thumbUrl: `/api/object-storage/image/${thumbPath}`,
       };
+      
+      console.log(`[TRACE] Returning URLs:`, JSON.stringify(urls));
+      return urls;
     } catch (error) {
       console.error('Error uploading to Object Storage:', error);
       throw new Error(`Failed to upload image: ${error}`);
