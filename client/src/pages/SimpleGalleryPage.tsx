@@ -74,7 +74,6 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
   
   // Fetch gallery images
   const fetchImages = async () => {
-    console.log(`fetchImages called with search term: "${searchTerm}"`);
     setLoading(true);
     setError(null);
     
@@ -84,11 +83,9 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       if (mode === 'trash') params.append('trash', 'true');
       if (searchTerm && searchTerm.trim() !== '') {
         params.append('q', searchTerm.trim()); // Backend expects 'q' parameter
-        console.log(`Added search parameter q=${searchTerm.trim()}`);
       }
       
       const url = `/api/gallery?${params.toString()}`;
-      console.log('Fetching images with URL:', url);
       
       const response = await fetch(url, {
         credentials: 'include',
@@ -104,7 +101,6 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       }
       
       const data = await response.json();
-      console.log(`Gallery data received: ${data.items?.length || 0} images`);
       
       // Ensure images have proper URLs
       const formattedImages = data.items || [];
@@ -539,8 +535,6 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
   
   // Separate effect for search term changes
   useEffect(() => {
-    console.log(`Search term changed to: "${searchTerm}"`);
-    
     // Always fetch images when the search term changes
     // This allows showing all images when search is cleared
     fetchImages();

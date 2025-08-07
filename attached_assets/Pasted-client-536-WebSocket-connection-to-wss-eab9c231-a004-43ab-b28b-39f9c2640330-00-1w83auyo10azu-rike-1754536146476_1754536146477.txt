@@ -1,0 +1,30 @@
+client:536 WebSocket connection to 'wss://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/?token=ejvhoFS4Tp4L' failed: 
+setupWebSocket @ client:536
+(anonymous) @ client:531
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=ejvhoFS4Tp4L' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+setupWebSocket @ client:536
+fallback @ client:509
+(anonymous) @ client:555
+chunk-WERSD76P.js?v=44fc700f:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+main.tsx:13 SW registered:  ServiceWorkerRegistration {installing: null, waiting: null, active: ServiceWorker, navigationPreload: NavigationPreloadManager, scope: 'https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/', …}
+gallery:1 <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">
+SimpleGalleryPage.tsx:77 fetchImages called with search term: ""
+SimpleGalleryPage.tsx:91 Fetching images with URL: /api/gallery?
+SimpleGalleryPage.tsx:542 Search term changed to: ""
+SimpleGalleryPage.tsx:77 fetchImages called with search term: ""
+SimpleGalleryPage.tsx:91 Fetching images with URL: /api/gallery?
+websocket.ts:26 WebSocket connected
+SimpleGalleryPage.tsx:107 Gallery data received: 9 images
+ImageCard.tsx:92 [TRACE IMG] Image loaded successfully: {src: 'https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w…d/thumb/9005af1f-21d3-4069-ae77-91fe1eec4582.webp', imageId: '9005af1f-21d3-4069-ae77-91fe1eec4582', naturalWidth: 400, naturalHeight: 280, complete: true}
+ImageCard.tsx:92 [TRACE IMG] Image loaded successfully: {src: 'https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w…v/thumb/a70f3365-a9f6-49aa-9d14-f90b8dffeacd.webp', imageId: 'a70f3365-a9f6-49aa-9d14-f90b8dffeacd', naturalWidth: 400, naturalHeight: 280, complete: true}
+ImageCard.tsx:92 [TRACE IMG] Image loaded successfully: {src: 'https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w…v/thumb/a644f0b0-2943-4c62-80d0-febd2c74528d.webp', imageId: 'a644f0b0-2943-4c62-80d0-febd2c74528d', naturalWidth: 400, naturalHeight: 280, complete: true}
+ImageCard.tsx:92 [TRACE IMG] Image loaded successfully: {src: 'https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w…v/thumb/eee88d4a-c0dc-4eeb-8380-0eb8b53e0d57.webp', imageId: 'eee88d4a-c0dc-4eeb-8380-0eb8b53e0d57', naturalWidth: 400, naturalHeight: 280, complete: true}
+ImageCard.tsx:92 [TRACE IMG] Image loaded successfully: {src: 'https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w…torage/image/prod/thumb/edit_1754525846691_0.webp', imageId: 'edit_1754525846691_0', naturalWidth: 400, naturalHeight: 400, complete: true}
+ImageCard.tsx:92 [TRACE IMG] Image loaded successfully: {src: 'https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w…torage/image/prod/thumb/edit_1754525779245_0.webp', imageId: 'edit_1754525779245_0', naturalWidth: 400, naturalHeight: 400, complete: true}
+ImageCard.tsx:92 [TRACE IMG] Image loaded successfully: {src: 'https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w…storage/image/prod/thumb/img_1754525733818_0.webp', imageId: 'img_1754525733818_0', naturalWidth: 400, naturalHeight: 400, complete: true}
+ImageCard.tsx:92 [TRACE IMG] Image loaded successfully: {src: 'https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w…d/thumb/ad1809bd-cf24-4e8d-bb5d-5c79924d56df.webp', imageId: 'ad1809bd-cf24-4e8d-bb5d-5c79924d56df', naturalWidth: 400, naturalHeight: 280, complete: true}
+ImageCard.tsx:92 [TRACE IMG] Image loaded successfully: {src: 'https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w…-storage/image/dev/thumb/img_1754524224847_0.webp', imageId: 'img_1754524224847_0', naturalWidth: 400, naturalHeight: 171, complete: true}
+SimpleGalleryPage.tsx:107 Gallery data received: 9 images

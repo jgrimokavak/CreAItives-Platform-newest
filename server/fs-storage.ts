@@ -102,11 +102,6 @@ export async function persistImage(b64: string, meta: ImageMetadata, customId?: 
       
       // Insert the record properly
       const [savedImage] = await db.insert(images).values(record).returning();
-      console.log(`[TRACE] DB record written:
-        - ID: ${savedImage.id}
-        - Full URL: ${savedImage.fullUrl}
-        - Thumb URL: ${savedImage.thumbUrl}
-        - Created At: ${savedImage.createdAt}`);
       
       // ✅ CRITICAL FIX: Send WebSocket notification to refresh frontend gallery
       const wsPayload = {
@@ -127,7 +122,6 @@ export async function persistImage(b64: string, meta: ImageMetadata, customId?: 
           deletedAt: savedImage.deletedAt ? new Date(savedImage.deletedAt).toISOString() : null
         }
       };
-      console.log(`[TRACE] Sending WebSocket imageCreated event:`, JSON.stringify(wsPayload));
       push('imageCreated', wsPayload);
       
     } catch (error) {
