@@ -60,7 +60,7 @@ Preferred communication style: Simple, everyday language.
 ### AI Services
 - **OpenAI API**: GPT-Image-1, GPT-4o.
 - **Replicate API**: Imagen-3, Flux-Pro 1.1, Flux-Kontext-Max, Flux-Krea-Dev, Topaz Labs Upscale API.
-- **Google Vertex AI**: Veo video generation models (Veo 2, Veo 3, Veo 3 Fast).
+
 
 ### Data Sources
 - **Google Sheets**: Live car database and dynamic color management.

@@ -185,77 +185,7 @@ export const editImageSchema = z.object({
 
 export type EditImageInput = z.infer<typeof editImageSchema>;
 
-// Videos database schema 
-export const videos = pgTable("videos", {
-  id: text("id").primaryKey(),
-  project_id: text("project_id"),
-  prompt: text("prompt").notNull(),
-  negative_prompt: text("negative_prompt"),
-  model_id: text("model_id").notNull(),
-  aspect_ratio: text("aspect_ratio").notNull(),
-  resolution: text("resolution").notNull(),
-  duration: text("duration").notNull(),
-  sample_count: text("sample_count").default("1"),
-  seed: text("seed"),
-  audio: boolean("audio").default(false),
-  enhance_prompt: boolean("enhance_prompt").default(false),
-  person_generation: text("person_generation").default("allow_all"),
-  status: text("status").notNull().default("queued"), // queued, processing, completed, failed
-  gcs_uri: text("gcs_uri"),
-  vertex_op: text("vertex_op"), // Vertex AI operation name
-  video_url: text("video_url"), // Final video URL after completion
-  error_message: text("error_message"),
-  created_at: timestamp("created_at").defaultNow().notNull(),
-  completed_at: timestamp("completed_at"),
-});
 
-export const insertVideoSchema = createInsertSchema(videos).omit({
-  id: true,
-  created_at: true,
-  completed_at: true,
-});
-
-export type InsertVideo = z.infer<typeof insertVideoSchema>;
-export type Video = typeof videos.$inferSelect;
-
-// Projects table for video organization
-export const projects = pgTable('projects', {
-  id: varchar('id').primaryKey(),
-  name: varchar('name', { length: 100 }).notNull(),
-  description: text('description'),
-  gcs_folder: varchar('gcs_folder').notNull(), // GCS folder path for this project
-  video_count: integer('video_count').default(0).notNull(),
-  created_at: timestamp('created_at').defaultNow().notNull(),
-  updated_at: timestamp('updated_at').defaultNow().notNull(),
-});
-
-export const insertProjectSchema = createInsertSchema(projects).omit({
-  id: true,
-  video_count: true,
-  created_at: true,
-  updated_at: true,
-});
-
-export type InsertProject = z.infer<typeof insertProjectSchema>;
-export type Project = typeof projects.$inferSelect;
-
-// Video generation request schema
-export const generateVideoSchema = z.object({
-  prompt: z.string().min(1).max(32000),
-  negativePrompt: z.string().optional(),
-  model: z.enum(["Veo 3", "Veo 3 Fast", "Veo 2"]),
-  aspectRatio: z.enum(["16:9", "9:16", "1:1"]),
-  resolution: z.enum(["720p", "1080p"]),
-  duration: z.number().int().min(5).max(8),
-  sampleCount: z.number().int().min(1).max(4).default(1),
-  generateAudio: z.boolean().default(false),
-  seed: z.number().int().optional(),
-  enhancePrompt: z.boolean().default(false),
-  personGeneration: z.enum(["allow_all", "dont_allow"]).default("allow_all"),
-  projectId: z.string().optional(),
-});
-
-export type GenerateVideoInput = z.infer<typeof generateVideoSchema>;
 
 // Email Builder Schema - MJML-based only
 export interface EmailComponent {

@@ -24,8 +24,8 @@ import upscaleRoutes from "./routes/upscale-routes";
 import enhancePromptRouter from "./routes/enhancePrompt";
 import enhanceEditPromptRouter from "./routes/enhanceEditPrompt";
 import promptSuggestionsRouter from "./routes/promptSuggestions";
-import videoRoutes from "./routes/video-routes";
-import projectRoutes from "./routes/project-routes";
+
+
 import objectStorageRoutes from "./routes/object-storage-routes";
 import galleryObjectStorageRoutes from "./gallery-object-storage";
 import { compileMjml, testMjmlCompilation } from "./routes/email-routes";
@@ -1081,11 +1081,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Add prompt suggestions routes
   app.use('/api', promptSuggestionsRouter);
   
-  // Add video generation routes
-  app.use('/api/video-generate', videoRoutes);
+
   
-  // Add project management routes
-  app.use('/api/projects', projectRoutes);
+
   
   // Add Object Storage routes
   app.use('/api', objectStorageRoutes);

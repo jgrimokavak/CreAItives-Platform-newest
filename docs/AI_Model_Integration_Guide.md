@@ -4,7 +4,7 @@
 This guide provides the exact process for successfully adding new AI models to the "Create" page, based on the flux-krea-dev integration experience and all errors encountered during the process.
 
 ## Prerequisites
-- Model must be available via the provider API (OpenAI, Replicate, Google Vertex AI)
+- Model must be available via the provider API (OpenAI, Replicate)
 - Model parameters and schema must be documented
 - Provider authentication must be configured
 
