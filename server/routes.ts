@@ -1093,25 +1093,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/email/compile-mjml', compileMjml);
   app.get('/api/email/test-mjml', testMjmlCompilation);
   
-  // Gallery sync route (admin only) 
-  app.post('/api/gallery/sync', isAdmin, async (req, res) => {
-    try {
-      const { manualGallerySync } = await import('./utils/gallerySync');
-      const report = await manualGallerySync();
-      res.json({
-        success: true,
-        message: 'Gallery synchronization completed',
-        report
-      });
-    } catch (error) {
-      console.error('Error in gallery sync:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Gallery synchronization failed',
-        error: error instanceof Error ? error.message : 'Unknown error'
-      });
-    }
-  });
+  // REMOVED: Gallery sync API endpoint that was causing images to be incorrectly moved to trash
   
   // Car generation routes
   app.get("/api/cars/makes", async (_req, res) => res.json(await listMakes()));
@@ -1513,17 +1495,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize cleanup job for trashed images
   setupCleanupJob();
   
-  // Run gallery sync on startup to clean up orphaned records
-  (async () => {
-    try {
-      console.log('Running initial gallery sync to clean up orphaned records...');
-      const { manualGallerySync } = await import('./utils/gallerySync');
-      const report = await manualGallerySync();
-      console.log('Initial gallery sync completed:', report);
-    } catch (error) {
-      console.error('Error in initial gallery sync:', error);
-    }
-  })();
+  // REMOVED: Gallery sync that was causing images to be incorrectly moved to trash
+  // due to dev/prod environment isolation issues. This system is no longer necessary.
   
   // Initialize car data auto-refresh
   setupCarDataAutoRefresh();
