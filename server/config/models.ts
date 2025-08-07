@@ -128,6 +128,40 @@ export const fluxKreaDevSchema = {
   required: ["prompt"]
 };
 
+// Minimax Hailuo-02 schema for video generation
+export const minimaxHailuoSchema = {
+  type: "object",
+  properties: {
+    prompt: {
+      type: "string",
+      description: "Text prompt for video generation"
+    },
+    duration: {
+      type: "integer",
+      enum: [6, 10],
+      description: "Duration of the video in seconds. 10 seconds is only available for 768p resolution.",
+      default: 6
+    },
+    resolution: {
+      type: "string",
+      enum: ["512p", "768p", "1080p"],
+      description: "Pick between standard 512p, 768p, or pro 1080p resolution. The pro model is not just high resolution, it is also higher quality.",
+      default: "1080p"
+    },
+    prompt_optimizer: {
+      type: "boolean",
+      description: "Use prompt optimizer",
+      default: true
+    },
+    first_frame_image: {
+      type: "string",
+      format: "uri",
+      description: "First frame image for video generation. The output video will have the same aspect ratio as this image."
+    }
+  },
+  required: ["prompt"]
+};
+
 export const models: ModelConfig[] = [
   {
     key: "gpt-image-1",
@@ -211,6 +245,19 @@ export const models: ModelConfig[] = [
     description: "This model generates beautiful cinematic 2 megapixel images in 3-4 seconds"
   },
   // Video Models
+  {
+    key: "hailuo-02",
+    provider: "replicate", 
+    slug: "minimax/hailuo-02",
+    schema: minimaxHailuoSchema,
+    defaults: {
+      duration: 6,
+      resolution: "1080p",
+      prompt_optimizer: true
+    },
+    visible: ["prompt", "duration", "resolution", "prompt_optimizer", "first_frame_image"],
+    description: "Hailuo-02 – High-quality video generation from Minimax with fast generation times."
+  },
   {
     key: "veo-3",
     provider: "vertex",

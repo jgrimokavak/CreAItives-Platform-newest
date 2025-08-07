@@ -18,6 +18,100 @@ export class ReplicateProvider extends BaseProvider {
     return model?.defaults || {};
   }
   
+  async generateVideo(modelKey: string, inputs: any): Promise<{ jobId: string }> {
+    const model = models.find(m => m.key === modelKey);
+    if (!model || model.provider !== 'replicate') {
+      throw new Error(`Invalid Replicate video model: ${modelKey}`);
+    }
+
+    const modelIdentifier = model.version || model.slug;
+    if (!modelIdentifier) {
+      throw new Error(`Model ${modelKey} missing version or slug`);
+    }
+
+    // Prepare the input for the specific model
+    let body: Record<string, any> = {
+      ...this.getDefaults(modelKey),
+      ...inputs
+    };
+
+    // Map parameters for hailuo-02 model
+    if (modelKey === 'hailuo-02') {
+      // Map frontend parameters to model parameters
+      if (inputs.promptOptimizer !== undefined) {
+        body.prompt_optimizer = inputs.promptOptimizer;
+        delete body.promptOptimizer;
+      }
+      if (inputs.firstFrameImage !== undefined) {
+        body.first_frame_image = inputs.firstFrameImage;
+        delete body.firstFrameImage;
+      }
+    }
+
+    log({
+      ts: new Date().toISOString(),
+      direction: "request",
+      payload: {
+        type: "replicate_video_generate",
+        modelKey,
+        inputs: { ...body, prompt: body.prompt?.substring(0, 50) + '...' }
+      }
+    });
+
+    // Create a prediction for video generation
+    const prediction = await createPrediction(modelIdentifier, body);
+    
+    return { jobId: prediction.id };
+  }
+
+  async pollJobStatus(jobId: string): Promise<{ status: string; videoUrl?: string; thumbnailUrl?: string; error?: string }> {
+    try {
+      const result = await waitForPrediction(jobId);
+      
+      if (result.status === 'succeeded' && result.output) {
+        // Handle different output formats from different video models
+        let videoUrl: string | undefined;
+        let thumbnailUrl: string | undefined;
+
+        if (typeof result.output === 'string') {
+          videoUrl = result.output;
+        } else if (result.output && typeof result.output === 'object') {
+          // If output is an object with url method (like in the example)
+          if ('url' in result.output && typeof result.output.url === 'function') {
+            videoUrl = result.output.url();
+          } else if ('url' in result.output && typeof result.output.url === 'string') {
+            videoUrl = result.output.url;
+          }
+          
+          // Look for thumbnail
+          if ('thumbnail' in result.output) {
+            thumbnailUrl = result.output.thumbnail;
+          }
+        }
+
+        return {
+          status: 'completed',
+          videoUrl: videoUrl,
+          thumbnailUrl: thumbnailUrl
+        };
+      } else if (result.status === 'failed') {
+        return {
+          status: 'failed',
+          error: result.error || 'Video generation failed'
+        };
+      } else {
+        return {
+          status: 'processing'
+        };
+      }
+    } catch (error: any) {
+      return {
+        status: 'failed',
+        error: error.message || 'Error polling job status'
+      };
+    }
+  }
+
   async generate(options: GenerateOptions): Promise<ProviderResult> {
     const { prompt, modelKey, ...params } = options;
     

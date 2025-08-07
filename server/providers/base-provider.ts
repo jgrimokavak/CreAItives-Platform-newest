@@ -36,6 +36,11 @@ export abstract class BaseProvider {
   async generateVideo(modelKey: string, inputs: Record<string, any>): Promise<any> {
     throw new Error(`${this.name} provider does not support video generation`);
   }
+
+  // Poll video generation job status - optional, not all providers support this
+  async pollJobStatus(jobId: string): Promise<{ status: string; videoUrl?: string; thumbnailUrl?: string; error?: string }> {
+    throw new Error(`${this.name} provider does not support job status polling`);
+  }
   
   // Get default parameters for a model
   abstract getDefaults(modelKey: string): Record<string, any>;
