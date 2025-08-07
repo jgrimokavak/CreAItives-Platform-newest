@@ -39,7 +39,7 @@ import SimpleGalleryPage from './SimpleGalleryPage';
 
 // Video Gallery Component
 function VideoGallery() {
-  const { data: videos, isLoading } = useQuery<any[]>({
+  const { data: videosResponse, isLoading } = useQuery<{items: any[]}>({
     queryKey: ['/api/video'],
     queryFn: () => apiRequest('/api/video'),
   });
@@ -52,6 +52,8 @@ function VideoGallery() {
       </div>
     );
   }
+
+  const videos = videosResponse?.items || [];
 
   if (!videos || videos.length === 0) {
     return (
