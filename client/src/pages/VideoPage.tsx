@@ -308,10 +308,15 @@ export default function VideoPage() {
         throw new Error("Prompt must be at least 3 characters long");
       }
       
-      // Get reference image if available
-      let imageData = null;
+      // Prepare the request payload
+      const payload: any = {
+        text: currentPrompt,
+        model: "minimax-hailuo-02",
+      };
+      
+      // Only include image if there's actually one selected
       if (firstFrameImagePreview) {
-        imageData = firstFrameImagePreview; // Already in base64 format
+        payload.image = firstFrameImagePreview;
       }
       
       const response = await apiRequest("/api/enhance-video-prompt", {
@@ -319,11 +324,7 @@ export default function VideoPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          text: currentPrompt,
-          model: "minimax-hailuo-02",
-          image: imageData,
-        }),
+        body: JSON.stringify(payload),
       });
       
       return response;
