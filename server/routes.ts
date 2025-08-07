@@ -1069,8 +1069,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api', galleryRoutes);
   
   // Add video and project routes
-  app.use('/api', videoRoutes);
-  app.use('/api', projectRoutes);
+  app.use('/api/video', videoRoutes);
+  app.use('/api/projects', projectRoutes);
   
   // Add model routes (includes /api/models endpoint)
   app.use('/api', modelRoutes);

@@ -125,7 +125,7 @@ interface Project {
 
 export default function VideoPage() {
   const { toast } = useToast();
-  const [selectedProject, setSelectedProject] = useState<string>('');
+  const [selectedProject, setSelectedProject] = useState<string>('none');
   const [activeTab, setActiveTab] = useState<'create' | 'gallery'>('create');
   const [showCreateProject, setShowCreateProject] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
@@ -219,7 +219,7 @@ export default function VideoPage() {
     mutationFn: async (data: VideoGenerationForm) => {
       const payload = {
         ...data,
-        projectId: selectedProject || undefined,
+        projectId: selectedProject === 'none' ? undefined : selectedProject,
       };
       
       return await apiRequest('/api/video/generate', {
@@ -347,7 +347,7 @@ export default function VideoPage() {
                             <SelectValue placeholder="Choose a project (optional)" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">No Project</SelectItem>
+                            <SelectItem value="none">No Project</SelectItem>
                             {projects?.map((project) => (
                               <SelectItem key={project.id} value={project.id}>
                                 {project.name}
