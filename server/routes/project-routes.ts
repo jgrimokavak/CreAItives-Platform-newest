@@ -9,7 +9,8 @@ const router = express.Router();
 // Create project
 router.post('/', async (req, res) => {
   try {
-    const userId = (req.session as any)?.user?.id;
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
     }
@@ -53,7 +54,8 @@ router.post('/', async (req, res) => {
 // List user's projects
 router.get('/', async (req, res) => {
   try {
-    const userId = (req.session as any)?.user?.id;
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
     }
@@ -70,7 +72,8 @@ router.get('/', async (req, res) => {
 // Get project by ID
 router.get('/:id', async (req, res) => {
   try {
-    const userId = (req.session as any)?.user?.id;
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
     }
@@ -81,8 +84,7 @@ router.get('/:id', async (req, res) => {
     }
 
     // Ensure user can only access their own projects (or is admin)
-    const user = (req.session as any)?.user;
-    if (project.userId !== userId && user?.role !== 'admin') {
+    if (project.userId !== userId && user?.claims?.role !== 'admin') {
       return res.status(403).json({ error: 'Access denied' });
     }
 
@@ -97,7 +99,8 @@ router.get('/:id', async (req, res) => {
 // Update project
 router.put('/:id', async (req, res) => {
   try {
-    const userId = (req.session as any)?.user?.id;
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
     }
@@ -108,8 +111,7 @@ router.put('/:id', async (req, res) => {
     }
 
     // Ensure user can only update their own projects (or is admin)
-    const user = (req.session as any)?.user;
-    if (project.userId !== userId && user?.role !== 'admin') {
+    if (project.userId !== userId && user?.claims?.role !== 'admin') {
       return res.status(403).json({ error: 'Access denied' });
     }
 
@@ -147,7 +149,8 @@ router.put('/:id', async (req, res) => {
 // Delete project
 router.delete('/:id', async (req, res) => {
   try {
-    const userId = (req.session as any)?.user?.id;
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
     }
@@ -158,8 +161,7 @@ router.delete('/:id', async (req, res) => {
     }
 
     // Ensure user can only delete their own projects (or is admin)
-    const user = (req.session as any)?.user;
-    if (project.userId !== userId && user?.role !== 'admin') {
+    if (project.userId !== userId && user?.claims?.role !== 'admin') {
       return res.status(403).json({ error: 'Access denied' });
     }
 

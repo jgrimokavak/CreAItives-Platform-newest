@@ -40,21 +40,36 @@ import SimpleGalleryPage from './SimpleGalleryPage';
 // Video generation form schema
 const videoGenerationSchema = z.object({
   prompt: z.string().min(10, 'Prompt must be at least 10 characters').max(2000, 'Prompt must be less than 2000 characters'),
-  model: z.enum(['veo-3', 'veo-3-fast', 'veo-2']),
-  aspectRatio: z.enum(['1:1', '16:9', '9:16', '4:3', '3:4']),
-  resolution: z.enum(['720p', '1080p']),
-  duration: z.enum(['3s', '5s', '10s', '15s']),
+  model: z.enum(['hailuo-02', 'veo-3', 'veo-3-fast', 'veo-2']),
+  aspectRatio: z.enum(['1:1', '16:9', '9:16', '4:3', '3:4']).optional(),
+  resolution: z.enum(['512p', '768p', '720p', '1080p']),
+  duration: z.union([
+    z.enum(['3s', '5s', '10s', '15s']), // for veo models
+    z.number().int().min(6).max(10) // for hailuo-02 (6 or 10 seconds)
+  ]),
   projectId: z.string().optional(),
   referenceImage: z.string().optional(), // base64 encoded image
+  firstFrameImage: z.string().optional(), // for hailuo-02
   seed: z.number().int().optional(),
   audioEnabled: z.boolean().default(false),
   personGeneration: z.boolean().default(true),
+  promptOptimizer: z.boolean().default(true), // for hailuo-02
 });
 
 export type VideoGenerationForm = z.infer<typeof videoGenerationSchema>;
 
 // Video model configurations
 const VIDEO_MODELS = {
+  'hailuo-02': {
+    label: 'Hailuo-02',
+    description: 'High-quality video generation from Minimax with fast generation times',
+    maxDuration: 10, // numeric for hailuo-02
+    resolutions: ['512p', '768p', '1080p'],
+    aspectRatios: ['1:1', '16:9', '9:16', '4:3', '3:4'], // aspect ratio determined by firstFrameImage
+    supportsDurationInt: true, // uses integer duration instead of string
+    supportsFirstFrame: true,
+    supportsPromptOptimizer: true
+  },
   'veo-3': {
     label: 'Veo 3',
     description: 'Latest Google video model with highest quality',
@@ -73,8 +88,8 @@ const VIDEO_MODELS = {
     label: 'Veo 2',
     description: 'Stable and reliable video generation',
     maxDuration: '10s',
-    resolutions: ['720p'],
-    aspectRatios: ['16:9', '9:16']
+    resolutions: ['720p', '1080p'],
+    aspectRatios: ['1:1', '16:9', '9:16', '4:3']
   }
 };
 
@@ -100,16 +115,20 @@ export default function VideoPage() {
     resolver: zodResolver(videoGenerationSchema),
     defaultValues: {
       prompt: '',
-      model: 'veo-3',
+      model: 'hailuo-02',
       aspectRatio: '16:9',
       resolution: '1080p',
-      duration: '5s',
+      duration: 6, // integer for hailuo-02
       audioEnabled: false,
       personGeneration: true,
+      promptOptimizer: true,
     },
   });
 
   const watchedModel = form.watch('model');
+  
+  // Ensure we have a valid model, fallback to hailuo-02 if not
+  const currentModel = watchedModel && VIDEO_MODELS[watchedModel] ? watchedModel : 'hailuo-02';
 
   // Fetch projects
   const { data: projects, isLoading: projectsLoading, refetch: refetchProjects } = useQuery<Project[]>({
@@ -451,11 +470,11 @@ export default function VideoPage() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {VIDEO_MODELS[watchedModel].aspectRatios.map((ratio) => (
+                            {VIDEO_MODELS[currentModel]?.aspectRatios?.map((ratio) => (
                               <SelectItem key={ratio} value={ratio}>
                                 {ratio}
                               </SelectItem>
-                            ))}
+                            )) || []}
                           </SelectContent>
                         </Select>
                       </div>
@@ -471,11 +490,11 @@ export default function VideoPage() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {VIDEO_MODELS[watchedModel].resolutions.map((res) => (
+                            {VIDEO_MODELS[currentModel]?.resolutions?.map((res) => (
                               <SelectItem key={res} value={res}>
                                 {res}
                               </SelectItem>
-                            ))}
+                            )) || []}
                           </SelectContent>
                         </Select>
                       </div>
@@ -488,24 +507,88 @@ export default function VideoPage() {
                         Duration
                       </Label>
                       <Select
-                        value={form.watch('duration')}
-                        onValueChange={(value) => form.setValue('duration', value as any)}
+                        value={form.watch('duration')?.toString()}
+                        onValueChange={(value) => {
+                          // Handle different duration formats for different models
+                          if (VIDEO_MODELS[currentModel]?.supportsDurationInt) {
+                            form.setValue('duration', parseInt(value));
+                          } else {
+                            form.setValue('duration', value as any);
+                          }
+                        }}
                       >
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="3s">3 seconds</SelectItem>
-                          <SelectItem value="5s">5 seconds</SelectItem>
-                          {parseInt(VIDEO_MODELS[watchedModel].maxDuration.replace('s', '')) >= 10 && (
-                            <SelectItem value="10s">10 seconds</SelectItem>
-                          )}
-                          {parseInt(VIDEO_MODELS[watchedModel].maxDuration.replace('s', '')) >= 15 && (
-                            <SelectItem value="15s">15 seconds</SelectItem>
+                          {currentModel === 'hailuo-02' ? (
+                            <>
+                              <SelectItem value="6">6 seconds</SelectItem>
+                              <SelectItem value="10">10 seconds</SelectItem>
+                            </>
+                          ) : (
+                            <>
+                              <SelectItem value="3s">3 seconds</SelectItem>
+                              <SelectItem value="5s">5 seconds</SelectItem>
+                              {VIDEO_MODELS[currentModel] && typeof VIDEO_MODELS[currentModel].maxDuration === 'string' &&
+                               parseInt(VIDEO_MODELS[currentModel].maxDuration.replace('s', '')) >= 10 && (
+                                <SelectItem value="10s">10 seconds</SelectItem>
+                              )}
+                              {VIDEO_MODELS[currentModel] && typeof VIDEO_MODELS[currentModel].maxDuration === 'string' &&
+                               parseInt(VIDEO_MODELS[currentModel].maxDuration.replace('s', '')) >= 15 && (
+                                <SelectItem value="15s">15 seconds</SelectItem>
+                              )}
+                            </>
                           )}
                         </SelectContent>
                       </Select>
                     </div>
+
+                    <Separator />
+
+                    {/* Model-specific Options */}
+                    {currentModel === 'hailuo-02' && (
+                      <>
+                        <Separator />
+                        
+                        {/* Prompt Optimizer for Hailuo-02 */}
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label>Prompt Optimizer</Label>
+                            <p className="text-sm text-muted-foreground">
+                              Automatically enhance your prompt for better results
+                            </p>
+                          </div>
+                          <Switch
+                            checked={form.watch('promptOptimizer')}
+                            onCheckedChange={(checked) => form.setValue('promptOptimizer', checked)}
+                          />
+                        </div>
+
+                        {/* First Frame Image for Hailuo-02 */}
+                        <div className="space-y-2">
+                          <Label>First Frame Image (Optional)</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Upload an image to use as the first frame. The output video will match this aspect ratio.
+                          </p>
+                          <Input
+                            type="file"
+                            accept="image/*"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onload = (e) => {
+                                  const base64 = e.target?.result as string;
+                                  form.setValue('firstFrameImage', base64);
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                          />
+                        </div>
+                      </>
+                    )}
 
                     <Separator />
 

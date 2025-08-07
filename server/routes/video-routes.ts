@@ -11,7 +11,8 @@ const providerRegistry = new ProviderRegistry();
 // Generate video endpoint
 router.post('/generate', async (req, res) => {
   try {
-    const userId = (req.session as any)?.user?.id;
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
     }
@@ -33,9 +34,9 @@ router.post('/generate', async (req, res) => {
       id: videoId,
       prompt: inputs.prompt,
       model: model,
-      aspectRatio: inputs.aspectRatio,
+      aspectRatio: inputs.aspectRatio || '16:9', // default aspect ratio
       resolution: inputs.resolution,
-      duration: inputs.duration,
+      duration: inputs.duration?.toString() || '6', // convert to string, default to 6 seconds
       status: 'pending',
       userId: userId,
       projectId: projectId || null,
@@ -98,7 +99,8 @@ router.post('/generate', async (req, res) => {
 // Get video by ID
 router.get('/:id', async (req, res) => {
   try {
-    const userId = (req.session as any)?.user?.id;
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
     }
@@ -109,8 +111,7 @@ router.get('/:id', async (req, res) => {
     }
 
     // Ensure user can only access their own videos (or is admin)
-    const user = (req.session as any)?.user;
-    if (video.userId !== userId && user?.role !== 'admin') {
+    if (video.userId !== userId && user?.claims?.role !== 'admin') {
       return res.status(403).json({ error: 'Access denied' });
     }
 
@@ -124,7 +125,8 @@ router.get('/:id', async (req, res) => {
 // List user's videos
 router.get('/', async (req, res) => {
   try {
-    const userId = (req.session as any)?.user?.id;
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
     }
