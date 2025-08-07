@@ -37,6 +37,108 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import SimpleGalleryPage from './SimpleGalleryPage';
 
+// Video Gallery Component
+function VideoGallery() {
+  const { data: videos, isLoading } = useQuery<any[]>({
+    queryKey: ['/api/video'],
+    queryFn: () => apiRequest('/api/video'),
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="w-8 h-8 animate-spin" />
+        <span className="ml-2">Loading videos...</span>
+      </div>
+    );
+  }
+
+  if (!videos || videos.length === 0) {
+    return (
+      <div className="rounded-lg border bg-muted/5 p-8">
+        <div className="text-center space-y-3">
+          <VideoIcon className="w-16 h-16 text-muted-foreground mx-auto" />
+          <h3 className="text-lg font-medium">No Videos Yet</h3>
+          <p className="text-muted-foreground max-w-md mx-auto">
+            Generate your first video using the form above. Videos will appear here once completed.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <h3 className="text-lg font-medium">Your Videos ({videos.length})</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {videos.map((video) => (
+          <Card key={video.id} className="overflow-hidden">
+            <div className="aspect-video bg-muted relative group">
+              {video.status === 'completed' && video.url ? (
+                <>
+                  {video.thumbUrl && (
+                    <img 
+                      src={video.thumbUrl} 
+                      alt="Video thumbnail"
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => window.open(video.url, '_blank')}
+                      className="flex items-center gap-2"
+                    >
+                      <Play className="w-4 h-4" />
+                      Play Video
+                    </Button>
+                  </div>
+                </>
+              ) : video.status === 'processing' ? (
+                <div className="w-full h-full flex items-center justify-center">
+                  <div className="text-center">
+                    <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">Processing...</p>
+                  </div>
+                </div>
+              ) : video.status === 'failed' ? (
+                <div className="w-full h-full flex items-center justify-center">
+                  <div className="text-center text-destructive">
+                    <AlertCircle className="w-8 h-8 mx-auto mb-2" />
+                    <p className="text-sm">Failed to generate</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <VideoIcon className="w-12 h-12 text-muted-foreground" />
+                </div>
+              )}
+            </div>
+            <CardContent className="p-4">
+              <p className="text-sm font-medium line-clamp-2 mb-2">{video.prompt}</p>
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>{video.model}</span>
+                <span>{video.resolution} • {video.duration}s</span>
+              </div>
+              <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
+                <span className={`capitalize ${
+                  video.status === 'completed' ? 'text-green-600' :
+                  video.status === 'processing' ? 'text-yellow-600' :
+                  video.status === 'failed' ? 'text-red-600' : ''
+                }`}>
+                  {video.status}
+                </span>
+                <span>{new Date(video.createdAt).toLocaleDateString()}</span>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // Video generation form schema
 const videoGenerationSchema = z.object({
   prompt: z.string().min(1, 'Prompt is required').max(2000, 'Prompt must be less than 2000 characters'),
@@ -729,22 +831,7 @@ export default function VideoPage() {
         </TabsContent>
 
         <TabsContent value="gallery" className="space-y-6">
-          <div className="rounded-lg border bg-muted/5 p-6">
-            <div className="text-center space-y-2">
-              <VideoIcon className="w-12 h-12 text-muted-foreground mx-auto" />
-              <h3 className="text-lg font-medium">Video Gallery</h3>
-              <p className="text-muted-foreground">
-                Video gallery integration will be available here. Videos will appear alongside images in the main gallery filtered by project.
-              </p>
-              <Button
-                variant="outline"
-                onClick={() => window.open('/gallery', '_blank')}
-                className="mt-4"
-              >
-                Open Main Gallery
-              </Button>
-            </div>
-          </div>
+          <VideoGallery />
         </TabsContent>
       </Tabs>
     </div>

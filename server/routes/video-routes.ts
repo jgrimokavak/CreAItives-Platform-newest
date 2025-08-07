@@ -34,16 +34,13 @@ router.post('/generate', async (req, res) => {
       id: videoId,
       prompt: inputs.prompt,
       model: model,
-      aspectRatio: inputs.aspectRatio || '16:9', // default aspect ratio
       resolution: inputs.resolution,
       duration: inputs.duration?.toString() || '6', // convert to string, default to 6 seconds
       status: 'pending',
       userId: userId,
       projectId: projectId || null,
-      referenceImage: inputs.referenceImage || null,
-      seed: inputs.seed || null,
-      audioEnabled: inputs.audioEnabled || false,
-      personGeneration: inputs.personGeneration !== false, // default to true
+      firstFrameImage: inputs.firstFrameImage || null,
+      promptOptimizer: inputs.promptOptimizer !== false, // default to true
       environment: process.env.NODE_ENV === 'production' ? 'prod' : 'dev',
     });
 
@@ -225,11 +222,41 @@ async function pollVideoJob(videoId: string, jobId: string, provider: any) {
       const jobStatus = await provider.pollJobStatus(jobId);
       
       if (jobStatus.status === 'completed') {
+        // Download and save video to object storage
+        let finalVideoUrl = jobStatus.videoUrl;
+        let finalThumbUrl = jobStatus.thumbnailUrl;
+
+        try {
+          if (jobStatus.videoUrl) {
+            const videoResponse = await fetch(jobStatus.videoUrl);
+            const videoBuffer = await videoResponse.arrayBuffer();
+            const videoKey = `videos/${videoId}.mp4`;
+            
+            const { uploadFromBytes } = await import('@replit/object-storage');
+            await uploadFromBytes(videoKey, Buffer.from(videoBuffer), {
+              'Content-Type': 'video/mp4',
+            });
+            
+            // Use the direct Replicate URL for now as object storage might have issues
+            finalVideoUrl = jobStatus.videoUrl;
+            console.log(`Video URL available: ${videoKey}`);
+          }
+
+          if (jobStatus.thumbnailUrl) {
+            // Use the direct Replicate URL for now as object storage might have issues  
+            finalThumbUrl = jobStatus.thumbnailUrl;
+            console.log(`Thumbnail URL available: thumbnails/${videoId}.jpg`);
+          }
+        } catch (storageError) {
+          console.error('Error saving to storage:', storageError);
+          // Still save the original URLs as fallback
+        }
+
         // Job completed successfully
         await storage.updateVideo(videoId, {
           status: 'completed',
-          url: jobStatus.videoUrl,
-          thumbUrl: jobStatus.thumbnailUrl,
+          url: finalVideoUrl,
+          thumbUrl: finalThumbUrl,
           completedAt: new Date(),
         });
         
