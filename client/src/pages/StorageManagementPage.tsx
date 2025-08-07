@@ -223,17 +223,20 @@ export default function StorageManagementPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <label className="text-sm font-medium">Environment Filter:</label>
+                <label className="text-sm font-medium">Storage View:</label>
                 <Select value={environment} onValueChange={setEnvironment}>
                   <SelectTrigger className="w-32">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Both</SelectItem>
-                    <SelectItem value="dev">Dev</SelectItem>
-                    <SelectItem value="prod">Prod</SelectItem>
+                    <SelectItem value="all">All Files</SelectItem>
+                    <SelectItem value="dev">Dev Only</SelectItem>
+                    <SelectItem value="prod">Prod Only</SelectItem>
                   </SelectContent>
                 </Select>
+                <span className="text-xs text-muted-foreground">
+                  (Note: All files share the same bucket storage cost)
+                </span>
               </div>
               
               <div className="flex items-center space-x-2">
@@ -252,6 +255,19 @@ export default function StorageManagementPage() {
             </div>
 
             <div className="flex items-center space-x-2">
+              <Button 
+                onClick={() => {
+                  queryClient.invalidateQueries({ queryKey: ['/api/admin/storage/stats'] });
+                  queryClient.invalidateQueries({ queryKey: ['/api/admin/storage/objects'] });
+                  toast({ title: "Data Refreshed", description: "Storage metrics updated" });
+                }}
+                variant="outline"
+                size="sm"
+              >
+                <Activity className="h-4 w-4 mr-2" />
+                Refresh Data
+              </Button>
+              
               <Button 
                 onClick={() => verifyMutation.mutate()} 
                 disabled={verifyMutation.isPending}

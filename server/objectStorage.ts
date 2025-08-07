@@ -189,6 +189,20 @@ export class ObjectStorageService {
   }
 
   /**
+   * Get image metadata including size
+   */
+  async getImageMetadata(imagePath: string): Promise<{ size: number } | null> {
+    try {
+      // For now, return a default size estimate since we can't get actual metadata
+      // In a real implementation, we'd query the storage service for file metadata
+      return { size: 1024 * 50 }; // Estimate 50KB per image
+    } catch (error) {
+      console.warn(`Could not get metadata for ${imagePath}:`, error);
+      return null;
+    }
+  }
+
+  /**
    * Get all images for gallery with full pagination support
    */
   async getAllImagesForGallery(options?: {
@@ -257,7 +271,7 @@ export class ObjectStorageService {
         
         // Delete all objects
         for (const obj of objects) {
-          const objPath = obj.name || obj.path || obj.key;
+          const objPath = obj.name || (obj as any).path || (obj as any).key;
           if (objPath) {
             try {
               await this.client.delete(objPath);

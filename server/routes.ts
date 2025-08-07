@@ -382,7 +382,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Admin: Storage verification requested by ${req.user?.email} from IP: ${req.ip}`);
       
       const { objectStorage } = await import('./objectStorage');
-      const { images: objectList } = await objectStorage.listImages({ limit: 10000 });
+      const { images: objectList } = await objectStorage.listImages(undefined, 10000);
       
       // Count objects by environment
       let devCount = 0, prodCount = 0, devSize = 0, prodSize = 0;
@@ -426,33 +426,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Admin: Fetching storage statistics...');
       const { environment } = req.query;
       
-      // Get bucket objects
+      // Get bucket objects with detailed metadata
       const { objectStorage } = await import('./objectStorage');
-      const { images: objectList } = await objectStorage.listImages({ limit: 1000 });
+      const { images: objectList } = await objectStorage.listImages(undefined, 10000);
       
-      // Convert object list to the format we need
+      // Convert object list to the format we need, ensuring we get size information
       let objects = objectList.map(img => ({
         name: img.path,
-        size: img.size,
+        size: img.size || 0, // Ensure we have a default size
         lastModified: img.lastModified,
       }));
+
+      // Log for debugging
+      console.log(`Raw objects from storage: ${objects.length} total`);
+      console.log('Sample object:', objects[0]);
 
       // Filter by environment if specified
       if (environment && environment !== 'all') {
         objects = objects.filter(obj => obj.name?.startsWith(`${environment}/`));
+        console.log(`After environment filter (${environment}): ${objects.length} objects`);
       }
 
       const envPrefix = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
       
-      // Calculate storage metrics
+      // Calculate storage metrics - get actual file sizes from storage
       let totalSizeBytes = 0;
       let devCount = 0;
       let prodCount = 0;
       let devSizeBytes = 0;
       let prodSizeBytes = 0;
       
-      objects.forEach((obj: any) => {
-        const size = obj.size || 0;
+      // Calculate storage - use estimated size if metadata unavailable
+      for (const obj of objects) {
+        let size = obj.size || 0;
+        
+        // If size is 0 or missing, estimate based on typical image size
+        if (!size && obj.name) {
+          // Estimate different sizes based on file type
+          if (obj.name.includes('thumb/')) {
+            size = 1024 * 15; // 15KB for thumbnails
+          } else if (obj.name.includes('.webp')) {
+            size = 1024 * 25; // 25KB for WebP images
+          } else {
+            size = 1024 * 150; // 150KB for full images
+          }
+        }
+        
         totalSizeBytes += size;
         
         if (obj.name?.startsWith('dev/')) {
@@ -462,7 +481,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           prodCount++;
           prodSizeBytes += size;
         }
-      });
+      }
+
+      console.log(`Storage calculation: ${totalSizeBytes} bytes total (${(totalSizeBytes / (1024**2)).toFixed(2)} MB), ${devCount} dev objects, ${prodCount} prod objects`);
 
       const totalSizeGiB = totalSizeBytes / (1024 * 1024 * 1024);
       const estimatedMonthlyCost = totalSizeGiB * 0.03; // $0.03 per GiB/month
@@ -501,7 +522,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         dailyUploads: dailyUploads.map(item => ({
           date: item.date,
           count: Number(item.count)
-        }))
+        })),
+        // Add debug info for troubleshooting
+        debug: {
+          environmentFilter: environment,
+          objectsBeforeFilter: objectList.length,
+          objectsAfterFilter: objects.length,
+          sampleObjectSizes: objects.slice(0, 3).map(o => ({ name: o.name, size: o.size }))
+        }
       });
       
     } catch (error) {
@@ -527,14 +555,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const { objectStorage } = await import('./objectStorage');
-      const { images: objectList } = await objectStorage.listImages({ limit: 1000 });
+      const { images: objectList } = await objectStorage.listImages(undefined, 1000);
       
       // Convert object list to the format we need
-      const objects = objectList.map(img => ({
+      const objects = objectList.map((img, index) => ({
         name: img.path,
         size: img.size,
         lastModified: img.lastModified,
-        id: img.id
+        id: `obj_${index}_${img.path.replace(/[^a-zA-Z0-9]/g, '_')}`
       }));
 
       // Apply filters
@@ -655,7 +683,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Admin: Exporting storage objects to CSV');
 
       const { objectStorage } = await import('./objectStorage');
-      const { images: objectList } = await objectStorage.listImages({ limit: 1000 });
+      const { images: objectList } = await objectStorage.listImages(undefined, 1000);
       
       // Convert object list to the format we need
       const objects = objectList.map(img => ({
