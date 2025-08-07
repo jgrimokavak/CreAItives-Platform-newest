@@ -21,6 +21,34 @@ export class ObjectStorageService {
   /**
    * Upload image buffer to Object Storage with environment-aware path
    */
+  async uploadVideo(videoBuffer: Buffer, videoId: string, fileExtension: string = 'mp4'): Promise<{
+    fullUrl: string;
+    thumbUrl?: string;
+  }> {
+    const envPrefix = this.getEnvironmentPrefix();
+    const fullPath = `${envPrefix}/video-generations/${videoId}.${fileExtension}`;
+
+    try {
+      // Upload video using correct uploadFromBytes method
+      console.log(`[TRACE] Uploading video to Object Storage key: ${fullPath}`);
+      const uploadResult = await this.client.uploadFromBytes(fullPath, videoBuffer);
+      if (!uploadResult.ok) {
+        throw new Error('Failed to upload video');
+      }
+      console.log(`[TRACE] Video uploaded successfully to: ${fullPath}`);
+
+      const urls = {
+        fullUrl: `/api/object-storage/video/${fullPath}`,
+      };
+      
+      console.log(`[TRACE] Returning video URLs:`, JSON.stringify(urls));
+      return urls;
+    } catch (error) {
+      console.error(`[ERROR] Failed to upload video ${videoId}:`, error);
+      throw error;
+    }
+  }
+
   async uploadImage(imageBuffer: Buffer, imageId: string, fileExtension: string = 'png'): Promise<{
     fullUrl: string;
     thumbUrl: string;

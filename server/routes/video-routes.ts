@@ -208,21 +208,18 @@ router.delete('/:id', async (req, res) => {
 
     // Delete from object storage if it exists
     try {
-      const storageModule = await import('@replit/object-storage');
-      if (video.url && video.url.includes('replit-object-storage.com')) {
-        const urlParts = video.url.split('/');
-        const fileName = urlParts[urlParts.length - 1];
-        await storageModule.default.deleteObject(`videos/${fileName}`);
-        console.log(`Deleted video file from storage: videos/${fileName}`);
-      }
-      if (video.thumbUrl && video.thumbUrl.includes('replit-object-storage.com')) {
-        const urlParts = video.thumbUrl.split('/');
-        const fileName = urlParts[urlParts.length - 1];
-        await storageModule.default.deleteObject(`thumbnails/${fileName}`);
-        console.log(`Deleted thumbnail file from storage: thumbnails/${fileName}`);
+      if (video.url && video.url.includes('/api/object-storage/video/')) {
+        // Extract the storage path from the URL
+        const pathMatch = video.url.match(/\/api\/object-storage\/video\/(.+)/);
+        if (pathMatch) {
+          const storageModule = await import('@replit/object-storage');
+          const client = storageModule.default;
+          await client.deleteObject(pathMatch[1]);
+          console.log(`Deleted video file from storage: ${pathMatch[1]}`);
+        }
       }
     } catch (storageError) {
-      console.error('Error deleting from storage:', storageError);
+      console.error('Error deleting video from storage:', storageError);
       // Continue with database deletion even if storage deletion fails
     }
 
@@ -254,31 +251,30 @@ async function pollVideoJob(videoId: string, jobId: string, provider: any) {
 
         try {
           if (jobStatus.videoUrl) {
+            // Download video from Replicate
+            console.log(`Downloading video from Replicate: ${jobStatus.videoUrl}`);
             const videoResponse = await fetch(jobStatus.videoUrl);
-            const videoBuffer = await videoResponse.arrayBuffer();
-            const videoKey = `videos/${videoId}.mp4`;
+            const videoBuffer = Buffer.from(await videoResponse.arrayBuffer());
             
-            const storageModule = await import('@replit/object-storage');
-            await storageModule.default.uploadFromBytes(videoKey, Buffer.from(videoBuffer), {
-              'Content-Type': 'video/mp4',
-            });
+            // Upload to object storage using the same pattern as images
+            const { ObjectStorageService } = await import('../objectStorage');
+            const objectStorage = new ObjectStorageService();
+            const uploadResult = await objectStorage.uploadVideo(videoBuffer, videoId, 'mp4');
             
-            // Generate the object storage URL 
-            const baseUrl = process.env.NODE_ENV === 'production' 
-              ? 'https://kavak-gallery.replit-object-storage.com'
-              : 'https://kavak-gallery.replit-object-storage.com';
-            finalVideoUrl = `${baseUrl}/${videoKey}`;
-            console.log(`Video URL available: ${videoKey}`);
+            finalVideoUrl = uploadResult.fullUrl;
+            console.log(`Video uploaded to object storage: ${finalVideoUrl}`);
           }
 
           if (jobStatus.thumbnailUrl) {
-            // Use the direct Replicate URL for now as object storage might have issues  
+            // Keep thumbnail URL from Replicate for now
             finalThumbUrl = jobStatus.thumbnailUrl;
-            console.log(`Thumbnail URL available: thumbnails/${videoId}.jpg`);
+            console.log(`Thumbnail URL available: ${finalThumbUrl}`);
           }
         } catch (storageError) {
-          console.error('Error saving to storage:', storageError);
-          // Still save the original URLs as fallback
+          console.error('Error saving video to storage:', storageError);
+          // Fallback to original Replicate URLs if storage fails
+          finalVideoUrl = jobStatus.videoUrl;
+          finalThumbUrl = jobStatus.thumbnailUrl;
         }
 
         // Job completed successfully

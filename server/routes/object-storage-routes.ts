@@ -37,6 +37,44 @@ router.get('/object-storage/image/:path(*)', async (req: Request, res: Response)
   }
 });
 
+// Serve video files from object storage
+router.get('/object-storage/video/:path(*)', async (req: Request, res: Response) => {
+  try {
+    const videoPath = req.params.path;
+    
+    if (!videoPath) {
+      return res.status(400).json({ error: 'Video path is required' });
+    }
+
+    // Download video from Object Storage
+    const videoBuffer = await objectStorage.downloadAsBytes(videoPath);
+    
+    if (!videoBuffer) {
+      return res.status(404).json({ error: 'Video not found' });
+    }
+    
+    // Determine content type based on extension
+    const ext = videoPath.split('.').pop()?.toLowerCase();
+    const contentType = ext === 'mp4' ? 'video/mp4' : 
+                       ext === 'webm' ? 'video/webm' :
+                       ext === 'mov' ? 'video/quicktime' :
+                       'application/octet-stream';
+    
+    // Set appropriate headers for video streaming
+    res.set({
+      'Content-Type': contentType,
+      'Content-Length': videoBuffer.length.toString(),
+      'Cache-Control': 'public, max-age=86400', // 24 hour cache
+      'Accept-Ranges': 'bytes', // Enable video seeking
+    });
+
+    res.send(videoBuffer);
+  } catch (error) {
+    console.error('Error serving video from Object Storage:', error);
+    res.status(404).json({ error: 'Video not found' });
+  }
+});
+
 /**
  * List images from Object Storage for gallery
  * Route: GET /api/object-storage/gallery

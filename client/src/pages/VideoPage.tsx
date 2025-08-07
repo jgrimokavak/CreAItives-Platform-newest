@@ -272,6 +272,7 @@ export default function VideoPage() {
   const [newProjectDescription, setNewProjectDescription] = useState('');
   const [generatingVideoId, setGeneratingVideoId] = useState<string | null>(null);
   const [generationProgress, setGenerationProgress] = useState<string>('');
+  const [firstFrameImagePreview, setFirstFrameImagePreview] = useState<string | null>(null);
 
   // Form setup
   const form = useForm<VideoGenerationForm>({
