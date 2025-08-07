@@ -212,10 +212,29 @@ router.delete('/:id', async (req, res) => {
         // Extract the storage path from the URL
         const pathMatch = video.url.match(/\/api\/object-storage\/video\/(.+)/);
         if (pathMatch) {
-          const storageModule = await import('@replit/object-storage');
-          const client = storageModule.default;
-          await client.deleteObject(pathMatch[1]);
-          console.log(`Deleted video file from storage: ${pathMatch[1]}`);
+          const { Client } = await import('@replit/object-storage');
+          const client = new Client();
+          const { ok, error } = await client.delete(pathMatch[1]);
+          if (ok) {
+            console.log(`Deleted video file from storage: ${pathMatch[1]}`);
+          } else {
+            console.error(`Failed to delete video from storage: ${error}`);
+          }
+        }
+      }
+      
+      // Also delete thumbnail if it exists in object storage
+      if (video.thumbUrl && video.thumbUrl.includes('/api/object-storage/video/')) {
+        const thumbMatch = video.thumbUrl.match(/\/api\/object-storage\/video\/(.+)/);
+        if (thumbMatch) {
+          const { Client } = await import('@replit/object-storage');
+          const client = new Client();
+          const { ok, error } = await client.delete(thumbMatch[1]);
+          if (ok) {
+            console.log(`Deleted video thumbnail from storage: ${thumbMatch[1]}`);
+          } else {
+            console.error(`Failed to delete video thumbnail from storage: ${error}`);
+          }
         }
       }
     } catch (storageError) {
