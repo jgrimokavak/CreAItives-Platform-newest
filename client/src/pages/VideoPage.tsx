@@ -258,13 +258,19 @@ export default function VideoPage() {
     }
 
     // Reset aspect ratio if not available for selected model
-    if (!modelConfig.aspectRatios.includes(currentAspectRatio)) {
+    if (currentAspectRatio && !modelConfig.aspectRatios.includes(currentAspectRatio)) {
       form.setValue('aspectRatio', modelConfig.aspectRatios[0] as any);
     }
 
     // Reset duration if exceeds model's max duration
-    const maxDurationSeconds = parseInt(modelConfig.maxDuration.replace('s', ''));
-    const currentDurationSeconds = parseInt(currentDuration.replace('s', ''));
+    const rawMax = modelConfig.maxDuration;
+    const maxDurationSeconds = typeof rawMax === 'string'
+      ? parseInt(rawMax.replace('s', ''))
+      : rawMax;
+    const rawCurrent = currentDuration;
+    const currentDurationSeconds = typeof rawCurrent === 'string'
+      ? parseInt(rawCurrent.replace('s', ''))
+      : rawCurrent;
     if (currentDurationSeconds > maxDurationSeconds) {
       form.setValue('duration', modelConfig.maxDuration as any);
     }
