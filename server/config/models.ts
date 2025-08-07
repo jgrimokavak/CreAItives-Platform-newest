@@ -257,27 +257,6 @@ export const models: ModelConfig[] = [
     },
     visible: ["prompt", "duration", "resolution", "prompt_optimizer", "first_frame_image"],
     description: "Hailuo-02 – High-quality video generation from Minimax with fast generation times."
-  },
-  {
-    key: "veo-3",
-    provider: "vertex",
-    slug: "veo-3.0-generate-preview",
-    visible: ["prompt", "aspect_ratio", "resolution", "duration", "audio_enabled", "person_generation", "seed"],
-    description: "Veo 3 – Latest Google video model with highest quality and longest duration support."
-  },
-  {
-    key: "veo-3-fast", 
-    provider: "vertex",
-    slug: "veo-3.0-generate-fast-preview",
-    visible: ["prompt", "aspect_ratio", "resolution", "duration", "audio_enabled", "person_generation", "seed"],
-    description: "Veo 3 Fast – Faster generation with good quality, optimized for speed."
-  },
-  {
-    key: "veo-2",
-    provider: "vertex",
-    slug: "veo-2.0-generate-preview", 
-    visible: ["prompt", "aspect_ratio", "resolution", "duration", "seed"],
-    description: "Veo 2 – Stable and reliable video generation with consistent results."
   }
 ];
 

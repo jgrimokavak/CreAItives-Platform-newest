@@ -126,13 +126,10 @@ export type GenerateImageInput = z.infer<typeof generateImageSchema>;
 // Video generation schema
 export const generateVideoSchema = z.object({
   prompt: z.string().min(10, 'Prompt must be at least 10 characters').max(2000, 'Prompt must be less than 2000 characters'),
-  model: z.enum(['hailuo-02', 'veo-3', 'veo-3-fast', 'veo-2']),
+  model: z.enum(['hailuo-02']),
   aspectRatio: z.enum(['1:1', '16:9', '9:16', '4:3', '3:4']).optional(),
   resolution: z.enum(['512p', '768p', '720p', '1080p']),
-  duration: z.union([
-    z.enum(['3s', '5s', '10s', '15s']), // for veo models
-    z.number().int().min(6).max(10) // for hailuo-02 (6 or 10 seconds)
-  ]),
+  duration: z.number().int().min(6).max(10), // for hailuo-02 (6 or 10 seconds)
   projectId: z.string().optional(),
   referenceImage: z.string().optional(), // base64 encoded image
   firstFrameImage: z.string().optional(), // for hailuo-02
@@ -146,29 +143,13 @@ export type GenerateVideoInput = z.infer<typeof generateVideoSchema>;
 
 // Video model form schemas
 export const videoModelSchemas = {
-  "veo-3": z.object({
+  "hailuo-02": z.object({
     prompt: z.string().min(10).max(2000),
-    aspectRatio: z.enum(['1:1', '16:9', '9:16', '4:3', '3:4']),
+    aspectRatio: z.enum(['1:1', '16:9', '9:16', '4:3', '3:4']).optional(),
     resolution: z.enum(['720p', '1080p']),
-    duration: z.enum(['3s', '5s', '10s', '15s']),
-    audioEnabled: z.boolean().optional(),
-    personGeneration: z.boolean().optional(),
-    seed: z.number().int().optional(),
-  }),
-  "veo-3-fast": z.object({
-    prompt: z.string().min(10).max(2000),
-    aspectRatio: z.enum(['1:1', '16:9', '9:16']),
-    resolution: z.enum(['720p', '1080p']),
-    duration: z.enum(['3s', '5s', '10s']),
-    audioEnabled: z.boolean().optional(),
-    personGeneration: z.boolean().optional(),
-    seed: z.number().int().optional(),
-  }),
-  "veo-2": z.object({
-    prompt: z.string().min(10).max(2000),
-    aspectRatio: z.enum(['16:9', '9:16']),
-    resolution: z.enum(['720p']),
-    duration: z.enum(['3s', '5s', '10s']),
+    duration: z.number().int().min(6).max(10),
+    promptOptimizer: z.boolean().optional(),
+    firstFrameImage: z.string().optional(),
     seed: z.number().int().optional(),
   }),
 };

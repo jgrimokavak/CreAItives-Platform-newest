@@ -96,6 +96,42 @@ router.post('/generate', async (req, res) => {
   }
 });
 
+// Get video status/details by ID
+router.get('/status/:id', async (req, res) => {
+  try {
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const video = await storage.getVideoById(req.params.id);
+    if (!video) {
+      return res.status(404).json({ error: 'Video not found' });
+    }
+
+    // Ensure user can only access their own videos (or is admin)
+    if (video.userId !== userId && user?.claims?.role !== 'admin') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    res.json({ 
+      id: video.id,
+      status: video.status,
+      url: video.url,
+      thumbUrl: video.thumbUrl,
+      error: video.error,
+      prompt: video.prompt,
+      createdAt: video.createdAt,
+      completedAt: video.completedAt,
+      projectId: video.projectId
+    });
+  } catch (error: any) {
+    console.error('Get video status error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Get video by ID
 router.get('/:id', async (req, res) => {
   try {

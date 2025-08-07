@@ -40,13 +40,10 @@ import SimpleGalleryPage from './SimpleGalleryPage';
 // Video generation form schema
 const videoGenerationSchema = z.object({
   prompt: z.string().min(10, 'Prompt must be at least 10 characters').max(2000, 'Prompt must be less than 2000 characters'),
-  model: z.enum(['hailuo-02', 'veo-3', 'veo-3-fast', 'veo-2']),
-  aspectRatio: z.enum(['1:1', '16:9', '9:16', '4:3', '3:4']).optional(),
-  resolution: z.enum(['512p', '768p', '720p', '1080p']),
-  duration: z.union([
-    z.enum(['3s', '5s', '10s', '15s']), // for veo models
-    z.number().int().min(6).max(10) // for hailuo-02 (6 or 10 seconds)
-  ]),
+  model: z.enum(['hailuo-02']),
+  aspectRatio: z.enum(['16:9']).optional(),
+  resolution: z.enum(['720p', '1080p']),
+  duration: z.number().int().min(6).max(10), // for hailuo-02 (6 or 10 seconds)
   projectId: z.string().optional(),
   referenceImage: z.string().optional(), // base64 encoded image
   firstFrameImage: z.string().optional(), // for hailuo-02
@@ -61,41 +58,17 @@ export type VideoGenerationForm = z.infer<typeof videoGenerationSchema>;
 // DIAGNOSTIC: Log model configuration loading
 console.log('[DIAGNOSTIC] Loading VIDEO_MODELS configuration');
 
-// Video model configurations
+// Video model configurations - Only Hailuo-02 is available
 const VIDEO_MODELS = {
   'hailuo-02': {
-    label: 'Hailuo-02',
-    description: 'High-quality video generation from Minimax with fast generation times',
+    label: 'Minimax Hailuo-02',
+    description: 'High-quality video generation (3-6 min processing time)',
     maxDuration: 10, // numeric for hailuo-02
-    resolutions: ['512p', '768p', '1080p'],
-    aspectRatios: ['1:1', '16:9', '9:16', '4:3', '3:4'], // aspect ratio determined by firstFrameImage
+    resolutions: ['720p', '1080p'],
+    aspectRatios: ['16:9'], // Default aspect ratio
     supportsDurationInt: true, // uses integer duration instead of string
     supportsFirstFrame: true,
     supportsPromptOptimizer: true
-  },
-  'veo-3': {
-    label: 'Veo 3',
-    description: 'Latest Google video model with highest quality',
-    maxDuration: '15s',
-    resolutions: ['720p', '1080p'],
-    aspectRatios: ['1:1', '16:9', '9:16', '4:3', '3:4'],
-    supportsDurationInt: false
-  },
-  'veo-3-fast': {
-    label: 'Veo 3 Fast',
-    description: 'Faster generation with good quality',
-    maxDuration: '10s',
-    resolutions: ['720p', '1080p'],
-    aspectRatios: ['1:1', '16:9', '9:16'],
-    supportsDurationInt: false
-  },
-  'veo-2': {
-    label: 'Veo 2',
-    description: 'Stable and reliable video generation',
-    maxDuration: '10s',
-    resolutions: ['720p', '1080p'],
-    aspectRatios: ['1:1', '16:9', '9:16', '4:3'],
-    supportsDurationInt: false
   }
 };
 
@@ -130,6 +103,8 @@ export default function VideoPage() {
   const [showCreateProject, setShowCreateProject] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectDescription, setNewProjectDescription] = useState('');
+  const [generatingVideoId, setGeneratingVideoId] = useState<string | null>(null);
+  const [generationProgress, setGenerationProgress] = useState<string>('');
 
   // Form setup
   const form = useForm<VideoGenerationForm>({
@@ -148,8 +123,8 @@ export default function VideoPage() {
 
   const watchedModel = form.watch('model');
   
-  // Ensure we have a valid model, fallback to hailuo-02 if not
-  const currentModel = watchedModel && VIDEO_MODELS[watchedModel] ? watchedModel : 'hailuo-02';
+  // Always use hailuo-02 as it's the only model available
+  const currentModel = 'hailuo-02';
 
   // Fetch projects
   const { data: projects, isLoading: projectsLoading, refetch: refetchProjects } = useQuery<Project[]>({
@@ -231,10 +206,15 @@ export default function VideoPage() {
     onSuccess: (data) => {
       toast({
         title: 'Video Generation Started',
-        description: `Job ${data.jobId} has been queued. You'll be notified when complete.`,
+        description: 'Processing will take 3-6 minutes. We\'ll notify you when complete.',
       });
-      // Switch to gallery tab to show progress
-      setActiveTab('gallery');
+      
+      // Start polling for video status
+      if (data.video?.id) {
+        setGeneratingVideoId(data.video.id);
+        setGenerationProgress('Starting video generation...');
+        pollVideoStatus(data.video.id);
+      }
     },
     onError: (error: any) => {
       toast({
@@ -242,8 +222,87 @@ export default function VideoPage() {
         description: error?.message || 'Could not start video generation. Please try again.',
         variant: 'destructive',
       });
+      setGeneratingVideoId(null);
+      setGenerationProgress('');
     },
   });
+
+  // Poll for video status
+  const pollVideoStatus = async (videoId: string) => {
+    const maxAttempts = 60; // 6 minutes with 6-second intervals
+    let attempts = 0;
+
+    const poll = async () => {
+      try {
+        attempts++;
+        
+        const response = await apiRequest(`/api/video/status/${videoId}`);
+        
+        if (response.status === 'completed') {
+          setGenerationProgress('Video completed!');
+          toast({
+            title: 'Video Ready!',
+            description: 'Your video has been generated successfully.',
+          });
+          
+          // Refresh gallery if on gallery tab
+          if (activeTab === 'gallery') {
+            queryClient.invalidateQueries({ queryKey: ['/api/video'] });
+          }
+          
+          setGeneratingVideoId(null);
+          setGenerationProgress('');
+          return;
+        }
+        
+        if (response.status === 'failed') {
+          setGenerationProgress('Generation failed');
+          toast({
+            title: 'Video Generation Failed',
+            description: response.error || 'The video could not be generated.',
+            variant: 'destructive',
+          });
+          setGeneratingVideoId(null);
+          setGenerationProgress('');
+          return;
+        }
+        
+        // Update progress message
+        const elapsed = attempts * 6;
+        const minutes = Math.floor(elapsed / 60);
+        const seconds = elapsed % 60;
+        setGenerationProgress(`Processing... (${minutes}:${seconds.toString().padStart(2, '0')} elapsed)`);
+        
+        // Continue polling if still processing
+        if (attempts < maxAttempts) {
+          setTimeout(poll, 6000); // Poll every 6 seconds
+        } else {
+          // Timeout
+          setGenerationProgress('Generation timed out');
+          toast({
+            title: 'Generation Timeout',
+            description: 'Video generation is taking longer than expected. Please check back later.',
+            variant: 'destructive',
+          });
+          setGeneratingVideoId(null);
+          setGenerationProgress('');
+        }
+      } catch (error) {
+        console.error('Error polling video status:', error);
+        
+        // Retry a few times on network errors
+        if (attempts < 5) {
+          setTimeout(poll, 6000);
+        } else {
+          setGenerationProgress('Failed to check status');
+          setGeneratingVideoId(null);
+        }
+      }
+    };
+
+    // Start polling
+    poll();
+  };
 
   // Handle model change - update available options
   useEffect(() => {
@@ -497,7 +556,7 @@ export default function VideoPage() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {VIDEO_MODELS[currentModel]?.aspectRatios?.map((ratio) => (
+                            {VIDEO_MODELS[currentModel]?.aspectRatios?.map((ratio: string) => (
                               <SelectItem key={ratio} value={ratio}>
                                 {ratio}
                               </SelectItem>
@@ -517,7 +576,7 @@ export default function VideoPage() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {VIDEO_MODELS[currentModel]?.resolutions?.map((res) => (
+                            {VIDEO_MODELS[currentModel]?.resolutions?.map((res: string) => (
                               <SelectItem key={res} value={res}>
                                 {res}
                               </SelectItem>
@@ -548,33 +607,8 @@ export default function VideoPage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {currentModel === 'hailuo-02' ? (
-                            <>
-                              <SelectItem value="6">6 seconds</SelectItem>
-                              <SelectItem value="10">10 seconds</SelectItem>
-                            </>
-                          ) : (
-                            <>
-                              <SelectItem value="3s">3 seconds</SelectItem>
-                              <SelectItem value="5s">5 seconds</SelectItem>
-                              {VIDEO_MODELS[currentModel] && VIDEO_MODELS[currentModel].maxDuration && (() => {
-                                const maxDur = VIDEO_MODELS[currentModel].maxDuration;
-                                const maxDurationNum = typeof maxDur === 'string' ? 
-                                  parseInt(maxDur.replace('s', '')) : maxDur;
-                                return maxDurationNum >= 10;
-                              })() && (
-                                <SelectItem value="10s">10 seconds</SelectItem>
-                              )}
-                              {VIDEO_MODELS[currentModel] && VIDEO_MODELS[currentModel].maxDuration && (() => {
-                                const maxDur = VIDEO_MODELS[currentModel].maxDuration;
-                                const maxDurationNum = typeof maxDur === 'string' ? 
-                                  parseInt(maxDur.replace('s', '')) : maxDur;
-                                return maxDurationNum >= 15;
-                              })() && (
-                                <SelectItem value="15s">15 seconds</SelectItem>
-                              )}
-                            </>
-                          )}
+                          <SelectItem value="6">6 seconds</SelectItem>
+                          <SelectItem value="10">10 seconds</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -672,13 +706,13 @@ export default function VideoPage() {
                 <Button
                   type="submit"
                   size="lg"
-                  disabled={generateVideoMutation.isPending}
+                  disabled={generateVideoMutation.isPending || generatingVideoId !== null || !form.watch('prompt')?.trim()}
                   className="w-full"
                 >
-                  {generateVideoMutation.isPending ? (
+                  {generateVideoMutation.isPending || generatingVideoId ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Generating Video...
+                      {generationProgress || 'Starting generation...'}
                     </>
                   ) : (
                     <>
@@ -699,20 +733,20 @@ export default function VideoPage() {
                 <CardContent>
                   <div className="space-y-3">
                     <div>
-                      <h4 className="font-medium">{VIDEO_MODELS[watchedModel].label}</h4>
+                      <h4 className="font-medium">{VIDEO_MODELS['hailuo-02'].label}</h4>
                       <p className="text-sm text-muted-foreground">
-                        {VIDEO_MODELS[watchedModel].description}
+                        {VIDEO_MODELS['hailuo-02'].description}
                       </p>
                     </div>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span>Max Duration:</span>
-                        <Badge variant="secondary">{VIDEO_MODELS[watchedModel].maxDuration}</Badge>
+                        <Badge variant="secondary">{VIDEO_MODELS['hailuo-02'].maxDuration} seconds</Badge>
                       </div>
                       <div className="flex justify-between">
                         <span>Resolutions:</span>
                         <div className="flex gap-1">
-                          {VIDEO_MODELS[watchedModel].resolutions.map((res) => (
+                          {VIDEO_MODELS['hailuo-02'].resolutions.map((res: string) => (
                             <Badge key={res} variant="outline" className="text-xs">
                               {res}
                             </Badge>
