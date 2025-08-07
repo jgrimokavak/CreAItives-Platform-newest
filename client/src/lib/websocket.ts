@@ -13,6 +13,20 @@ export function setupWebSocket(onMessage: (ev: string, data: any) => void): WebS
     const port = window.location.port ? `:${window.location.port}` : '';
     const wsUrl = `${protocol}//${hostname}${port}/ws`;
     
+    // DIAGNOSTIC: Log WebSocket URL construction
+    console.log('[DIAGNOSTIC] WebSocket URL construction:', {
+      protocol,
+      hostname,
+      port,
+      fullUrl: wsUrl,
+      windowLocation: {
+        protocol: window.location.protocol,
+        hostname: window.location.hostname,
+        port: window.location.port,
+        href: window.location.href
+      }
+    });
+    
     // Create the socket with proper error handling
     let socket: WebSocket;
     try {

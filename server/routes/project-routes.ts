@@ -54,18 +54,36 @@ router.post('/', async (req, res) => {
 // List user's projects
 router.get('/', async (req, res) => {
   try {
+    // DIAGNOSTIC: Log authentication details
     const user = req.user as any;
     const userId = user?.claims?.sub;
+    console.log('[DIAGNOSTIC] /api/projects GET - Auth details:', {
+      hasUser: !!user,
+      hasUserClaims: !!(user?.claims),
+      userId: userId,
+      isAuthenticated: req.isAuthenticated?.(),
+      sessionExists: !!(req as any).session,
+      userKeys: user ? Object.keys(user) : [],
+      claimsKeys: user?.claims ? Object.keys(user.claims) : []
+    });
+    
     if (!userId) {
+      console.error('[DIAGNOSTIC] /api/projects GET - Authentication failed: No userId found');
       return res.status(401).json({ error: 'Authentication required' });
     }
 
+    console.log('[DIAGNOSTIC] /api/projects GET - Fetching projects for userId:', userId);
     const projects = await storage.getAllProjects(userId);
+    console.log('[DIAGNOSTIC] /api/projects GET - Found projects:', projects.length);
     res.json(projects);
 
   } catch (error: any) {
-    console.error('List projects error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('[DIAGNOSTIC] /api/projects GET - Error:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 });
 

@@ -58,6 +58,9 @@ const videoGenerationSchema = z.object({
 
 export type VideoGenerationForm = z.infer<typeof videoGenerationSchema>;
 
+// DIAGNOSTIC: Log model configuration loading
+console.log('[DIAGNOSTIC] Loading VIDEO_MODELS configuration');
+
 // Video model configurations
 const VIDEO_MODELS = {
   'hailuo-02': {
@@ -75,23 +78,41 @@ const VIDEO_MODELS = {
     description: 'Latest Google video model with highest quality',
     maxDuration: '15s',
     resolutions: ['720p', '1080p'],
-    aspectRatios: ['1:1', '16:9', '9:16', '4:3', '3:4']
+    aspectRatios: ['1:1', '16:9', '9:16', '4:3', '3:4'],
+    supportsDurationInt: false
   },
   'veo-3-fast': {
     label: 'Veo 3 Fast',
     description: 'Faster generation with good quality',
     maxDuration: '10s',
     resolutions: ['720p', '1080p'],
-    aspectRatios: ['1:1', '16:9', '9:16']
+    aspectRatios: ['1:1', '16:9', '9:16'],
+    supportsDurationInt: false
   },
   'veo-2': {
     label: 'Veo 2',
     description: 'Stable and reliable video generation',
     maxDuration: '10s',
     resolutions: ['720p', '1080p'],
-    aspectRatios: ['1:1', '16:9', '9:16', '4:3']
+    aspectRatios: ['1:1', '16:9', '9:16', '4:3'],
+    supportsDurationInt: false
   }
 };
+
+// DIAGNOSTIC: Log the loaded models
+console.log('[DIAGNOSTIC] VIDEO_MODELS loaded:', {
+  modelKeys: Object.keys(VIDEO_MODELS),
+  models: Object.entries(VIDEO_MODELS).reduce((acc, [key, model]) => {
+    acc[key] = {
+      label: model.label,
+      maxDuration: model.maxDuration,
+      maxDurationType: typeof model.maxDuration,
+      resolutions: model.resolutions,
+      aspectRatios: model.aspectRatios
+    };
+    return acc;
+  }, {} as any)
+});
 
 // Project interface
 interface Project {
@@ -530,12 +551,20 @@ export default function VideoPage() {
                             <>
                               <SelectItem value="3s">3 seconds</SelectItem>
                               <SelectItem value="5s">5 seconds</SelectItem>
-                              {VIDEO_MODELS[currentModel] && typeof VIDEO_MODELS[currentModel].maxDuration === 'string' &&
-                               parseInt(VIDEO_MODELS[currentModel].maxDuration.replace('s', '')) >= 10 && (
+                              {VIDEO_MODELS[currentModel] && VIDEO_MODELS[currentModel].maxDuration && (() => {
+                                const maxDur = VIDEO_MODELS[currentModel].maxDuration;
+                                const maxDurationNum = typeof maxDur === 'string' ? 
+                                  parseInt(maxDur.replace('s', '')) : maxDur;
+                                return maxDurationNum >= 10;
+                              })() && (
                                 <SelectItem value="10s">10 seconds</SelectItem>
                               )}
-                              {VIDEO_MODELS[currentModel] && typeof VIDEO_MODELS[currentModel].maxDuration === 'string' &&
-                               parseInt(VIDEO_MODELS[currentModel].maxDuration.replace('s', '')) >= 15 && (
+                              {VIDEO_MODELS[currentModel] && VIDEO_MODELS[currentModel].maxDuration && (() => {
+                                const maxDur = VIDEO_MODELS[currentModel].maxDuration;
+                                const maxDurationNum = typeof maxDur === 'string' ? 
+                                  parseInt(maxDur.replace('s', '')) : maxDur;
+                                return maxDurationNum >= 15;
+                              })() && (
                                 <SelectItem value="15s">15 seconds</SelectItem>
                               )}
                             </>
