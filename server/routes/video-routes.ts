@@ -208,17 +208,17 @@ router.delete('/:id', async (req, res) => {
 
     // Delete from object storage if it exists
     try {
-      const { deleteObject } = await import('@replit/object-storage');
-      if (video.url && video.url.includes('storage.googleapis.com')) {
+      const storageModule = await import('@replit/object-storage');
+      if (video.url && video.url.includes('replit-object-storage.com')) {
         const urlParts = video.url.split('/');
         const fileName = urlParts[urlParts.length - 1];
-        await deleteObject(`videos/${fileName}`);
+        await storageModule.default.deleteObject(`videos/${fileName}`);
         console.log(`Deleted video file from storage: videos/${fileName}`);
       }
-      if (video.thumbUrl && video.thumbUrl.includes('storage.googleapis.com')) {
+      if (video.thumbUrl && video.thumbUrl.includes('replit-object-storage.com')) {
         const urlParts = video.thumbUrl.split('/');
         const fileName = urlParts[urlParts.length - 1];
-        await deleteObject(`thumbnails/${fileName}`);
+        await storageModule.default.deleteObject(`thumbnails/${fileName}`);
         console.log(`Deleted thumbnail file from storage: thumbnails/${fileName}`);
       }
     } catch (storageError) {
@@ -258,13 +258,16 @@ async function pollVideoJob(videoId: string, jobId: string, provider: any) {
             const videoBuffer = await videoResponse.arrayBuffer();
             const videoKey = `videos/${videoId}.mp4`;
             
-            const { uploadFromBytes } = await import('@replit/object-storage');
-            await uploadFromBytes(videoKey, Buffer.from(videoBuffer), {
+            const storageModule = await import('@replit/object-storage');
+            await storageModule.default.uploadFromBytes(videoKey, Buffer.from(videoBuffer), {
               'Content-Type': 'video/mp4',
             });
             
-            // Use the direct Replicate URL for now as object storage might have issues
-            finalVideoUrl = jobStatus.videoUrl;
+            // Generate the object storage URL 
+            const baseUrl = process.env.NODE_ENV === 'production' 
+              ? 'https://kavak-gallery.replit-object-storage.com'
+              : 'https://kavak-gallery.replit-object-storage.com';
+            finalVideoUrl = `${baseUrl}/${videoKey}`;
             console.log(`Video URL available: ${videoKey}`);
           }
 

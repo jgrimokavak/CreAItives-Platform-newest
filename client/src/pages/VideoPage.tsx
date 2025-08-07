@@ -38,6 +38,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import SimpleGalleryPage from './SimpleGalleryPage';
+import ReferenceImageUpload from '@/components/ReferenceImageUpload';
 
 // Video Gallery Component
 function VideoGallery() {
@@ -107,12 +108,24 @@ function VideoGallery() {
                       size="sm"
                       variant="secondary"
                       onClick={() => {
-                        const link = document.createElement('a');
-                        link.href = video.url;
-                        link.download = `video-${video.id}.mp4`;
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
+                        // Force download by creating a blob and downloading it
+                        fetch(video.url)
+                          .then(response => response.blob())
+                          .then(blob => {
+                            const url = window.URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.download = `video-${video.id}.mp4`;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            window.URL.revokeObjectURL(url);
+                          })
+                          .catch(error => {
+                            console.error('Download error:', error);
+                            // Fallback: open in new tab
+                            window.open(video.url, '_blank');
+                          });
                       }}
                       className="flex items-center gap-2"
                     >
@@ -751,53 +764,20 @@ export default function VideoPage() {
                         </div>
 
                         {/* First Frame Image for Hailuo-02 */}
-                        <div className="space-y-2">
-                          <Label>First Frame Image (Optional)</Label>
-                          <p className="text-sm text-muted-foreground">
-                            Upload an image to use as the first frame. The output video will match this aspect ratio.
-                          </p>
-                          <Input
-                            type="file"
-                            accept="image/*"
-                            onChange={async (e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                const reader = new FileReader();
-                                reader.onload = (e) => {
-                                  const base64 = e.target?.result as string;
-                                  form.setValue('firstFrameImage', base64);
-                                };
-                                reader.readAsDataURL(file);
-                              }
-                            }}
-                          />
-                        </div>
+                        <ReferenceImageUpload
+                          value={firstFrameImagePreview || undefined}
+                          onChange={(value) => {
+                            setFirstFrameImagePreview(value || null);
+                            form.setValue('firstFrameImage', value || '');
+                          }}
+                          className="w-full"
+                        />
                       </>
                     )}
 
                     <Separator />
 
-                    {/* First Frame Image Upload */}
-                    <div className="space-y-2">
-                      <Label>First Frame Image (Optional)</Label>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        Upload an image to use as the first frame. The video will match the aspect ratio of your image.
-                      </p>
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (e) => {
-                              form.setValue('firstFrameImage', e.target?.result as string);
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                        }}
-                      />
-                    </div>
+
                   </CardContent>
                 </Card>
 
