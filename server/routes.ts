@@ -659,7 +659,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { db: backfillDb } = await import('./db');
       const { images: backfillImages } = await import('@shared/schema');
       const { eq, or, isNull: isNullValue } = await import('drizzle-orm');
-      const { replitStorage } = await import('./replitObjectStorage');
+      const { objectStorage } = await import('./objectStorage');
 
       // Get images with missing sizes
       const imagesToBackfill = await backfillDb.select()
@@ -673,9 +673,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (const image of imagesToBackfill) {
         try {
           const objectPath = `${image.environment || 'dev'}/${image.id}.png`;
-          const { ok, value: bytes } = await replitStorage.client.downloadAsBytes(objectPath);
+          const bytes = await objectStorage.downloadImage(objectPath);
           
-          if (ok && bytes) {
+          if (bytes) {
             const size = bytes.length;
             await backfillDb.update(backfillImages)
               .set({ size })

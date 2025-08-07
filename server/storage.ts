@@ -329,10 +329,11 @@ export class DatabaseStorage implements IStorage {
   }> {
     const { starred, trash, limit = 50, cursor, searchQuery } = options;
     
-    console.log(`getAllImages called with options:`, JSON.stringify(options));
-    
     // Apply sensible limit constraints for performance
     const take = Math.min(Number(limit) || 50, 100);
+    
+    // Get current environment to filter images
+    const currentEnv = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
     
     try {
       // Build query
@@ -341,9 +342,11 @@ export class DatabaseStorage implements IStorage {
       // Build conditions array
       const conditions = [];
       
+      // CRITICAL FIX: Filter by environment to prevent cross-environment sync issues
+      conditions.push(eq(images.environment, currentEnv));
+      
       // Filter by starred and trash status
       if (starred) {
-        console.log("Filtering for starred=true images");
         conditions.push(eq(images.starred, "true"));
       }
       
@@ -356,7 +359,6 @@ export class DatabaseStorage implements IStorage {
       // Add text search if searchQuery is provided
       if (searchQuery && searchQuery.trim() !== '') {
         const searchTerm = searchQuery.trim();
-        console.log(`Searching for prompt containing: "${searchTerm}"`);
         
         // Use case-insensitive ILIKE for flexible search
         if (searchTerm.length >= 1) { // Allow even single character searches
@@ -364,8 +366,6 @@ export class DatabaseStorage implements IStorage {
             conditions.push(
               ilike(images.prompt, `%${searchTerm}%`)
             );
-            
-            console.log(`Added search condition for prompt containing: "${searchTerm}"`);
           } catch (err) {
             console.error(`Error adding search condition:`, err);
           }
@@ -411,7 +411,6 @@ export class DatabaseStorage implements IStorage {
           .orderBy(desc(images.createdAt))
           .limit(take + 1);
       }
-      console.log(`Query returned ${results.length} results`);
       
       // Check if there are more results
       const hasMore = results.length > take;
@@ -426,11 +425,8 @@ export class DatabaseStorage implements IStorage {
       
       // Convert to GeneratedImage type with thumbnail optimization
       const mappedItems = items.map(item => {
-        // This is important - make sure we properly convert the string "true"/"false" to boolean
+        // Convert string "true"/"false" to boolean
         const starredStatus = item.starred === "true";
-        if (process.env.NODE_ENV !== 'production') {
-          console.log(`Image ${item.id} starred status: "${item.starred}" -> ${starredStatus}`);
-        }
         
         return {
           id: item.id,
@@ -452,19 +448,6 @@ export class DatabaseStorage implements IStorage {
           quality: item.quality
         };
       });
-      
-      console.log(`Returning ${mappedItems.length} images, nextCursor: ${nextCursor}`);
-      
-      // Log a sample image for debugging
-      if (mappedItems.length > 0) {
-        if (process.env.NODE_ENV !== 'production') {
-          console.log(`Sample image data:`, {
-            id: mappedItems[0].id,
-            starred: mappedItems[0].starred,
-            deletedAt: mappedItems[0].deletedAt
-          });
-        }
-      }
       
       return {
         items: mappedItems,

@@ -14,11 +14,6 @@ router.get('/gallery', async (req, res) => {
   try {
     const { cursor, limit = 50, starred, trash, q } = req.query;
     
-    console.log(`Object Storage gallery request:`, 
-      { cursor, limit, starred: starred === 'true', trash: trash === 'true', searchQuery: q });
-    
-    // For now, get images from database but enhance with Object Storage in the future
-    // This maintains compatibility while we transition to full Object Storage
     const searchParams = {
       starred: starred === 'true',
       trash: trash === 'true',
@@ -28,8 +23,6 @@ router.get('/gallery', async (req, res) => {
     };
     
     const { items, nextCursor } = await storage.getAllImages(searchParams);
-    
-    console.log(`Returning ${items.length} images from hybrid storage, nextCursor: ${nextCursor}`);
     
     res.json({
       items,

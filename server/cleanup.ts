@@ -29,7 +29,7 @@ export const setupCleanupJob = () => {
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       
       try {
-        const { and, isNotNull } = await import('drizzle-orm');
+        const { and, isNotNull, eq } = await import('drizzle-orm');
         
         // Get current environment to ensure we only delete images from our environment
         const currentEnv = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
@@ -66,7 +66,7 @@ export const setupCleanupJob = () => {
         const result = await db.delete(images).where(and(
           isNotNull(images.deletedAt),
           lt(images.deletedAt, thirtyDaysAgo),
-          images.environment.eq(currentEnv)
+          eq(images.environment, currentEnv)
         ));
         dbRecordsDeleted = result.rowCount || 0;
         console.log(`Permanently deleted ${dbRecordsDeleted} images from trash (30+ days old) for environment: ${currentEnv}`);

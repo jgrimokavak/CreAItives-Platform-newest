@@ -78,6 +78,9 @@ export async function persistImage(b64: string, meta: ImageMetadata, customId?: 
     // Determine quality (if available in params)
     const quality = meta.params.quality || null;
     
+    // Get current environment
+    const currentEnv = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
+    
     // Store image metadata in database with Object Storage URLs
     try {
       const record = {
@@ -85,7 +88,7 @@ export async function persistImage(b64: string, meta: ImageMetadata, customId?: 
         url: fullUrl,
         prompt: meta.prompt,
         dimensions: dimensionsStr,
-      size: data.length, // File size in bytes
+        size: imgBuf.length, // File size in bytes
         model: meta.params.model || 'gpt-image-1',
         width: widthStr,
         height: heightStr,
@@ -93,7 +96,8 @@ export async function persistImage(b64: string, meta: ImageMetadata, customId?: 
         fullUrl: fullUrl,
         starred: starredStr,
         aspectRatio,
-        quality
+        quality,
+        environment: currentEnv // Set environment field
       };
       
       // Insert the record properly
