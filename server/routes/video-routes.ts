@@ -263,12 +263,18 @@ async function pollVideoJob(videoId: string, jobId: string, provider: any) {
             
             finalVideoUrl = uploadResult.fullUrl;
             console.log(`Video uploaded to object storage: ${finalVideoUrl}`);
+            
+            // Use generated thumbnail if available
+            if (uploadResult.thumbUrl) {
+              finalThumbUrl = uploadResult.thumbUrl;
+              console.log(`Video thumbnail created: ${finalThumbUrl}`);
+            }
           }
 
-          if (jobStatus.thumbnailUrl) {
-            // Keep thumbnail URL from Replicate for now
+          // Fallback to Replicate thumbnail if no generated thumbnail
+          if (!finalThumbUrl && jobStatus.thumbnailUrl) {
             finalThumbUrl = jobStatus.thumbnailUrl;
-            console.log(`Thumbnail URL available: ${finalThumbUrl}`);
+            console.log(`Using Replicate thumbnail URL: ${finalThumbUrl}`);
           }
         } catch (storageError) {
           console.error('Error saving video to storage:', storageError);

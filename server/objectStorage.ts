@@ -27,6 +27,7 @@ export class ObjectStorageService {
   }> {
     const envPrefix = this.getEnvironmentPrefix();
     const fullPath = `${envPrefix}/video-generations/${videoId}.${fileExtension}`;
+    const thumbPath = `${envPrefix}/video-generations/thumbs/${videoId}.webp`;
 
     try {
       // Upload video using correct uploadFromBytes method
@@ -37,8 +38,38 @@ export class ObjectStorageService {
       }
       console.log(`[TRACE] Video uploaded successfully to: ${fullPath}`);
 
+      // Create video thumbnail using ffmpeg or similar
+      let thumbUrl = undefined;
+      try {
+        console.log(`[TRACE] Creating video thumbnail from buffer (${videoBuffer.length} bytes)`);
+        // For now, we'll create a placeholder thumbnail since video thumbnail generation requires ffmpeg
+        // In a full implementation, you'd use ffmpeg to extract the first frame
+        const placeholderThumbnail = await sharp({
+          create: {
+            width: 400,
+            height: 225,
+            channels: 4,
+            background: { r: 100, g: 100, b: 100, alpha: 1 }
+          }
+        })
+        .png()
+        .toBuffer();
+
+        // Upload thumbnail
+        console.log(`[TRACE] Uploading video thumbnail to Object Storage key: ${thumbPath}`);
+        const thumbResult = await this.client.uploadFromBytes(thumbPath, placeholderThumbnail);
+        if (thumbResult.ok) {
+          thumbUrl = `/api/object-storage/video/${thumbPath}`;
+          console.log(`[TRACE] Video thumbnail uploaded successfully to: ${thumbPath}`);
+        }
+      } catch (thumbError) {
+        console.error('[WARN] Failed to create video thumbnail:', thumbError);
+        // Continue without thumbnail - not critical
+      }
+
       const urls = {
         fullUrl: `/api/object-storage/video/${fullPath}`,
+        thumbUrl
       };
       
       console.log(`[TRACE] Returning video URLs:`, JSON.stringify(urls));

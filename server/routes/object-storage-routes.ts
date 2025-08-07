@@ -46,18 +46,17 @@ router.get('/object-storage/video/:path(*)', async (req: Request, res: Response)
       return res.status(400).json({ error: 'Video path is required' });
     }
 
-    // Download video from Object Storage
-    const videoBuffer = await objectStorage.downloadAsBytes(videoPath);
-    
-    if (!videoBuffer) {
-      return res.status(404).json({ error: 'Video not found' });
-    }
+    console.log(`[TRACE] Serving video from path: ${videoPath}`);
+
+    // Download video from Object Storage using the same method as images
+    const videoBuffer = await objectStorage.downloadImage(videoPath);
     
     // Determine content type based on extension
     const ext = videoPath.split('.').pop()?.toLowerCase();
     const contentType = ext === 'mp4' ? 'video/mp4' : 
                        ext === 'webm' ? 'video/webm' :
                        ext === 'mov' ? 'video/quicktime' :
+                       ext === 'webp' ? 'image/webp' : // For thumbnails
                        'application/octet-stream';
     
     // Set appropriate headers for video streaming
