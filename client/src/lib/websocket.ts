@@ -9,8 +9,9 @@ export function setupWebSocket(onMessage: (ev: string, data: any) => void): WebS
   try {
     // Create proper WebSocket URL based on environment
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.host;
-    const wsUrl = `${protocol}//${host}/ws`;
+    const hostname = window.location.hostname || 'localhost';
+    const port = window.location.port ? `:${window.location.port}` : '';
+    const wsUrl = `${protocol}//${hostname}${port}/ws`;
     
     // Create the socket with proper error handling
     let socket: WebSocket;

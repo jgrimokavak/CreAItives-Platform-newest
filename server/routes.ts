@@ -421,27 +421,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`After environment filter (${environment}): ${filteredObjects.length} objects`);
       }
 
-      // Calculate metrics
+      // Calculate metrics - always calculate full stats but filter display based on environment
+      let allDevCount = 0;
+      let allProdCount = 0;
+      let allDevSizeBytes = 0;
+      let allProdSizeBytes = 0;
       let totalSizeBytes = 0;
-      let devCount = 0;
-      let prodCount = 0;
-      let devSizeBytes = 0;
-      let prodSizeBytes = 0;
 
-      filteredObjects.forEach(obj => {
-        totalSizeBytes += obj.size;
-        
+      // Calculate full bucket stats first
+      objects.forEach(obj => {
         if (obj.environment === 'dev') {
-          devCount++;
-          devSizeBytes += obj.size;
+          allDevCount++;
+          allDevSizeBytes += obj.size;
         } else if (obj.environment === 'prod') {
-          prodCount++;
-          prodSizeBytes += obj.size;
+          allProdCount++;
+          allProdSizeBytes += obj.size;
         }
+        totalSizeBytes += obj.size;
       });
 
-      const totalSizeGiB = totalSizeBytes / (1024 * 1024 * 1024);
-      const estimatedMonthlyCost = totalSizeGiB * 0.03; // $0.03 per GiB/month
+      // Set display values based on filter
+      let displayCount = filteredObjects.length;
+      let displaySizeBytes = 0;
+      let devCount = allDevCount;
+      let prodCount = allProdCount;
+      let devSizeBytes = allDevSizeBytes;  
+      let prodSizeBytes = allProdSizeBytes;
+
+      if (environment === 'dev') {
+        displaySizeBytes = allDevSizeBytes;
+        prodCount = 0;
+        prodSizeBytes = 0;
+      } else if (environment === 'prod') {
+        displaySizeBytes = allProdSizeBytes;
+        devCount = 0;
+        devSizeBytes = 0;
+      } else {
+        // 'all' or undefined - show everything
+        displaySizeBytes = totalSizeBytes;
+      }
+
+      const displaySizeGiB = displaySizeBytes / (1024 * 1024 * 1024);
+      const estimatedMonthlyCost = displaySizeGiB * 0.03; // $0.03 per GiB/month
       
       // Get upload activity from database
       const thirtyDaysAgo = new Date();
@@ -461,14 +482,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .groupBy(sql`DATE(${images.createdAt})`)
         .orderBy(sql`DATE(${images.createdAt})`);
 
-      console.log(`Storage stats: ${filteredObjects.length} objects, ${totalSizeGiB.toFixed(3)} GiB (${(totalSizeBytes / (1024**2)).toFixed(2)} MB)`);
+      console.log(`Storage stats: ${displayCount} objects displayed, ${displaySizeGiB.toFixed(3)} GiB (${(displaySizeBytes / (1024**2)).toFixed(2)} MB) [Filter: ${environment || 'all'}]`);
       
       const envPrefix = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
       
       res.json({
-        totalObjects: filteredObjects.length,
-        totalSizeBytes,
-        totalSizeGiB: Number(totalSizeGiB.toFixed(3)),
+        totalObjects: displayCount,
+        totalSizeBytes: displaySizeBytes,
+        totalSizeGiB: Number(displaySizeGiB.toFixed(3)),
         estimatedMonthlyCost: Number(estimatedMonthlyCost.toFixed(2)),
         environments: {
           dev: devCount,

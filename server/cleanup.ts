@@ -31,36 +31,45 @@ export const setupCleanupJob = () => {
       try {
         const { and, isNotNull } = await import('drizzle-orm');
         
-        // First, get the IDs of images to be permanently deleted (for Object Storage cleanup)
-        const imagesToDelete = await db.select({ id: images.id })
+        // Get current environment to ensure we only delete images from our environment
+        const currentEnv = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
+        
+        // First, get the IDs and environments of images to be permanently deleted (for Object Storage cleanup)
+        const imagesToDelete = await db.select({ id: images.id, environment: images.environment })
           .from(images)
           .where(and(
             isNotNull(images.deletedAt),
             lt(images.deletedAt, thirtyDaysAgo)
           ));
         
-        // Delete images from Object Storage
-        if (imagesToDelete.length > 0) {
+        // Filter to only our environment's images
+        const environmentFilteredImages = imagesToDelete.filter(img => 
+          (img.environment || 'dev') === currentEnv
+        );
+        
+        // Delete images from Object Storage (only from our environment)
+        if (environmentFilteredImages.length > 0) {
           const { objectStorage } = await import('./objectStorage');
           
-          for (const image of imagesToDelete) {
+          for (const image of environmentFilteredImages) {
             try {
               // The deleteImage method expects just the image ID, not the full path
               await objectStorage.deleteImage(image.id, 'png');
-              console.log(`Successfully deleted image ${image.id} from Object Storage during cleanup`);
+              console.log(`Successfully deleted image ${image.id} from Object Storage during cleanup (env: ${image.environment || 'dev'})`);
             } catch (storageErr) {
               console.error(`Failed to delete ${image.id} from Object Storage:`, storageErr);
             }
           }
         }
         
-        // Delete records from database
+        // Delete records from database (only from our environment)
         const result = await db.delete(images).where(and(
           isNotNull(images.deletedAt),
-          lt(images.deletedAt, thirtyDaysAgo)
+          lt(images.deletedAt, thirtyDaysAgo),
+          images.environment.eq(currentEnv)
         ));
         dbRecordsDeleted = result.rowCount || 0;
-        console.log(`Permanently deleted ${dbRecordsDeleted} images from trash (30+ days old)`);
+        console.log(`Permanently deleted ${dbRecordsDeleted} images from trash (30+ days old) for environment: ${currentEnv}`);
       } catch (dbErr) {
         console.error('Error cleaning trash records:', dbErr);
       }

@@ -143,6 +143,7 @@ export const images = pgTable("images", {
   // New fields for enhanced display
   aspectRatio: text("aspect_ratio"),  // Direct aspect ratio as selected by user (e.g., "16:9")
   quality: text("quality"),           // Image quality setting
+  environment: text("environment").notNull().default("dev"), // 'dev' | 'prod' - environment where image was created
 });
 
 export const insertImageSchema = createInsertSchema(images);
