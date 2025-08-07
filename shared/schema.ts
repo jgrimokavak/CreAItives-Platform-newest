@@ -128,7 +128,7 @@ export const images = pgTable("images", {
   id: text("id").primaryKey(),
   url: text("url").notNull(),
   prompt: text("prompt").notNull(),
-  size: text("size").notNull(),
+  dimensions: text("dimensions").notNull(), // Image dimensions like "1024x1024"
   model: text("model").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   // Added fields for gallery functionality
@@ -143,7 +143,8 @@ export const images = pgTable("images", {
   // New fields for enhanced display
   aspectRatio: text("aspect_ratio"),  // Direct aspect ratio as selected by user (e.g., "16:9")
   quality: text("quality"),           // Image quality setting
-  environment: text("environment").notNull().default("dev"), // 'dev' | 'prod' - environment where image was created
+  environment: text("environment").default("dev").notNull(), // 'dev' | 'prod' - environment where image was created
+  size: integer("size").default(0), // File size in bytes
 });
 
 export const insertImageSchema = createInsertSchema(images);
@@ -156,7 +157,7 @@ export interface GeneratedImage {
   id: string;
   url: string;
   prompt: string;
-  size: string;
+  dimensions: string; // Image dimensions like "1024x1024"
   model: string;
   createdAt: string;
   sourceThumb?: string | null; // 128px thumbnail of the first reference image

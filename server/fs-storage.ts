@@ -44,7 +44,7 @@ export async function persistImage(b64: string, meta: ImageMetadata, customId?: 
     const { fullUrl, thumbUrl } = await objectStorage.uploadImage(imgBuf, id, 'png');
 
     // Format params for database storage
-    const sizeStr = `${width || 1024}x${height || 1024}`;
+    const dimensionsStr = `${width || 1024}x${height || 1024}`;
     const widthStr = width?.toString() || '1024';
     const heightStr = height?.toString() || '1024';
     const starredStr = 'false';
@@ -84,7 +84,8 @@ export async function persistImage(b64: string, meta: ImageMetadata, customId?: 
         id: id,
         url: fullUrl,
         prompt: meta.prompt,
-        size: sizeStr,
+        dimensions: dimensionsStr,
+      size: data.length, // File size in bytes
         model: meta.params.model || 'gpt-image-1',
         width: widthStr,
         height: heightStr,

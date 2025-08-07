@@ -13,7 +13,7 @@ export class ReplitObjectStorageAdmin {
   }
 
   /**
-   * List all objects in the bucket with full metadata and real file sizes
+   * List all objects in the bucket with basic metadata (without downloading for size)
    */
   async listAllObjects(): Promise<{
     objects: Array<{
@@ -34,43 +34,17 @@ export class ReplitObjectStorageAdmin {
       }
 
       const objectKeys = value || [];
-      const objects: Array<{
-        name: string;
-        size: number;
-        lastModified: Date;
-        environment: 'dev' | 'prod' | 'unknown';
-        type: 'image' | 'thumbnail' | 'other';
-      }> = [];
-
-      // Get real file sizes by downloading each object
-      for (const obj of objectKeys) {
-        const name = (obj as any).name || (obj as any).key || '';
-        if (!name) continue;
-        
-        let size = 0;
+      const objects = objectKeys.map((obj: any) => {
+        const name = obj.name || obj.key || '';
         let lastModified = new Date();
 
-        // Get real size by downloading the object
-        try {
-          const { ok: downloadOk, value: bytes } = await this.client.downloadAsBytes(name);
-          if (downloadOk && bytes) {
-            size = bytes.length;
-          }
-        } catch (downloadError) {
-          console.warn(`Could not get size for ${name}:`, downloadError);
-          // Fallback to metadata size if available
-          const objAny = obj as any;
-          size = objAny.size || objAny.contentLength || objAny.length || 0;
-        }
-
         // Try to get lastModified from different possible properties
-        const objAny = obj as any;
-        if (objAny.lastModified) {
-          lastModified = new Date(objAny.lastModified);
-        } else if (objAny.timeCreated) {
-          lastModified = new Date(objAny.timeCreated);
-        } else if (objAny.updated) {
-          lastModified = new Date(objAny.updated);
+        if (obj.lastModified) {
+          lastModified = new Date(obj.lastModified);
+        } else if (obj.timeCreated) {
+          lastModified = new Date(obj.timeCreated);
+        } else if (obj.updated) {
+          lastModified = new Date(obj.updated);
         }
 
         // Determine environment
@@ -89,22 +63,20 @@ export class ReplitObjectStorageAdmin {
           type = 'image';
         }
 
-        objects.push({
+        return {
           name,
-          size,
+          size: 0, // Will be populated from database
           lastModified,
           environment,
           type,
-        });
-      }
+        };
+      });
 
-      const totalSize = objects.reduce((sum: number, obj) => sum + obj.size, 0);
-
-      console.log(`Listed ${objects.length} objects, total real size: ${totalSize} bytes (${(totalSize / (1024**2)).toFixed(2)} MB)`);
+      console.log(`Listed ${objects.length} objects from bucket`);
       
       return {
         objects,
-        totalSize,
+        totalSize: 0, // Will be calculated from database
       };
 
     } catch (error) {

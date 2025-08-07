@@ -410,55 +410,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Admin: Fetching storage statistics...');
       const { environment } = req.query;
       
-      // Get real data from Replit Object Storage
-      const { replitStorage } = await import('./replitObjectStorage');
-      const { objects, totalSize } = await replitStorage.listAllObjects();
-      
-      // Filter by environment if specified
-      let filteredObjects = objects;
-      if (environment && environment !== 'all') {
-        filteredObjects = objects.filter(obj => obj.environment === environment);
-        console.log(`After environment filter (${environment}): ${filteredObjects.length} objects`);
-      }
+      // Get metrics from database instead of downloading files
+      const { db: database } = await import('./db');
+      const { images: imagesTable } = await import('@shared/schema');
+      const { sql: sqlFunc, eq, and, isNull } = await import('drizzle-orm');
 
-      // Calculate metrics - always calculate full stats but filter display based on environment
+      // Get counts and sizes by environment from database
+      const statsQuery = database
+        .select({
+          environment: imagesTable.environment,
+          count: sqlFunc<number>`COUNT(*)`,
+          totalSize: sqlFunc<number>`COALESCE(SUM(${imagesTable.size}), 0)`
+        })
+        .from(imagesTable)
+        .where(isNull(imagesTable.deletedAt)) // Only active images
+        .groupBy(imagesTable.environment);
+
+      const dbStats = await statsQuery;
+
+      // Calculate metrics based on database data
       let allDevCount = 0;
       let allProdCount = 0;
       let allDevSizeBytes = 0;
       let allProdSizeBytes = 0;
-      let totalSizeBytes = 0;
 
-      // Calculate full bucket stats first
-      objects.forEach(obj => {
-        if (obj.environment === 'dev') {
-          allDevCount++;
-          allDevSizeBytes += obj.size;
-        } else if (obj.environment === 'prod') {
-          allProdCount++;
-          allProdSizeBytes += obj.size;
+      dbStats.forEach(stat => {
+        const env = stat.environment || 'dev';
+        const count = Number(stat.count) || 0;
+        const size = Number(stat.totalSize) || 0;
+        
+        if (env === 'dev') {
+          allDevCount = count;
+          allDevSizeBytes = size;
+        } else if (env === 'prod') {
+          allProdCount = count;
+          allProdSizeBytes = size;
         }
-        totalSizeBytes += obj.size;
       });
 
       // Set display values based on filter
-      let displayCount = filteredObjects.length;
-      let displaySizeBytes = 0;
+      let displayCount = allDevCount + allProdCount;
+      let displaySizeBytes = allDevSizeBytes + allProdSizeBytes;
       let devCount = allDevCount;
       let prodCount = allProdCount;
       let devSizeBytes = allDevSizeBytes;  
       let prodSizeBytes = allProdSizeBytes;
 
       if (environment === 'dev') {
+        displayCount = allDevCount;
         displaySizeBytes = allDevSizeBytes;
         prodCount = 0;
         prodSizeBytes = 0;
       } else if (environment === 'prod') {
+        displayCount = allProdCount;
         displaySizeBytes = allProdSizeBytes;
         devCount = 0;
         devSizeBytes = 0;
-      } else {
-        // 'all' or undefined - show everything
-        displaySizeBytes = totalSizeBytes;
       }
 
       const displaySizeGiB = displaySizeBytes / (1024 * 1024 * 1024);
@@ -468,21 +475,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       
-      const { sql, gte } = await import('drizzle-orm');
-      const { images } = await import('@shared/schema');
-      const { db } = await import('./db');
+      const { gte } = await import('drizzle-orm');
       
-      const dailyUploads = await db
+      const dailyUploads = await database
         .select({
-          date: sql<string>`DATE(${images.createdAt})`,
-          count: sql<number>`COUNT(*)`
+          date: sqlFunc<string>`DATE(${imagesTable.createdAt})`,
+          count: sqlFunc<number>`COUNT(*)`
         })
-        .from(images)
-        .where(gte(images.createdAt, thirtyDaysAgo))
-        .groupBy(sql`DATE(${images.createdAt})`)
-        .orderBy(sql`DATE(${images.createdAt})`);
+        .from(imagesTable)
+        .where(gte(imagesTable.createdAt, thirtyDaysAgo))
+        .groupBy(sqlFunc`DATE(${imagesTable.createdAt})`)
+        .orderBy(sqlFunc`DATE(${imagesTable.createdAt})`);
 
-      console.log(`Storage stats: ${displayCount} objects displayed, ${displaySizeGiB.toFixed(3)} GiB (${(displaySizeBytes / (1024**2)).toFixed(2)} MB) [Filter: ${environment || 'all'}]`);
+      console.log(`Storage stats from DB: ${displayCount} objects displayed, ${displaySizeGiB.toFixed(3)} GiB (${(displaySizeBytes / (1024**2)).toFixed(2)} MB) [Filter: ${environment || 'all'}]`);
       
       const envPrefix = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
       
@@ -504,14 +509,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Add debug info for troubleshooting
         debug: {
           environmentFilter: environment,
-          totalObjectsInBucket: objects.length,
-          objectsAfterFilter: filteredObjects.length,
-          sampleObjectSizes: filteredObjects.slice(0, 3).map(o => ({ 
-            name: o.name, 
-            size: o.size, 
-            type: o.type,
-            env: o.environment 
-          }))
+          dbStats: dbStats,
+          devCount: allDevCount,
+          prodCount: allProdCount,
+          devSize: allDevSizeBytes,
+          prodSize: allProdSizeBytes
         }
       });
       
@@ -537,17 +539,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         page, limit, environment, dateFrom, dateTo, minSize, maxSize
       });
 
-      const { replitStorage } = await import('./replitObjectStorage');
-      const { objects: allObjects } = await replitStorage.listAllObjects();
+      // Get object list from database with actual sizes
+      const { db: dbConn } = await import('./db');
+      const { images: imgTable } = await import('@shared/schema');
+      const { isNull: isNullFunc } = await import('drizzle-orm');
+
+      const imageRecords = await dbConn.select().from(imgTable).where(isNullFunc(imgTable.deletedAt));
       
-      // Convert object list to the format we need
-      const objects = allObjects.map((obj, index) => ({
-        name: obj.name,
-        size: obj.size,
-        lastModified: obj.lastModified,
-        id: `obj_${index}_${obj.name.replace(/[^a-zA-Z0-9]/g, '_')}`,
-        environment: obj.environment,
-        type: obj.type
+      // Convert database records to object format
+      const objects = imageRecords.map((img, index) => ({
+        name: `${img.environment || 'dev'}/${img.id}.png`, // Reconstruct object path
+        size: img.size || 0,
+        lastModified: img.createdAt || new Date(),
+        id: `obj_${index}_${img.id}`,
+        environment: img.environment || 'dev',
+        type: 'image' as const
       }));
 
       // Apply filters
@@ -645,6 +651,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Backfill route for existing images with missing size
+  app.post('/api/admin/storage/backfill-size', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      console.log('Admin: Starting backfill of missing file sizes...');
+      
+      const { db: backfillDb } = await import('./db');
+      const { images: backfillImages } = await import('@shared/schema');
+      const { eq, or, isNull: isNullValue } = await import('drizzle-orm');
+      const { replitStorage } = await import('./replitObjectStorage');
+
+      // Get images with missing sizes
+      const imagesToBackfill = await backfillDb.select()
+        .from(backfillImages)
+        .where(or(eq(backfillImages.size, 0), isNullValue(backfillImages.size)));
+
+      let updated = 0;
+      let failed = 0;
+      const errors: string[] = [];
+
+      for (const image of imagesToBackfill) {
+        try {
+          const objectPath = `${image.environment || 'dev'}/${image.id}.png`;
+          const { ok, value: bytes } = await replitStorage.client.downloadAsBytes(objectPath);
+          
+          if (ok && bytes) {
+            const size = bytes.length;
+            await backfillDb.update(backfillImages)
+              .set({ size })
+              .where(eq(backfillImages.id, image.id));
+            
+            updated++;
+            console.log(`Backfilled size for ${image.id}: ${size} bytes`);
+          } else {
+            failed++;
+            errors.push(`${image.id}: Failed to download`);
+          }
+        } catch (error) {
+          failed++;
+          errors.push(`${image.id}: ${error}`);
+          console.error(`Error backfilling ${image.id}:`, error);
+        }
+      }
+
+      console.log(`Backfill completed: ${updated} updated, ${failed} failed`);
+      
+      res.json({
+        success: true,
+        total: imagesToBackfill.length,
+        updated,
+        failed,
+        errors: errors.length > 0 ? errors.slice(0, 10) : undefined // Limit error list
+      });
+      
+    } catch (error) {
+      console.error('Error in backfill operation:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   app.get('/api/admin/storage/objects/export', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const { environment, dateFrom, dateTo } = req.query;
@@ -654,8 +719,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { replitStorage } = await import('./replitObjectStorage');
       const { objects: objectList } = await replitStorage.listAllObjects();
       
-      // Use the objects from the storage result
-      const objects = objectList;
+      // Get objects from database for CSV export
+      const { db: dbInstance } = await import('./db');
+      const { images: imgsTable } = await import('@shared/schema');
+      const { isNull: isNullCheck } = await import('drizzle-orm');
+
+      const imageRecords = await dbInstance.select().from(imgsTable).where(isNullCheck(imgsTable.deletedAt));
+      
+      // Convert to objects format for CSV export
+      const objects = imageRecords.map((img) => ({
+        name: `${img.environment || 'dev'}/${img.id}.png`,
+        size: img.size || 0,
+        lastModified: img.createdAt || new Date(),
+        environment: img.environment || 'dev',
+        type: 'image' as const
+      }));
 
       // Apply filters
       let filteredObjects = objects.filter((obj: any) => {

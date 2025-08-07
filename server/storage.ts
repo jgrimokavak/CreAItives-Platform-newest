@@ -264,7 +264,7 @@ export class DatabaseStorage implements IStorage {
       id: image.id,
       url: image.url,
       prompt: image.prompt,
-      size: image.size,
+      dimensions: image.dimensions || '1024x1024', // Image dimensions like "1024x1024"
       model: image.model,
       width: image.width || "1024",
       height: image.height || "1024",
@@ -286,7 +286,7 @@ export class DatabaseStorage implements IStorage {
         id: savedImage.id,
         url: savedImage.url,
         prompt: savedImage.prompt,
-        size: savedImage.size,
+        dimensions: savedImage.dimensions || '1024x1024',
         model: savedImage.model,
         createdAt: savedImage.createdAt ? new Date(savedImage.createdAt).toISOString() : new Date().toISOString(),
         width: savedImage.width || '1024',
@@ -304,10 +304,22 @@ export class DatabaseStorage implements IStorage {
     
     // Convert to GeneratedImage type
     return {
-      ...savedImage,
+      id: savedImage.id,
+      url: savedImage.url,
+      prompt: savedImage.prompt,
+      dimensions: savedImage.dimensions || '1024x1024',
+      model: savedImage.model,
       createdAt: savedImage.createdAt ? new Date(savedImage.createdAt).toISOString() : new Date().toISOString(),
+      width: savedImage.width || '1024',
+      height: savedImage.height || '1024',
+      fullUrl: savedImage.fullUrl,
+      thumbUrl: savedImage.thumbUrl,
       starred: savedImage.starred === "true",
-      deletedAt: savedImage.deletedAt ? new Date(savedImage.deletedAt).toISOString() : null
+      sourceThumb: savedImage.sourceThumb,
+      sourceImage: savedImage.sourceImage,
+      deletedAt: savedImage.deletedAt ? new Date(savedImage.deletedAt).toISOString() : null,
+      aspectRatio: savedImage.aspectRatio,
+      quality: savedImage.quality
     };
   }
 
@@ -424,7 +436,7 @@ export class DatabaseStorage implements IStorage {
           id: item.id,
           url: item.thumbUrl || item.url, // Prefer thumbnail for gallery listing
           prompt: item.prompt,
-          size: item.size,
+          dimensions: item.dimensions || '1024x1024', // Image dimensions like "1024x1024"
           model: item.model,
           createdAt: item.createdAt ? new Date(item.createdAt).toISOString() : new Date().toISOString(),
           width: item.width,

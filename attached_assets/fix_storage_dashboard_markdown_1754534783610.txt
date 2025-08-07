@@ -1,0 +1,99 @@
+## 🛠️ Replit Agent — Fix Storage Dashboard by Recording File Size on Upload
+
+### Problem
+
+Replit Object Storage's `client.list()` does **not** return file sizes. The current dashboard implementation shows **0 B** or **1 B** because it's trying to derive size post-upload using `downloadAsText()` or a bad stream.
+
+---
+
+### ✅ Objective
+
+Store the **file size** at the moment of upload (when you already have the buffer), and pull metrics from the database instead of trying to re-download everything later.
+
+---
+
+### 📌 Tasks
+
+---
+
+### 1. Add `size` column to the `images` table
+
+**Migration:**
+
+```sql
+ALTER TABLE images ADD COLUMN size BIGINT DEFAULT 0;
+```
+
+---
+
+### 2. Capture file size on upload
+
+**File:** `server/objectStorage.ts` (or wherever you handle image uploads)
+
+Add this when inserting the image record:
+
+```ts
+const size = buffer.length;
+
+await db.images.insert({
+  id,
+  key,
+  environment,
+  size,
+  // ...other fields
+});
+```
+
+---
+
+### 3. Backfill existing images with missing size
+
+**Create a one-time admin route**:
+
+```ts
+POST /api/admin/storage/backfill-size
+```
+
+Loop over all `images` where `size = 0`, call `client.downloadAsBytes(key)`, and set `size = buffer.length`.
+
+**Example logic:**
+
+```ts
+const { ok, value: buffer } = await client.downloadAsBytes(image.key);
+if (ok) {
+  await db.images.update(image.id, { size: buffer.length });
+}
+```
+
+Once complete, **disable or remove** the route.
+
+---
+
+### 4. Update dashboard metrics to use DB size
+
+**In `/api/admin/storage/stats`**, query like:
+
+```sql
+SELECT
+  COUNT(*) AS objectCount,
+  SUM(size) AS totalBytes,
+  environment
+FROM images
+WHERE (:env IS NULL OR environment = :env);
+```
+
+Use this for “Storage Used”, “Monthly Cost”, etc.
+
+---
+
+### 🧪 Acceptance Criteria
+
+- [ ] Storage cards show accurate byte totals (from DB).  
+- [ ] Switching Dev/Prod updates numbers correctly.  
+- [ ] New uploads instantly reflect correct size.  
+- [ ] Backfill is successful for all historical records.  
+- [ ] No client.list() calls are used for size in dashboard.
+
+---
+
+Ping me once this is implemented in preview.
