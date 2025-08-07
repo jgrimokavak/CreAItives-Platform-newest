@@ -2,6 +2,7 @@ import { BaseProvider } from './base-provider';
 import { OpenAIProvider } from './openai-provider';
 import { ReplicateProvider } from './replicate-provider';
 import { FalProvider } from './fal-provider';
+import { VertexProvider } from './vertex-provider';
 import { models } from '../config/models';
 
 export class ProviderRegistry {
@@ -12,6 +13,7 @@ export class ProviderRegistry {
     this.providers.push(new OpenAIProvider());
     this.providers.push(new ReplicateProvider());
     this.providers.push(new FalProvider());
+    this.providers.push(new VertexProvider());
   }
   
   // Get the provider for a specific model

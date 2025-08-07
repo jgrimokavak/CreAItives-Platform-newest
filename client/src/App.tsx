@@ -9,6 +9,7 @@ import HomePage from "@/pages/HomePage";
 import SimpleGalleryPage from "@/pages/SimpleGalleryPage";
 import UpscalePage from "./pages/UpscalePageNew";
 import CarCreationPage from "./pages/CarCreationPage";
+import VideoPage from "./pages/VideoPage";
 
 import EmailBuilderPage from "./pages/EmailBuilderPage";
 import UserManagementPage from "./pages/UserManagementPage";
@@ -46,6 +47,7 @@ function Router() {
           <Route path="/email-builder" component={() => <Redirect to="/home" />} />
           <Route path="/trash" component={() => <Redirect to="/home" />} />
           <Route path="/car" component={() => <Redirect to="/home" />} />
+          <Route path="/video" component={() => <Redirect to="/home" />} />
 
           <Route path="/admin/users" component={() => <Redirect to="/home" />} />
           <Route path="/admin/page-settings" component={() => <Redirect to="/home" />} />
@@ -87,6 +89,11 @@ function Router() {
           <Route path="/car" component={() => (
             <Sidebar>
               <CarCreationPage />
+            </Sidebar>
+          )} />
+          <Route path="/video" component={() => (
+            <Sidebar>
+              <VideoPage />
             </Sidebar>
           )} />
 

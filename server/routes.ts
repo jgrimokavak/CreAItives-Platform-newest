@@ -24,6 +24,8 @@ import upscaleRoutes from "./routes/upscale-routes";
 import enhancePromptRouter from "./routes/enhancePrompt";
 import enhanceEditPromptRouter from "./routes/enhanceEditPrompt";
 import promptSuggestionsRouter from "./routes/promptSuggestions";
+import videoRoutes from "./routes/video-routes";
+import projectRoutes from "./routes/project-routes";
 
 
 import objectStorageRoutes from "./routes/object-storage-routes";
@@ -1065,6 +1067,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Add gallery routes
   app.use('/api', galleryRoutes);
+  
+  // Add video and project routes
+  app.use('/api', videoRoutes);
+  app.use('/api', projectRoutes);
   
   // Add model routes (includes /api/models endpoint)
   app.use('/api', modelRoutes);

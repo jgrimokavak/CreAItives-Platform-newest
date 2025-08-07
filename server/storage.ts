@@ -1,4 +1,4 @@
-import { users, images, pageSettings, type User, type UpsertUser, type GeneratedImage, type PageSettings, type InsertPageSettings } from "@shared/schema";
+import { users, images, pageSettings, videos, projects, type User, type UpsertUser, type GeneratedImage, type PageSettings, type InsertPageSettings, type Video, type InsertVideo, type Project, type InsertProject } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, isNull, isNotNull, and, ilike, lt, sql, or, not } from "drizzle-orm";
 import * as fs from "fs";
@@ -43,6 +43,23 @@ export interface IStorage {
   getAllPageSettings(): Promise<PageSettings[]>;
   updatePageSetting(pageKey: string, isEnabled: boolean): Promise<PageSettings | undefined>;
   initializePageSettings(): Promise<void>;
+
+  // Video operations
+  saveVideo(video: InsertVideo): Promise<Video>;
+  getAllVideos(options?: { userId?: string; projectId?: string; status?: string; limit?: number; cursor?: string }): Promise<{
+    items: Video[];
+    nextCursor: string | null;
+  }>;
+  getVideoById(id: string): Promise<Video | undefined>;
+  updateVideo(id: string, updates: Partial<Video>): Promise<Video | undefined>;
+  deleteVideo(id: string): Promise<void>;
+
+  // Project operations
+  createProject(project: InsertProject): Promise<Project>;
+  getAllProjects(userId: string): Promise<Project[]>;
+  getProjectById(id: string): Promise<Project | undefined>;
+  updateProject(id: string, updates: Partial<Project>): Promise<Project | undefined>;
+  deleteProject(id: string): Promise<void>;
 }
 
 // Database storage implementation
@@ -606,7 +623,7 @@ export class DatabaseStorage implements IStorage {
     const defaultPages = [
       { pageKey: 'create', pageName: 'Create', description: 'Main image creation page' },
       { pageKey: 'car', pageName: 'Car Creation', description: 'Car-specific image creation' },
-
+      { pageKey: 'video', pageName: 'Video Creation', description: 'AI video generation with Vertex AI' },
       { pageKey: 'gallery', pageName: 'Gallery', description: 'View and manage generated images' },
       { pageKey: 'upscale', pageName: 'Upscale', description: 'Image upscaling functionality' },
       { pageKey: 'email-builder', pageName: 'Email CreAItor', description: 'MJML email builder' },
@@ -626,6 +643,91 @@ export class DatabaseStorage implements IStorage {
       );
       console.log('Initialized page settings with default configuration');
     }
+  }
+
+  // Video operations
+  async saveVideo(video: InsertVideo): Promise<Video> {
+    const [savedVideo] = await db.insert(videos).values(video).returning();
+    return savedVideo;
+  }
+
+  async getAllVideos(options?: { userId?: string; projectId?: string; status?: string; limit?: number; cursor?: string }): Promise<{
+    items: Video[];
+    nextCursor: string | null;
+  }> {
+    const { userId, projectId, status, limit = 50, cursor } = options || {};
+    
+    let query = db.select().from(videos) as any;
+    const conditions = [];
+    
+    if (userId) conditions.push(eq(videos.userId, userId));
+    if (projectId) conditions.push(eq(videos.projectId, projectId));
+    if (status) conditions.push(eq(videos.status, status));
+    if (cursor) conditions.push(lt(videos.createdAt, new Date(cursor)));
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+    
+    const videoList = await query
+      .orderBy(desc(videos.createdAt))
+      .limit(limit + 1);
+    
+    const hasMore = videoList.length > limit;
+    const items = hasMore ? videoList.slice(0, -1) : videoList;
+    const nextCursor = hasMore ? items[items.length - 1]?.createdAt?.toISOString() || null : null;
+    
+    return { items, nextCursor };
+  }
+
+  async getVideoById(id: string): Promise<Video | undefined> {
+    const [video] = await db.select().from(videos).where(eq(videos.id, id));
+    return video;
+  }
+
+  async updateVideo(id: string, updates: Partial<Video>): Promise<Video | undefined> {
+    const [updatedVideo] = await db
+      .update(videos)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(videos.id, id))
+      .returning();
+    return updatedVideo;
+  }
+
+  async deleteVideo(id: string): Promise<void> {
+    await db.delete(videos).where(eq(videos.id, id));
+  }
+
+  // Project operations
+  async createProject(project: InsertProject): Promise<Project> {
+    const [createdProject] = await db.insert(projects).values(project).returning();
+    return createdProject;
+  }
+
+  async getAllProjects(userId: string): Promise<Project[]> {
+    return await db
+      .select()
+      .from(projects)
+      .where(eq(projects.userId, userId))
+      .orderBy(desc(projects.createdAt));
+  }
+
+  async getProjectById(id: string): Promise<Project | undefined> {
+    const [project] = await db.select().from(projects).where(eq(projects.id, id));
+    return project;
+  }
+
+  async updateProject(id: string, updates: Partial<Project>): Promise<Project | undefined> {
+    const [updatedProject] = await db
+      .update(projects)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(projects.id, id))
+      .returning();
+    return updatedProject;
+  }
+
+  async deleteProject(id: string): Promise<void> {
+    await db.delete(projects).where(eq(projects.id, id));
   }
 }
 

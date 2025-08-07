@@ -123,6 +123,51 @@ export const modelFormSchemas = {
 
 export type GenerateImageInput = z.infer<typeof generateImageSchema>;
 
+// Video generation schema
+export const generateVideoSchema = z.object({
+  prompt: z.string().min(10, 'Prompt must be at least 10 characters').max(2000, 'Prompt must be less than 2000 characters'),
+  model: z.enum(['veo-3', 'veo-3-fast', 'veo-2']),
+  aspectRatio: z.enum(['1:1', '16:9', '9:16', '4:3', '3:4']),
+  resolution: z.enum(['720p', '1080p']),
+  duration: z.enum(['3s', '5s', '10s', '15s']),
+  projectId: z.string().optional(),
+  referenceImage: z.string().optional(), // base64 encoded image
+  seed: z.number().int().optional(),
+  audioEnabled: z.boolean().default(false),
+  personGeneration: z.boolean().default(true),
+});
+
+export type GenerateVideoInput = z.infer<typeof generateVideoSchema>;
+
+// Video model form schemas
+export const videoModelSchemas = {
+  "veo-3": z.object({
+    prompt: z.string().min(10).max(2000),
+    aspectRatio: z.enum(['1:1', '16:9', '9:16', '4:3', '3:4']),
+    resolution: z.enum(['720p', '1080p']),
+    duration: z.enum(['3s', '5s', '10s', '15s']),
+    audioEnabled: z.boolean().optional(),
+    personGeneration: z.boolean().optional(),
+    seed: z.number().int().optional(),
+  }),
+  "veo-3-fast": z.object({
+    prompt: z.string().min(10).max(2000),
+    aspectRatio: z.enum(['1:1', '16:9', '9:16']),
+    resolution: z.enum(['720p', '1080p']),
+    duration: z.enum(['3s', '5s', '10s']),
+    audioEnabled: z.boolean().optional(),
+    personGeneration: z.boolean().optional(),
+    seed: z.number().int().optional(),
+  }),
+  "veo-2": z.object({
+    prompt: z.string().min(10).max(2000),
+    aspectRatio: z.enum(['16:9', '9:16']),
+    resolution: z.enum(['720p']),
+    duration: z.enum(['3s', '5s', '10s']),
+    seed: z.number().int().optional(),
+  }),
+};
+
 // Images database schema 
 export const images = pgTable("images", {
   id: text("id").primaryKey(),
@@ -217,3 +262,48 @@ export const insertPageSettingsSchema = createInsertSchema(pageSettings).omit({
 
 export type InsertPageSettings = z.infer<typeof insertPageSettingsSchema>;
 export type PageSettings = typeof pageSettings.$inferSelect;
+
+// Videos database schema
+export const videos = pgTable("videos", {
+  id: text("id").primaryKey(),
+  url: text("url"),
+  prompt: text("prompt").notNull(),
+  model: text("model").notNull(),
+  aspectRatio: text("aspect_ratio").notNull(),
+  resolution: text("resolution").notNull(),
+  duration: text("duration").notNull(),
+  status: text("status").default("pending").notNull(), // 'pending' | 'processing' | 'completed' | 'failed'
+  jobId: text("job_id"),
+  projectId: text("project_id"),
+  userId: text("user_id").notNull(),
+  referenceImage: text("reference_image"), // base64 encoded reference image
+  seed: integer("seed"),
+  audioEnabled: boolean("audio_enabled").default(false),
+  personGeneration: boolean("person_generation").default(true),
+  thumbUrl: text("thumb_url"),
+  fullUrl: text("full_url"),
+  error: text("error"), // Error message if generation failed
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  completedAt: timestamp("completed_at"),
+  environment: text("environment").default("dev").notNull(), // 'dev' | 'prod'
+  size: integer("size").default(0), // File size in bytes
+});
+
+export const insertVideoSchema = createInsertSchema(videos);
+export type InsertVideo = z.infer<typeof insertVideoSchema>;
+export type Video = typeof videos.$inferSelect;
+
+// Projects database schema for video organization
+export const projects = pgTable("projects", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  userId: text("user_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertProjectSchema = createInsertSchema(projects);
+export type InsertProject = z.infer<typeof insertProjectSchema>;
+export type Project = typeof projects.$inferSelect;

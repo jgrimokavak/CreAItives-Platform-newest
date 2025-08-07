@@ -31,6 +31,11 @@ export abstract class BaseProvider {
   async edit(options: EditOptions): Promise<ProviderResult> {
     throw new Error(`${this.name} provider does not support image editing`);
   }
+
+  // Generate video from text - optional, not all providers support this
+  async generateVideo(modelKey: string, inputs: Record<string, any>): Promise<any> {
+    throw new Error(`${this.name} provider does not support video generation`);
+  }
   
   // Get default parameters for a model
   abstract getDefaults(modelKey: string): Record<string, any>;

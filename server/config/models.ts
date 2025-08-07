@@ -3,7 +3,7 @@
 // Define the model interface
 export interface ModelConfig {
   key: string;
-  provider: 'openai' | 'replicate' | 'fal';
+  provider: 'openai' | 'replicate' | 'fal' | 'vertex';
   visible: string[];
   description: string;
   slug?: string;
@@ -209,6 +209,28 @@ export const models: ModelConfig[] = [
     },
     visible: ["prompt", "aspect_ratio", "seed", "juiced"],
     description: "This model generates beautiful cinematic 2 megapixel images in 3-4 seconds"
+  },
+  // Video Models
+  {
+    key: "veo-3",
+    provider: "vertex",
+    slug: "veo-3.0-generate-preview",
+    visible: ["prompt", "aspect_ratio", "resolution", "duration", "audio_enabled", "person_generation", "seed"],
+    description: "Veo 3 – Latest Google video model with highest quality and longest duration support."
+  },
+  {
+    key: "veo-3-fast", 
+    provider: "vertex",
+    slug: "veo-3.0-generate-fast-preview",
+    visible: ["prompt", "aspect_ratio", "resolution", "duration", "audio_enabled", "person_generation", "seed"],
+    description: "Veo 3 Fast – Faster generation with good quality, optimized for speed."
+  },
+  {
+    key: "veo-2",
+    provider: "vertex",
+    slug: "veo-2.0-generate-preview", 
+    visible: ["prompt", "aspect_ratio", "resolution", "duration", "seed"],
+    description: "Veo 2 – Stable and reliable video generation with consistent results."
   }
 ];
 
