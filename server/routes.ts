@@ -205,17 +205,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userEmail = req.user?.claims?.email;
       
       if (!userId) {
+        console.log(`Unauthorized admin access attempt from IP: ${req.ip}, path: ${req.path}, timestamp: ${new Date().toISOString()}`);
         return res.status(401).json({ message: "Unauthorized" });
       }
       
       // Only allow joaquin.grimoldi@kavak.com to access admin functions
       if (userEmail !== 'joaquin.grimoldi@kavak.com') {
+        console.log(`Admin access denied for user: ${userEmail} from IP: ${req.ip}, path: ${req.path}, timestamp: ${new Date().toISOString()}`);
         return res.status(403).json({ message: "Admin access restricted to authorized personnel only" });
       }
       
       // Use cached user lookup to reduce database calls
       const user = await getCachedUser(userId);
       if (!user || user.role !== 'admin') {
+        console.log(`Admin role check failed for user: ${userEmail} from IP: ${req.ip}, path: ${req.path}, timestamp: ${new Date().toISOString()}`);
         return res.status(403).json({ message: "Admin access required" });
       }
       
@@ -366,20 +369,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Storage management routes (admin only)
+  
+  // Admin self-test endpoint for access control verification
+  app.get('/api/admin/storage/self-test', isAuthenticated, isAdmin, async (req: any, res) => {
+    console.log(`Admin self-test passed for user: ${req.user?.email} from IP: ${req.ip}`);
+    res.json({ ok: true, timestamp: new Date().toISOString() });
+  });
+
+  // Admin storage verification endpoint
+  app.get('/api/admin/storage/verify', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      console.log(`Admin: Storage verification requested by ${req.user?.email} from IP: ${req.ip}`);
+      
+      const { objectStorage } = await import('./objectStorage');
+      const { images: objectList } = await objectStorage.listImages({ limit: 10000 });
+      
+      // Count objects by environment
+      let devCount = 0, prodCount = 0, devSize = 0, prodSize = 0;
+      
+      objectList.forEach(img => {
+        if (img.path.startsWith('dev/')) {
+          devCount++;
+          devSize += img.size || 0;
+        } else if (img.path.startsWith('prod/')) {
+          prodCount++;
+          prodSize += img.size || 0;
+        }
+      });
+      
+      const totalCount = devCount + prodCount;
+      const totalSize = devSize + prodSize;
+      
+      console.log(`Storage verification: ${totalCount} objects (${devCount} dev, ${prodCount} prod), ${(totalSize / (1024**3)).toFixed(3)} GiB`);
+      
+      res.json({
+        verified: true,
+        timestamp: new Date().toISOString(),
+        live: {
+          totalObjects: totalCount,
+          totalSizeBytes: totalSize,
+          devObjects: devCount,
+          prodObjects: prodCount,
+          devSizeBytes: devSize,
+          prodSizeBytes: prodSize
+        }
+      });
+      
+    } catch (error) {
+      console.error('Storage verification failed:', error);
+      res.status(500).json({ error: 'Verification failed' });
+    }
+  });
+
   app.get('/api/admin/storage/stats', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       console.log('Admin: Fetching storage statistics...');
+      const { environment } = req.query;
       
       // Get bucket objects
       const { objectStorage } = await import('./objectStorage');
       const { images: objectList } = await objectStorage.listImages({ limit: 1000 });
       
       // Convert object list to the format we need
-      const objects = objectList.map(img => ({
+      let objects = objectList.map(img => ({
         name: img.path,
         size: img.size,
         lastModified: img.lastModified,
       }));
+
+      // Filter by environment if specified
+      if (environment && environment !== 'all') {
+        objects = objects.filter(obj => obj.name?.startsWith(`${environment}/`));
+      }
 
       const envPrefix = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
       
@@ -387,6 +448,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let totalSizeBytes = 0;
       let devCount = 0;
       let prodCount = 0;
+      let devSizeBytes = 0;
+      let prodSizeBytes = 0;
       
       objects.forEach((obj: any) => {
         const size = obj.size || 0;
@@ -394,8 +457,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (obj.name?.startsWith('dev/')) {
           devCount++;
+          devSizeBytes += size;
         } else if (obj.name?.startsWith('prod/')) {
           prodCount++;
+          prodSizeBytes += size;
         }
       });
 

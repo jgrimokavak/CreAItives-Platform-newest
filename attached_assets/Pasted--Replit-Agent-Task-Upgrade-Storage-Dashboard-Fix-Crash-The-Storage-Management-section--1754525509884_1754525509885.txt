@@ -1,0 +1,71 @@
+## 📣 Replit Agent Task — Upgrade Storage Dashboard & Fix Crash
+The **Storage Management** section (`/admin/storage`) is live but needs four new features plus a crash fix.
+
+---
+
+### 1 · Access-Control Audit  
+Guarantee that only admins can access any storage-management UI or API.
+
+* Re-use existing `AdminRoute` / auth-guard middleware.  
+* Hitting `/admin/storage` or any `/api/admin/*` route in an incognito session must return **401/403**.  
+* Add `/api/admin/storage/self-test` that returns `{ ok: true }` only when the admin guard passes.  
+* Log every unauthorized attempt (IP, timestamp, path).
+
+---
+
+### 2 · Data-Accuracy Verification  
+Add a “Verify Now” button that compares dashboard stats to live bucket data.
+
+* **Backend route:** `GET /api/admin/storage/verify`  
+  * Uses `client.list()` to count objects and sum sizes by environment (`dev/`, `prod/`).  
+  * Returns the real numbers plus any diff vs currently cached values.  
+* **Frontend:**  
+  * Button in the Dashboard tab triggers the route.  
+  * Show green badge “Last verified: <timestamp>” on match; red badge with diff on mismatch.
+
+---
+
+### 3 · Graph UX Polish  
+Improve the Daily Upload Activity chart.
+
+* Add hover **tooltips** (date + count).  
+* Add date-range selector: **7 d · 30 d · 90 d** (default 30 d).  
+* Keep existing chart library; no heavy new deps.
+
+---
+
+### 4 · Prod vs Dev Toggle  
+Allow quick filtering of all stats and tables.
+
+* Segmented control (Both · Dev · Prod) in dashboard header.  
+* Filtering logic: object keys starting with `dev/` or `prod/`.  
+* All metrics, tables, and chart re-query without full page reload (default = Both).
+
+---
+
+### 🐞  Crash Fix — Object Management Tab  
+Current error:
+Uncaught Error: A <Select.Item /> must have a value prop that is not an empty string.
+
+* Ensure every `<Select.Item>` has a non-empty `value`.  
+* Provide default placeholder value for the `<Select.Root>`.  
+* Eliminate WebSocket fallback warning (`wss://localhost:undefined`) by guarding the fallback URL builder.
+
+---
+
+### Constraints
+* **Do not break** existing generation, gallery, or thumbnail flows.  
+* All new code remains behind the admin guard.  
+* New API endpoints live under `/api/admin/storage/*`.  
+* Add concise console logs; remove noisy debug prints.
+
+---
+
+### Acceptance Checklist
+- [ ] Incognito visit to `/admin/storage` returns 401/403.  
+- [ ] “Verify Now” badge shows green on match, red with diff on mismatch.  
+- [ ] Chart displays tooltips and respects 7/30/90-day selector.  
+- [ ] Prod/Dev toggle instantly filters all views.  
+- [ ] Object Management tab loads error-free.
+
+Notify me in preview once everything meets this checklist.
