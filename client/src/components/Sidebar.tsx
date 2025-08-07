@@ -14,7 +14,8 @@ import {
   VideoIcon,
   Users,
   Shield,
-  Settings
+  Settings,
+  HardDrive
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/hooks/useAuth';
@@ -139,6 +140,9 @@ const Sidebar = ({ children }: SidebarProps) => {
               </SidebarLink>
               <SidebarLink to="/admin/page-settings" icon={<Settings size={18} />}>
                 Page Settings
+              </SidebarLink>
+              <SidebarLink to="/admin/storage" icon={<HardDrive size={18} />}>
+                Storage Management
               </SidebarLink>
             </>
           )}

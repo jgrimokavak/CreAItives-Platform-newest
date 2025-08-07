@@ -13,6 +13,7 @@ import VideoCreationPage from "./pages/VideoCreationPage";
 import EmailBuilderPage from "./pages/EmailBuilderPage";
 import UserManagementPage from "./pages/UserManagementPage";
 import PageSettingsPage from "./pages/PageSettingsPage";
+import StorageManagementPage from "./pages/StorageManagementPage";
 import AdminRoute from "./components/AdminRoute";
 import { EditorProvider } from "@/context/EditorContext";
 import Sidebar from "@/components/Sidebar";
@@ -48,6 +49,7 @@ function Router() {
           <Route path="/video" component={() => <Redirect to="/home" />} />
           <Route path="/admin/users" component={() => <Redirect to="/home" />} />
           <Route path="/admin/page-settings" component={() => <Redirect to="/home" />} />
+          <Route path="/admin/storage" component={() => <Redirect to="/home" />} />
         </>
       ) : (
         // If authenticated, show protected routes within sidebar layout
@@ -104,6 +106,13 @@ function Router() {
             <Sidebar>
               <AdminRoute>
                 <PageSettingsPage />
+              </AdminRoute>
+            </Sidebar>
+          )} />
+          <Route path="/admin/storage" component={() => (
+            <Sidebar>
+              <AdminRoute>
+                <StorageManagementPage />
               </AdminRoute>
             </Sidebar>
           )} />
