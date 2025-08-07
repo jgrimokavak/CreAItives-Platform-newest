@@ -31,7 +31,9 @@ import {
   AlertCircle,
   CheckCircle,
   FolderOpen,
-  Plus
+  Plus,
+  Download,
+  Trash2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
@@ -39,6 +41,7 @@ import SimpleGalleryPage from './SimpleGalleryPage';
 
 // Video Gallery Component
 function VideoGallery() {
+  const { toast } = useToast();
   const { data: videosResponse, isLoading } = useQuery<{items: any[]}>({
     queryKey: ['/api/video'],
     queryFn: () => apiRequest('/api/video'),
@@ -78,14 +81,19 @@ function VideoGallery() {
             <div className="aspect-video bg-muted relative group">
               {video.status === 'completed' && video.url ? (
                 <>
-                  {video.thumbUrl && (
-                    <img 
-                      src={video.thumbUrl} 
-                      alt="Video thumbnail"
-                      className="w-full h-full object-cover"
-                    />
-                  )}
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  {/* Create thumbnail from video */}
+                  <video 
+                    className="w-full h-full object-cover"
+                    muted
+                    preload="metadata"
+                    onLoadedMetadata={(e) => {
+                      const video = e.target as HTMLVideoElement;
+                      video.currentTime = 1; // Seek to 1 second for thumbnail
+                    }}
+                  >
+                    <source src={video.url} type="video/mp4" />
+                  </video>
+                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                     <Button
                       size="sm"
                       variant="secondary"
@@ -93,7 +101,51 @@ function VideoGallery() {
                       className="flex items-center gap-2"
                     >
                       <Play className="w-4 h-4" />
-                      Play Video
+                      Play
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => {
+                        const link = document.createElement('a');
+                        link.href = video.url;
+                        link.download = `video-${video.id}.mp4`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                      }}
+                      className="flex items-center gap-2"
+                    >
+                      <Download className="w-4 h-4" />
+                      Download
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={async () => {
+                        if (confirm('Are you sure you want to delete this video?')) {
+                          try {
+                            await apiRequest(`/api/video/${video.id}`, {
+                              method: 'DELETE'
+                            });
+                            queryClient.invalidateQueries({ queryKey: ['/api/video'] });
+                            toast({
+                              title: 'Video Deleted',
+                              description: 'Video has been successfully deleted.',
+                            });
+                          } catch (error) {
+                            toast({
+                              title: 'Delete Failed',
+                              description: 'Failed to delete video. Please try again.',
+                              variant: 'destructive',
+                            });
+                          }
+                        }
+                      }}
+                      className="flex items-center gap-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Delete
                     </Button>
                   </div>
                 </>

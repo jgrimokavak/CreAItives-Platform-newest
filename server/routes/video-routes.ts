@@ -41,6 +41,7 @@ router.post('/generate', async (req, res) => {
       projectId: projectId || null,
       firstFrameImage: inputs.firstFrameImage || null,
       promptOptimizer: inputs.promptOptimizer !== false, // default to true
+      aspectRatio: '16:9', // Default aspect ratio for hailuo-02
       environment: process.env.NODE_ENV === 'production' ? 'prod' : 'dev',
     });
 
@@ -174,7 +175,12 @@ router.get('/', async (req, res) => {
       cursor: cursor as string,
     });
 
-    res.json(videos);
+    // Filter out failed videos from the gallery
+    const successfulVideos = videos.items?.filter(video => video.status !== 'failed') || [];
+
+    res.json({
+      items: successfulVideos
+    });
   } catch (error: any) {
     console.error('List videos error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -184,7 +190,8 @@ router.get('/', async (req, res) => {
 // Delete video
 router.delete('/:id', async (req, res) => {
   try {
-    const userId = (req.session as any)?.user?.id;
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
     }
@@ -195,9 +202,28 @@ router.delete('/:id', async (req, res) => {
     }
 
     // Ensure user can only delete their own videos (or is admin)
-    const user = (req.session as any)?.user;
-    if (video.userId !== userId && user?.role !== 'admin') {
+    if (video.userId !== userId && user?.claims?.role !== 'admin') {
       return res.status(403).json({ error: 'Access denied' });
+    }
+
+    // Delete from object storage if it exists
+    try {
+      const { deleteObject } = await import('@replit/object-storage');
+      if (video.url && video.url.includes('storage.googleapis.com')) {
+        const urlParts = video.url.split('/');
+        const fileName = urlParts[urlParts.length - 1];
+        await deleteObject(`videos/${fileName}`);
+        console.log(`Deleted video file from storage: videos/${fileName}`);
+      }
+      if (video.thumbUrl && video.thumbUrl.includes('storage.googleapis.com')) {
+        const urlParts = video.thumbUrl.split('/');
+        const fileName = urlParts[urlParts.length - 1];
+        await deleteObject(`thumbnails/${fileName}`);
+        console.log(`Deleted thumbnail file from storage: thumbnails/${fileName}`);
+      }
+    } catch (storageError) {
+      console.error('Error deleting from storage:', storageError);
+      // Continue with database deletion even if storage deletion fails
     }
 
     await storage.deleteVideo(req.params.id);

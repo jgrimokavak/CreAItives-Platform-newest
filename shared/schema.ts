@@ -248,17 +248,15 @@ export const videos = pgTable("videos", {
   url: text("url"),
   prompt: text("prompt").notNull(),
   model: text("model").notNull(),
-  aspectRatio: text("aspect_ratio").notNull(),
+  aspectRatio: text("aspect_ratio"),
   resolution: text("resolution").notNull(),
   duration: text("duration").notNull(),
   status: text("status").default("pending").notNull(), // 'pending' | 'processing' | 'completed' | 'failed'
   jobId: text("job_id"),
   projectId: text("project_id"),
   userId: text("user_id").notNull(),
-  referenceImage: text("reference_image"), // base64 encoded reference image
-  seed: integer("seed"),
-  audioEnabled: boolean("audio_enabled").default(false),
-  personGeneration: boolean("person_generation").default(true),
+  firstFrameImage: text("first_frame_image"), // base64 encoded first frame image for hailuo-02
+  promptOptimizer: boolean("prompt_optimizer").default(true),
   thumbUrl: text("thumb_url"),
   fullUrl: text("full_url"),
   error: text("error"), // Error message if generation failed
