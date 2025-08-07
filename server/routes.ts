@@ -1084,6 +1084,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Add edit prompt enhancement routes
   app.use('/api', enhanceEditPromptRouter);
   
+  // Add video prompt enhancement routes  
+  app.use('/api', await import("./routes/enhanceVideoPrompt").then(m => m.default));
+  
   // Add prompt suggestions routes
   app.use('/api', promptSuggestionsRouter);
   

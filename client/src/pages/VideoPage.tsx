@@ -273,6 +273,7 @@ export default function VideoPage() {
   const [generatingVideoId, setGeneratingVideoId] = useState<string | null>(null);
   const [generationProgress, setGenerationProgress] = useState<string>('');
   const [firstFrameImagePreview, setFirstFrameImagePreview] = useState<string | null>(null);
+  const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false);
 
   // Form setup
   const form = useForm<VideoGenerationForm>({
@@ -298,31 +299,55 @@ export default function VideoPage() {
     retry: false,
   });
 
-  // AI Enhance mutation
-  const aiEnhanceMutation = useMutation({
-    mutationFn: async (prompt: string) => {
-      return await apiRequest('/api/ai/enhance-prompt', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, type: 'video' }),
+  // Video prompt enhancement mutation
+  const enhanceVideoPromptMutation = useMutation({
+    mutationFn: async () => {
+      const currentPrompt = form.getValues("prompt");
+      
+      if (currentPrompt.length < 3) {
+        throw new Error("Prompt must be at least 3 characters long");
+      }
+      
+      // Get reference image if available
+      let imageData = null;
+      if (firstFrameImagePreview) {
+        imageData = firstFrameImagePreview; // Already in base64 format
+      }
+      
+      const response = await apiRequest("/api/enhance-video-prompt", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          text: currentPrompt,
+          model: "minimax-hailuo-02",
+          image: imageData,
+        }),
       });
+      
+      return response;
     },
     onSuccess: (data) => {
-      if (data.enhancedPrompt) {
-        form.setValue('prompt', data.enhancedPrompt);
-        toast({
-          title: 'Prompt Enhanced',
-          description: 'Your prompt has been improved with AI suggestions.',
-        });
+      // Update the form with the enhanced prompt
+      if (data.prompt) {
+        form.setValue("prompt", data.prompt);
       }
-    },
-    onError: () => {
+      
+      setIsEnhancingPrompt(false);
       toast({
-        title: 'Enhancement Failed',
-        description: 'Could not enhance prompt. Please try again.',
-        variant: 'destructive',
+        title: "Video prompt enhanced!",
+        description: "Your prompt has been optimized for video generation",
       });
     },
+    onError: (error: any) => {
+      setIsEnhancingPrompt(false);
+      toast({
+        title: "Couldn't enhance prompt",
+        description: "API error: " + (error.message || "Unknown error"),
+        variant: "destructive",
+      });
+    }
   });
 
   // Create project mutation
@@ -487,9 +512,17 @@ export default function VideoPage() {
 
   const handleEnhancePrompt = () => {
     const currentPrompt = form.getValues('prompt');
-    if (currentPrompt.trim()) {
-      aiEnhanceMutation.mutate(currentPrompt);
+    if (currentPrompt.trim().length < 3) {
+      toast({
+        title: "Prompt too short",
+        description: "Please enter at least 3 characters to enhance the prompt",
+        variant: "destructive",
+      });
+      return;
     }
+    
+    setIsEnhancingPrompt(true);
+    enhanceVideoPromptMutation.mutate();
   };
 
   const handleCreateProject = () => {
@@ -671,10 +704,10 @@ export default function VideoPage() {
                           variant="outline"
                           size="sm"
                           onClick={handleEnhancePrompt}
-                          disabled={!form.watch('prompt')?.trim() || aiEnhanceMutation.isPending}
+                          disabled={!form.watch('prompt')?.trim() || isEnhancingPrompt}
                           className="flex items-center gap-2"
                         >
-                          {aiEnhanceMutation.isPending ? (
+                          {isEnhancingPrompt ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
                           ) : (
                             <Sparkles className="w-4 h-4" />
