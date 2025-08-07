@@ -31,13 +31,15 @@ router.post('/', async (req, res) => {
 
     const { name, description } = validationResult.data;
 
-    // Create project
-    const project = await storage.createProject({
+    // Create project  
+    const projectData = {
       id: crypto.randomUUID(),
       name,
       description: description || null,
       userId,
-    });
+    };
+    
+    const project = await storage.createProject(projectData);
 
     res.json({
       success: true,

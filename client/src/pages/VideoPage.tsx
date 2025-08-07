@@ -39,18 +39,13 @@ import SimpleGalleryPage from './SimpleGalleryPage';
 
 // Video generation form schema
 const videoGenerationSchema = z.object({
-  prompt: z.string().min(10, 'Prompt must be at least 10 characters').max(2000, 'Prompt must be less than 2000 characters'),
+  prompt: z.string().min(1, 'Prompt is required').max(2000, 'Prompt must be less than 2000 characters'),
   model: z.enum(['hailuo-02']),
-  aspectRatio: z.enum(['16:9']).optional(),
-  resolution: z.enum(['720p', '1080p']),
-  duration: z.number().int().min(6).max(10), // for hailuo-02 (6 or 10 seconds)
+  resolution: z.enum(['512p', '768p', '1080p']),
+  duration: z.number().int().min(6).max(10), // 6 or 10 seconds only  
   projectId: z.string().optional(),
-  referenceImage: z.string().optional(), // base64 encoded image
-  firstFrameImage: z.string().optional(), // for hailuo-02
-  seed: z.number().int().optional(),
-  audioEnabled: z.boolean().default(false),
-  personGeneration: z.boolean().default(true),
-  promptOptimizer: z.boolean().default(true), // for hailuo-02
+  firstFrameImage: z.string().optional(), // determines aspect ratio
+  promptOptimizer: z.boolean().default(true),
 });
 
 export type VideoGenerationForm = z.infer<typeof videoGenerationSchema>;
@@ -63,12 +58,15 @@ const VIDEO_MODELS = {
   'hailuo-02': {
     label: 'Minimax Hailuo-02',
     description: 'High-quality video generation (3-6 min processing time)',
-    maxDuration: 10, // numeric for hailuo-02
-    resolutions: ['720p', '1080p'],
-    aspectRatios: ['16:9'], // Default aspect ratio
-    supportsDurationInt: true, // uses integer duration instead of string
+    maxDuration: 10, // 6 or 10 seconds
+    resolutions: ['512p', '768p', '1080p'],
+    supportsDurationInt: true,
     supportsFirstFrame: true,
-    supportsPromptOptimizer: true
+    supportsPromptOptimizer: true,
+    durationOptions: [
+      { value: 6, label: '6 seconds' },
+      { value: 10, label: '10 seconds (768p only)' }
+    ]
   }
 };
 
@@ -112,11 +110,8 @@ export default function VideoPage() {
     defaultValues: {
       prompt: '',
       model: 'hailuo-02',
-      aspectRatio: '16:9',
       resolution: '1080p',
-      duration: 6, // integer for hailuo-02
-      audioEnabled: false,
-      personGeneration: true,
+      duration: 6,
       promptOptimizer: true,
     },
   });
@@ -136,7 +131,7 @@ export default function VideoPage() {
   // AI Enhance mutation
   const aiEnhanceMutation = useMutation({
     mutationFn: async (prompt: string) => {
-      return await apiRequest('/api/ai-enhance', {
+      return await apiRequest('/api/ai/enhance-prompt', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt, type: 'video' }),
@@ -304,36 +299,21 @@ export default function VideoPage() {
     poll();
   };
 
-  // Handle model change - update available options
+  // Handle duration and resolution validation
   useEffect(() => {
-    const modelConfig = VIDEO_MODELS[watchedModel];
-    const currentResolution = form.getValues('resolution');
-    const currentAspectRatio = form.getValues('aspectRatio');
-    const currentDuration = form.getValues('duration');
-
-    // Reset resolution if not available for selected model
-    if (!modelConfig.resolutions.includes(currentResolution)) {
-      form.setValue('resolution', modelConfig.resolutions[0] as any);
+    const currentDuration = form.watch('duration');
+    const currentResolution = form.watch('resolution');
+    
+    // If 10 seconds is selected but resolution is not 768p, change to 6 seconds
+    if (currentDuration === 10 && currentResolution !== '768p') {
+      form.setValue('duration', 6);
+      toast({
+        title: 'Duration Adjusted',
+        description: '10 seconds is only available for 768p resolution.',
+        variant: 'destructive',
+      });
     }
-
-    // Reset aspect ratio if not available for selected model
-    if (currentAspectRatio && !modelConfig.aspectRatios.includes(currentAspectRatio)) {
-      form.setValue('aspectRatio', modelConfig.aspectRatios[0] as any);
-    }
-
-    // Reset duration if exceeds model's max duration
-    const rawMax = modelConfig.maxDuration;
-    const maxDurationSeconds = typeof rawMax === 'string'
-      ? parseInt(rawMax.replace('s', ''))
-      : rawMax;
-    const rawCurrent = currentDuration;
-    const currentDurationSeconds = typeof rawCurrent === 'string'
-      ? parseInt(rawCurrent.replace('s', ''))
-      : rawCurrent;
-    if (currentDurationSeconds > maxDurationSeconds) {
-      form.setValue('duration', modelConfig.maxDuration as any);
-    }
-  }, [watchedModel, form]);
+  }, [form.watch('duration'), form.watch('resolution'), form, toast]);
 
   const handleEnhancePrompt = () => {
     const currentPrompt = form.getValues('prompt');
@@ -545,26 +525,6 @@ export default function VideoPage() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Aspect Ratio */}
-                      <div className="space-y-2">
-                        <Label>Aspect Ratio</Label>
-                        <Select
-                          value={form.watch('aspectRatio')}
-                          onValueChange={(value) => form.setValue('aspectRatio', value as any)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {VIDEO_MODELS[currentModel]?.aspectRatios?.map((ratio: string) => (
-                              <SelectItem key={ratio} value={ratio}>
-                                {ratio}
-                              </SelectItem>
-                            )) || []}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
                       {/* Resolution */}
                       <div className="space-y-2">
                         <Label>Resolution</Label>
@@ -608,7 +568,7 @@ export default function VideoPage() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="6">6 seconds</SelectItem>
-                          <SelectItem value="10">10 seconds</SelectItem>
+                          <SelectItem value="10">10 seconds (768p only)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -661,44 +621,26 @@ export default function VideoPage() {
 
                     <Separator />
 
-                    {/* Advanced Options */}
-                    <div className="space-y-4">
-                      <h3 className="font-medium">Advanced Options</h3>
-                      
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <Label>Audio Generation</Label>
-                          <p className="text-sm text-muted-foreground">
-                            Generate background audio for the video
-                          </p>
-                        </div>
-                        <Switch
-                          checked={form.watch('audioEnabled')}
-                          onCheckedChange={(checked) => form.setValue('audioEnabled', checked)}
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <Label>Person Generation</Label>
-                          <p className="text-sm text-muted-foreground">
-                            Allow generation of people in videos
-                          </p>
-                        </div>
-                        <Switch
-                          checked={form.watch('personGeneration')}
-                          onCheckedChange={(checked) => form.setValue('personGeneration', checked)}
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>Seed (optional)</Label>
-                        <Input
-                          type="number"
-                          placeholder="Enter seed for reproducible results"
-                          {...form.register('seed', { valueAsNumber: true })}
-                        />
-                      </div>
+                    {/* First Frame Image Upload */}
+                    <div className="space-y-2">
+                      <Label>First Frame Image (Optional)</Label>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Upload an image to use as the first frame. The video will match the aspect ratio of your image.
+                      </p>
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                              form.setValue('firstFrameImage', e.target?.result as string);
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
                     </div>
                   </CardContent>
                 </Card>
@@ -776,8 +718,8 @@ export default function VideoPage() {
                     <h4 className="font-medium mb-1">Technical Notes</h4>
                     <ul className="list-disc list-inside space-y-1 text-muted-foreground">
                       <li>Higher resolutions take longer to generate</li>
-                      <li>Use seed for consistent style across videos</li>
-                      <li>Consider aspect ratio for intended platform</li>
+                      <li>10 seconds duration only available for 768p</li>
+                      <li>Upload first frame image to control aspect ratio</li>
                     </ul>
                   </div>
                 </CardContent>

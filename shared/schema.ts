@@ -125,18 +125,13 @@ export type GenerateImageInput = z.infer<typeof generateImageSchema>;
 
 // Video generation schema
 export const generateVideoSchema = z.object({
-  prompt: z.string().min(10, 'Prompt must be at least 10 characters').max(2000, 'Prompt must be less than 2000 characters'),
+  prompt: z.string().min(1, 'Prompt is required').max(2000, 'Prompt must be less than 2000 characters'),
   model: z.enum(['hailuo-02']),
-  aspectRatio: z.enum(['1:1', '16:9', '9:16', '4:3', '3:4']).optional(),
-  resolution: z.enum(['512p', '768p', '720p', '1080p']),
-  duration: z.number().int().min(6).max(10), // for hailuo-02 (6 or 10 seconds)
+  resolution: z.enum(['512p', '768p', '1080p']),
+  duration: z.number().int().min(6).max(10), // 6 or 10 seconds only
   projectId: z.string().optional(),
-  referenceImage: z.string().optional(), // base64 encoded image
-  firstFrameImage: z.string().optional(), // for hailuo-02
-  seed: z.number().int().optional(),
-  audioEnabled: z.boolean().default(false),
-  personGeneration: z.boolean().default(true),
-  promptOptimizer: z.boolean().default(true), // for hailuo-02
+  firstFrameImage: z.string().optional(), // determines aspect ratio
+  promptOptimizer: z.boolean().default(true),
 });
 
 export type GenerateVideoInput = z.infer<typeof generateVideoSchema>;
@@ -144,13 +139,11 @@ export type GenerateVideoInput = z.infer<typeof generateVideoSchema>;
 // Video model form schemas
 export const videoModelSchemas = {
   "hailuo-02": z.object({
-    prompt: z.string().min(10).max(2000),
-    aspectRatio: z.enum(['1:1', '16:9', '9:16', '4:3', '3:4']).optional(),
-    resolution: z.enum(['720p', '1080p']),
+    prompt: z.string().min(1).max(2000),
+    resolution: z.enum(['512p', '768p', '1080p']),
     duration: z.number().int().min(6).max(10),
     promptOptimizer: z.boolean().optional(),
     firstFrameImage: z.string().optional(),
-    seed: z.number().int().optional(),
   }),
 };
 
