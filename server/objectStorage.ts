@@ -22,29 +22,6 @@ export class ObjectStorageService {
   }
 
   /**
-   * Upload reference image to Object Storage and return URL
-   */
-  async uploadReferenceImage(imageBuffer: Buffer, videoId: string): Promise<string> {
-    const envPrefix = this.getEnvironmentPrefix();
-    const imagePath = `${envPrefix}/reference-images/${videoId}.jpg`;
-
-    try {
-      console.log(`[TRACE] Uploading reference image to Object Storage key: ${imagePath}`);
-      const uploadResult = await this.client.uploadFromBytes(imagePath, imageBuffer);
-      if (!uploadResult.ok) {
-        throw new Error('Failed to upload reference image');
-      }
-      console.log(`[TRACE] Reference image uploaded successfully to: ${imagePath}`);
-      
-      // Return the server-side URL for serving the reference image
-      return `/api/object-storage/video/${imagePath}`;
-    } catch (error) {
-      console.error('Error uploading reference image:', error);
-      throw new Error('Failed to upload reference image');
-    }
-  }
-
-  /**
    * Upload image buffer to Object Storage with environment-aware path
    */
   async uploadVideo(videoBuffer: Buffer, videoId: string, fileExtension: string = 'mp4'): Promise<{
