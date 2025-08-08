@@ -984,6 +984,7 @@ export default function VideoPage() {
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectDescription, setNewProjectDescription] = useState('');
   const [renameProjectName, setRenameProjectName] = useState('');
+  const [renameProjectDescription, setRenameProjectDescription] = useState('');
   const [firstFrameImagePreview, setFirstFrameImagePreview] = useState<string | null>(null);
   const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false);
   const [recentlyGeneratedVideos, setRecentlyGeneratedVideos] = useState<string[]>([]);
@@ -1518,6 +1519,7 @@ export default function VideoPage() {
       renameProjectMutation.mutate({
         projectId: selectedProject,
         name: renameProjectName.trim(),
+        description: renameProjectDescription.trim() || undefined,
       });
     }
   };
@@ -1841,7 +1843,12 @@ export default function VideoPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => setShowRenameProject(!showRenameProject)}
+                            onClick={() => {
+                              const project = projects?.find(p => p.id === selectedProject);
+                              setRenameProjectName(project?.name || '');
+                              setRenameProjectDescription(project?.description || '');
+                              setShowRenameProject(!showRenameProject);
+                            }}
                             className="h-10 px-4 flex items-center gap-2 hover:bg-blue-500/10 text-blue-600 hover:text-blue-700 transition-all duration-200"
                           >
                             <Edit className="w-4 h-4" />
@@ -1925,17 +1932,31 @@ export default function VideoPage() {
                             </div>
                             <h3 className="font-semibold text-sm">Rename Project</h3>
                           </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="renameProjectName" className="text-sm font-semibold flex items-center gap-1">
-                              New Project Name <span className="text-red-500">*</span>
-                            </Label>
-                            <Input
-                              id="renameProjectName"
-                              placeholder="Enter new project name"
-                              value={renameProjectName}
-                              onChange={(e) => setRenameProjectName(e.target.value)}
-                              className="h-11 focus:ring-2 focus:ring-blue-500/20 bg-background/80"
-                            />
+                          <div className="space-y-3">
+                            <div className="space-y-2">
+                              <Label htmlFor="renameProjectName" className="text-sm font-semibold flex items-center gap-1">
+                                Project Name <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                id="renameProjectName"
+                                placeholder="Enter new project name"
+                                value={renameProjectName}
+                                onChange={(e) => setRenameProjectName(e.target.value)}
+                                className="h-11 focus:ring-2 focus:ring-blue-500/20 bg-background/80"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="renameProjectDescription" className="text-sm font-semibold">
+                                Description <span className="text-muted-foreground font-normal">(optional)</span>
+                              </Label>
+                              <Input
+                                id="renameProjectDescription"
+                                placeholder="Brief description of the project"
+                                value={renameProjectDescription}
+                                onChange={(e) => setRenameProjectDescription(e.target.value)}
+                                className="h-11 focus:ring-2 focus:ring-blue-500/20 bg-background/80"
+                              />
+                            </div>
                           </div>
                           <div className="flex gap-2 pt-3">
                             <Button
