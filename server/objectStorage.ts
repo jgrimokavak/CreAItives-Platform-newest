@@ -26,7 +26,7 @@ export class ObjectStorageService {
    */
   async uploadReferenceImage(imageBuffer: Buffer, videoId: string): Promise<string> {
     const envPrefix = this.getEnvironmentPrefix();
-    const imagePath = `${envPrefix}/reference-images/${videoId}.jpg`;
+    const imagePath = `${envPrefix}/video-generations/reference-images/${videoId}.jpg`;
 
     try {
       console.log(`[TRACE] Uploading reference image to Object Storage key: ${imagePath}`);
