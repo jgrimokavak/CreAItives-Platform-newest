@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -67,6 +67,7 @@ export interface VideoCardProps {
   onMove?: (id: string, projectId: string | null) => void;
   onUseReferenceImage?: (src: string) => void;
   className?: string;
+  autoPlay?: boolean; // Auto-play the video when it loads
 }
 
 interface Project {
@@ -81,13 +82,27 @@ export default function VideoCard({
   onDelete, 
   onMove, 
   onUseReferenceImage,
-  className 
+  className,
+  autoPlay = false
 }: VideoCardProps) {
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showPromptDialog, setShowPromptDialog] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+
+  // Auto-play functionality
+  useEffect(() => {
+    if (autoPlay && video.status === 'completed' && video.url && videoRef.current) {
+      const videoElement = videoRef.current;
+      const playVideo = () => {
+        videoElement.play().catch(console.warn);
+      };
+      
+      // Slight delay to ensure video is loaded
+      setTimeout(playVideo, 300);
+    }
+  }, [autoPlay, video.status, video.url]);
 
   // Fetch projects for move menu
   const { data: projects } = useQuery<Project[]>({

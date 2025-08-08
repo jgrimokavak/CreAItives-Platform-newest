@@ -1,0 +1,44 @@
+# GOAL
+1) **Allow multiple videos to be generated concurrently** (the Generate button should not lock out after the first click). 
+2) Fix the **Job Tray “Play”** action so it reliably plays the finished video (by focusing the Result panel or an inline player).
+# CONTEXT
+Page: `client/src/pages/VideoPage.tsx` (Create tab).
+The Job Tray exists and shows jobs with statuses; Download works; Play does not.
+The right Project Panel now scrolls correctly — keep that.
+We want queue-like behavior: I can submit again while previous jobs are processing.
+# REQUIREMENTS
+## A) Enable concurrent generation (no locking the Generate button)
+Review the submit logic for the Create form:
+If the button is disabled due to `isSubmitting` / `mutation.isLoading`, refactor so **each submit** creates a **new independent job**, and the button **re-enables immediately** after the request returns (non-blocking).
+If we’re awaiting a long server task **until completion**, change to **fire-and-poll**:
+The `POST /api/video/generate` should **return quickly** with a video/job record (status `pending`/`processing`) and **not** block until completion.
+The Job Tray handles progress by polling `/api/video/:id` (we already do basic polling — keep or refine).
+Ensure subsequent submits:
+Can occur even if other jobs are still `pending/processing`.
+Add each job to the Job Tray and to any local “recent/Result” state.
+UX polish:
+Keep a very short “busy” state only while the **network request** is in flight; **do not** keep the button disabled for the entire render duration.
+Handle errors per-submit without affecting other running jobs.
+If the backend route currently blocks until completion, switch it to return immediately after the job is queued/saved and **move the long work to background** (reuse existing patterns). If it already returns quickly, just fix the client to stop treating the page as single-flight.
+## B) Make Job Tray “Play” actually play
+The tray needs enough data to play: `videoId` and either `url` or a way to fetch it.
+Implement a clear, reliable behavior for the Play button:
+**Option A (preferred):** Focus the **Result panel** and set the tray item’s video as the **active Result video**, then **autoplay** it inline.
+Add a callback like `onPlay(videoId)` from Job Tray → VideoPage.
+In VideoPage, fetch the video object if needed, set `lastCreatedVideo` (or `activeResultVideo`), and scroll the Result panel into view (smooth).
+In the Result panel, render `VideoCard` with `autoPlay` support (e.g., a `shouldAutoPlay` flag or a small effect that calls `videoRef.play()` once once it mounts).
+**Option B:** Open a modal with an inline `<video controls>` using the same VideoCard or a minimal player (still fine).
+Ensure the tray’s Play only appears for `completed` jobs and **works after a page refresh** (i.e., the tray can refetch the finished job to get `url`).
+## C) Keep existing behavior intact
+Do not change Gallery or Project Panel behavior.
+Do not introduce new libraries/dependencies.
+Keep VideoCard as-is (posters/thumbnails are correct).
+# ACCEPTANCE
+I can click **Generate** multiple times; each click adds a new Job Tray item while previous ones are processing. The Generate button **does not** remain disabled due to other jobs.
+The Job Tray **Play** button:
+Scrolls/focuses the Result panel and **plays** the finished video inline (or opens a working inline modal).
+Works reliably even after refresh (by fetching the video details if missing).
+No regressions: the right Project Panel still scrolls; download still works; the Result panel still shows the latest created video.
+# POST-CHECK
+Try submitting 2–3 jobs in quick succession → all appear in the tray and progress independently.
+When the first one completes, press **Play** → the video plays. The others keep processing.

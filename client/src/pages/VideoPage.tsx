@@ -969,8 +969,6 @@ export default function VideoPage() {
   const [showCreateProject, setShowCreateProject] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectDescription, setNewProjectDescription] = useState('');
-  const [generatingVideoId, setGeneratingVideoId] = useState<string | null>(null);
-  const [generationProgress, setGenerationProgress] = useState<string>('');
   const [lastCreatedVideo, setLastCreatedVideo] = useState<Video | null>(null);
   const [firstFrameImagePreview, setFirstFrameImagePreview] = useState<string | null>(null);
   const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false);
@@ -978,6 +976,9 @@ export default function VideoPage() {
   
   // Job Tray state
   const [jobTrayItems, setJobTrayItems] = useState<JobTrayItem[]>([]);
+  
+  // Track active polling for each job
+  const [activePolling, setActivePolling] = useState<Set<string>>(new Set());
 
   // Form setup
   const form = useForm<VideoGenerationForm>({
@@ -1124,8 +1125,7 @@ export default function VideoPage() {
         };
         setJobTrayItems(prev => [newJob, ...prev.slice(0, 4)]); // Keep max 5 jobs
         
-        setGeneratingVideoId(data.video.id);
-        setGenerationProgress('Starting video generation...');
+        // Start polling for this specific job
         pollVideoStatus(data.video.id);
       }
     },
@@ -1135,13 +1135,18 @@ export default function VideoPage() {
         description: error?.message || 'Could not start video generation. Please try again.',
         variant: 'destructive',
       });
-      setGeneratingVideoId(null);
-      setGenerationProgress('');
     },
   });
 
-  // Poll for video status
+  // Poll for video status - now handles individual jobs
   const pollVideoStatus = async (videoId: string) => {
+    // Prevent duplicate polling for the same video
+    if (activePolling.has(videoId)) {
+      return;
+    }
+
+    setActivePolling(prev => new Set(Array.from(prev).concat([videoId])));
+
     const maxAttempts = 60; // 6 minutes with 6-second intervals
     let attempts = 0;
 
@@ -1152,7 +1157,9 @@ export default function VideoPage() {
         const response = await apiRequest(`/api/video/status/${videoId}`);
         
         if (response.status === 'completed') {
-          setGenerationProgress('Video completed!');
+          // Update Job Tray item
+          handleJobUpdate(videoId, 'completed');
+          
           toast({
             title: 'Video Ready!',
             description: 'Your video has been generated successfully.',
@@ -1172,42 +1179,57 @@ export default function VideoPage() {
             createdAt: response.createdAt || new Date().toISOString()
           });
           
-          setGeneratingVideoId(null);
-          setGenerationProgress('');
+          // Stop polling for this job
+          setActivePolling(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(videoId);
+            return newSet;
+          });
           return;
         }
         
         if (response.status === 'failed') {
-          setGenerationProgress('Generation failed');
+          // Update Job Tray item with error
+          handleJobUpdate(videoId, 'failed', response.error || 'Generation failed');
+          
           toast({
             title: 'Video Generation Failed',
             description: response.error || 'The video could not be generated.',
             variant: 'destructive',
           });
-          setGeneratingVideoId(null);
-          setGenerationProgress('');
+          
+          // Stop polling for this job
+          setActivePolling(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(videoId);
+            return newSet;
+          });
           return;
         }
         
-        // Update progress message
-        const elapsed = attempts * 6;
-        const minutes = Math.floor(elapsed / 60);
-        const seconds = elapsed % 60;
-        setGenerationProgress(`Processing... (${minutes}:${seconds.toString().padStart(2, '0')} elapsed)`);
+        // Update Job Tray status to processing
+        if (response.status === 'processing') {
+          handleJobUpdate(videoId, 'processing');
+        }
         
         // Continue polling if still processing
         if (attempts < maxAttempts) {
           setTimeout(poll, 6000); // Poll every 6 seconds
         } else {
           // Timeout
-          setGenerationProgress('Generation timed out');
+          handleJobUpdate(videoId, 'failed', 'Generation timed out');
           toast({
             title: 'Generation Timeout',
             description: 'Video generation is taking longer than expected. Please check back later.',
             variant: 'destructive',
           });
-          setGeneratingVideoId(null);
-          setGenerationProgress('');
+          
+          // Stop polling for this job
+          setActivePolling(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(videoId);
+            return newSet;
+          });
         }
       } catch (error) {
         console.error('Error polling video status:', error);
@@ -1216,8 +1238,14 @@ export default function VideoPage() {
         if (attempts < 5) {
           setTimeout(poll, 6000);
         } else {
-          setGenerationProgress('Failed to check status');
-          setGeneratingVideoId(null);
+          handleJobUpdate(videoId, 'failed', 'Failed to check status');
+          
+          // Stop polling for this job
+          setActivePolling(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(videoId);
+            return newSet;
+          });
         }
       }
     };
@@ -1241,9 +1269,44 @@ export default function VideoPage() {
     setJobTrayItems(prev => prev.filter(job => job.id !== jobId));
   };
 
-  const handlePlayVideo = (videoId: string) => {
-    // This could trigger video playback in the VideoCard
-    console.log('Playing video:', videoId);
+  const handlePlayVideo = async (videoId: string) => {
+    try {
+      // Fetch the full video data
+      const response = await apiRequest(`/api/video/status/${videoId}`);
+      
+      if (response.status === 'completed') {
+        // Set as the active result video
+        setLastCreatedVideo({
+          ...response,
+          model: response.model || 'hailuo-02',
+          status: response.status as 'pending' | 'processing' | 'completed' | 'failed',
+          createdAt: response.createdAt instanceof Date 
+            ? response.createdAt.toISOString() 
+            : response.createdAt || new Date().toISOString()
+        });
+        
+        // Scroll to Result panel smoothly
+        const resultPanel = document.querySelector('[data-result-panel]');
+        if (resultPanel) {
+          resultPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        
+        // Auto-play the video after a short delay
+        setTimeout(() => {
+          const videoElement = document.querySelector('[data-result-panel] video') as HTMLVideoElement;
+          if (videoElement) {
+            videoElement.play().catch(console.warn);
+          }
+        }, 500);
+      }
+    } catch (error) {
+      console.error('Error playing video:', error);
+      toast({
+        title: 'Playback Error',
+        description: 'Could not load video for playback.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleJumpToResult = (videoId: string) => {
@@ -1497,13 +1560,13 @@ export default function VideoPage() {
                 <Button
                   type="submit"
                   size="lg"
-                  disabled={generateVideoMutation.isPending || generatingVideoId !== null || !form.watch('prompt')?.trim()}
+                  disabled={generateVideoMutation.isPending || !form.watch('prompt')?.trim()}
                   className="w-full"
                 >
-                  {generateVideoMutation.isPending || generatingVideoId ? (
+                  {generateVideoMutation.isPending ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      {generationProgress || 'Starting generation...'}
+                      Starting generation...
                     </>
                   ) : (
                     <>
@@ -1629,7 +1692,7 @@ export default function VideoPage() {
 
           {/* Result Panel - Full width at bottom */}
           {lastCreatedVideo && (
-            <div className="space-y-4 mt-8">
+            <div className="space-y-4 mt-8" data-result-panel>
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-semibold flex items-center gap-2">
                   <Sparkles className="w-6 h-6 text-primary" />
@@ -1651,9 +1714,13 @@ export default function VideoPage() {
                     <VideoCard
                       video={{
                         ...lastCreatedVideo,
-                        status: lastCreatedVideo.status as 'pending' | 'processing' | 'completed' | 'failed'
+                        status: lastCreatedVideo.status as 'pending' | 'processing' | 'completed' | 'failed',
+                        createdAt: lastCreatedVideo.createdAt instanceof Date 
+                          ? lastCreatedVideo.createdAt.toISOString() 
+                          : lastCreatedVideo.createdAt || new Date().toISOString()
                       }}
                       className="w-full"
+                      autoPlay={true}
                     />
                   </div>
                 </CardContent>
