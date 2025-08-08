@@ -1,0 +1,51 @@
+# GOAL
+Clean, professional **VideoCard** UX with **reliable thumbnails** and a tidy, consistent layout. No duplicate play controls, no floating random buttons, and **reference image UI only when a reference was used**.
+# SCOPE
+Primary file: `client/src/components/VideoCard.tsx`
+May touch: a tiny helper or styles, and **server code ONLY if needed to produce/store a thumbnail** (see “Thumbnails” below).
+Do NOT change app layout, routes, or dependencies unless a small server helper is required for thumbnails.
+# WHAT THE CARD SHOULD LOOK LIKE (END RESULT)
+**Media area**: shows a **thumbnail/poster** until play; clicking play uses the **native `<video controls>`** bar (one set of controls, no overlay play).
+**Top-right**: a compact action cluster (icon button **Download** + overflow menu “…”) aligned neatly; no other floating buttons over the video.
+**Bottom content area** (under the media):
+**Prompt (2-line clamp)** with a small “**View full**” link that opens a dialog (full text + “Copy prompt”).
+**Meta row**: model • resolution • duration on the left; created date on the right.
+**Optional reference chip** (only if the render actually used a reference) with a small image icon + “Reference”; clicking opens a preview dialog with “Copy image” and **(optional)** `onUseReferenceImage?(src)` callback. If no reference was used, **do not render** the chip.
+# BEHAVIOR REQUIREMENTS
+1) **Thumbnails (MOST IMPORTANT)**
+The card must have a reliable `poster` image:
+Use `video.thumbUrl` if present.
+Else use `video.firstFrameImage` (base64) if present.
+If neither exists:
+**Preferred**: Generate a thumbnail server-side (first frame or a still), persist it as `thumbUrl` in storage, and return it in the video payload so subsequent renders have a poster.
+**Acceptable fallback** (if generation is not feasible): show a tasteful placeholder poster (not a gray block) with a generic video thumbnail look.
+If you add a server helper, keep it minimal: e.g., when a video completes, extract a frame and store to object storage, set `thumbUrl`. Reuse existing storage patterns.
+2) **Play controls**
+Only native `<video controls>`; **remove any extra overlay play**.
+`poster={thumbUrl || firstFrameImage || placeholder}` so the card never looks blank before play.
+3) **Actions**
+**Download**: a clear icon button in the top-right action cluster; keep a menu item too.
+Overflow menu: **Copy prompt**, **Move to…**, **Delete** (no duplicate Play).
+Show busy states (spinner) when preparing download.
+4) **Prompt UX**
+2-line clamp; “View full” opens dialog with full text + “Copy”.
+Ensure long prompts don’t shift layout; use fixed max-height + scroll in dialog.
+5) **Reference UI (ONLY WHEN APPLICABLE)**
+Determine if a reference was used (e.g., `video.referenceImageUrl` or a boolean flag; if not present, infer from data you already store).
+If yes: render a small chip **in the bottom content area** (not over the video).
+Clicking shows a preview dialog with **Copy image** (or open in new tab if clipboard not supported).
+Provide optional `onUseReferenceImage?(src)` prop; if not passed, no-op.
+If no reference was used: **do not render anything** about reference.
+6) **Visual polish / spacing**
+Consistent padding and alignment; 8/12/16px rhythm.
+Status badge (completed/processing/failed) stays in the **top-right corner of the media**, small and aligned (same baseline as action cluster, separated so they don’t collide).
+Card should look balanced at all breakpoints; test in Gallery grid and in the Create tab’s right panel and Result panel.
+# ACCEPTANCE
+Thumbnails reliably appear before playing (prefer real `thumbUrl`; fallback to `firstFrameImage`; last resort is a tasteful placeholder).
+No duplicate play controls; UI feels tidy (top-right cluster + clean bottom content).
+Prompt: “View full” + “Copy prompt” both work.
+Reference chip shows **only** for videos that used a reference; its dialog works.
+Download is easy to find and works. No random UI elements floating over the video.
+# NOTES
+You choose the cleanest implementation. If server help is needed to extract/store thumbnails, implement it minimally and wire it where video status becomes `completed`.
+Keep types consistent; avoid breaking other consumers of `VideoCard`

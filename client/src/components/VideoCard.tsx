@@ -60,6 +60,7 @@ export interface VideoCardProps {
     duration?: string | null;
     projectId?: string | null;
     createdAt?: string | null;
+    referenceImageUrl?: string | null; // Reference image used in generation (if any)
   };
   draggable?: boolean;
   onDelete?: (id: string) => void;
@@ -260,9 +261,19 @@ export default function VideoCard({
     }
   };
 
-  // Get the reference image source (prioritize thumbUrl over firstFrameImage)
-  const getReferenceImageSrc = () => {
+  // Get the poster/thumbnail source (for video poster attribute)
+  const getPosterSrc = () => {
     return video.thumbUrl || video.firstFrameImage || null;
+  };
+
+  // Get the reference image source (only if a reference was actually used)
+  const getReferenceImageSrc = () => {
+    return video.referenceImageUrl || null;
+  };
+
+  // Determine if this video has a usable thumbnail for display
+  const hasThumbnail = () => {
+    return !!(video.thumbUrl || video.firstFrameImage);
   };
 
   const formatDate = (dateString: string | null) => {
@@ -296,10 +307,18 @@ export default function VideoCard({
       <CardContent className="p-0">
         {/* Video/Thumbnail Section */}
         <div className="aspect-video bg-muted relative overflow-hidden">
-          {/* Placeholder background for better fallback */}
-          {!video.thumbUrl && !video.firstFrameImage && (
-            <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-muted">
-              <VideoIconSm className="w-8 h-8 text-muted-foreground" />
+          {/* Tasteful placeholder background */}
+          {!hasThumbnail() && (
+            <div 
+              className="absolute inset-0 w-full h-full flex flex-col items-center justify-center"
+              style={{ 
+                background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+              }}
+            >
+              <div className="p-4 rounded-lg bg-white/50 backdrop-blur-sm border border-white/20">
+                <VideoIconSm className="w-8 h-8 text-slate-500" />
+              </div>
+              <p className="text-xs text-slate-500 mt-2">Generating thumbnail...</p>
             </div>
           )}
           
@@ -308,7 +327,7 @@ export default function VideoCard({
               ref={videoRef}
               controls
               preload="metadata"
-              poster={video.thumbUrl || video.firstFrameImage || undefined}
+              poster={getPosterSrc() || undefined}
               className="w-full h-full object-cover"
               onPlay={() => setIsPlaying(true)}
               onPause={() => setIsPlaying(false)}
@@ -317,15 +336,9 @@ export default function VideoCard({
               <source src={video.url} type="video/mp4" />
               Your browser does not support the video tag.
             </video>
-          ) : video.thumbUrl ? (
+          ) : hasThumbnail() ? (
             <img
-              src={video.thumbUrl}
-              alt={video.prompt}
-              className="w-full h-full object-cover"
-            />
-          ) : video.firstFrameImage ? (
-            <img
-              src={video.firstFrameImage}
+              src={getPosterSrc()!}
               alt={video.prompt}
               className="w-full h-full object-cover"
             />
@@ -338,163 +351,38 @@ export default function VideoCard({
             </div>
           )}
 
-          {/* Top-right actions */}
-          <div className="absolute top-2 right-2 flex gap-2">
+          {/* Top-right action cluster */}
+          <div className="absolute top-3 right-3 flex items-center gap-2">
             {/* Download Button - visible for completed videos */}
             {video.url && video.status === 'completed' && (
               <Button
                 size="sm"
                 variant="secondary"
-                className="h-6 w-6 p-0 bg-black/50 hover:bg-black/70 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                className="h-7 w-7 p-0 bg-black/60 hover:bg-black/80 text-white opacity-0 group-hover:opacity-100 transition-all duration-200"
                 onClick={handleDownload}
                 disabled={isDownloading}
               >
                 {isDownloading ? (
-                  <Loader2 className="w-3 h-3 animate-spin" />
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 ) : (
-                  <Download className="w-3 h-3" />
+                  <Download className="w-3.5 h-3.5" />
                 )}
               </Button>
             )}
             
-            {/* Status Badge */}
-            <Badge 
-              variant={getStatusVariant(video.status)} 
-              className="text-xs flex items-center gap-1"
-            >
-              {getStatusIcon(video.status)}
-              {video.status}
-            </Badge>
-          </div>
-
-          {/* Reference Image Chip */}
-          {getReferenceImageSrc() && (
-            <div className="absolute bottom-2 left-2">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    className="h-6 px-2 bg-black/50 hover:bg-black/70 text-white opacity-0 group-hover:opacity-100 transition-opacity text-xs"
-                  >
-                    <ImageIcon className="w-3 h-3 mr-1" />
-                    Reference
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-64 p-3">
-                  <div className="space-y-3">
-                    <img
-                      src={getReferenceImageSrc()!}
-                      alt="Reference image"
-                      className="w-full h-32 object-cover rounded border"
-                    />
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="flex-1"
-                        onClick={() => handleCopyImage(getReferenceImageSrc()!)}
-                      >
-                        <Copy className="w-3 h-3 mr-1" />
-                        Copy Image
-                      </Button>
-                      {onUseReferenceImage && (
-                        <Button
-                          size="sm"
-                          className="flex-1"
-                          onClick={() => handleUseReference(getReferenceImageSrc()!)}
-                        >
-                          <ExternalLink className="w-3 h-3 mr-1" />
-                          Use as Reference
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
-            </div>
-          )}
-        </div>
-
-        {/* Info Section */}
-        <div className="p-3">
-          {/* Prompt with View Full */}
-          <div className="mb-2">
-            <p className="text-sm font-medium line-clamp-2 mb-1" title={video.prompt}>
-              {video.prompt}
-            </p>
-            <Dialog open={showPromptDialog} onOpenChange={setShowPromptDialog}>
-              <DialogTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
-                >
-                  <Eye className="w-3 h-3 mr-1" />
-                  View full
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Prompt</DialogTitle>
-                </DialogHeader>
-                <ScrollArea className="max-h-96">
-                  <Textarea
-                    value={video.prompt}
-                    readOnly
-                    className="min-h-32 resize-none border-0 p-3 focus-visible:ring-0"
-                  />
-                </ScrollArea>
-                <DialogFooter className="gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => copyToClipboard(video.prompt, 'Prompt copied to clipboard')}
-                  >
-                    <Copy className="w-4 h-4 mr-2" />
-                    Copy
-                  </Button>
-                  <DialogClose asChild>
-                    <Button>Close</Button>
-                  </DialogClose>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
-
-          {/* Metadata */}
-          <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
-            <div className="flex items-center gap-2">
-              <span>{video.model}</span>
-              {video.resolution && (
-                <>
-                  <span>•</span>
-                  <span>{video.resolution}</span>
-                </>
-              )}
-              {video.duration && (
-                <>
-                  <span>•</span>
-                  <span>{video.duration}s</span>
-                </>
-              )}
-            </div>
-            <span>{formatDate(video.createdAt || null)}</span>
-          </div>
-
-          {/* Actions Menu */}
-          <div className="flex justify-end">
+            {/* Overflow Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
-                  variant="ghost"
                   size="sm"
-                  className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                  variant="secondary"
+                  className="h-7 w-7 p-0 bg-black/60 hover:bg-black/80 text-white opacity-0 group-hover:opacity-100 transition-all duration-200"
                   disabled={deleteMutation.isPending || moveMutation.isPending}
                 >
-                  <MoreHorizontal className="w-4 h-4" />
+                  <MoreHorizontal className="w-3.5 h-3.5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" className="w-48">
                 {video.url && video.status === 'completed' && (
                   <>
                     <DropdownMenuItem onClick={handleDownload}>
@@ -549,7 +437,134 @@ export default function VideoCard({
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            
+            {/* Status Badge */}
+            <Badge 
+              variant={getStatusVariant(video.status)} 
+              className="text-xs flex items-center gap-1 ml-1"
+            >
+              {getStatusIcon(video.status)}
+              {video.status}
+            </Badge>
           </div>
+        </div>
+
+        {/* Bottom Content Area */}
+        <div className="p-4 space-y-3">
+          {/* Prompt Section */}
+          <div className="space-y-2">
+            <p className="text-sm font-medium line-clamp-2 leading-relaxed" title={video.prompt}>
+              {video.prompt}
+            </p>
+            <Dialog open={showPromptDialog} onOpenChange={setShowPromptDialog}>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Eye className="w-3 h-3 mr-1" />
+                  View full
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg">
+                <DialogHeader>
+                  <DialogTitle>Full Prompt</DialogTitle>
+                </DialogHeader>
+                <ScrollArea className="max-h-96 pr-4">
+                  <div className="p-4 bg-muted rounded-lg">
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                      {video.prompt}
+                    </p>
+                  </div>
+                </ScrollArea>
+                <DialogFooter className="gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => copyToClipboard(video.prompt, 'Prompt copied to clipboard')}
+                  >
+                    <Copy className="w-4 h-4 mr-2" />
+                    Copy prompt
+                  </Button>
+                  <DialogClose asChild>
+                    <Button>Close</Button>
+                  </DialogClose>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          {/* Metadata Row */}
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <span className="font-medium">{video.model}</span>
+              {video.resolution && (
+                <>
+                  <span className="opacity-50">•</span>
+                  <span>{video.resolution}</span>
+                </>
+              )}
+              {video.duration && (
+                <>
+                  <span className="opacity-50">•</span>
+                  <span>{video.duration}s</span>
+                </>
+              )}
+            </div>
+            <span className="tabular-nums">{formatDate(video.createdAt || null)}</span>
+          </div>
+
+          {/* Reference Image Chip (only if reference was used) */}
+          {getReferenceImageSrc() && (
+            <div className="pt-1">
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="h-7 px-2 text-xs bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+                  >
+                    <ImageIcon className="w-3 h-3 mr-1.5" />
+                    Reference
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-sm">
+                  <DialogHeader>
+                    <DialogTitle>Reference Image</DialogTitle>
+                    <DialogDescription>
+                      This image was used as reference during generation
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <img
+                      src={getReferenceImageSrc()!}
+                      alt="Reference image used in generation"
+                      className="w-full max-h-64 object-cover rounded-lg border"
+                    />
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => handleCopyImage(getReferenceImageSrc()!)}
+                      >
+                        <Copy className="w-3.5 h-3.5 mr-2" />
+                        Copy Image
+                      </Button>
+                      {onUseReferenceImage && (
+                        <Button
+                          className="flex-1"
+                          onClick={() => handleUseReference(getReferenceImageSrc()!)}
+                        >
+                          <ExternalLink className="w-3.5 h-3.5 mr-2" />
+                          Use as Reference
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

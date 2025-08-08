@@ -1,5 +1,8 @@
 import { Client } from '@replit/object-storage';
 import sharp from 'sharp';
+import fs from 'fs';
+import path from 'path';
+import { spawn } from 'child_process';
 
 // Environment-aware Object Storage service for kavak-gallery bucket
 export class ObjectStorageService {
@@ -38,33 +41,42 @@ export class ObjectStorageService {
       }
       console.log(`[TRACE] Video uploaded successfully to: ${fullPath}`);
 
-      // Create video thumbnail using ffmpeg or similar
+      // Create video thumbnail using ffmpeg
       let thumbUrl = undefined;
       try {
         console.log(`[TRACE] Creating video thumbnail from buffer (${videoBuffer.length} bytes)`);
-        // For now, we'll create a placeholder thumbnail since video thumbnail generation requires ffmpeg
-        // In a full implementation, you'd use ffmpeg to extract the first frame
-        const placeholderThumbnail = await sharp({
-          create: {
-            width: 400,
-            height: 225,
-            channels: 4,
-            background: { r: 100, g: 100, b: 100, alpha: 1 }
-          }
-        })
-        .png()
-        .toBuffer();
-
+        const thumbnailBuffer = await this.extractVideoThumbnail(videoBuffer);
+        
         // Upload thumbnail
         console.log(`[TRACE] Uploading video thumbnail to Object Storage key: ${thumbPath}`);
-        const thumbResult = await this.client.uploadFromBytes(thumbPath, placeholderThumbnail);
+        const thumbResult = await this.client.uploadFromBytes(thumbPath, thumbnailBuffer);
         if (thumbResult.ok) {
           thumbUrl = `/api/object-storage/video/${thumbPath}`;
           console.log(`[TRACE] Video thumbnail uploaded successfully to: ${thumbPath}`);
         }
       } catch (thumbError) {
         console.error('[WARN] Failed to create video thumbnail:', thumbError);
-        // Continue without thumbnail - not critical
+        // Create fallback placeholder thumbnail
+        try {
+          const placeholderThumbnail = await sharp({
+            create: {
+              width: 400,
+              height: 225,
+              channels: 4,
+              background: { r: 71, g: 85, b: 105, alpha: 1 }
+            }
+          })
+          .png()
+          .toBuffer();
+
+          const thumbResult = await this.client.uploadFromBytes(thumbPath, placeholderThumbnail);
+          if (thumbResult.ok) {
+            thumbUrl = `/api/object-storage/video/${thumbPath}`;
+            console.log(`[TRACE] Fallback thumbnail uploaded successfully`);
+          }
+        } catch (fallbackError) {
+          console.error('[WARN] Failed to create fallback thumbnail:', fallbackError);
+        }
       }
 
       const urls = {
@@ -349,6 +361,102 @@ export class ObjectStorageService {
       console.error('Error wiping Object Storage:', error);
       throw error;
     }
+  }
+
+  /**
+   * Extract first frame from video buffer and return as optimized thumbnail
+   */
+  private async extractVideoThumbnail(videoBuffer: Buffer): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+      // Create temporary file for video
+      const tempDir = '/tmp';
+      const videoPath = path.join(tempDir, `video_${Date.now()}.mp4`);
+      const thumbPath = path.join(tempDir, `thumb_${Date.now()}.png`);
+      
+      try {
+        // Write video buffer to temporary file
+        fs.writeFileSync(videoPath, videoBuffer);
+        
+        // Extract first frame using ffmpeg
+        const ffmpeg = spawn('ffmpeg', [
+          '-i', videoPath,           // Input video
+          '-ss', '00:00:01',         // Seek to 1 second (skip potential black frames)
+          '-vframes', '1',           // Extract 1 frame
+          '-f', 'image2',            // Output format
+          '-vf', 'scale=400:225',    // Resize to 400x225
+          '-q:v', '2',               // High quality
+          '-y',                      // Overwrite output
+          thumbPath                  // Output path
+        ]);
+
+        let stderr = '';
+        ffmpeg.stderr.on('data', (data) => {
+          stderr += data.toString();
+        });
+
+        ffmpeg.on('close', async (code) => {
+          try {
+            // Clean up input video file
+            if (fs.existsSync(videoPath)) {
+              fs.unlinkSync(videoPath);
+            }
+            
+            if (code === 0 && fs.existsSync(thumbPath)) {
+              // Read and optimize the thumbnail
+              const rawThumb = fs.readFileSync(thumbPath);
+              const optimizedThumb = await sharp(rawThumb)
+                .webp({ quality: 85 })
+                .toBuffer();
+              
+              // Clean up temporary thumbnail
+              fs.unlinkSync(thumbPath);
+              
+              resolve(optimizedThumb);
+            } else {
+              reject(new Error(`ffmpeg failed with code ${code}: ${stderr}`));
+            }
+          } catch (error) {
+            // Clean up files on error
+            [videoPath, thumbPath].forEach(filePath => {
+              try {
+                if (fs.existsSync(filePath)) {
+                  fs.unlinkSync(filePath);
+                }
+              } catch (cleanupError) {
+                console.warn(`Failed to clean up ${filePath}:`, cleanupError);
+              }
+            });
+            reject(error);
+          }
+        });
+
+        ffmpeg.on('error', (error) => {
+          // Clean up files on error
+          [videoPath, thumbPath].forEach(filePath => {
+            try {
+              if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+              }
+            } catch (cleanupError) {
+              console.warn(`Failed to clean up ${filePath}:`, cleanupError);
+            }
+          });
+          reject(error);
+        });
+      } catch (error) {
+        // Clean up files on error
+        [videoPath, thumbPath].forEach(filePath => {
+          try {
+            if (fs.existsSync(filePath)) {
+              fs.unlinkSync(filePath);
+            }
+          } catch (cleanupError) {
+            console.warn(`Failed to clean up ${filePath}:`, cleanupError);
+          }
+        });
+        reject(error);
+      }
+    });
   }
 }
 
