@@ -254,6 +254,29 @@ export default function VideoCard({
     }
   };
 
+  const handleDownloadImage = async (imageSrc: string) => {
+    try {
+      const response = await fetch(imageSrc);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `reference-image-${video.id}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast({ title: 'Reference image download started' });
+    } catch (error) {
+      toast({
+        title: 'Failed to download image',
+        description: 'An error occurred while downloading',
+        variant: 'destructive'
+      });
+    }
+  };
+
   const handleUseReference = (imageSrc: string) => {
     if (onUseReferenceImage) {
       onUseReferenceImage(imageSrc);
@@ -545,10 +568,10 @@ export default function VideoCard({
                       <Button
                         variant="outline"
                         className="flex-1"
-                        onClick={() => handleCopyImage(getReferenceImageSrc()!)}
+                        onClick={() => handleDownloadImage(getReferenceImageSrc()!)}
                       >
-                        <Copy className="w-3.5 h-3.5 mr-2" />
-                        Copy Image
+                        <Download className="w-3.5 h-3.5 mr-2" />
+                        Download Image
                       </Button>
                       {onUseReferenceImage && (
                         <Button
