@@ -48,6 +48,8 @@ import ReferenceImageUpload from '@/components/ReferenceImageUpload';
 import type { Video } from '@shared/schema';
 import VideoCard from '@/components/VideoCard';
 
+
+
 // ProjectVideoPreview Component for the right column
 interface ProjectVideoPreviewProps {
   selectedProject: string;
@@ -244,6 +246,21 @@ function VideoGallery() {
   });
 
   const isLoading = projectsLoading || videosLoading;
+  const projects = projectsData || [];
+  const allVideos = videosResponse?.items || [];
+
+  const toggleGroup = (groupId: string) => {
+    setCollapsedGroups(prev => ({
+      ...prev,
+      [groupId]: !prev[groupId]
+    }));
+  };
+
+  const getProjectName = (groupId: string) => {
+    if (groupId === 'unassigned') return 'Unassigned';
+    const project = projects.find((p: any) => p.id === groupId);
+    return project?.name || 'Unknown Project';
+  };
 
   if (isLoading) {
     return (
@@ -253,9 +270,6 @@ function VideoGallery() {
       </div>
     );
   }
-
-  const projects = projectsData || [];
-  const allVideos = videosResponse?.items || [];
 
   if (allVideos.length === 0) {
     return (
@@ -293,19 +307,6 @@ function VideoGallery() {
 
   // Filter out empty groups and sort
   const nonEmptyGroups = Object.entries(videoGroups).filter(([_, videos]) => videos.length > 0);
-  
-  const toggleGroup = (groupId: string) => {
-    setCollapsedGroups(prev => ({
-      ...prev,
-      [groupId]: !prev[groupId]
-    }));
-  };
-
-  const getProjectName = (groupId: string) => {
-    if (groupId === 'unassigned') return 'Unassigned';
-    const project = projects.find((p: any) => p.id === groupId);
-    return project?.name || 'Unknown Project';
-  };
 
   return (
     <div className="space-y-6">

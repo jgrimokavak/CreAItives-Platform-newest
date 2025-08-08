@@ -1,0 +1,73 @@
+# CONTEXT
+We are improving the **Video Creation** page of a web app.
+Current state:
+Users can generate videos with `POST /api/video/generate`.
+The Create tab has:
+Left: generation form
+Right: project panel with videos for the selected project
+Bottom: Result panel showing the most recently generated video
+The Gallery tab organizes videos into collapsible groups (projects + Unassigned).
+Videos are displayed using the `VideoCard` component, with inline playback, Delete, Move, drag-and-drop, filters, and bulk actions.
+The backend supports `/api/video/:id` for fetching and deleting, and `/api/video/:id/move` for moving videos.
+The current UI shows generated videos only after they are fully complete — there’s no live feedback during processing.
+Goal for this step:
+Add a **Job Tray** at the bottom of the Create tab to show generation progress in real time and provide quick access to recently generated videos.
+---
+# BEFORE STARTING
+Run type-check and start the dev server. 
+   Fix any errors before continuing.
+Confirm:
+`POST /api/video/generate` returns enough information to identify the video/job (`id` and/or `status`).
+There’s a way to check video status from the server (e.g., re-fetch `/api/video/:id`).
+---
+# TASK: Add a Job Tray for live progress tracking
+## 1. Component structure
+Create `client/src/components/JobTray.tsx`.
+Props:
+  ```ts
+  interface JobTrayProps {
+    jobs: {
+      id: string;
+      status: 'pending' | 'processing' | 'completed' | 'failed';
+      prompt: string;
+      model: string;
+      createdAt: string;
+      projectId?: string | null;
+    }[];
+    onCancel?: (id: string) => void;
+    onRetry?: (id: string) => void;
+  }
+	•	Render:
+	•	Sticky bar at the bottom of the Create tab.
+	•	For each job:
+	•	Show model badge, short prompt, status chip.
+	•	Progress bar:
+	•	If pending or processing, show indeterminate animation or percentage if available.
+	•	If completed, turn into a “Play” button to open inline player.
+	•	If failed, show “Retry” button (calls onRetry).
+	•	“Cancel” button for jobs that are still processing.
+State management
+	•	In VideoPage.tsx, maintain a jobs state array.
+	•	When POST /api/video/generate is called:
+	•	Add a new job to jobs with status 'pending' or 'processing'.
+	•	Use a polling hook (e.g., useInterval) to re-fetch job status every 5–10 seconds:
+	•	Call /api/video/:id to check if status changed to 'completed' or 'failed'.
+	•	Update the jobs state accordingly.
+	•	When completed:
+	•	Move the video into the Result panel and the right Project Panel list.
+	•	Keep it in the Job Tray until manually dismissed (X button).
+Integration
+	•	Add <JobTray jobs={jobs} onCancel={...} onRetry={...} /> to the bottom of the Create tab (below the Result panel).
+	•	Style the tray with a minimal, non-intrusive look that still stands out when there’s activity.
+Optional backend tweak
+	•	If no explicit job tracking exists, treat each video generation as a “job” and poll /api/video/:id for status updates until it’s 'completed' or 'failed'.
+⸻
+ACCEPTANCE CRITERIA
+	•	When a user generates a video, a new entry appears in the Job Tray with a visible status.
+	•	Status updates in near-real time without manual refresh.
+	•	Completed jobs can be played directly from the Job Tray.
+	•	Failed jobs can be retried from the Job Tray.
+	•	Cancelling a job stops polling and hides it from the tray.
+	•	The Job Tray is always visible at the bottom of the Create tab while there are active or recently completed jobs.
+---
+This will make the Create tab feel **interactive and responsive**, letting users track multiple generations in progress and jump straight to the results. 

@@ -1,0 +1,52 @@
+# CONTEXT
+We are improving the **Video Creation** page of a web app.
+Current state:
+The Gallery tab displays videos grouped into collapsible sections:
+One per project
+One “Unassigned” group for videos without a project
+Videos are displayed with the `VideoCard` component (inline playback, Delete, Move).
+Users can move videos between groups using drag-and-drop or the “Move to…” menu.
+`/api/video/:id/move` and `/api/video/:id` (delete) endpoints work correctly.
+Goal for this step:
+Add **filters**, **bulk selection with actions**, and a few **quality-of-life** improvements to the Gallery.
+---
+# BEFORE STARTING
+Run type-check and start the dev server. 
+   Fix any errors before continuing.
+Verify:
+Drag-and-drop is working without breaking inline playback.
+“Move to…” menu still works.
+---
+# TASK: Add filters, bulk selection, and small UI enhancements to the Gallery
+## 1. Filters
+Above the collapsible groups in the Gallery:
+Add a small filter bar with:
+**Status filter**: All / Completed / Processing / Failed
+**Date filter**: All / Last 7 days / Last 30 days
+**Search box**: Filters videos by matching the search text against the `prompt` (client-side filter for now).
+These filters should update the visible videos **client-side** without breaking counts in the headers.
+## 2. Bulk selection
+Add a **“Select mode”** toggle button in the Gallery header.
+When active:
+Each `VideoCard` shows a checkbox overlay.
+Clicking selects/deselects the video.
+Track selected video IDs in component state.
+## 3. Bulk actions bar
+When in select mode and at least one video is selected, show a floating bar with:
+**Move to…** → Choose a project or “Unassigned”:
+Loop through selected IDs, calling `PATCH /api/video/:id/move`.
+Use optimistic UI for responsiveness.
+**Delete** → Loop through selected IDs, calling `DELETE /api/video/:id`.
+**Download** → Trigger a blob download for each selected video (sequentially or with a short concurrency limit).
+## 4. Quality-of-life improvements
+On hover, if `thumbUrl` exists, show a subtle play overlay to indicate inline playback.
+When deleting or moving, show a toast with an **Undo** option:
+Undo reverts the action **client-side** within 5 seconds.
+No server-side undo required for now.
+Preserve the current filter and selection state when navigating between tabs.
+---
+# ACCEPTANCE CRITERIA
+Filters work client-side without breaking group headers or counts.
+User can select multiple videos and perform bulk Move, Delete, or Download.
+Undo toast appears after Delete or Move and restores videos if clicked.
+UI feels responsive: optimistic updates for bulk actions, drag-and-drop still works.
