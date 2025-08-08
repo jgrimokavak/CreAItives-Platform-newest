@@ -1,0 +1,76 @@
+# CONTEXT — READ BEFORE CHANGING ANYTHING
+We are working on the **Video Creation page** (`VideoPage.tsx`) and the **Gallery tab** in this app.
+This page has **two tabs**:
+**Create** — This is a **two-column layout**:
+**Left column:** Form for creating a video (prompt, resolution, duration, etc.). This works already.
+**Right column:** Project selector + contents of the selected project (videos).
+**Bottom (full width):** Result panel showing the most recently generated video.
+All videos in both Create and Gallery tabs use a unified `VideoCard` component that supports inline video playback and actions.
+**Gallery** — Displays videos **grouped by project** in collapsible sections, plus an “Unassigned” section for videos with no project. 
+Each project group contains videos using the same `VideoCard` component.
+The Gallery already supports **select mode** for bulk move/delete (via “Move to…” in the UI).
+There is **no drag-and-drop** — previous attempts to add DnD caused major “Invalid hook call” React errors.
+The **current working state** after rollback is:
+Projects feature is in place.
+Collapsible groups in Gallery work.
+Selecting and moving/deleting videos works.
+Video generation works in Create tab.
+Results panel at bottom updates after video generation.
+We want to **stabilize** this working state first before adding new features (Job Tray, improved VideoCard, etc.).
+---
+# RECHECK & FIX FIRST — ENSURE DEPENDENCY & REACT STABILITY
+Run type-check and dev server. 
+   If it crashes, continue with the steps below and retry after changes.
+Show current dependency tree:
+```bash
+npm ls react
+npm ls react-dom
+npm ls @dnd-kit/core @dnd-kit/sortable
+Paste output to the console.
+⸻
+TASK A — Remove DnD packages (we’re not using them)
+npm remove @dnd-kit/core @dnd-kit/sortable
+⸻
+TASK B — Pin and dedupe React
+In package.json, set these exact versions and add overrides:
+{
+  "dependencies": {
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
+  },
+  "overrides": {
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
+  }
+}
+In vite.config.ts, ensure React dedupe:
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    dedupe: ['react', 'react-dom']
+  }
+});
+Make sure no sub-packages declare their own react / react-dom.
+⸻
+TASK C — Clean install
+rm -rf node_modules package-lock.json
+npm install
+Then verify again:
+npm ls react
+npm ls react-dom
+They must resolve to a single 18.2.0 at the root.
+⸻
+TASK D — Sanity pass (no feature changes)
+	•	Start the app. If “Invalid hook call” persists, search for any hooks used outside React components/custom hooks and fix.
+	•	Confirm:
+	•	Create tab renders (2 columns) and the Result panel updates after generation.
+	•	Gallery tab shows collapsible project groups + Unassigned with VideoCard.
+	•	Select mode, bulk Move/Delete, and VideoCard “Move to…” all work.
+	•	Inline <video> playback still works.
+⸻
+ACCEPTANCE
+	•	npm ls react and npm ls react-dom show exactly 18.2.0 once (no duplicates).
+	•	App renders with no “Invalid hook call”.
+	•	Existing Create and Gallery flows work exactly as before (no regressions)
