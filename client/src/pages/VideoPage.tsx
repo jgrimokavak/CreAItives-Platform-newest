@@ -1164,16 +1164,6 @@ export default function VideoPage() {
       if (data.video?.id) {
         const formValues = form.getValues();
         
-        // Add to Job Tray immediately
-        const newJob: JobTrayItem = {
-          id: data.video.id,
-          status: 'pending',
-          prompt: data.video.prompt || formValues.prompt,
-          model: data.video.model || formValues.model,
-          createdAt: Date.now()
-        };
-        setJobTrayItems(prev => [newJob, ...prev.slice(0, 4)]); // Keep max 5 jobs
-        
         // Add to Results array with form snapshot to prevent mismatches
         const newResult: ResultEntry = {
           videoId: data.video.id,
