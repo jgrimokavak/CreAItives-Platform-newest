@@ -1,0 +1,48 @@
+# GOAL
+Fix the **Result** panel so it never mismatches prompt/video, and support **multiple concurrent results**:
+Each result card is tied to a **specific videoId**.
+When multiple generations are in flight, I can see (and switch between) all recent results.
+Job Tray **Play** selects that exact result.
+# CONTEXT
+Page: `client/src/pages/VideoPage.tsx` (Create tab).
+Current behavior: only one Result card is shown; with multiple jobs, whichever finishes first can overwrite that card’s `url` while the prompt label comes from a different submission → mismatch.
+Gallery displays correct prompts because it fetches each video by ID from the API.
+# REQUIREMENTS
+## A) Make Results ID-driven (no more shared generic state)
+On **submit** (POST `/api/video/generate`), capture the **returned videoId** (or the job’s id that maps 1:1 to a videoId) and the form data snapshot (prompt/model/etc.) and push an entry to a **`results` array** in state:
+  ```ts
+  type ResultEntry = {
+    videoId: string;
+    submittedAt: number;     // Date.now()
+    promptAtSubmit: string;  // snapshot
+    modelAtSubmit?: string;
+    status: 'pending' | 'processing' | 'completed' | 'failed';
+    data?: Video;            // populated when fetched (includes url, thumbUrl, etc.)
+  }
+	•	Do not store a single lastCreatedVideo; use the results array keyed by videoId.
+B) Update the specific entry on completion (no global overwrite)
+	•	When polling jobs or when a job completes, fetch /api/video/:id for that exact videoId and update only that ResultEntry.
+	•	Do not merge prompts from local state into other entries; once fetched, display server data for title/prompt/url so the card always matches the asset.
+C) Result panel UI: multiple recent results
+Choose any simple, stable UI:
+	•	Option 1 (tabs/pills): A horizontal list of pills for the last N results (most recent on the left). Clicking a pill shows that result’s VideoCard.
+	•	Option 2 (stack): Show the last N results as a small list (collapsed cards), with the most recent expanded. Keep N ≈ 3–5.
+	•	Either way, each visible result card renders by videoId → use the fetched Video object to populate VideoCard. Avoid mixing in the local prompt snapshot once the server object is available.
+D) Integrate Job Tray “Play” with Results
+	•	Job Tray “Play” should select the matching result by videoId, scroll the Result panel into view, and autoplay that card.
+	•	Implementation detail:
+	•	Pass onPlay(videoId) down to the tray.
+	•	In Result panel, keep activeResultVideoId and focus that entry. Support an autoPlay flag that calls videoRef.play() on mount for that card.
+E) Edge cases & polish
+	•	If a result entry fails to fetch or is deleted, show a small “Not available” state for that pill/entry.
+	•	Keep the last ~5 results; allow a “Clear all” action to reset the panel.
+	•	After refresh, repopulate recent results from the Job Tray list (if you persist it) or just show the latest one; but never reuse a generic state—always drive by videoId.
+DO NOTS
+	•	Do not change Gallery, routes, schema, or add new dependencies.
+	•	Do not change VideoCard layout beyond what’s necessary for autoplay hook.
+ACCEPTANCE
+	•	Submit 3 jobs quickly. As they finish in any order:
+	•	Each produces its own result entry tied to its own videoId.
+	•	No prompt/video mix-ups; each card displays the server-fetched prompt/url that match.
+	•	Job Tray Play selects that exact result and plays it inline.
+	•	Result panel can switch between the last few results without layout jumps.

@@ -962,6 +962,16 @@ interface Project {
   updatedAt: string;
 }
 
+// Result entry type for the new results system
+type ResultEntry = {
+  videoId: string;
+  submittedAt: number;
+  promptAtSubmit: string;
+  modelAtSubmit: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  data?: Video; // Video data when fetched from API
+};
+
 export default function VideoPage() {
   const { toast } = useToast();
   const [selectedProject, setSelectedProject] = useState<string>('none');
@@ -969,7 +979,6 @@ export default function VideoPage() {
   const [showCreateProject, setShowCreateProject] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectDescription, setNewProjectDescription] = useState('');
-  const [lastCreatedVideo, setLastCreatedVideo] = useState<Video | null>(null);
   const [firstFrameImagePreview, setFirstFrameImagePreview] = useState<string | null>(null);
   const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false);
   const [recentlyGeneratedVideos, setRecentlyGeneratedVideos] = useState<string[]>([]);
@@ -979,6 +988,10 @@ export default function VideoPage() {
   
   // Track active polling for each job
   const [activePolling, setActivePolling] = useState<Set<string>>(new Set());
+  
+  // New results system - tracks each video by ID to prevent mismatches
+  const [results, setResults] = useState<ResultEntry[]>([]);
+  const [activeResultVideoId, setActiveResultVideoId] = useState<string | null>(null);
 
   // Form setup
   const form = useForm<VideoGenerationForm>({
@@ -1114,16 +1127,32 @@ export default function VideoPage() {
         description: 'Processing will take 3-6 minutes. We\'ll notify you when complete.',
       });
       
-      // Add to Job Tray immediately
+      // Capture form data snapshot for the results system
       if (data.video?.id) {
+        const formValues = form.getValues();
+        
+        // Add to Job Tray immediately
         const newJob: JobTrayItem = {
           id: data.video.id,
           status: 'pending',
-          prompt: data.video.prompt || form.getValues('prompt'),
-          model: data.video.model || 'hailuo-02',
+          prompt: data.video.prompt || formValues.prompt,
+          model: data.video.model || formValues.model,
           createdAt: Date.now()
         };
         setJobTrayItems(prev => [newJob, ...prev.slice(0, 4)]); // Keep max 5 jobs
+        
+        // Add to Results array with form snapshot to prevent mismatches
+        const newResult: ResultEntry = {
+          videoId: data.video.id,
+          submittedAt: Date.now(),
+          promptAtSubmit: formValues.prompt,
+          modelAtSubmit: formValues.model,
+          status: 'pending'
+        };
+        setResults(prev => [newResult, ...prev.slice(0, 4)]); // Keep last 5 results
+        
+        // Set as active result
+        setActiveResultVideoId(data.video.id);
         
         // Start polling for this specific job
         pollVideoStatus(data.video.id);
@@ -1171,13 +1200,26 @@ export default function VideoPage() {
           // Add to recently generated videos for immediate display
           setRecentlyGeneratedVideos(prev => [videoId, ...prev.slice(0, 4)]);
           
-          // Set the last created video for the Result panel
-          setLastCreatedVideo({
-            ...response,
-            model: response.model || 'hailuo-02',
-            status: response.status as 'pending' | 'processing' | 'completed' | 'failed',
-            createdAt: response.createdAt || new Date().toISOString()
-          });
+          // Update the specific result entry with fetched data
+          setResults(prev => prev.map(result => 
+            result.videoId === videoId 
+              ? { 
+                  ...result, 
+                  status: 'completed' as const,
+                  data: {
+                    ...response,
+                    model: response.model || 'hailuo-02',
+                    status: response.status as 'pending' | 'processing' | 'completed' | 'failed',
+                    createdAt: response.createdAt instanceof Date 
+                      ? response.createdAt.toISOString() 
+                      : response.createdAt || new Date().toISOString()
+                  }
+                }
+              : result
+          ));
+          
+          // Auto-select this result as the active one
+          setActiveResultVideoId(videoId);
           
           // Stop polling for this job
           setActivePolling(prev => {
@@ -1191,6 +1233,13 @@ export default function VideoPage() {
         if (response.status === 'failed') {
           // Update Job Tray item with error
           handleJobUpdate(videoId, 'failed', response.error || 'Generation failed');
+          
+          // Update the specific result entry with failed status
+          setResults(prev => prev.map(result => 
+            result.videoId === videoId 
+              ? { ...result, status: 'failed' as const }
+              : result
+          ));
           
           toast({
             title: 'Video Generation Failed',
@@ -1211,6 +1260,13 @@ export default function VideoPage() {
         if (response.status === 'processing') {
           handleJobUpdate(videoId, 'processing');
         }
+        
+        // Update results status for any non-completed/failed status
+        setResults(prev => prev.map(result => 
+          result.videoId === videoId 
+            ? { ...result, status: response.status as 'pending' | 'processing' | 'completed' | 'failed' }
+            : result
+        ));
         
         // Continue polling if still processing
         if (attempts < maxAttempts) {
@@ -1275,29 +1331,57 @@ export default function VideoPage() {
       const response = await apiRequest(`/api/video/status/${videoId}`);
       
       if (response.status === 'completed') {
-        // Set as the active result video
-        setLastCreatedVideo({
-          ...response,
-          model: response.model || 'hailuo-02',
-          status: response.status as 'pending' | 'processing' | 'completed' | 'failed',
-          createdAt: response.createdAt instanceof Date 
-            ? response.createdAt.toISOString() 
-            : response.createdAt || new Date().toISOString()
+        // Update the specific result entry with fetched data
+        setResults(prev => {
+          const existingIndex = prev.findIndex(r => r.videoId === videoId);
+          if (existingIndex >= 0) {
+            // Update existing result
+            return prev.map(result => 
+              result.videoId === videoId 
+                ? { 
+                    ...result, 
+                    status: 'completed' as const,
+                    data: {
+                      ...response,
+                      model: response.model || 'hailuo-02',
+                      status: response.status as 'pending' | 'processing' | 'completed' | 'failed',
+                      createdAt: response.createdAt instanceof Date 
+                        ? response.createdAt.toISOString() 
+                        : response.createdAt || new Date().toISOString()
+                    }
+                  }
+                : result
+            );
+          } else {
+            // Create new result entry if not found
+            const newResult: ResultEntry = {
+              videoId,
+              submittedAt: Date.now(),
+              promptAtSubmit: response.prompt || 'Unknown prompt',
+              modelAtSubmit: response.model || 'hailuo-02',
+              status: 'completed',
+              data: {
+                ...response,
+                model: response.model || 'hailuo-02',
+                status: response.status as 'pending' | 'processing' | 'completed' | 'failed',
+                createdAt: response.createdAt instanceof Date 
+                  ? response.createdAt.toISOString() 
+                  : response.createdAt || new Date().toISOString()
+              }
+            };
+            return [newResult, ...prev.slice(0, 4)];
+          }
         });
         
-        // Scroll to Result panel smoothly
-        const resultPanel = document.querySelector('[data-result-panel]');
-        if (resultPanel) {
-          resultPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
+        // Set as active result and scroll to Result panel
+        setActiveResultVideoId(videoId);
         
-        // Auto-play the video after a short delay
         setTimeout(() => {
-          const videoElement = document.querySelector('[data-result-panel] video') as HTMLVideoElement;
-          if (videoElement) {
-            videoElement.play().catch(console.warn);
+          const resultPanel = document.querySelector('[data-result-panel]');
+          if (resultPanel) {
+            resultPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }
-        }, 500);
+        }, 100);
       }
     } catch (error) {
       console.error('Error playing video:', error);
@@ -1310,21 +1394,16 @@ export default function VideoPage() {
   };
 
   const handleJumpToResult = (videoId: string) => {
-    // Set this video as the last created video to show in Result panel
-    const jobItem = jobTrayItems.find(job => job.id === videoId);
-    if (jobItem && jobItem.status === 'completed') {
-      // Fetch the full video data and set as last created
-      apiRequest(`/api/video/status/${videoId}`)
-        .then(response => {
-          setLastCreatedVideo({
-            ...response,
-            model: response.model || 'hailuo-02',
-            status: response.status as 'pending' | 'processing' | 'completed' | 'failed',
-            createdAt: response.createdAt || new Date().toISOString()
-          });
-        })
-        .catch(console.error);
-    }
+    // Set this video as the active result and scroll to Result panel
+    setActiveResultVideoId(videoId);
+    
+    // Scroll to Result panel smoothly
+    setTimeout(() => {
+      const resultPanel = document.querySelector('[data-result-panel]');
+      if (resultPanel) {
+        resultPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
   };
 
   // Handle duration and resolution validation
@@ -1690,41 +1769,116 @@ export default function VideoPage() {
             </div>
           </div>
 
-          {/* Result Panel - Full width at bottom */}
-          {lastCreatedVideo && (
+          {/* Results Panel - Multiple concurrent results */}
+          {results.length > 0 && (
             <div className="space-y-4 mt-8" data-result-panel>
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-semibold flex items-center gap-2">
                   <Sparkles className="w-6 h-6 text-primary" />
-                  Result
+                  Results
+                  <Badge variant="secondary" className="ml-2">
+                    {results.length}
+                  </Badge>
                 </h3>
-                <Button
-                  variant="outline"
-                  onClick={() => setActiveTab('gallery')}
-                  className="flex items-center gap-2"
-                >
-                  <FolderOpen className="w-4 h-4" />
-                  Open in Gallery
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setResults([])}
+                    className="text-xs"
+                  >
+                    Clear All
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setActiveTab('gallery')}
+                    className="flex items-center gap-2"
+                  >
+                    <FolderOpen className="w-4 h-4" />
+                    Open in Gallery
+                  </Button>
+                </div>
               </div>
               
-              <Card>
-                <CardContent className="p-4">
-                  <div className="max-w-md">
-                    <VideoCard
-                      video={{
-                        ...lastCreatedVideo,
-                        status: lastCreatedVideo.status as 'pending' | 'processing' | 'completed' | 'failed',
-                        createdAt: lastCreatedVideo.createdAt instanceof Date 
-                          ? lastCreatedVideo.createdAt.toISOString() 
-                          : lastCreatedVideo.createdAt || new Date().toISOString()
-                      }}
-                      className="w-full"
-                      autoPlay={true}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Result Pills/Tabs */}
+              <div className="flex gap-2 flex-wrap">
+                {results.slice(0, 5).map((result, index) => {
+                  const isActive = activeResultVideoId === result.videoId;
+                  const isCompleted = result.status === 'completed' && result.data;
+                  return (
+                    <Button
+                      key={result.videoId}
+                      variant={isActive ? "default" : "outline"}
+                      size="sm"
+                      className="h-auto p-2 flex flex-col items-start min-w-0"
+                      onClick={() => setActiveResultVideoId(result.videoId)}
+                      disabled={!isCompleted}
+                    >
+                      <div className="flex items-center gap-1 w-full">
+                        <Badge 
+                          variant="secondary" 
+                          className={`text-xs ${
+                            result.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            result.status === 'processing' ? 'bg-blue-100 text-blue-800' :
+                            result.status === 'failed' ? 'bg-red-100 text-red-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}
+                        >
+                          {result.status}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">#{index + 1}</span>
+                      </div>
+                      <div className="text-xs text-left truncate max-w-24">
+                        {isCompleted && result.data ? result.data.prompt : result.promptAtSubmit}
+                      </div>
+                    </Button>
+                  );
+                })}
+              </div>
+              
+              {/* Active Result Display */}
+              {(() => {
+                const activeResult = results.find(r => r.videoId === activeResultVideoId);
+                if (!activeResult) return null;
+                
+                if (activeResult.status === 'completed' && activeResult.data) {
+                  return (
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="max-w-md">
+                          <VideoCard
+                            video={activeResult.data}
+                            className="w-full"
+                            autoPlay={true}
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                } else {
+                  return (
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-3">
+                          {activeResult.status === 'processing' && <Loader2 className="w-5 h-5 animate-spin" />}
+                          {activeResult.status === 'failed' && <AlertCircle className="w-5 h-5 text-red-500" />}
+                          {activeResult.status === 'pending' && <Clock className="w-5 h-5 text-yellow-500" />}
+                          <div>
+                            <p className="font-medium">
+                              {activeResult.status === 'processing' && 'Generating video...'}
+                              {activeResult.status === 'failed' && 'Generation failed'}
+                              {activeResult.status === 'pending' && 'Queued for generation'}
+                            </p>
+                            <p className="text-sm text-muted-foreground truncate max-w-md">
+                              {activeResult.promptAtSubmit}
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                }
+              })()}
             </div>
           )}
           
