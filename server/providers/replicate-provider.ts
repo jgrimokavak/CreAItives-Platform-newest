@@ -42,8 +42,11 @@ export class ReplicateProvider extends BaseProvider {
         body.prompt_optimizer = inputs.promptOptimizer;
         delete body.promptOptimizer;
       }
-      if (inputs.firstFrameImage !== undefined) {
+      if (inputs.firstFrameImage !== undefined && inputs.firstFrameImage !== '') {
         body.first_frame_image = inputs.firstFrameImage;
+        delete body.firstFrameImage;
+      } else {
+        // Remove the field entirely if empty or undefined
         delete body.firstFrameImage;
       }
     }

@@ -1822,9 +1822,11 @@ export default function VideoPage() {
                       const diffMinutes = Math.floor(diffSeconds / 60);
                       const diffHours = Math.floor(diffMinutes / 60);
                       
-                      if (diffHours > 0) return `${diffHours}h ${diffMinutes % 60}m ago`;
-                      if (diffMinutes > 0) return `${diffMinutes}m ${diffSeconds % 60}s ago`;
-                      return `${diffSeconds}s ago`;
+                      // For completed jobs, stop the clock to show total generation time
+                      // For processing jobs, show elapsed time
+                      if (diffHours > 0) return `${diffHours}h ${diffMinutes % 60}m`;
+                      if (diffMinutes > 0) return `${diffMinutes}m ${diffSeconds % 60}s`;
+                      return `${diffSeconds}s`;
                     } catch (error) {
                       return 'Unknown time';
                     }
@@ -1919,9 +1921,11 @@ export default function VideoPage() {
                     const diffMinutes = Math.floor(diffSeconds / 60);
                     const diffHours = Math.floor(diffMinutes / 60);
                     
-                    if (diffHours > 0) return `${diffHours}h ${diffMinutes % 60}m ago`;
-                    if (diffMinutes > 0) return `${diffMinutes}m ${diffSeconds % 60}s ago`;
-                    return `${diffSeconds}s ago`;
+                    // For completed jobs, stop the clock to show total generation time
+                    // For processing jobs, show elapsed time  
+                    if (diffHours > 0) return `${diffHours}h ${diffMinutes % 60}m`;
+                    if (diffMinutes > 0) return `${diffMinutes}m ${diffSeconds % 60}s`;
+                    return `${diffSeconds}s`;
                   } catch (error) {
                     return 'Unknown time';
                   }
@@ -2021,7 +2025,7 @@ export default function VideoPage() {
                                 </div>
                               </div>
                               <p className="text-xs text-muted-foreground text-center mt-2">
-                                This usually takes 30-60 seconds
+                                This usually takes 3-6 minutes
                               </p>
                             </div>
                           )}
