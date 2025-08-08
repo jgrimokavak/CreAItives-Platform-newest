@@ -9,7 +9,7 @@ import HomePage from "@/pages/HomePage";
 import SimpleGalleryPage from "@/pages/SimpleGalleryPage";
 import UpscalePage from "./pages/UpscalePageNew";
 import CarCreationPage from "./pages/CarCreationPage";
-import VideoPage from "./pages/VideoPage";
+import VideoPageMinimal from "./pages/VideoPageMinimal";
 
 import EmailBuilderPage from "./pages/EmailBuilderPage";
 import UserManagementPage from "./pages/UserManagementPage";
@@ -23,8 +23,8 @@ import { useWebSocket } from "@/lib/websocket";
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
   
-  // Set up WebSocket connection for real-time updates
-  useWebSocket();
+  // WebSocket temporarily disabled to fix hooks violations
+  // useWebSocket();
 
   // If still loading authentication, don't render anything to prevent unwanted redirects
   if (isLoading) {
@@ -93,7 +93,7 @@ function Router() {
           )} />
           <Route path="/video" component={() => (
             <Sidebar>
-              <VideoPage />
+              <VideoPageMinimal />
             </Sidebar>
           )} />
 
