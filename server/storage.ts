@@ -698,7 +698,7 @@ export class DatabaseStorage implements IStorage {
     await db.delete(videos).where(eq(videos.id, id));
   }
 
-  // Project operations
+  // Enhanced Project operations with advanced features
   async createProject(project: InsertProject): Promise<Project> {
     const [createdProject] = await db.insert(projects).values(project).returning();
     return createdProject;
@@ -717,6 +717,84 @@ export class DatabaseStorage implements IStorage {
     return project;
   }
 
+  async getProjectWithVideos(projectId: string, userId: string): Promise<{
+    project: Project;
+    videos: Video[];
+    totalVideos: number;
+    completedVideos: number;
+    processingVideos: number;
+    totalDuration: number;
+  } | null> {
+    // Get project
+    const project = await this.getProjectById(projectId);
+    if (!project || project.userId !== userId) {
+      return null;
+    }
+
+    // Get all videos for this project
+    const projectVideos = await db
+      .select()
+      .from(videos)
+      .where(and(
+        eq(videos.projectId, projectId),
+        eq(videos.userId, userId)
+      ))
+      .orderBy(desc(videos.createdAt));
+
+    // Calculate statistics
+    const completedVideos = projectVideos.filter(v => v.status === 'completed').length;
+    const processingVideos = projectVideos.filter(v => v.status === 'processing').length;
+    const totalDuration = projectVideos
+      .filter(v => v.status === 'completed')
+      .reduce((sum, v) => sum + (parseInt(v.duration) || 0), 0);
+
+    return {
+      project,
+      videos: projectVideos,
+      totalVideos: projectVideos.length,
+      completedVideos,
+      processingVideos,
+      totalDuration
+    };
+  }
+
+  async getProjectsWithStats(userId: string): Promise<Array<Project & {
+    videoCount: number;
+    completedCount: number;
+    processingCount: number;
+    lastActivity?: Date;
+  }>> {
+    // Get projects with video counts using SQL aggregation
+    const projectsWithStats = await db
+      .select({
+        id: projects.id,
+        name: projects.name,
+        description: projects.description,
+        gcsFolder: projects.gcsFolder,
+        videoCount: projects.videoCount,
+        userId: projects.userId,
+        createdAt: projects.createdAt,
+        updatedAt: projects.updatedAt,
+        totalVideos: sql<number>`COALESCE(COUNT(${videos.id}), 0)`.as('totalVideos'),
+        completedCount: sql<number>`COALESCE(SUM(CASE WHEN ${videos.status} = 'completed' THEN 1 ELSE 0 END), 0)`.as('completedCount'),
+        processingCount: sql<number>`COALESCE(SUM(CASE WHEN ${videos.status} = 'processing' THEN 1 ELSE 0 END), 0)`.as('processingCount'),
+        lastActivity: sql<Date>`COALESCE(MAX(${videos.createdAt}), ${projects.createdAt})`.as('lastActivity')
+      })
+      .from(projects)
+      .leftJoin(videos, eq(projects.id, videos.projectId))
+      .where(eq(projects.userId, userId))
+      .groupBy(projects.id)
+      .orderBy(desc(projects.createdAt));
+
+    return projectsWithStats.map(p => ({
+      ...p,
+      videoCount: p.totalVideos,
+      completedCount: p.completedCount,
+      processingCount: p.processingCount,
+      lastActivity: p.lastActivity
+    }));
+  }
+
   async updateProject(id: string, updates: Partial<Project>): Promise<Project | undefined> {
     const [updatedProject] = await db
       .update(projects)
@@ -727,7 +805,30 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteProject(id: string): Promise<void> {
+    // First move all videos in this project to no project (null)
+    await db
+      .update(videos)
+      .set({ projectId: null })
+      .where(eq(videos.projectId, id));
+    
+    // Then delete the project
     await db.delete(projects).where(eq(projects.id, id));
+  }
+
+  // Update video count when videos are moved to/from projects
+  async updateProjectVideoCount(projectId: string): Promise<void> {
+    const videoCount = await db
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(videos)
+      .where(eq(videos.projectId, projectId));
+    
+    await db
+      .update(projects)
+      .set({ 
+        videoCount: videoCount[0]?.count || 0,
+        updatedAt: new Date() 
+      })
+      .where(eq(projects.id, projectId));
   }
 }
 

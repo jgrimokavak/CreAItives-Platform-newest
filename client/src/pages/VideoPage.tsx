@@ -43,6 +43,255 @@ import SimpleGalleryPage from './SimpleGalleryPage';
 import ReferenceImageUpload from '@/components/ReferenceImageUpload';
 import type { Video } from '@shared/schema';
 
+// ProjectVideoPreview Component for the right column
+interface ProjectVideoPreviewProps {
+  selectedProject: string;
+  projects: Project[];
+  onVideoPlay: (videoId: string) => void;
+  onVideoDelete: (videoId: string) => void;
+}
+
+function ProjectVideoPreview({ selectedProject, projects, onVideoPlay, onVideoDelete }: ProjectVideoPreviewProps) {
+  const { toast } = useToast();
+  
+  // Fetch project details with videos
+  const { data: projectDetails, isLoading: projectLoading } = useQuery({
+    queryKey: ['/api/projects', selectedProject, 'details'],
+    queryFn: () => selectedProject === 'none' ? 
+      Promise.resolve(null) : 
+      apiRequest(`/api/projects/${selectedProject}/details`),
+    enabled: selectedProject !== 'none',
+  });
+
+  // Fetch unassigned videos when no project is selected
+  const { data: unassignedVideos, isLoading: unassignedLoading } = useQuery<{items: Video[]}>({
+    queryKey: ['/api/video', 'unassigned'],
+    queryFn: () => apiRequest('/api/video?projectId=null'),
+    enabled: selectedProject === 'none',
+  });
+
+  if (selectedProject === 'none') {
+    return (
+      <Card className="h-full">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <VideoIconSm className="w-5 h-5" />
+            Unassigned Videos
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Videos that aren't part of any project
+          </p>
+        </CardHeader>
+        <CardContent>
+          {unassignedLoading ? (
+            <div className="flex items-center justify-center p-8">
+              <Loader2 className="w-6 h-6 animate-spin" />
+              <span className="ml-2">Loading videos...</span>
+            </div>
+          ) : unassignedVideos?.items?.length ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {unassignedVideos.items.slice(0, 8).map((video) => (
+                  <div key={video.id} className="group relative">
+                    <div className="aspect-video bg-muted rounded-lg overflow-hidden relative">
+                      {video.thumbUrl ? (
+                        <img
+                          src={video.thumbUrl}
+                          alt={video.prompt}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <VideoIconSm className="w-8 h-8 text-muted-foreground" />
+                        </div>
+                      )}
+                      
+                      {video.status === 'processing' && (
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                          <Loader2 className="w-6 h-6 animate-spin text-white" />
+                        </div>
+                      )}
+
+                      {video.url && video.status === 'completed' && (
+                        <div className="absolute inset-0 bg-black/0 hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                          <Button
+                            size="sm"
+                            onClick={() => window.open(video.url, '_blank')}
+                            className="rounded-full"
+                          >
+                            <Play className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      )}
+                      
+                      <div className="absolute top-2 right-2">
+                        <Badge variant={video.status === 'completed' ? 'default' : 'secondary'} className="text-xs">
+                          {video.status}
+                        </Badge>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-2">
+                      <p className="text-sm font-medium line-clamp-2">{video.prompt}</p>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
+                        <span>{video.resolution} • {video.duration}s</span>
+                        <span>{new Date(video.createdAt).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              {unassignedVideos.items.length > 8 && (
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground">
+                    {unassignedVideos.items.length - 8} more videos...
+                  </p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <VideoIconSm className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium mb-2">No Unassigned Videos</h3>
+              <p className="text-muted-foreground text-sm">
+                All your videos are organized into projects, or you haven't created any videos yet.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const selectedProjectData = projects.find(p => p.id === selectedProject);
+
+  return (
+    <Card className="h-full">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <FolderOpen className="w-5 h-5 text-blue-500" />
+              {selectedProjectData?.name || 'Project'}
+            </CardTitle>
+            {selectedProjectData?.description && (
+              <p className="text-sm text-muted-foreground mt-1">
+                {selectedProjectData.description}
+              </p>
+            )}
+          </div>
+        </div>
+        
+        {projectDetails && (
+          <div className="flex gap-4 text-sm">
+            <div className="flex items-center gap-1">
+              <VideoIconSm className="w-4 h-4" />
+              <span>{projectDetails.totalVideos} videos</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <CheckCircle className="w-4 h-4 text-green-500" />
+              <span>{projectDetails.completedVideos} completed</span>
+            </div>
+            {projectDetails.processingVideos > 0 && (
+              <div className="flex items-center gap-1">
+                <Loader2 className="w-4 h-4 text-yellow-500" />
+                <span>{projectDetails.processingVideos} processing</span>
+              </div>
+            )}
+            <div className="flex items-center gap-1">
+              <Clock className="w-4 h-4" />
+              <span>{projectDetails.totalDuration}s total</span>
+            </div>
+          </div>
+        )}
+      </CardHeader>
+      
+      <CardContent>
+        {projectLoading ? (
+          <div className="flex items-center justify-center p-8">
+            <Loader2 className="w-6 h-6 animate-spin" />
+            <span className="ml-2">Loading project...</span>
+          </div>
+        ) : projectDetails?.videos?.length ? (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {projectDetails.videos.slice(0, 8).map((video) => (
+                <div key={video.id} className="group relative">
+                  <div className="aspect-video bg-muted rounded-lg overflow-hidden relative">
+                    {video.thumbUrl ? (
+                      <img
+                        src={video.thumbUrl}
+                        alt={video.prompt}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <VideoIconSm className="w-8 h-8 text-muted-foreground" />
+                      </div>
+                    )}
+                    
+                    {video.status === 'processing' && (
+                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                        <Loader2 className="w-6 h-6 animate-spin text-white" />
+                      </div>
+                    )}
+
+                    {video.url && video.status === 'completed' && (
+                      <div className="absolute inset-0 bg-black/0 hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                        <Button
+                          size="sm"
+                          onClick={() => window.open(video.url, '_blank')}
+                          className="rounded-full"
+                        >
+                          <Play className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    )}
+                    
+                    <div className="absolute top-2 right-2">
+                      <Badge variant={video.status === 'completed' ? 'default' : 'secondary'} className="text-xs">
+                        {video.status}
+                      </Badge>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-2">
+                    <p className="text-sm font-medium line-clamp-2">{video.prompt}</p>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
+                      <span>{video.resolution} • {video.duration}s</span>
+                      <span>{new Date(video.createdAt).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {projectDetails.videos.length > 8 && (
+              <div className="text-center">
+                <p className="text-sm text-muted-foreground">
+                  {projectDetails.videos.length - 8} more videos in this project...
+                </p>
+                <Button variant="outline" size="sm" className="mt-2">
+                  View All Project Videos
+                </Button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <FolderOpen className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium mb-2">No Videos in Project</h3>
+            <p className="text-muted-foreground text-sm mb-4">
+              This project doesn't have any videos yet. Generate your first video above to get started.
+            </p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 // Video Gallery Component
 function VideoGallery() {
   const { toast } = useToast();
@@ -250,8 +499,7 @@ console.log('[DIAGNOSTIC] VIDEO_MODELS loaded:', {
       label: model.label,
       maxDuration: model.maxDuration,
       maxDurationType: typeof model.maxDuration,
-      resolutions: model.resolutions,
-      aspectRatios: model.aspectRatios
+      resolutions: model.resolutions
     };
     return acc;
   }, {} as any)
@@ -851,141 +1099,14 @@ export default function VideoPage() {
               </form>
             </div>
 
-            {/* Right Column - Info & Tips */}
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Model Information</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div>
-                      <h4 className="font-medium">{VIDEO_MODELS['hailuo-02'].label}</h4>
-                      <p className="text-sm text-muted-foreground">
-                        {VIDEO_MODELS['hailuo-02'].description}
-                      </p>
-                    </div>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span>Max Duration:</span>
-                        <Badge variant="secondary">{VIDEO_MODELS['hailuo-02'].maxDuration} seconds</Badge>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Resolutions:</span>
-                        <div className="flex gap-1">
-                          {VIDEO_MODELS['hailuo-02'].resolutions.map((res: string) => (
-                            <Badge key={res} variant="outline" className="text-xs">
-                              {res}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Best Practices</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 text-sm">
-                  <div>
-                    <h4 className="font-medium mb-1">Prompt Tips</h4>
-                    <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                      <li>Be specific about camera movements</li>
-                      <li>Describe lighting and mood clearly</li>
-                      <li>Include motion and action details</li>
-                      <li>Use the AI Enhance feature for better results</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="font-medium mb-1">Technical Notes</h4>
-                    <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                      <li>Higher resolutions take longer to generate</li>
-                      <li>10 seconds duration only available for 768p</li>
-                      <li>Upload first frame image to control aspect ratio</li>
-                    </ul>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Recent Videos Section */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Clock className="w-5 h-5" />
-                    Recent Videos
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {recentVideosLoading ? (
-                    <div className="flex items-center justify-center p-4">
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      <span className="ml-2">Loading recent videos...</span>
-                    </div>
-                  ) : recentVideos?.items?.length > 0 ? (
-                    <div className="space-y-3">
-                      {recentVideos.items.slice(0, 3).map((video) => (
-                        <div key={video.id} className="flex gap-3 p-2 rounded-lg border bg-muted/20 hover:bg-muted/40 transition-colors">
-                          {video.thumbUrl ? (
-                            <img
-                              src={video.thumbUrl}
-                              alt={video.prompt}
-                              className="w-16 h-12 rounded object-cover bg-muted"
-                            />
-                          ) : (
-                            <div className="w-16 h-12 rounded bg-muted flex items-center justify-center">
-                              <VideoIconSm className="w-6 h-6 text-muted-foreground" />
-                            </div>
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium line-clamp-1">{video.prompt}</p>
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                              <span>{video.resolution}</span>
-                              <span>•</span>
-                              <span>{video.duration}s</span>
-                              {video.status === 'completed' && (
-                                <>
-                                  <span>•</span>
-                                  <Badge variant="outline" className="text-xs px-1.5 py-0">
-                                    Ready
-                                  </Badge>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                          {video.url && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              asChild
-                            >
-                              <a href={video.url} target="_blank" rel="noopener noreferrer">
-                                <ExternalLink className="w-3 h-3" />
-                              </a>
-                            </Button>
-                          )}
-                        </div>
-                      ))}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setActiveTab('gallery')}
-                        className="w-full mt-2"
-                      >
-                        View All Videos
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="text-center py-6">
-                      <VideoIconSm className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
-                      <p className="text-sm text-muted-foreground">No videos yet</p>
-                      <p className="text-xs text-muted-foreground">Generate your first video above!</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+            {/* Right Column - Project Video Preview (3/5 of the width) */}
+            <div className="lg:col-span-3">
+              <ProjectVideoPreview 
+                selectedProject={selectedProject} 
+                projects={projects || []}
+                onVideoPlay={(videoId) => console.log('Playing video:', videoId)}
+                onVideoDelete={(videoId) => console.log('Deleting video:', videoId)}
+              />
             </div>
           </div>
         </TabsContent>

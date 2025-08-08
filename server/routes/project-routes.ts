@@ -77,18 +77,41 @@ router.get('/', async (req, res) => {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    console.log('[DIAGNOSTIC] /api/projects GET - Fetching projects for userId:', userId);
-    const projects = await storage.getAllProjects(userId);
-    console.log('[DIAGNOSTIC] /api/projects GET - Found projects:', projects.length);
-    res.json(projects);
+    const { withStats } = req.query;
+    
+    if (withStats === 'true') {
+      const projectsWithStats = await storage.getProjectsWithStats(userId);
+      res.json(projectsWithStats);
+    } else {
+      const projects = await storage.getAllProjects(userId);
+      res.json(projects);
+    }
 
   } catch (error: any) {
-    console.error('[DIAGNOSTIC] /api/projects GET - Error:', {
-      message: error.message,
-      stack: error.stack,
-      name: error.name
-    });
-    res.status(500).json({ error: 'Internal server error', details: error.message });
+    console.error('List projects error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get project with videos and detailed statistics
+router.get('/:id/details', async (req, res) => {
+  try {
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const projectDetails = await storage.getProjectWithVideos(req.params.id, userId);
+    if (!projectDetails) {
+      return res.status(404).json({ error: 'Project not found or access denied' });
+    }
+
+    res.json(projectDetails);
+
+  } catch (error: any) {
+    console.error('Get project details error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

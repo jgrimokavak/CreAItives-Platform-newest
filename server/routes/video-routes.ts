@@ -293,6 +293,14 @@ router.patch('/:id/move', async (req, res) => {
       return res.status(404).json({ error: 'Video not found' });
     }
 
+    // Update video counts for both old and new projects
+    if (video.projectId) {
+      await storage.updateProjectVideoCount(video.projectId);
+    }
+    if (projectId) {
+      await storage.updateProjectVideoCount(projectId);
+    }
+
     res.json({
       success: true,
       video: updatedVideo,
