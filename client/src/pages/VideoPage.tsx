@@ -1800,57 +1800,133 @@ export default function VideoPage() {
                 </div>
               </div>
               
-              {/* Result Pills/Tabs */}
-              <div className="flex gap-2 flex-wrap">
+              {/* Recent Results Grid */}
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {results.slice(0, 5).map((result, index) => {
                   const isActive = activeResultVideoId === result.videoId;
                   const isCompleted = result.status === 'completed' && result.data;
+                  
+                  // Calculate elapsed time
+                  const getElapsedTime = () => {
+                    const startTime = new Date(result.createdAt);
+                    const now = new Date();
+                    const diffMs = now.getTime() - startTime.getTime();
+                    const diffSeconds = Math.floor(diffMs / 1000);
+                    const diffMinutes = Math.floor(diffSeconds / 60);
+                    const diffHours = Math.floor(diffMinutes / 60);
+                    
+                    if (diffHours > 0) return `${diffHours}h ${diffMinutes % 60}m ago`;
+                    if (diffMinutes > 0) return `${diffMinutes}m ${diffSeconds % 60}s ago`;
+                    return `${diffSeconds}s ago`;
+                  };
+                  
                   return (
-                    <Button
+                    <Card 
                       key={result.videoId}
-                      variant={isActive ? "default" : "outline"}
-                      size="sm"
-                      className="h-auto p-2 flex flex-col items-start min-w-0"
-                      onClick={() => setActiveResultVideoId(result.videoId)}
-                      disabled={!isCompleted}
+                      className={`cursor-pointer transition-all hover:shadow-md ${
+                        isActive ? 'ring-2 ring-primary shadow-lg' : ''
+                      } ${!isCompleted ? 'opacity-60' : ''}`}
+                      onClick={() => isCompleted && setActiveResultVideoId(result.videoId)}
                     >
-                      <div className="flex items-center gap-1 w-full">
-                        <Badge 
-                          variant="secondary" 
-                          className={`text-xs ${
-                            result.status === 'completed' ? 'bg-green-100 text-green-800' :
-                            result.status === 'processing' ? 'bg-blue-100 text-blue-800' :
-                            result.status === 'failed' ? 'bg-red-100 text-red-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}
-                        >
-                          {result.status}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">#{index + 1}</span>
-                      </div>
-                      <div className="text-xs text-left truncate max-w-24">
-                        {isCompleted && result.data ? result.data.prompt : result.promptAtSubmit}
-                      </div>
-                    </Button>
+                      <CardContent className="p-4 space-y-3">
+                        {/* Status Header */}
+                        <div className="flex items-center justify-between">
+                          <Badge 
+                            variant={
+                              result.status === 'completed' ? 'default' :
+                              result.status === 'processing' ? 'secondary' :
+                              result.status === 'failed' ? 'destructive' :
+                              'outline'
+                            }
+                            className="text-xs font-medium"
+                          >
+                            {result.status === 'processing' && <Loader2 className="w-3 h-3 animate-spin mr-1" />}
+                            {result.status === 'failed' && <AlertCircle className="w-3 h-3 mr-1" />}
+                            {result.status === 'pending' && <Clock className="w-3 h-3 mr-1" />}
+                            {result.status === 'completed' && <CheckCircle className="w-3 h-3 mr-1" />}
+                            {result.status === 'processing' ? 'Generating' :
+                             result.status === 'completed' ? 'Ready' :
+                             result.status === 'failed' ? 'Failed' : 'Queued'}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">#{index + 1}</span>
+                        </div>
+                        
+                        {/* Prompt Preview */}
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium text-foreground line-clamp-2 leading-relaxed">
+                            {isCompleted && result.data ? result.data.prompt : result.promptAtSubmit}
+                          </p>
+                        </div>
+                        
+                        {/* Elapsed Time & Model Info */}
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {getElapsedTime()}
+                          </span>
+                          {result.modelAtSubmit && (
+                            <span className="bg-muted px-2 py-1 rounded text-xs">
+                              {result.modelAtSubmit}
+                            </span>
+                          )}
+                        </div>
+                        
+                        {/* Progress indicator for processing */}
+                        {result.status === 'processing' && (
+                          <div className="w-full bg-muted rounded-full h-1.5">
+                            <div className="bg-primary h-1.5 rounded-full animate-pulse" style={{width: '60%'}}></div>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
                   );
                 })}
               </div>
               
-              {/* Active Result Display */}
+              {/* Active Result Display - Main Video Player */}
               {(() => {
                 const activeResult = results.find(r => r.videoId === activeResultVideoId);
                 if (!activeResult) return null;
                 
+                // Calculate elapsed time for active result
+                const getActiveElapsedTime = () => {
+                  const startTime = new Date(activeResult.createdAt);
+                  const now = new Date();
+                  const diffMs = now.getTime() - startTime.getTime();
+                  const diffSeconds = Math.floor(diffMs / 1000);
+                  const diffMinutes = Math.floor(diffSeconds / 60);
+                  const diffHours = Math.floor(diffMinutes / 60);
+                  
+                  if (diffHours > 0) return `${diffHours}h ${diffMinutes % 60}m ago`;
+                  if (diffMinutes > 0) return `${diffMinutes}m ${diffSeconds % 60}s ago`;
+                  return `${diffSeconds}s ago`;
+                };
+                
                 if (activeResult.status === 'completed' && activeResult.data) {
                   return (
-                    <Card>
-                      <CardContent className="p-4">
-                        <div className="max-w-md">
+                    <Card className="shadow-lg">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="w-5 h-5 text-green-500" />
+                            <CardTitle className="text-lg">Video Ready</CardTitle>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Clock className="w-4 h-4" />
+                            {getActiveElapsedTime()}
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <div className="max-w-2xl">
                           <VideoCard
                             key={activeResult.data.id} // IMPORTANT: forces remount when ID changes
                             video={{
                               ...activeResult.data,
-                              status: activeResult.data.status as 'pending' | 'processing' | 'completed' | 'failed'
+                              status: activeResult.data.status as 'pending' | 'processing' | 'completed' | 'failed',
+                              createdAt: activeResult.data.createdAt instanceof Date 
+                                ? activeResult.data.createdAt.toISOString() 
+                                : activeResult.data.createdAt
                             }}
                             className="w-full"
                             autoPlay={true}
@@ -1861,22 +1937,63 @@ export default function VideoPage() {
                   );
                 } else {
                   return (
-                    <Card>
-                      <CardContent className="p-4">
-                        <div className="flex items-center gap-3">
-                          {activeResult.status === 'processing' && <Loader2 className="w-5 h-5 animate-spin" />}
-                          {activeResult.status === 'failed' && <AlertCircle className="w-5 h-5 text-red-500" />}
-                          {activeResult.status === 'pending' && <Clock className="w-5 h-5 text-yellow-500" />}
-                          <div>
-                            <p className="font-medium">
-                              {activeResult.status === 'processing' && 'Generating video...'}
-                              {activeResult.status === 'failed' && 'Generation failed'}
-                              {activeResult.status === 'pending' && 'Queued for generation'}
+                    <Card className="shadow-lg">
+                      <CardContent className="p-6">
+                        <div className="flex flex-col items-center justify-center space-y-4 py-8">
+                          {/* Status Icon & Animation */}
+                          <div className="relative">
+                            {activeResult.status === 'processing' && (
+                              <>
+                                <Loader2 className="w-12 h-12 animate-spin text-blue-500" />
+                                <div className="absolute inset-0 rounded-full border-2 border-blue-200 animate-ping"></div>
+                              </>
+                            )}
+                            {activeResult.status === 'failed' && (
+                              <AlertCircle className="w-12 h-12 text-red-500" />
+                            )}
+                            {activeResult.status === 'pending' && (
+                              <Clock className="w-12 h-12 text-yellow-500" />
+                            )}
+                          </div>
+                          
+                          {/* Status Message */}
+                          <div className="text-center space-y-2">
+                            <p className="text-xl font-semibold">
+                              {activeResult.status === 'processing' && 'Generating Your Video'}
+                              {activeResult.status === 'failed' && 'Generation Failed'}
+                              {activeResult.status === 'pending' && 'Queued for Generation'}
                             </p>
-                            <p className="text-sm text-muted-foreground truncate max-w-md">
+                            <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
                               {activeResult.promptAtSubmit}
                             </p>
+                            
+                            {/* Elapsed Time */}
+                            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mt-3">
+                              <Clock className="w-4 h-4" />
+                              <span>Started {getActiveElapsedTime()}</span>
+                            </div>
+                            
+                            {/* Model Info */}
+                            {activeResult.modelAtSubmit && (
+                              <div className="mt-3">
+                                <span className="bg-muted px-3 py-1 rounded-full text-xs">
+                                  {activeResult.modelAtSubmit}
+                                </span>
+                              </div>
+                            )}
                           </div>
+                          
+                          {/* Progress Bar for Processing */}
+                          {activeResult.status === 'processing' && (
+                            <div className="w-full max-w-md">
+                              <div className="w-full bg-muted rounded-full h-2">
+                                <div className="bg-blue-500 h-2 rounded-full animate-pulse" style={{width: '70%'}}></div>
+                              </div>
+                              <p className="text-xs text-muted-foreground text-center mt-2">
+                                This usually takes 30-60 seconds
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
