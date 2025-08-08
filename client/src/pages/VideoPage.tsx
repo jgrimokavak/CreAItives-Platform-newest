@@ -42,6 +42,7 @@ import { apiRequest, queryClient } from '@/lib/queryClient';
 import SimpleGalleryPage from './SimpleGalleryPage';
 import ReferenceImageUpload from '@/components/ReferenceImageUpload';
 import type { Video } from '@shared/schema';
+import VideoCard from '@/components/VideoCard';
 
 // ProjectVideoPreview Component for the right column
 interface ProjectVideoPreviewProps {
@@ -92,53 +93,15 @@ function ProjectVideoPreview({ selectedProject, projects, onVideoPlay, onVideoDe
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {unassignedVideos.items.slice(0, 8).map((video) => (
-                  <div key={video.id} className="group relative">
-                    <div className="aspect-video bg-muted rounded-lg overflow-hidden relative">
-                      {video.thumbUrl ? (
-                        <img
-                          src={video.thumbUrl}
-                          alt={video.prompt}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <VideoIconSm className="w-8 h-8 text-muted-foreground" />
-                        </div>
-                      )}
-                      
-                      {video.status === 'processing' && (
-                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                          <Loader2 className="w-6 h-6 animate-spin text-white" />
-                        </div>
-                      )}
-
-                      {video.url && video.status === 'completed' && (
-                        <div className="absolute inset-0 bg-black/0 hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                          <Button
-                            size="sm"
-                            onClick={() => window.open(video.url, '_blank')}
-                            className="rounded-full"
-                          >
-                            <Play className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      )}
-                      
-                      <div className="absolute top-2 right-2">
-                        <Badge variant={video.status === 'completed' ? 'default' : 'secondary'} className="text-xs">
-                          {video.status}
-                        </Badge>
-                      </div>
-                    </div>
-                    
-                    <div className="mt-2">
-                      <p className="text-sm font-medium line-clamp-2">{video.prompt}</p>
-                      <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
-                        <span>{video.resolution} • {video.duration}s</span>
-                        <span>{new Date(video.createdAt).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-                  </div>
+                  <VideoCard 
+                    key={video.id}
+                    video={{
+                      ...video,
+                      model: video.model || 'hailuo-02',
+                      status: video.status as 'pending' | 'processing' | 'completed' | 'failed'
+                    }}
+                    className="w-full"
+                  />
                 ))}
               </div>
               
@@ -216,54 +179,16 @@ function ProjectVideoPreview({ selectedProject, projects, onVideoPlay, onVideoDe
         ) : projectDetails?.videos?.length ? (
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {projectDetails.videos.slice(0, 8).map((video) => (
-                <div key={video.id} className="group relative">
-                  <div className="aspect-video bg-muted rounded-lg overflow-hidden relative">
-                    {video.thumbUrl ? (
-                      <img
-                        src={video.thumbUrl}
-                        alt={video.prompt}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <VideoIconSm className="w-8 h-8 text-muted-foreground" />
-                      </div>
-                    )}
-                    
-                    {video.status === 'processing' && (
-                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                        <Loader2 className="w-6 h-6 animate-spin text-white" />
-                      </div>
-                    )}
-
-                    {video.url && video.status === 'completed' && (
-                      <div className="absolute inset-0 bg-black/0 hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                        <Button
-                          size="sm"
-                          onClick={() => window.open(video.url, '_blank')}
-                          className="rounded-full"
-                        >
-                          <Play className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    )}
-                    
-                    <div className="absolute top-2 right-2">
-                      <Badge variant={video.status === 'completed' ? 'default' : 'secondary'} className="text-xs">
-                        {video.status}
-                      </Badge>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-2">
-                    <p className="text-sm font-medium line-clamp-2">{video.prompt}</p>
-                    <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
-                      <span>{video.resolution} • {video.duration}s</span>
-                      <span>{new Date(video.createdAt).toLocaleDateString()}</span>
-                    </div>
-                  </div>
-                </div>
+              {projectDetails.videos.slice(0, 8).map((video: Video) => (
+                <VideoCard 
+                  key={video.id}
+                  video={{
+                    ...video,
+                    model: video.model || 'hailuo-02',
+                    status: video.status as 'pending' | 'processing' | 'completed' | 'failed'
+                  }}
+                  className="w-full"
+                />
               ))}
             </div>
             
@@ -330,128 +255,15 @@ function VideoGallery() {
       <h3 className="text-lg font-medium">Your Videos ({videos.length})</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {videos.map((video) => (
-          <Card key={video.id} className="overflow-hidden">
-            <div className="aspect-video bg-muted relative group">
-              {video.status === 'completed' && video.url ? (
-                <>
-                  {/* Create thumbnail from video */}
-                  <video 
-                    className="w-full h-full object-cover"
-                    muted
-                    preload="metadata"
-                    onLoadedMetadata={(e) => {
-                      const video = e.target as HTMLVideoElement;
-                      video.currentTime = 1; // Seek to 1 second for thumbnail
-                    }}
-                  >
-                    <source src={video.url} type="video/mp4" />
-                  </video>
-                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => window.open(video.url, '_blank')}
-                      className="flex items-center gap-2"
-                    >
-                      <Play className="w-4 h-4" />
-                      Play
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => {
-                        // Force download by creating a blob and downloading it
-                        fetch(video.url)
-                          .then(response => response.blob())
-                          .then(blob => {
-                            const url = window.URL.createObjectURL(blob);
-                            const link = document.createElement('a');
-                            link.href = url;
-                            link.download = `video-${video.id}.mp4`;
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                            window.URL.revokeObjectURL(url);
-                          })
-                          .catch(error => {
-                            console.error('Download error:', error);
-                            // Fallback: open in new tab
-                            window.open(video.url, '_blank');
-                          });
-                      }}
-                      className="flex items-center gap-2"
-                    >
-                      <Download className="w-4 h-4" />
-                      Download
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={async () => {
-                        if (confirm('Are you sure you want to delete this video?')) {
-                          try {
-                            await apiRequest(`/api/video/${video.id}`, {
-                              method: 'DELETE'
-                            });
-                            queryClient.invalidateQueries({ queryKey: ['/api/video'] });
-                            toast({
-                              title: 'Video Deleted',
-                              description: 'Video has been successfully deleted.',
-                            });
-                          } catch (error) {
-                            toast({
-                              title: 'Delete Failed',
-                              description: 'Failed to delete video. Please try again.',
-                              variant: 'destructive',
-                            });
-                          }
-                        }
-                      }}
-                      className="flex items-center gap-2"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      Delete
-                    </Button>
-                  </div>
-                </>
-              ) : video.status === 'processing' ? (
-                <div className="w-full h-full flex items-center justify-center">
-                  <div className="text-center">
-                    <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" />
-                    <p className="text-sm text-muted-foreground">Processing...</p>
-                  </div>
-                </div>
-              ) : video.status === 'failed' ? (
-                <div className="w-full h-full flex items-center justify-center">
-                  <div className="text-center text-destructive">
-                    <AlertCircle className="w-8 h-8 mx-auto mb-2" />
-                    <p className="text-sm">Failed to generate</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <VideoIcon className="w-12 h-12 text-muted-foreground" />
-                </div>
-              )}
-            </div>
-            <CardContent className="p-4">
-              <p className="text-sm font-medium line-clamp-2 mb-2">{video.prompt}</p>
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>{video.model}</span>
-                <span>{video.resolution} • {video.duration}s</span>
-              </div>
-              <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
-                <span className={`capitalize ${
-                  video.status === 'completed' ? 'text-green-600' :
-                  video.status === 'processing' ? 'text-yellow-600' :
-                  video.status === 'failed' ? 'text-red-600' : ''
-                }`}>
-                  {video.status}
-                </span>
-                <span>{new Date(video.createdAt).toLocaleDateString()}</span>
-              </div>
-            </CardContent>
-          </Card>
+          <VideoCard
+            key={video.id}
+            video={{
+              ...video,
+              model: video.model || 'hailuo-02',
+              status: video.status as 'pending' | 'processing' | 'completed' | 'failed'
+            }}
+            className="w-full"
+          />
         ))}
       </div>
     </div>
