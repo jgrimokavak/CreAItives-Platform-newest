@@ -911,7 +911,7 @@ function VideoGallery() {
 // Video generation form schema
 const videoGenerationSchema = z.object({
   prompt: z.string().min(1, 'Prompt is required').max(2000, 'Prompt must be less than 2000 characters'),
-  model: z.enum(['hailuo-02', 'runway-gen3']),
+  model: z.enum(['hailuo-02', 'test-model-1', 'test-model-2', 'test-model-3', 'test-model-4', 'test-model-5']),
   resolution: z.enum(['512p', '768p', '1080p']),
   duration: z.number().int().min(6).max(10), // 6 or 10 seconds only  
   projectId: z.string().optional(),
@@ -1530,7 +1530,7 @@ export default function VideoPage() {
                       <Label>AI Model</Label>
                       <ModelSelector
                         value={form.watch('model')}
-                        onChange={(modelId) => form.setValue('model', modelId, { shouldDirty: true })}
+                        onChange={(modelId) => form.setValue('model', modelId as any, { shouldDirty: true })}
                         disabled={generateVideoMutation.isPending}
                       />
                     </div>

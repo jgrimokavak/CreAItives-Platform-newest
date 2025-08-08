@@ -23,8 +23,8 @@ export const VIDEO_MODELS: ModelDef[] = [
     badges: ['Cinematic', 'High Quality']
   },
   {
-    id: 'runway-gen3',
-    name: 'Runway Gen-3 Alpha',
+    id: 'test-model-1',
+    name: 'Test Model 1',
     summary: 'Fast video generation with motion control (1–2 min typical).',
     details: [
       'Optimized for quick generation times',
@@ -34,5 +34,57 @@ export const VIDEO_MODELS: ModelDef[] = [
     ],
     recommended: false,
     badges: ['Fast', 'Motion Control']
+  },
+  {
+    id: 'test-model-2',
+    name: 'Test Model 2',
+    summary: 'Balanced quality and speed (2–4 min typical).',
+    details: [
+      'Good balance of quality and generation time',
+      'Supports various aspect ratios',
+      'Reliable motion tracking',
+      'Best for general-purpose content'
+    ],
+    recommended: false,
+    badges: ['Balanced', 'Versatile']
+  },
+  {
+    id: 'test-model-3',
+    name: 'Test Model 3',
+    summary: 'Ultra-high quality generation (5–10 min typical).',
+    details: [
+      'Premium quality output',
+      'Advanced lighting and shadows',
+      'Best for professional content',
+      '4K resolution support'
+    ],
+    recommended: false,
+    badges: ['Premium', '4K Ready']
+  },
+  {
+    id: 'test-model-4',
+    name: 'Test Model 4',
+    summary: 'Experimental features with AI enhancement (3–7 min typical).',
+    details: [
+      'Cutting-edge AI techniques',
+      'Experimental motion effects',
+      'Beta testing phase',
+      'May have occasional artifacts'
+    ],
+    recommended: false,
+    badges: ['Experimental', 'AI Enhanced']
+  },
+  {
+    id: 'test-model-5',
+    name: 'Test Model 5',
+    summary: 'Specialized for character animation (4–6 min typical).',
+    details: [
+      'Optimized for human subjects',
+      'Advanced facial expression tracking',
+      'Natural body movement',
+      'Best for portrait and character work'
+    ],
+    recommended: false,
+    badges: ['Characters', 'Animation']
   }
 ];
