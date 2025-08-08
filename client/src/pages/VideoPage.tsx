@@ -1847,7 +1847,11 @@ export default function VideoPage() {
                       <CardContent className="p-4">
                         <div className="max-w-md">
                           <VideoCard
-                            video={activeResult.data}
+                            key={activeResult.data.id} // IMPORTANT: forces remount when ID changes
+                            video={{
+                              ...activeResult.data,
+                              status: activeResult.data.status as 'pending' | 'processing' | 'completed' | 'failed'
+                            }}
                             className="w-full"
                             autoPlay={true}
                           />

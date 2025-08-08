@@ -87,9 +87,23 @@ export default function VideoCard({
 }: VideoCardProps) {
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const prevUrlRef = useRef<string | undefined>(undefined);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showPromptDialog, setShowPromptDialog] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+
+  // Force video element to reload when source changes to prevent mismatches
+  useEffect(() => {
+    if (!videoRef.current) return;
+    if (prevUrlRef.current !== video.url) {
+      // Stop current playback and reload new source
+      try {
+        videoRef.current.pause();
+      } catch {}
+      videoRef.current.load();
+      prevUrlRef.current = video.url || undefined;
+    }
+  }, [video.url]);
 
   // Auto-play functionality
   useEffect(() => {

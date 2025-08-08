@@ -1,0 +1,54 @@
+# GOAL
+Eliminate prompt/video mismatches in the **Result** panel:
+The video player must always show the correct media for the selected result.
+Keep the Results UI simple: pills (recent results) + one active `VideoCard`.
+# CONTEXT
+Page: `client/src/pages/VideoPage.tsx`
+Card: `client/src/components/VideoCard.tsx`
+Current symptoms: when multiple jobs complete, the Result card’s prompt changes but the video sometimes stays stuck on a previous asset. There’s also an extra “mini tray” UI inside Results that’s redundant.
+# FIXES
+## A) Force the `<video>` element to reload when the source changes
+**File:** `client/src/components/VideoCard.tsx`
+Add an effect that runs when `video.url` (or `video.id`) changes:
+  ```ts
+  const prevUrlRef = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (!videoRef.current) return;
+    if (prevUrlRef.current !== video.url) {
+      // Stop current playback and reload new source
+      try {
+        videoRef.current.pause();
+      } catch {}
+      videoRef.current.load();
+      prevUrlRef.current = video.url;
+    }
+  }, [video.url]);
+	•	Keep current poster logic as-is (thumbUrl || firstFrameImage).
+B) Always key VideoCard by videoId where it’s rendered
+File: client/src/pages/VideoPage.tsx
+	•	In the Result panel, when rendering the active result, add a key prop:
+<VideoCard
+  key={activeResult.data.id} // IMPORTANT: forces remount when ID changes
+  video={activeResult.data}
+  className="w-full"
+  autoPlay={true}
+/>
+	•	Do the same anywhere else you render VideoCard in a list if not already keyed by video.id. C) Simplify the Results panel to avoid double state
+File: client/src/pages/VideoPage.tsx
+	•	Remove any “secondary job tray” or duplicate list inside Results that mirrors the real Job Tray.
+	•	Keep only:
+	•	The pills row for the last N results (already implemented).
+	•	The single active VideoCard below it.
+	•	Ensure pills derive status from results[] (ID-driven) and do not create their own polling.
+D) Ensure Result entries are ID-driven and fetch data by ID
+	•	When a job completes, update only that result entry (you already do this).
+	•	When switching pills, the active card must use the server-fetched Video object for that videoId (no mixing in local prompt/url from a different entry).
+ACCEPTANCE
+	•	Generate 2–3 videos quickly. As they finish in any order:
+	•	Selecting each result pill shows the correct video (not a previous one).
+	•	No mismatched prompts vs. media.
+	•	The Results area contains only the pill list + one active card (no extra tray).
+	•	Job Tray “Play” focuses the correct result and plays it.
+DO NOTS
+	•	Do not change APIs, schema, or add dependencies.
+	•	Do not modify Gallery or the main Job Tray.
