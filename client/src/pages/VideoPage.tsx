@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -53,7 +53,6 @@ import SimpleGalleryPage from './SimpleGalleryPage';
 import ReferenceImageUpload from '@/components/ReferenceImageUpload';
 import type { Video } from '@shared/schema';
 import VideoCard from '@/components/VideoCard';
-import JobTray, { type JobTrayJob } from '@/components/JobTray';
 
 
 
@@ -975,18 +974,6 @@ export default function VideoPage() {
   const [firstFrameImagePreview, setFirstFrameImagePreview] = useState<string | null>(null);
   const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false);
   const [recentlyGeneratedVideos, setRecentlyGeneratedVideos] = useState<string[]>([]);
-  
-  // Polling cleanup
-  const pollTimer = useRef<NodeJS.Timeout | null>(null);
-  
-  // Cleanup polling on unmount
-  useEffect(() => {
-    return () => {
-      if (pollTimer.current) {
-        clearTimeout(pollTimer.current);
-      }
-    };
-  }, []);
 
   // Form setup
   const form = useForm<VideoGenerationForm>({
@@ -1611,23 +1598,6 @@ export default function VideoPage() {
                   </div>
                 </CardContent>
               </Card>
-            </div>
-          )}
-          
-          {/* Status display when generating */}
-          {generatingVideoId && (
-            <div className="mt-6 p-4 border rounded-lg bg-blue-50 dark:bg-blue-950">
-              <div className="flex items-center gap-3">
-                <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
-                <div>
-                  <p className="font-medium text-blue-900 dark:text-blue-100">
-                    Video Generation in Progress
-                  </p>
-                  <p className="text-sm text-blue-700 dark:text-blue-200">
-                    {generationProgress}
-                  </p>
-                </div>
-              </div>
             </div>
           )}
         </TabsContent>
