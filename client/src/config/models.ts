@@ -11,39 +11,40 @@ export type ModelDef = {
 export const VIDEO_MODELS: ModelDef[] = [
   {
     id: 'hailuo-02',
-    name: 'Minimax HaiLuo-02',
-    summary: 'High-quality video generation (3–6 min typical).',
+    name: 'Minimax HaiLuo',
+    summary: 'High-quality video synthesis with advanced physics simulation.',
     details: [
-      'Best for cinematic shots and natural lighting',
-      'Good motion consistency for 5–8s clips',
-      'Typical ranges: 512p–1080p',
-      'Supports reference image input'
+      'Native 1080p generation capability',
+      'Advanced physics modeling for realistic motion',
+      'Supports both text-to-video and image-to-video',
+      'Handles complex scenarios like gymnastics',
+      '6-10 second duration support'
     ],
-    recommended: true,
-    badges: ['Cinematic', 'High Quality']
+    recommended: false,
+    badges: ['High Quality', 'Physics']
   },
   {
     id: 'test-model-1',
     name: 'Test Model 1',
-    summary: 'Fast video generation with motion control (1–2 min typical).',
+    summary: 'Fast generation optimized for quick turnaround.',
     details: [
-      'Optimized for quick generation times',
-      'Advanced motion and camera controls',
-      'Best for dynamic scenes and action',
-      'Supports 720p–1080p resolutions'
+      'Optimized for speed over quality',
+      'Best for rapid prototyping',
+      'Good for simple motion sequences',
+      '720p output resolution'
     ],
     recommended: false,
-    badges: ['Fast', 'Motion Control']
+    badges: ['Fast', 'Prototyping']
   },
   {
     id: 'test-model-2',
     name: 'Test Model 2',
-    summary: 'Balanced quality and speed (2–4 min typical).',
+    summary: 'Balanced performance for general-purpose content.',
     details: [
       'Good balance of quality and generation time',
       'Supports various aspect ratios',
-      'Reliable motion tracking',
-      'Best for general-purpose content'
+      'Reliable for everyday video creation',
+      'Suitable for social media content'
     ],
     recommended: false,
     badges: ['Balanced', 'Versatile']
@@ -51,40 +52,40 @@ export const VIDEO_MODELS: ModelDef[] = [
   {
     id: 'test-model-3',
     name: 'Test Model 3',
-    summary: 'Ultra-high quality generation (5–10 min typical).',
+    summary: 'Premium quality with advanced lighting effects.',
     details: [
-      'Premium quality output',
-      'Advanced lighting and shadows',
-      'Best for professional content',
-      '4K resolution support'
+      'Enhanced lighting and shadow rendering',
+      'Best for professional content creation',
+      'Advanced scene composition',
+      'Higher computational requirements'
     ],
     recommended: false,
-    badges: ['Premium', '4K Ready']
+    badges: ['Premium', 'Professional']
   },
   {
     id: 'test-model-4',
     name: 'Test Model 4',
-    summary: 'Experimental features with AI enhancement (3–7 min typical).',
+    summary: 'Experimental model with cutting-edge AI techniques.',
     details: [
-      'Cutting-edge AI techniques',
-      'Experimental motion effects',
-      'Beta testing phase',
-      'May have occasional artifacts'
+      'Latest AI research implementations',
+      'Experimental motion enhancement',
+      'Beta testing phase - results may vary',
+      'Feedback helps improve the model'
     ],
     recommended: false,
-    badges: ['Experimental', 'AI Enhanced']
+    badges: ['Experimental', 'Beta']
   },
   {
     id: 'test-model-5',
     name: 'Test Model 5',
-    summary: 'Specialized for character animation (4–6 min typical).',
+    summary: 'Specialized for character and portrait videos.',
     details: [
       'Optimized for human subjects',
-      'Advanced facial expression tracking',
-      'Natural body movement',
-      'Best for portrait and character work'
+      'Enhanced facial expression tracking',
+      'Natural body movement simulation',
+      'Great for character-focused content'
     ],
     recommended: false,
-    badges: ['Characters', 'Animation']
+    badges: ['Characters', 'Portraits']
   }
 ];

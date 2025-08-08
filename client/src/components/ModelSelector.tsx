@@ -23,15 +23,11 @@ const getProviderName = (modelId: string): string => {
   return 'Unknown';
 };
 
-// Get model version label
+// Get model version label (only show if actually relevant)
 const getVersionLabel = (modelId: string): string => {
+  // Only show versions that are actually meaningful
   switch (modelId) {
-    case 'hailuo-02': return 'v2';
-    case 'test-model-1': return 'v1';
-    case 'test-model-2': return 'v2';
-    case 'test-model-3': return 'v3';
-    case 'test-model-4': return 'v4';
-    case 'test-model-5': return 'v5';
+    case 'hailuo-02': return '02'; // This is part of the actual model name
     default: return '';
   }
 };
@@ -96,7 +92,7 @@ export function ModelSelector({ value, onChange, disabled }: ModelSelectorProps)
             <div className="flex items-center gap-3 min-w-0 flex-1">
               {/* Model Icon */}
               <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-medium", colors.primary)}>
-                {selectedModel.recommended ? <Crown className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
+                <Sparkles className="w-4 h-4" />
               </div>
               
               {/* Model Info */}
@@ -110,11 +106,7 @@ export function ModelSelector({ value, onChange, disabled }: ModelSelectorProps)
                       {version}
                     </span>
                   )}
-                  {selectedModel.recommended && (
-                    <Badge variant="secondary" className="text-xs px-1.5 py-0.5 bg-amber-100 text-amber-700 border-amber-200">
-                      ★ Recommended
-                    </Badge>
-                  )}
+
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <span>{provider}</span>
@@ -133,7 +125,7 @@ export function ModelSelector({ value, onChange, disabled }: ModelSelectorProps)
           </button>
         </DropdownMenuTrigger>
 
-        <DropdownMenuContent className="w-full min-w-[400px] p-1" align="start">
+        <DropdownMenuContent className="w-full min-w-[480px] max-w-[600px] p-2" align="start">
           {VIDEO_MODELS.map((model) => {
             const isSelected = model.id === value;
             const modelColors = getModelColors(model.id);
@@ -149,14 +141,14 @@ export function ModelSelector({ value, onChange, disabled }: ModelSelectorProps)
                   setOpen(false);
                 }}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-3 cursor-pointer rounded-lg transition-colors",
+                  "flex items-start gap-3 px-3 py-4 cursor-pointer rounded-lg transition-colors min-h-[80px]",
                   "hover:bg-muted/70 focus:bg-muted/70",
                   isSelected && "bg-primary/10 hover:bg-primary/15 focus:bg-primary/15"
                 )}
               >
                 {/* Model Icon */}
                 <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-medium", modelColors.primary)}>
-                  {model.recommended ? <Crown className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
+                  <Sparkles className="w-4 h-4" />
                 </div>
 
                 {/* Model Details */}
@@ -170,11 +162,7 @@ export function ModelSelector({ value, onChange, disabled }: ModelSelectorProps)
                         {modelVersion}
                       </span>
                     )}
-                    {model.recommended && (
-                      <Badge variant="secondary" className="text-xs px-1.5 py-0.5 bg-amber-100 text-amber-700 border-amber-200">
-                        ★ Recommended
-                      </Badge>
-                    )}
+
                   </div>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
                     <span>{modelProvider}</span>
@@ -185,9 +173,19 @@ export function ModelSelector({ value, onChange, disabled }: ModelSelectorProps)
                       </>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground line-clamp-2">
+                  <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
                     {model.summary}
                   </p>
+                  {/* Key features as small badges */}
+                  {model.details && model.details.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {model.details.slice(0, 2).map((detail, idx) => (
+                        <span key={idx} className="text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded">
+                          {detail.length > 25 ? detail.substring(0, 25) + '...' : detail}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Selection Check */}
