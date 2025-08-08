@@ -12,18 +12,38 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+  DialogFooter
+} from '@/components/ui/dialog';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { 
   MoreHorizontal, 
-  Play, 
   Download, 
   Trash2, 
   MoveIcon, 
   Loader2, 
   VideoIcon as VideoIconSm,
-  AlertCircle 
+  AlertCircle,
+  Eye,
+  Copy,
+  Image as ImageIcon,
+  ExternalLink
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -32,6 +52,7 @@ export interface VideoCardProps {
     id: string;
     url?: string | null;
     thumbUrl?: string | null;
+    firstFrameImage?: string | null; // base64 encoded first frame image
     status: 'pending' | 'processing' | 'completed' | 'failed';
     prompt: string;
     model: string;
@@ -43,6 +64,7 @@ export interface VideoCardProps {
   draggable?: boolean;
   onDelete?: (id: string) => void;
   onMove?: (id: string, projectId: string | null) => void;
+  onUseReferenceImage?: (src: string) => void;
   className?: string;
 }
 
@@ -57,11 +79,14 @@ export default function VideoCard({
   draggable = false, 
   onDelete, 
   onMove, 
+  onUseReferenceImage,
   className 
 }: VideoCardProps) {
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [showPromptDialog, setShowPromptDialog] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // Fetch projects for move menu
   const { data: projects } = useQuery<Project[]>({
@@ -149,6 +174,7 @@ export default function VideoCard({
   const handleDownload = async () => {
     if (!video.url) return;
     
+    setIsDownloading(true);
     try {
       const response = await fetch(video.url);
       const blob = await response.blob();
@@ -168,6 +194,8 @@ export default function VideoCard({
         description: 'An error occurred while downloading',
         variant: 'destructive'
       });
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -179,6 +207,62 @@ export default function VideoCard({
 
   const handleMove = (projectId: string | null) => {
     moveMutation.mutate({ videoId: video.id, projectId });
+  };
+
+  const copyToClipboard = async (text: string, successMessage: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({ title: successMessage });
+    } catch (error) {
+      toast({
+        title: 'Failed to copy to clipboard',
+        description: 'Please try again',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleCopyImage = async (imageSrc: string) => {
+    try {
+      if (imageSrc.startsWith('data:')) {
+        // Base64 image - copy the data URL
+        await copyToClipboard(imageSrc, 'Image copied to clipboard');
+      } else {
+        // URL image - try to fetch and copy as blob, fallback to opening in new tab
+        try {
+          const response = await fetch(imageSrc);
+          const blob = await response.blob();
+          await navigator.clipboard.write([
+            new ClipboardItem({
+              [blob.type]: blob
+            })
+          ]);
+          toast({ title: 'Image copied to clipboard' });
+        } catch {
+          // Fallback: open in new tab
+          window.open(imageSrc, '_blank');
+          toast({ title: 'Image opened in new tab' });
+        }
+      }
+    } catch (error) {
+      toast({
+        title: 'Failed to copy image',
+        description: 'Please try again',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleUseReference = (imageSrc: string) => {
+    if (onUseReferenceImage) {
+      onUseReferenceImage(imageSrc);
+      toast({ title: 'Reference image selected' });
+    }
+  };
+
+  // Get the reference image source (prioritize thumbUrl over firstFrameImage)
+  const getReferenceImageSrc = () => {
+    return video.thumbUrl || video.firstFrameImage || null;
   };
 
   const formatDate = (dateString: string | null) => {
@@ -212,12 +296,19 @@ export default function VideoCard({
       <CardContent className="p-0">
         {/* Video/Thumbnail Section */}
         <div className="aspect-video bg-muted relative overflow-hidden">
+          {/* Placeholder background for better fallback */}
+          {!video.thumbUrl && !video.firstFrameImage && (
+            <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-muted">
+              <VideoIconSm className="w-8 h-8 text-muted-foreground" />
+            </div>
+          )}
+          
           {video.url && video.status === 'completed' ? (
             <video
               ref={videoRef}
               controls
               preload="metadata"
-              poster={video.thumbUrl || undefined}
+              poster={video.thumbUrl || video.firstFrameImage || undefined}
               className="w-full h-full object-cover"
               onPlay={() => setIsPlaying(true)}
               onPause={() => setIsPlaying(false)}
@@ -232,11 +323,13 @@ export default function VideoCard({
               alt={video.prompt}
               className="w-full h-full object-cover"
             />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <VideoIconSm className="w-8 h-8 text-muted-foreground" />
-            </div>
-          )}
+          ) : video.firstFrameImage ? (
+            <img
+              src={video.firstFrameImage}
+              alt={video.prompt}
+              className="w-full h-full object-cover"
+            />
+          ) : null}
 
           {/* Status processing overlay */}
           {video.status === 'processing' && (
@@ -245,8 +338,26 @@ export default function VideoCard({
             </div>
           )}
 
-          {/* Status Badge */}
+          {/* Top-right actions */}
           <div className="absolute top-2 right-2 flex gap-2">
+            {/* Download Button - visible for completed videos */}
+            {video.url && video.status === 'completed' && (
+              <Button
+                size="sm"
+                variant="secondary"
+                className="h-6 w-6 p-0 bg-black/50 hover:bg-black/70 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={handleDownload}
+                disabled={isDownloading}
+              >
+                {isDownloading ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <Download className="w-3 h-3" />
+                )}
+              </Button>
+            )}
+            
+            {/* Status Badge */}
             <Badge 
               variant={getStatusVariant(video.status)} 
               className="text-xs flex items-center gap-1"
@@ -256,26 +367,99 @@ export default function VideoCard({
             </Badge>
           </div>
 
-          {/* Quick Play Button (only for completed videos) */}
-          {video.url && video.status === 'completed' && !isPlaying && (
-            <div className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-              <Button
-                size="sm"
-                onClick={handlePlay}
-                className="rounded-full bg-black/50 hover:bg-black/70 text-white"
-              >
-                <Play className="w-4 h-4" />
-              </Button>
+          {/* Reference Image Chip */}
+          {getReferenceImageSrc() && (
+            <div className="absolute bottom-2 left-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="h-6 px-2 bg-black/50 hover:bg-black/70 text-white opacity-0 group-hover:opacity-100 transition-opacity text-xs"
+                  >
+                    <ImageIcon className="w-3 h-3 mr-1" />
+                    Reference
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64 p-3">
+                  <div className="space-y-3">
+                    <img
+                      src={getReferenceImageSrc()!}
+                      alt="Reference image"
+                      className="w-full h-32 object-cover rounded border"
+                    />
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => handleCopyImage(getReferenceImageSrc()!)}
+                      >
+                        <Copy className="w-3 h-3 mr-1" />
+                        Copy Image
+                      </Button>
+                      {onUseReferenceImage && (
+                        <Button
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => handleUseReference(getReferenceImageSrc()!)}
+                        >
+                          <ExternalLink className="w-3 h-3 mr-1" />
+                          Use as Reference
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
           )}
         </div>
 
         {/* Info Section */}
         <div className="p-3">
-          {/* Prompt */}
-          <p className="text-sm font-medium line-clamp-2 mb-2" title={video.prompt}>
-            {video.prompt}
-          </p>
+          {/* Prompt with View Full */}
+          <div className="mb-2">
+            <p className="text-sm font-medium line-clamp-2 mb-1" title={video.prompt}>
+              {video.prompt}
+            </p>
+            <Dialog open={showPromptDialog} onOpenChange={setShowPromptDialog}>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
+                >
+                  <Eye className="w-3 h-3 mr-1" />
+                  View full
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Prompt</DialogTitle>
+                </DialogHeader>
+                <ScrollArea className="max-h-96">
+                  <Textarea
+                    value={video.prompt}
+                    readOnly
+                    className="min-h-32 resize-none border-0 p-3 focus-visible:ring-0"
+                  />
+                </ScrollArea>
+                <DialogFooter className="gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => copyToClipboard(video.prompt, 'Prompt copied to clipboard')}
+                  >
+                    <Copy className="w-4 h-4 mr-2" />
+                    Copy
+                  </Button>
+                  <DialogClose asChild>
+                    <Button>Close</Button>
+                  </DialogClose>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
 
           {/* Metadata */}
           <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
@@ -313,10 +497,6 @@ export default function VideoCard({
               <DropdownMenuContent align="end">
                 {video.url && video.status === 'completed' && (
                   <>
-                    <DropdownMenuItem onClick={handlePlay}>
-                      <Play className="w-4 h-4 mr-2" />
-                      Play
-                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleDownload}>
                       <Download className="w-4 h-4 mr-2" />
                       Download
@@ -324,6 +504,13 @@ export default function VideoCard({
                     <DropdownMenuSeparator />
                   </>
                 )}
+                
+                <DropdownMenuItem onClick={() => copyToClipboard(video.prompt, 'Prompt copied to clipboard')}>
+                  <Copy className="w-4 h-4 mr-2" />
+                  Copy prompt
+                </DropdownMenuItem>
+                
+                <DropdownMenuSeparator />
                 
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger disabled={moveMutation.isPending}>
