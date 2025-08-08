@@ -912,8 +912,7 @@ const videoGenerationSchema = z.object({
   resolution: z.enum(['512p', '768p', '1080p']),
   duration: z.number().int().min(6).max(10), // 6 or 10 seconds only  
   projectId: z.string().optional(),
-  firstFrameImage: z.string().optional(), // determines aspect ratio
-  referenceImage: z.string().optional(), // reference image for video generation
+  firstFrameImage: z.string().optional(), // determines aspect ratio AND gets saved as reference
   promptOptimizer: z.boolean().default(true),
 });
 
@@ -973,7 +972,6 @@ export default function VideoPage() {
   const [generationProgress, setGenerationProgress] = useState<string>('');
   const [lastCreatedVideo, setLastCreatedVideo] = useState<Video | null>(null);
   const [firstFrameImagePreview, setFirstFrameImagePreview] = useState<string | null>(null);
-  const [referenceImagePreview, setReferenceImagePreview] = useState<string | null>(null);
   const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false);
   const [recentlyGeneratedVideos, setRecentlyGeneratedVideos] = useState<string[]>([]);
 
@@ -1429,29 +1427,13 @@ export default function VideoPage() {
                         <div className="space-y-2">
                           <Label>First Frame Image (Optional)</Label>
                           <p className="text-sm text-muted-foreground">
-                            Sets the aspect ratio for your video
+                            Sets the aspect ratio for your video and guides the generation style
                           </p>
                           <ReferenceImageUpload
                             value={firstFrameImagePreview || undefined}
                             onChange={(value) => {
                               setFirstFrameImagePreview(value || null);
                               form.setValue('firstFrameImage', value || '');
-                            }}
-                            className="w-full"
-                          />
-                        </div>
-
-                        {/* Reference Image for Hailuo-02 */}
-                        <div className="space-y-2">
-                          <Label>Reference Image (Optional)</Label>
-                          <p className="text-sm text-muted-foreground">
-                            Upload an image to guide the video generation style
-                          </p>
-                          <ReferenceImageUpload
-                            value={referenceImagePreview || undefined}
-                            onChange={(value) => {
-                              setReferenceImagePreview(value || null);
-                              form.setValue('referenceImage', value || '');
                             }}
                             className="w-full"
                           />

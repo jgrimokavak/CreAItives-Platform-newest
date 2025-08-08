@@ -130,8 +130,7 @@ export const generateVideoSchema = z.object({
   resolution: z.enum(['512p', '768p', '1080p']),
   duration: z.number().int().min(6).max(10), // 6 or 10 seconds only
   projectId: z.string().optional(),
-  firstFrameImage: z.string().optional(), // determines aspect ratio
-  referenceImage: z.string().optional(), // base64 reference image to be stored in object storage
+  firstFrameImage: z.string().optional(), // determines aspect ratio AND gets saved as reference
   promptOptimizer: z.boolean().default(true),
 });
 
