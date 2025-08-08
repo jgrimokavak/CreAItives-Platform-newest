@@ -1775,47 +1775,64 @@ export default function VideoPage() {
               </form>
             </div>
 
-            {/* Right Column - Project Panel (4/12 columns) */}
+            {/* Enhanced Right Column - Project Panel (4/12 columns) */}
             <div className="lg:col-span-4">
-              <Card className="lg:sticky lg:top-6 lg:max-h-[calc(100vh-8rem)]">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FolderOpen className="w-5 h-5" />
+              <Card className="lg:sticky lg:top-6 lg:max-h-[calc(100vh-8rem)] border-0 shadow-md bg-gradient-to-br from-background to-muted/20">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-3 text-xl">
+                    <div className="p-2 rounded-lg bg-blue-500/10">
+                      <FolderOpen className="w-6 h-6 text-blue-500" />
+                    </div>
                     Project Panel
                   </CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Organize your videos into projects
+                  </p>
                 </CardHeader>
-                <CardContent className="space-y-4 lg:max-h-[calc(100vh-12rem)] lg:overflow-y-auto lg:pr-2">
-                  {/* Project Selection */}
+                <CardContent className="space-y-6 lg:max-h-[calc(100vh-12rem)] lg:overflow-y-auto lg:pr-2">
+                  {/* Enhanced Project Selection */}
                   {projectsLoading ? (
-                    <div className="flex items-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Loading projects...</span>
+                    <div className="flex items-center justify-center gap-2 p-8">
+                      <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                      <span className="text-sm text-muted-foreground">Loading projects...</span>
                     </div>
                   ) : (
                     <>
-                      <div className="space-y-2">
-                        <Label>Select Project</Label>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <FolderOpen className="w-4 h-4 text-primary" />
+                          <Label className="text-sm font-semibold">Select Project</Label>
+                        </div>
                         <Select value={selectedProject} onValueChange={handleProjectChange}>
-                          <SelectTrigger>
+                          <SelectTrigger className="h-12 focus:ring-2 focus:ring-primary/20 bg-background/50">
                             <SelectValue placeholder="Choose a project (optional)" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="none">No Project</SelectItem>
+                            <SelectItem value="none" className="py-3">
+                              <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-muted-foreground/50" />
+                                <span>No Project</span>
+                              </div>
+                            </SelectItem>
                             {projects?.map((project) => (
-                              <SelectItem key={project.id} value={project.id}>
-                                {project.name}
+                              <SelectItem key={project.id} value={project.id} className="py-3">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-2 h-2 rounded-full bg-blue-500" />
+                                  <span>{project.name}</span>
+                                </div>
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
                       </div>
                       
-                      <div className="flex items-center gap-2">
+                      {/* Enhanced Action Buttons */}
+                      <div className="flex items-center gap-3">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => setShowCreateProject(!showCreateProject)}
-                          className="flex items-center gap-2"
+                          className="flex-1 h-10 flex items-center justify-center gap-2 hover:bg-primary/5 border-primary/20 hover:border-primary/30 transition-all duration-200"
                         >
                           <Plus className="w-4 h-4" />
                           New Project
@@ -1825,7 +1842,7 @@ export default function VideoPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => setShowRenameProject(!showRenameProject)}
-                            className="flex items-center gap-2"
+                            className="h-10 px-4 flex items-center gap-2 hover:bg-blue-500/10 text-blue-600 hover:text-blue-700 transition-all duration-200"
                           >
                             <Edit className="w-4 h-4" />
                             Rename
@@ -1833,34 +1850,47 @@ export default function VideoPage() {
                         )}
                       </div>
 
+                      {/* Enhanced Create Project Form */}
                       {showCreateProject && (
-                        <div className="space-y-3 p-4 border rounded-lg bg-gradient-to-br from-muted/20 to-muted/10">
-                          <div className="space-y-2">
-                            <Label htmlFor="newProjectName" className="text-sm font-medium">Project Name</Label>
-                            <Input
-                              id="newProjectName"
-                              placeholder="Enter a descriptive project name"
-                              value={newProjectName}
-                              onChange={(e) => setNewProjectName(e.target.value)}
-                              className="focus:ring-2 focus:ring-primary/20"
-                            />
+                        <div className="space-y-4 p-5 border rounded-xl bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20 shadow-sm">
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="p-1.5 rounded-lg bg-primary/10">
+                              <Plus className="w-4 h-4 text-primary" />
+                            </div>
+                            <h3 className="font-semibold text-sm">Create New Project</h3>
                           </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="newProjectDescription" className="text-sm font-medium">Description <span className="text-muted-foreground">(optional)</span></Label>
-                            <Input
-                              id="newProjectDescription"
-                              placeholder="Brief description of the project"
-                              value={newProjectDescription}
-                              onChange={(e) => setNewProjectDescription(e.target.value)}
-                              className="focus:ring-2 focus:ring-primary/20"
-                            />
+                          <div className="space-y-3">
+                            <div className="space-y-2">
+                              <Label htmlFor="newProjectName" className="text-sm font-semibold flex items-center gap-1">
+                                Project Name <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                id="newProjectName"
+                                placeholder="Enter a descriptive project name"
+                                value={newProjectName}
+                                onChange={(e) => setNewProjectName(e.target.value)}
+                                className="h-11 focus:ring-2 focus:ring-primary/20 bg-background/80"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="newProjectDescription" className="text-sm font-semibold">
+                                Description <span className="text-muted-foreground font-normal">(optional)</span>
+                              </Label>
+                              <Input
+                                id="newProjectDescription"
+                                placeholder="Brief description of the project"
+                                value={newProjectDescription}
+                                onChange={(e) => setNewProjectDescription(e.target.value)}
+                                className="h-11 focus:ring-2 focus:ring-primary/20 bg-background/80"
+                              />
+                            </div>
                           </div>
-                          <div className="flex gap-2 pt-2">
+                          <div className="flex gap-2 pt-3">
                             <Button
                               onClick={handleCreateProject}
                               disabled={!newProjectName.trim() || createProjectMutation.isPending}
                               size="sm"
-                              className="flex-1"
+                              className="flex-1 h-10 bg-primary hover:bg-primary/90 shadow-sm hover:shadow-md transition-all duration-200"
                             >
                               {createProjectMutation.isPending ? (
                                 <>
@@ -1878,6 +1908,7 @@ export default function VideoPage() {
                               variant="outline"
                               onClick={() => setShowCreateProject(false)}
                               size="sm"
+                              className="h-10 hover:bg-muted/50 transition-colors duration-200"
                             >
                               Cancel
                             </Button>
@@ -1885,24 +1916,33 @@ export default function VideoPage() {
                         </div>
                       )}
 
+                      {/* Enhanced Rename Project Form */}
                       {showRenameProject && selectedProject !== 'none' && (
-                        <div className="space-y-3 p-4 border rounded-lg bg-gradient-to-br from-blue-50/50 to-blue-100/30">
+                        <div className="space-y-4 p-5 border rounded-xl bg-gradient-to-br from-blue-50/50 to-blue-100/30 border-blue-200/50 shadow-sm">
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="p-1.5 rounded-lg bg-blue-500/10">
+                              <Edit className="w-4 h-4 text-blue-500" />
+                            </div>
+                            <h3 className="font-semibold text-sm">Rename Project</h3>
+                          </div>
                           <div className="space-y-2">
-                            <Label htmlFor="renameProjectName" className="text-sm font-medium">New Project Name</Label>
+                            <Label htmlFor="renameProjectName" className="text-sm font-semibold flex items-center gap-1">
+                              New Project Name <span className="text-red-500">*</span>
+                            </Label>
                             <Input
                               id="renameProjectName"
                               placeholder="Enter new project name"
                               value={renameProjectName}
                               onChange={(e) => setRenameProjectName(e.target.value)}
-                              className="focus:ring-2 focus:ring-primary/20"
+                              className="h-11 focus:ring-2 focus:ring-blue-500/20 bg-background/80"
                             />
                           </div>
-                          <div className="flex gap-2 pt-2">
+                          <div className="flex gap-2 pt-3">
                             <Button
                               onClick={handleRenameProject}
                               disabled={!renameProjectName.trim() || renameProjectMutation.isPending}
                               size="sm"
-                              className="flex-1"
+                              className="flex-1 h-10 bg-blue-500 hover:bg-blue-600 text-white shadow-sm hover:shadow-md transition-all duration-200"
                             >
                               {renameProjectMutation.isPending ? (
                                 <>
@@ -1920,6 +1960,7 @@ export default function VideoPage() {
                               variant="outline"
                               onClick={() => setShowRenameProject(false)}
                               size="sm"
+                              className="h-10 hover:bg-muted/50 transition-colors duration-200"
                             >
                               Cancel
                             </Button>
@@ -1929,22 +1970,39 @@ export default function VideoPage() {
                     </>
                   )}
 
-                  {/* Project Videos */}
-                  <div className="space-y-3">
-                    <Separator />
-                    <h4 className="text-sm font-medium flex items-center gap-2">
-                      <VideoIcon className="w-4 h-4" />
-                      {selectedProject === 'none' ? 'Unassigned Videos' : 'Project Videos'}
-                    </h4>
+                  {/* Enhanced Project Videos Section */}
+                  <div className="space-y-4">
+                    {/* Enhanced Visual Separator */}
+                    <div className="relative">
+                      <Separator className="bg-gradient-to-r from-transparent via-border to-transparent" />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="bg-background px-3 py-1 rounded-full border shadow-sm">
+                          <span className="text-xs text-muted-foreground font-medium">Videos</span>
+                        </div>
+                      </div>
+                    </div>
                     
-                    <div className="max-h-[350px] overflow-y-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent pr-1">
-                      <ProjectVideoPreview 
-                        selectedProject={selectedProject} 
-                        projects={projects || []}
-                        compact={true}
-                        onVideoPlay={(videoId) => console.log('Playing video:', videoId)}
-                        onVideoDelete={(videoId) => console.log('Deleting video:', videoId)}
-                      />
+                    {/* Enhanced Video Section Header */}
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 rounded-lg bg-blue-500/10">
+                        <VideoIcon className="w-4 h-4 text-blue-500" />
+                      </div>
+                      <h4 className="text-sm font-semibold">
+                        {selectedProject === 'none' ? 'Unassigned Videos' : 'Project Videos'}
+                      </h4>
+                    </div>
+                    
+                    {/* Enhanced Video Container */}
+                    <div className="bg-muted/20 rounded-lg border p-3 shadow-sm">
+                      <div className="max-h-[350px] overflow-y-auto scrollbar-thin scrollbar-thumb-muted/50 scrollbar-track-transparent pr-2 -mr-2">
+                        <ProjectVideoPreview 
+                          selectedProject={selectedProject} 
+                          projects={projects || []}
+                          compact={true}
+                          onVideoPlay={(videoId) => console.log('Playing video:', videoId)}
+                          onVideoDelete={(videoId) => console.log('Deleting video:', videoId)}
+                        />
+                      </div>
                     </div>
                   </div>
                 </CardContent>
