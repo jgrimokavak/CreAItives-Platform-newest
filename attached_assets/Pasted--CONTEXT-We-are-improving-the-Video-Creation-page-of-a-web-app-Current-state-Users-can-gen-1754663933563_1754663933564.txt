@@ -1,0 +1,137 @@
+# CONTEXT
+We are improving the **Video Creation** page of a web app.
+Current state:
+Users can generate videos (`POST /api/video/generate`) and see progress (Job Tray), results (Result panel), and organized Gallery (projects + Unassigned).
+The Create tab supports a 2-column layout; there is also an optional 3-pane **Power Mode** (Form + Canvas + Project panel).
+Videos are displayed with a unified `VideoCard` component.
+We want to add **Presets** so users can save and reapply prompt/config combinations quickly.
+**Preset scope (important):**
+A **Preset** stores: `prompt`, `model`, `resolution`, `duration`, `aiEnhance` (and any other current form fields).
+**Do not** include `projectId` in the preset (presets should be reusable across projects).
+Single-user is fine for now (no sharing/roles).
+Goal for this step:
+1) Add a small **presets table** and CRUD API. 
+2) Add a **Preset Picker** UI in the Create tab (and Power Mode left pane). 
+3) Support **Save as New**, **Apply**, **Update**, **Rename**, **Delete**.
+---
+# BEFORE STARTING
+Run type-check and the dev server. Fix any errors first.
+Confirm the current create form fields you need to persist (e.g., `prompt`, `model`, `resolution`, `duration`, `aiEnhance`, etc.) so we can serialize them consistently.
+---
+# TASK: Implement Presets (backend + frontend)
+## 1) Shared types & schema
+**File:** `shared/schema.ts`
+Add a `presets` table with Drizzle (or your current ORM). Minimal fields:
+```ts
+export const presets = pgTable('presets', {
+  id: text('id').primaryKey(),                   // use nanoid/uuid
+  name: text('name').notNull(),                  // display name
+  payloadJson: jsonb('payload_json').notNull(),  // serialized form config (no projectId)
+  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull(),
+});
+	•	Add a Zod schema for I/O:
+export const presetPayloadSchema = z.object({
+  prompt: z.string().min(1),
+  model: z.string(),
+  resolution: z.string().optional().nullable(),
+  duration: z.string().optional().nullable(),
+  aiEnhance: z.boolean().optional(),
+  // add any other form fields here; exclude projectId
+});
+export const insertPresetSchema = z.object({
+  name: z.string().min(1),
+  payload: presetPayloadSchema,
+});
+export const updatePresetSchema = z.object({
+  name: z.string().min(1).optional(),
+  payload: presetPayloadSchema.optional(),
+});
+If you have a migrations system, generate & run a migration for the new table.
+⸻
+2) Storage helpers
+File: server/storage.ts
+Add simple helpers:
+export async function listPresets() { /* select * from presets order by updated_at desc */ }
+export async function getPreset(id: string) { /* select by id */ }
+export async function createPreset(input: { name: string; payload: any; }) { /* insert */ }
+export async function updatePreset(id: string, input: { name?: string; payload?: any; }) { /* update, set updated_at = now() */ }
+export async function deletePreset(id: string) { /* delete */ }
+⸻
+3) Routes
+File: server/routes/preset-routes.ts (new)
+Implement:
+	•	GET /api/presets → list
+	•	POST /api/presets → body { name, payload }
+	•	GET /api/presets/:id
+	•	PATCH /api/presets/:id → body { name?, payload? }
+	•	DELETE /api/presets/:id
+Validate with the Zod schemas from shared/schema.ts. Return JSON with id, name, payload, createdAt, updatedAt.
+Wire the router into your main server index (ensure CORS if needed).
+⸻
+4) Client data hooks
+Where you keep your fetch/query code (e.g., inside client/src/pages/VideoPage.tsx or a client/src/lib/api.ts), add React Query hooks:
+export function usePresets() {
+  return useQuery(['/api/presets']);
+}
+export function useCreatePreset() {
+  return useMutation({
+    mutationFn: (body) => fetch('/api/presets', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(body) }),
+    onSuccess: () => queryClient.invalidateQueries(['/api/presets']),
+  });
+}
+// Same pattern for update/delete
+⸻
+5) Preset Picker UI (component)
+File: client/src/components/PresetPicker.tsx (new)
+	•	Props:
+interface PresetPickerProps {
+  value?: string | null;                 // selected preset id (if any)
+  onApply: (payload: any) => void;       // called to populate the form with preset payload
+  onSaved?: (id: string) => void;        // optional callback after saving
+  getCurrentFormValues: () => any;       // returns the current form config (without projectId)
+}
+	•	UI:
+	•	A combobox/select listing presets by name (most recently updated first).
+	•	Buttons:
+	•	Apply (loads selected preset payload → onApply(payload))
+	•	Save as New → prompts for name, uses getCurrentFormValues() as payload → POST /api/presets
+	•	Update → overwrites selected preset with getCurrentFormValues() → PATCH /api/presets/:id
+	•	Rename → prompt for new name → PATCH
+	•	Delete → confirm → DELETE
+	•	Handle loading/disabled states gracefully.
+	•	Behavior details:
+	•	When user Apply: call onApply(payload) and show a small toast “Preset applied”.
+	•	When Save as New: after success, set that preset as selected.
+	•	When Update/Rename/Delete: invalidate /api/presets and update the current selection if needed.
+⸻
+6) Integrate into Create tab (and Power Mode)
+File: client/src/pages/VideoPage.tsx
+	•	In the Create tab:
+	•	Place <PresetPicker /> above the form (in Standard layout) and in the left pane (Power Mode).
+	•	Implement getCurrentFormValues() to serialize the current form fields (prompt/model/resolution/duration/aiEnhance/etc.). Exclude projectId.
+	•	Implement onApply(payload) to:
+	•	reset() the react-hook-form with payload fields.
+	•	Keep current projectId selection untouched.
+	•	Optional: persist the last used preset id in localStorage and preselect it on load.
+⸻
+7) Form serialization & safety
+	•	Ensure the form field names match the payload keys saved in presets.
+	•	If a preset payload is missing a field (older preset), keep the current form value for that field.
+	•	If the model in the preset is not available, show a warning and keep the current model.
+⸻
+ACCEPTANCE CRITERIA
+	•	/api/presets CRUD endpoints exist and return expected JSON.
+	•	Users can Save as New, Apply, Update, Rename, and Delete presets from the Create tab.
+	•	Applying a preset updates the form immediately (without affecting project selection).
+	•	The selected preset persists in the UI (optional: remembered via localStorage).
+	•	Power Mode shows the Preset Picker in the left pane and it behaves the same.
+	•	Type-check and runtime pass; no regressions to video generation, Job Tray, or Gallery features.
+⸻
+FINAL RECHECK
+	•	Re-run type-check and the app; fix any errors introduced.
+	•	Verify:
+	•	Create → Save preset → Apply preset → Generate → Result appears, Job Tray updates.
+	•	Delete/Move videos still work; Gallery grouping remains stable.
+	•	No console errors; network requests for presets succeed.
+---

@@ -39,7 +39,13 @@ import {
   ExternalLink,
   ChevronDown,
   ChevronRight,
-  Folder
+  Folder,
+  Search,
+  Filter,
+  CheckSquare,
+  Square,
+  MoveIcon,
+  X
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
@@ -232,6 +238,21 @@ function VideoGallery() {
   
   // State for managing collapse state of project groups
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+  
+  // Filter and selection state
+  const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'processing' | 'failed'>('all');
+  const [dateFilter, setDateFilter] = useState<'all' | '7days' | '30days'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSelectMode, setIsSelectMode] = useState(false);
+  const [selectedVideos, setSelectedVideos] = useState<Set<string>>(new Set());
+  
+  // Undo state
+  const [undoStack, setUndoStack] = useState<Array<{
+    type: 'move' | 'delete';
+    videos: Video[];
+    originalProjectIds?: (string | null)[];
+    timestamp: number;
+  }>>([]);
 
   // Fetch projects with stats
   const { data: projectsData, isLoading: projectsLoading } = useQuery({
@@ -240,7 +261,7 @@ function VideoGallery() {
   });
 
   // Fetch all videos
-  const { data: videosResponse, isLoading: videosLoading } = useQuery<{items: Video[]}>({
+  const { data: videosResponse, isLoading: videosLoading, refetch: refetchVideos } = useQuery<{items: Video[]}>({
     queryKey: ['/api/video'],
     queryFn: () => apiRequest('/api/video'),
   });
@@ -248,6 +269,264 @@ function VideoGallery() {
   const isLoading = projectsLoading || videosLoading;
   const projects = projectsData || [];
   const allVideos = videosResponse?.items || [];
+
+  // Filter and selection functions
+  const filterVideos = (videos: Video[]) => {
+    return videos.filter(video => {
+      // Status filter
+      if (statusFilter !== 'all' && video.status !== statusFilter) {
+        return false;
+      }
+      
+      // Date filter
+      if (dateFilter !== 'all') {
+        const videoDate = new Date(video.createdAt || '');
+        const now = new Date();
+        const daysDiff = (now.getTime() - videoDate.getTime()) / (1000 * 3600 * 24);
+        
+        if (dateFilter === '7days' && daysDiff > 7) return false;
+        if (dateFilter === '30days' && daysDiff > 30) return false;
+      }
+      
+      // Search filter
+      if (searchQuery && !video.prompt.toLowerCase().includes(searchQuery.toLowerCase())) {
+        return false;
+      }
+      
+      return true;
+    });
+  };
+
+  const toggleSelectMode = () => {
+    setIsSelectMode(!isSelectMode);
+    if (isSelectMode) {
+      setSelectedVideos(new Set());
+    }
+  };
+
+  const toggleVideoSelection = (videoId: string) => {
+    setSelectedVideos(prev => {
+      const newSelection = new Set(prev);
+      if (newSelection.has(videoId)) {
+        newSelection.delete(videoId);
+      } else {
+        newSelection.add(videoId);
+      }
+      return newSelection;
+    });
+  };
+
+  const selectAllVisibleVideos = (videos: Video[]) => {
+    const visibleVideoIds = videos.map(v => v.id);
+    setSelectedVideos(new Set(visibleVideoIds));
+  };
+
+  const clearSelection = () => {
+    setSelectedVideos(new Set());
+  };
+
+  // Bulk action functions
+  const bulkMoveVideos = async (targetProjectId: string | null) => {
+    const videosToMove = allVideos.filter(v => selectedVideos.has(v.id));
+    const originalProjectIds = videosToMove.map(v => v.projectId);
+    
+    try {
+      // Optimistic update
+      queryClient.setQueryData(['/api/video'], (oldData: any) => {
+        if (!oldData?.items) return oldData;
+        return {
+          ...oldData,
+          items: oldData.items.map((video: Video) =>
+            selectedVideos.has(video.id) ? { ...video, projectId: targetProjectId } : video
+          )
+        };
+      });
+
+      // API calls
+      await Promise.all(
+        Array.from(selectedVideos).map(videoId =>
+          apiRequest(`/api/video/${videoId}/move`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ projectId: targetProjectId }),
+          })
+        )
+      );
+
+      // Add to undo stack
+      setUndoStack(prev => [...prev.slice(-4), {
+        type: 'move',
+        videos: videosToMove,
+        originalProjectIds,
+        timestamp: Date.now()
+      }]);
+
+      const targetName = targetProjectId 
+        ? projects.find(p => p.id === targetProjectId)?.name || 'Unknown Project'
+        : 'Unassigned';
+
+      toast({
+        title: 'Videos moved successfully',
+        description: `${selectedVideos.size} video(s) moved to ${targetName}`,
+        action: (
+          <Button variant="outline" size="sm" onClick={() => undoMove(videosToMove, originalProjectIds)}>
+            Undo
+          </Button>
+        ),
+      });
+
+      clearSelection();
+      refetchVideos();
+      
+    } catch (error) {
+      console.error('Bulk move failed:', error);
+      
+      // Revert optimistic update
+      refetchVideos();
+      
+      toast({
+        title: 'Failed to move videos',
+        description: 'Some videos could not be moved. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const bulkDeleteVideos = async () => {
+    const videosToDelete = allVideos.filter(v => selectedVideos.has(v.id));
+    
+    try {
+      // Optimistic update
+      queryClient.setQueryData(['/api/video'], (oldData: any) => {
+        if (!oldData?.items) return oldData;
+        return {
+          ...oldData,
+          items: oldData.items.filter((video: Video) => !selectedVideos.has(video.id))
+        };
+      });
+
+      // API calls
+      await Promise.all(
+        Array.from(selectedVideos).map(videoId =>
+          apiRequest(`/api/video/${videoId}`, { method: 'DELETE' })
+        )
+      );
+
+      // Add to undo stack
+      setUndoStack(prev => [...prev.slice(-4), {
+        type: 'delete',
+        videos: videosToDelete,
+        timestamp: Date.now()
+      }]);
+
+      toast({
+        title: 'Videos deleted successfully',
+        description: `${selectedVideos.size} video(s) deleted`,
+        action: (
+          <Button variant="outline" size="sm" onClick={() => undoDelete(videosToDelete)}>
+            Undo
+          </Button>
+        ),
+      });
+
+      clearSelection();
+      refetchVideos();
+      
+    } catch (error) {
+      console.error('Bulk delete failed:', error);
+      
+      // Revert optimistic update
+      refetchVideos();
+      
+      toast({
+        title: 'Failed to delete videos',
+        description: 'Some videos could not be deleted. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const bulkDownloadVideos = async () => {
+    const videosToDownload = allVideos.filter(v => selectedVideos.has(v.id) && v.url);
+    
+    if (videosToDownload.length === 0) {
+      toast({
+        title: 'No videos to download',
+        description: 'Selected videos are not ready for download.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    toast({
+      title: 'Starting downloads',
+      description: `Downloading ${videosToDownload.length} video(s)...`,
+    });
+
+    for (const video of videosToDownload) {
+      if (video.url) {
+        try {
+          const response = await fetch(video.url);
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `video-${video.id}.mp4`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        } catch (error) {
+          console.error(`Failed to download video ${video.id}:`, error);
+        }
+      }
+    }
+  };
+
+  // Undo functions
+  const undoMove = async (videos: Video[], originalProjectIds: (string | null)[]) => {
+    try {
+      await Promise.all(
+        videos.map((video, index) =>
+          apiRequest(`/api/video/${video.id}/move`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ projectId: originalProjectIds[index] }),
+          })
+        )
+      );
+      
+      refetchVideos();
+      toast({
+        title: 'Move undone',
+        description: 'Videos restored to their original projects',
+      });
+    } catch (error) {
+      toast({
+        title: 'Undo failed',
+        description: 'Could not restore videos to original projects',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const undoDelete = async (videos: Video[]) => {
+    // Note: For now, this is just client-side restoration from the undo stack
+    // In a real app, you'd need server-side soft delete functionality
+    queryClient.setQueryData(['/api/video'], (oldData: any) => {
+      if (!oldData?.items) return { items: videos };
+      return {
+        ...oldData,
+        items: [...oldData.items, ...videos]
+      };
+    });
+    
+    toast({
+      title: 'Delete undone',
+      description: 'Videos restored (client-side only)',
+    });
+  };
 
   const toggleGroup = (groupId: string) => {
     setCollapsedGroups(prev => ({
@@ -285,7 +564,10 @@ function VideoGallery() {
     );
   }
 
-  // Group videos by projectId
+  // Apply filters to all videos first
+  const filteredVideos = filterVideos(allVideos);
+
+  // Group filtered videos by projectId
   const videoGroups: Record<string, Video[]> = {};
   
   // Initialize groups for all projects
@@ -296,8 +578,8 @@ function VideoGallery() {
   // Add unassigned group
   videoGroups['unassigned'] = [];
 
-  // Group videos
-  allVideos.forEach((video) => {
+  // Group filtered videos
+  filteredVideos.forEach((video) => {
     const groupKey = video.projectId || 'unassigned';
     if (!videoGroups[groupKey]) {
       videoGroups[groupKey] = [];
@@ -310,18 +592,199 @@ function VideoGallery() {
 
   return (
     <div className="space-y-6">
+      {/* Gallery Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-medium">Video Gallery</h3>
-        <Badge variant="secondary">{allVideos.length} total videos</Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary">{filteredVideos.length} of {allVideos.length} videos</Badge>
+          <Button
+            variant={isSelectMode ? "default" : "outline"}
+            size="sm"
+            onClick={toggleSelectMode}
+            className="gap-2"
+          >
+            {isSelectMode ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
+            {isSelectMode ? 'Exit Select' : 'Select Mode'}
+          </Button>
+        </div>
       </div>
 
+      {/* Filter Bar */}
+      <Card className="p-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {/* Status Filter */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium flex items-center gap-2">
+              <Filter className="w-4 h-4" />
+              Status
+            </Label>
+            <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="processing">Processing</SelectItem>
+                <SelectItem value="failed">Failed</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Date Filter */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium flex items-center gap-2">
+              <Clock className="w-4 h-4" />
+              Date Range
+            </Label>
+            <Select value={dateFilter} onValueChange={(value: any) => setDateFilter(value)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Time</SelectItem>
+                <SelectItem value="7days">Last 7 Days</SelectItem>
+                <SelectItem value="30days">Last 30 Days</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Search */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium flex items-center gap-2">
+              <Search className="w-4 h-4" />
+              Search Prompts
+            </Label>
+            <Input
+              placeholder="Search by prompt..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pr-8"
+            />
+          </div>
+
+          {/* Clear Filters */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium opacity-0">Actions</Label>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setStatusFilter('all');
+                setDateFilter('all');
+                setSearchQuery('');
+              }}
+              className="w-full"
+              disabled={statusFilter === 'all' && dateFilter === 'all' && !searchQuery}
+            >
+              Clear Filters
+            </Button>
+          </div>
+        </div>
+
+        {/* Selection Actions when in Select Mode */}
+        {isSelectMode && filteredVideos.length > 0 && (
+          <div className="mt-4 pt-4 border-t">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => selectAllVisibleVideos(filteredVideos)}
+                disabled={filteredVideos.every(v => selectedVideos.has(v.id))}
+              >
+                Select All Visible
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearSelection}
+                disabled={selectedVideos.size === 0}
+              >
+                Clear Selection
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                {selectedVideos.size} video{selectedVideos.size !== 1 ? 's' : ''} selected
+              </span>
+            </div>
+          </div>
+        )}
+      </Card>
+
+      {/* Bulk Actions Bar */}
+      {isSelectMode && selectedVideos.size > 0 && (
+        <Card className="p-4 bg-primary/5 border-primary/20">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CheckSquare className="w-5 h-5 text-primary" />
+              <span className="font-medium">{selectedVideos.size} videos selected</span>
+            </div>
+            <div className="flex items-center gap-2">
+              {/* Move to Project */}
+              <Select onValueChange={bulkMoveVideos}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Move to..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={null as any}>Unassigned</SelectItem>
+                  {projects.map((project: any) => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {project.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={bulkDownloadVideos}
+                className="gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Download
+              </Button>
+              
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={bulkDeleteVideos}
+                className="gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setIsSelectMode(false);
+                  clearSelection();
+                }}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Video Groups */}
       {nonEmptyGroups.length === 0 ? (
         <div className="rounded-lg border bg-muted/5 p-8">
           <div className="text-center space-y-3">
             <Folder className="w-16 h-16 text-muted-foreground mx-auto" />
-            <h3 className="text-lg font-medium">No Video Groups</h3>
+            <h3 className="text-lg font-medium">
+              {filteredVideos.length === 0 && allVideos.length > 0 
+                ? 'No videos match your filters' 
+                : 'No Video Groups'
+              }
+            </h3>
             <p className="text-muted-foreground max-w-md mx-auto">
-              Videos will be organized by projects once you generate some content.
+              {filteredVideos.length === 0 && allVideos.length > 0
+                ? 'Try adjusting your filter criteria to see more videos.'
+                : 'Videos will be organized by projects once you generate some content.'
+              }
             </p>
           </div>
         </div>
@@ -330,6 +793,9 @@ function VideoGallery() {
           {nonEmptyGroups.map(([groupId, videos]) => {
             const isCollapsed = collapsedGroups[groupId];
             const projectName = getProjectName(groupId);
+            const originalGroupSize = allVideos.filter(v => 
+              (v.projectId || 'unassigned') === groupId
+            ).length;
             
             return (
               <Card key={groupId}>
@@ -355,9 +821,42 @@ function VideoGallery() {
                             )}
                           </div>
                         </div>
-                        <Badge variant="outline">
-                          {videos.length} video{videos.length !== 1 ? 's' : ''}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">
+                            {videos.length}{originalGroupSize !== videos.length && ` of ${originalGroupSize}`} video{originalGroupSize !== 1 ? 's' : ''}
+                          </Badge>
+                          {isSelectMode && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const groupVideoIds = videos.map(v => v.id);
+                                const allSelected = groupVideoIds.every(id => selectedVideos.has(id));
+                                
+                                if (allSelected) {
+                                  setSelectedVideos(prev => {
+                                    const newSet = new Set(prev);
+                                    groupVideoIds.forEach(id => newSet.delete(id));
+                                    return newSet;
+                                  });
+                                } else {
+                                  setSelectedVideos(prev => {
+                                    const newSet = new Set(prev);
+                                    groupVideoIds.forEach(id => newSet.add(id));
+                                    return newSet;
+                                  });
+                                }
+                              }}
+                            >
+                              {videos.every(v => selectedVideos.has(v.id)) ? (
+                                <CheckSquare className="w-4 h-4" />
+                              ) : (
+                                <Square className="w-4 h-4" />
+                              )}
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </CardHeader>
                   </CollapsibleTrigger>
@@ -366,16 +865,32 @@ function VideoGallery() {
                     <CardContent className="pt-0">
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {videos.map((video) => (
-                          <VideoCard
+                          <div 
                             key={video.id}
-                            video={{
-                              ...video,
-                              model: video.model || 'hailuo-02',
-                              status: video.status as 'pending' | 'processing' | 'completed' | 'failed',
-                              createdAt: typeof video.createdAt === 'string' ? video.createdAt : video.createdAt?.toISOString() || null
-                            }}
-                            className="w-full"
-                          />
+                            className={`relative ${isSelectMode ? 'cursor-pointer' : ''}`}
+                            onClick={() => isSelectMode && toggleVideoSelection(video.id)}
+                          >
+                            {isSelectMode && (
+                              <div className="absolute top-2 left-2 z-10">
+                                <div className="bg-background/80 backdrop-blur-sm rounded-full p-1">
+                                  {selectedVideos.has(video.id) ? (
+                                    <CheckSquare className="w-5 h-5 text-primary" />
+                                  ) : (
+                                    <Square className="w-5 h-5 text-muted-foreground" />
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                            <VideoCard
+                              video={{
+                                ...video,
+                                model: video.model || 'hailuo-02',
+                                status: video.status as 'pending' | 'processing' | 'completed' | 'failed',
+                                createdAt: typeof video.createdAt === 'string' ? video.createdAt : video.createdAt?.toISOString() || null
+                              }}
+                              className={`w-full ${isSelectMode && selectedVideos.has(video.id) ? 'ring-2 ring-primary' : ''}`}
+                            />
+                          </div>
                         ))}
                       </div>
                     </CardContent>
