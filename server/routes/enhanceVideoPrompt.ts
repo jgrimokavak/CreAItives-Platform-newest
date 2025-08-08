@@ -45,6 +45,7 @@ IMPORTANT GUIDELINES FOR VIDEO GENERATION:
    - Structure the prompt with a clear beginning, middle, and end if appropriate
    - Add progression elements (e.g., "starts close-up, pulls back to reveal", "begins still, then moves")
    - Consider cause and effect relationships in the motion
+   - Specify timing for key moments (e.g., "pauses for 2 seconds", "accelerates in the final 3 seconds")
 
 6. CONTEXT-AWARE REFINEMENTS:
    - For character prompts, specify facial expressions and body language changes
@@ -56,8 +57,8 @@ IMPORTANT GUIDELINES FOR VIDEO GENERATION:
    - Prefer smooth, continuous motions over abrupt changes
    - Consider lighting consistency throughout the video duration
 
-8. NEGATIVE PROMPT:
-   - Add video-specific issues to avoid (e.g., "flickering, abrupt cuts, unnatural motion, morphing objects, inconsistent lighting")
+8. NEGATIVE PROMPT (Hailuo-02 Specific):
+   - Include technical issues this model tends to have: "flickering, morphing faces, inconsistent object identity, abrupt lighting changes, unnatural physics, jerky camera movement, temporal discontinuity, multiple conflicting actions"
 
 Return a JSON object with two keys:
 {
@@ -69,7 +70,31 @@ Return a JSON object with two keys:
   
   switch (model) {
     case "minimax-hailuo-02":
-      modelSpecificGuidance = "For Minimax Hailuo-02: This model excels at creating smooth, realistic motion with good temporal consistency. Focus on natural movements, realistic physics, and cinematic camera work. Emphasize smooth transitions and avoid rapid scene changes. The model handles human motion and facial expressions particularly well.";
+      modelSpecificGuidance = `For Minimax Hailuo-02: This model has specific strengths and optimal prompting strategies:
+
+STRENGTHS TO LEVERAGE:
+- Exceptional at smooth human motion and natural facial expressions
+- Excellent temporal consistency (objects maintain identity across frames)
+- Strong physics simulation (realistic gravity, momentum, collisions)
+- Good at atmospheric effects (smoke, fog, particle movement)
+- Handles camera movements smoothly (pans, tilts, zooms)
+
+OPTIMAL PROMPTING FOR HAILUO-02:
+- Always specify the emotion/mood progression ("starts contemplative, becomes joyful")
+- Include lighting direction and quality ("soft window light from the left")
+- Mention specific camera techniques ("shallow depth of field", "tracking shot")
+- Add environmental context that supports the main action
+- Use realistic timing references ("2-second pause before moving")
+- Specify material properties that affect motion ("flowing fabric", "rigid metal")
+
+AVOID FOR HAILUO-02:
+- Complex multi-character interactions (focus on 1-2 subjects max)
+- Rapid cuts or scene transitions within the same generation
+- Overly abstract or surreal concepts (model prefers realistic scenarios)
+- Too many simultaneous movements (keep motion hierarchy clear)
+
+RECOMMENDED STRUCTURE:
+[Setting/Environment] → [Main Subject/Action] → [Camera Movement] → [Lighting/Mood] → [Temporal Progression]`;
       break;
     default:
       modelSpecificGuidance = "";
