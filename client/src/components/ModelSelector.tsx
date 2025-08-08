@@ -125,7 +125,7 @@ export function ModelSelector({ value, onChange, disabled }: ModelSelectorProps)
           </button>
         </DropdownMenuTrigger>
 
-        <DropdownMenuContent className="w-full min-w-[480px] max-w-[600px] p-2" align="start">
+        <DropdownMenuContent className="w-full min-w-[500px] max-w-[700px] p-3" align="start">
           {VIDEO_MODELS.map((model) => {
             const isSelected = model.id === value;
             const modelColors = getModelColors(model.id);
@@ -141,30 +141,32 @@ export function ModelSelector({ value, onChange, disabled }: ModelSelectorProps)
                   setOpen(false);
                 }}
                 className={cn(
-                  "flex items-start gap-3 px-3 py-4 cursor-pointer rounded-lg transition-colors min-h-[80px]",
+                  "flex items-start gap-4 px-4 py-4 cursor-pointer rounded-lg transition-colors",
                   "hover:bg-muted/70 focus:bg-muted/70",
                   isSelected && "bg-primary/10 hover:bg-primary/15 focus:bg-primary/15"
                 )}
               >
                 {/* Model Icon */}
-                <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-medium", modelColors.primary)}>
-                  <Sparkles className="w-4 h-4" />
+                <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center text-white flex-shrink-0", modelColors.primary)}>
+                  <Sparkles className="w-5 h-5" />
                 </div>
 
                 {/* Model Details */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-semibold text-sm text-foreground">
+                  {/* Header */}
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="font-semibold text-base text-foreground">
                       {model.name}
                     </span>
                     {modelVersion && (
-                      <span className={cn("px-2 py-0.5 text-xs rounded-md font-medium", modelColors.light)}>
+                      <span className={cn("px-2 py-1 text-xs rounded-md font-medium", modelColors.light)}>
                         {modelVersion}
                       </span>
                     )}
-
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                  
+                  {/* Provider and feature */}
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
                     <span>{modelProvider}</span>
                     {modelFeature && (
                       <>
@@ -173,16 +175,20 @@ export function ModelSelector({ value, onChange, disabled }: ModelSelectorProps)
                       </>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
+                  
+                  {/* Description */}
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-3">
                     {model.summary}
                   </p>
-                  {/* Key features as small badges */}
+                  
+                  {/* Key capabilities - no truncation */}
                   {model.details && model.details.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {model.details.slice(0, 2).map((detail, idx) => (
-                        <span key={idx} className="text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded">
-                          {detail.length > 25 ? detail.substring(0, 25) + '...' : detail}
-                        </span>
+                    <div className="space-y-1">
+                      {model.details.slice(0, 3).map((detail, idx) => (
+                        <div key={idx} className="flex items-start gap-2 text-xs text-muted-foreground">
+                          <div className="w-1 h-1 rounded-full bg-muted-foreground/60 mt-2 flex-shrink-0"></div>
+                          <span className="leading-relaxed">{detail}</span>
+                        </div>
                       ))}
                     </div>
                   )}
