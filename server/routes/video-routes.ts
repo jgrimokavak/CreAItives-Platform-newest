@@ -67,7 +67,7 @@ router.post('/generate', async (req, res) => {
       referenceImageUrl: referenceImageUrl, // Store the persistent reference image URL
       promptOptimizer: inputs.promptOptimizer !== false, // default to true
       aspectRatio: '16:9', // Default aspect ratio for hailuo-02
-      environment: process.env.NODE_ENV === 'production' ? 'prod' : 'dev',
+      environment: process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev',
     });
 
     // Get the appropriate provider for video generation

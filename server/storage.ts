@@ -657,8 +657,14 @@ export class DatabaseStorage implements IStorage {
   }> {
     const { userId, projectId, status, limit = 50, cursor } = options || {};
     
+    // Get current environment to filter videos
+    const currentEnv = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
+    
     let query = db.select().from(videos) as any;
     const conditions = [];
+    
+    // CRITICAL: Filter by environment to prevent cross-environment issues
+    conditions.push(eq(videos.environment, currentEnv));
     
     if (userId) conditions.push(eq(videos.userId, userId));
     if (projectId) conditions.push(eq(videos.projectId, projectId));
@@ -731,13 +737,17 @@ export class DatabaseStorage implements IStorage {
       return null;
     }
 
-    // Get all videos for this project
+    // Get current environment to filter videos
+    const currentEnv = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
+
+    // Get all videos for this project, filtered by environment
     const projectVideos = await db
       .select()
       .from(videos)
       .where(and(
         eq(videos.projectId, projectId),
-        eq(videos.userId, userId)
+        eq(videos.userId, userId),
+        eq(videos.environment, currentEnv)
       ))
       .orderBy(desc(videos.createdAt));
 
@@ -764,7 +774,10 @@ export class DatabaseStorage implements IStorage {
     processingCount: number;
     lastActivity?: Date;
   }>> {
-    // Get projects with video counts using SQL aggregation
+    // Get current environment to filter videos
+    const currentEnv = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
+    
+    // Get projects with video counts using SQL aggregation, filtered by environment
     const projectsWithStats = await db
       .select({
         id: projects.id,
@@ -775,10 +788,10 @@ export class DatabaseStorage implements IStorage {
         userId: projects.userId,
         createdAt: projects.createdAt,
         updatedAt: projects.updatedAt,
-        totalVideos: sql<number>`COALESCE(COUNT(${videos.id}), 0)`.as('totalVideos'),
-        completedCount: sql<number>`COALESCE(SUM(CASE WHEN ${videos.status} = 'completed' THEN 1 ELSE 0 END), 0)`.as('completedCount'),
-        processingCount: sql<number>`COALESCE(SUM(CASE WHEN ${videos.status} = 'processing' THEN 1 ELSE 0 END), 0)`.as('processingCount'),
-        lastActivity: sql<Date>`COALESCE(MAX(${videos.createdAt}), ${projects.createdAt})`.as('lastActivity')
+        totalVideos: sql<number>`COALESCE(COUNT(CASE WHEN ${videos.environment} = ${currentEnv} THEN ${videos.id} END), 0)`.as('totalVideos'),
+        completedCount: sql<number>`COALESCE(SUM(CASE WHEN ${videos.status} = 'completed' AND ${videos.environment} = ${currentEnv} THEN 1 ELSE 0 END), 0)`.as('completedCount'),
+        processingCount: sql<number>`COALESCE(SUM(CASE WHEN ${videos.status} = 'processing' AND ${videos.environment} = ${currentEnv} THEN 1 ELSE 0 END), 0)`.as('processingCount'),
+        lastActivity: sql<Date>`COALESCE(MAX(CASE WHEN ${videos.environment} = ${currentEnv} THEN ${videos.createdAt} END), ${projects.createdAt})`.as('lastActivity')
       })
       .from(projects)
       .leftJoin(videos, eq(projects.id, videos.projectId))
@@ -817,10 +830,16 @@ export class DatabaseStorage implements IStorage {
 
   // Update video count when videos are moved to/from projects
   async updateProjectVideoCount(projectId: string): Promise<void> {
+    // Get current environment to filter videos
+    const currentEnv = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
+    
     const videoCount = await db
       .select({ count: sql<number>`COUNT(*)` })
       .from(videos)
-      .where(eq(videos.projectId, projectId));
+      .where(and(
+        eq(videos.projectId, projectId),
+        eq(videos.environment, currentEnv)
+      ));
     
     await db
       .update(projects)

@@ -27,6 +27,7 @@ Preferred communication style: Simple, everyday language.
 
 #### AI Video Generation
 - **Features**: Project-based organization with localStorage project memory, AI-enhanced prompts, configurable aspect ratios, resolutions, durations, optional audio generation, person generation controls, seed support, enhanced card-style model selector with keyboard navigation.
+- **Environment Isolation**: Videos are stored with environment tags ('dev' or 'prod') and filtered by environment to prevent cross-environment data mixing. Uses REPLIT_DEPLOYMENT environment variable for detection.
 
 #### Car Design Visualization System
 - **Data**: Google Sheets integration for a live car database and dynamic color management.
