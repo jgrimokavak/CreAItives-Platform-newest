@@ -45,7 +45,8 @@ import {
   CheckSquare,
   Square,
   MoveIcon,
-  X
+  X,
+  Edit
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
@@ -979,8 +980,10 @@ export default function VideoPage() {
   const [selectedProject, setSelectedProject] = useState<string>('none');
   const [activeTab, setActiveTab] = useState<'create' | 'gallery'>('create');
   const [showCreateProject, setShowCreateProject] = useState(false);
+  const [showRenameProject, setShowRenameProject] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectDescription, setNewProjectDescription] = useState('');
+  const [renameProjectName, setRenameProjectName] = useState('');
   const [firstFrameImagePreview, setFirstFrameImagePreview] = useState<string | null>(null);
   const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false);
   const [recentlyGeneratedVideos, setRecentlyGeneratedVideos] = useState<string[]>([]);
@@ -1138,6 +1141,34 @@ export default function VideoPage() {
       toast({
         title: 'Project Creation Failed',
         description: 'Could not create project. Please try again.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const renameProjectMutation = useMutation({
+    mutationFn: async (renameData: { projectId: string; name: string }) => {
+      return await apiRequest(`/api/projects/${renameData.projectId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: renameData.name }),
+      });
+    },
+    onSuccess: (updatedProject) => {
+      setShowRenameProject(false);
+      setRenameProjectName('');
+      // Invalidate and refetch projects
+      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+      refetchProjects();
+      toast({
+        title: 'Project Renamed',
+        description: `Project has been renamed to "${updatedProject.name}".`,
+      });
+    },
+    onError: () => {
+      toast({
+        title: 'Rename Failed',
+        description: 'Could not rename project. Please try again.',
         variant: 'destructive',
       });
     },
@@ -1482,6 +1513,15 @@ export default function VideoPage() {
     }
   };
 
+  const handleRenameProject = () => {
+    if (renameProjectName.trim() && selectedProject !== 'none') {
+      renameProjectMutation.mutate({
+        projectId: selectedProject,
+        name: renameProjectName.trim(),
+      });
+    }
+  };
+
   const onSubmit = (data: VideoGenerationForm) => {
     generateVideoMutation.mutate(data);
   };
@@ -1517,17 +1557,25 @@ export default function VideoPage() {
             <div className="lg:col-span-8 space-y-6">
               {/* Video Generation Form */}
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Settings className="w-5 h-5" />
+                <Card className="border-0 shadow-md bg-gradient-to-br from-background to-muted/20">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="flex items-center gap-3 text-xl">
+                      <div className="p-2 rounded-lg bg-primary/10">
+                        <Settings className="w-6 h-6 text-primary" />
+                      </div>
                       Video Configuration
                     </CardTitle>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Set up your video generation parameters
+                    </p>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    {/* Model Selection */}
-                    <div className="space-y-2">
-                      <Label>AI Model</Label>
+                    {/* Enhanced Model Selection */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-primary" />
+                        <Label className="text-sm font-semibold">AI Model</Label>
+                      </div>
                       <ModelSelector
                         value={form.watch('model')}
                         onChange={(modelId) => form.setValue('model', modelId as any, { shouldDirty: true })}
@@ -1537,17 +1585,20 @@ export default function VideoPage() {
 
                     <Separator />
 
-                    {/* Prompt */}
-                    <div className="space-y-2">
+                    {/* Enhanced Prompt Section */}
+                    <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <Label>Prompt</Label>
+                        <div className="flex items-center gap-2">
+                          <Edit className="w-4 h-4 text-primary" />
+                          <Label className="text-sm font-semibold">Video Prompt</Label>
+                        </div>
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
                           onClick={handleEnhancePrompt}
                           disabled={!form.watch('prompt')?.trim() || isEnhancingPrompt}
-                          className="flex items-center gap-2"
+                          className="flex items-center gap-2 hover:bg-primary/5"
                         >
                           {isEnhancingPrompt ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
@@ -1558,119 +1609,165 @@ export default function VideoPage() {
                         </Button>
                       </div>
                       <Textarea
-                        placeholder="Describe the video you want to generate..."
-                        className="min-h-[100px]"
+                        placeholder="Describe your video in detail... (e.g., 'A serene mountain lake at sunrise with gentle ripples on the water')"
+                        className="min-h-[120px] resize-none focus:ring-2 focus:ring-primary/20 bg-background/50"
                         {...form.register('prompt')}
                       />
                       {form.formState.errors.prompt && (
-                        <p className="text-sm text-destructive">
-                          {form.formState.errors.prompt.message}
-                        </p>
+                        <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+                          <AlertCircle className="w-4 h-4 text-destructive" />
+                          <p className="text-sm text-destructive">
+                            {form.formState.errors.prompt.message}
+                          </p>
+                        </div>
                       )}
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Resolution */}
-                      <div className="space-y-2">
-                        <Label>Resolution</Label>
+                    {/* Enhanced Resolution & Duration Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Enhanced Resolution */}
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <ImageIcon className="w-4 h-4 text-primary" />
+                          <Label className="text-sm font-semibold">Resolution</Label>
+                        </div>
                         <Select
                           value={form.watch('resolution')}
-                          onValueChange={(value) => form.setValue('resolution', value as any)}
+                          onValueChange={(value) => form.setValue('resolution', value as any, { shouldDirty: true })}
+                          disabled={generateVideoMutation.isPending}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className="h-12 focus:ring-2 focus:ring-primary/20">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {VIDEO_MODELS[currentModel]?.resolutions?.map((res: string) => (
-                              <SelectItem key={res} value={res}>
-                                {res}
-                              </SelectItem>
-                            )) || []}
+                            <SelectItem value="512p" className="py-3">
+                              <div className="flex flex-col items-start">
+                                <span className="font-medium">512p</span>
+                                <span className="text-xs text-muted-foreground">854 × 512 pixels</span>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="768p" className="py-3">
+                              <div className="flex flex-col items-start">
+                                <span className="font-medium">768p</span>
+                                <span className="text-xs text-muted-foreground">1366 × 768 pixels</span>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="1080p" className="py-3">
+                              <div className="flex flex-col items-start">
+                                <span className="font-medium">1080p</span>
+                                <span className="text-xs text-muted-foreground">1920 × 1080 pixels</span>
+                              </div>
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
 
-                      {/* Duration */}
-                      <div className="space-y-2">
-                        <Label className="flex items-center gap-2">
-                          <Clock className="w-4 h-4" />
-                          Duration
-                        </Label>
+                      {/* Enhanced Duration */}
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-primary" />
+                          <Label className="text-sm font-semibold">Duration</Label>
+                        </div>
                         <Select
                           value={form.watch('duration')?.toString()}
                           onValueChange={(value) => {
                             // Handle different duration formats for different models
                             if (VIDEO_MODELS[currentModel]?.supportsDurationInt) {
-                              form.setValue('duration', parseInt(value));
+                              form.setValue('duration', parseInt(value), { shouldDirty: true });
                             } else {
-                              form.setValue('duration', value as any);
+                              form.setValue('duration', value as any, { shouldDirty: true });
                             }
                           }}
+                          disabled={generateVideoMutation.isPending}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className="h-12 focus:ring-2 focus:ring-primary/20">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="6">6 seconds</SelectItem>
-                            <SelectItem value="10">10 seconds (768p only)</SelectItem>
+                            <SelectItem value="6" className="py-3">
+                              <div className="flex flex-col items-start">
+                                <span className="font-medium">6 seconds</span>
+                                <span className="text-xs text-muted-foreground">Standard duration</span>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="10" disabled={form.watch('resolution') !== '768p'} className="py-3">
+                              <div className="flex flex-col items-start">
+                                <span className="font-medium">10 seconds</span>
+                                <span className="text-xs text-muted-foreground">768p resolution only</span>
+                              </div>
+                            </SelectItem>
                           </SelectContent>
                         </Select>
+                        {form.watch('resolution') !== '768p' && (
+                          <p className="text-xs text-muted-foreground">
+                            10-second videos require 768p resolution
+                          </p>
+                        )}
                       </div>
                     </div>
 
                     <Separator />
 
-                    {/* Model-specific Options */}
+                    {/* Enhanced Model-specific Options */}
                     {currentModel === 'hailuo-02' && (
                       <>
-                        {/* Prompt Optimizer for Hailuo-02 */}
-                        <div className="flex items-center justify-between">
+                        {/* Enhanced Prompt Optimizer for Hailuo-02 */}
+                        <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border">
                           <div>
-                            <Label>Prompt Optimizer</Label>
-                            <p className="text-sm text-muted-foreground">
+                            <div className="flex items-center gap-2">
+                              <Sparkles className="w-4 h-4 text-primary" />
+                              <Label className="text-sm font-semibold">Prompt Optimizer</Label>
+                            </div>
+                            <p className="text-sm text-muted-foreground mt-1">
                               Automatically enhance your prompt for better results
                             </p>
                           </div>
                           <Switch
                             checked={form.watch('promptOptimizer')}
-                            onCheckedChange={(checked) => form.setValue('promptOptimizer', checked)}
+                            onCheckedChange={(checked) => form.setValue('promptOptimizer', checked, { shouldDirty: true })}
                           />
                         </div>
 
-                        {/* First Frame Image for Hailuo-02 */}
-                        <div className="space-y-2">
-                          <Label>First Frame Image (Optional)</Label>
+                        {/* Enhanced First Frame Image for Hailuo-02 */}
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <ImageIcon className="w-4 h-4 text-primary" />
+                            <Label className="text-sm font-semibold">First Frame Image (Optional)</Label>
+                          </div>
                           <p className="text-sm text-muted-foreground">
                             Sets the aspect ratio for your video and guides the generation style
                           </p>
-                          <ReferenceImageUpload
-                            value={firstFrameImagePreview || undefined}
-                            onChange={(value) => {
-                              setFirstFrameImagePreview(value || null);
-                              form.setValue('firstFrameImage', value || '');
-                            }}
-                            className="w-full"
-                          />
+                          <div className="p-4 bg-muted/30 rounded-lg border">
+                            <ReferenceImageUpload
+                              value={firstFrameImagePreview || undefined}
+                              onChange={(value) => {
+                                setFirstFrameImagePreview(value || null);
+                                form.setValue('firstFrameImage', value || '', { shouldDirty: true });
+                              }}
+                              className="w-full"
+                            />
+                          </div>
                         </div>
                       </>
                     )}
                   </CardContent>
                 </Card>
 
+                {/* Enhanced Generate Button */}
                 <Button
                   type="submit"
                   size="lg"
                   disabled={generateVideoMutation.isPending || !form.watch('prompt')?.trim()}
-                  className="w-full"
+                  className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   {generateVideoMutation.isPending ? (
                     <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      <Loader2 className="w-6 h-6 mr-3 animate-spin" />
                       Starting generation...
                     </>
                   ) : (
                     <>
-                      <Play className="w-4 h-4 mr-2" />
+                      <Play className="w-6 h-6 mr-3" />
                       Generate Video
                     </>
                   )}
@@ -1687,7 +1784,7 @@ export default function VideoPage() {
                     Project Panel
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4 lg:max-h-[calc(100vh-12rem)] lg:overflow-y-auto">
+                <CardContent className="space-y-4 lg:max-h-[calc(100vh-12rem)] lg:overflow-y-auto lg:pr-2">
                   {/* Project Selection */}
                   {projectsLoading ? (
                     <div className="flex items-center gap-2">
@@ -1723,43 +1820,105 @@ export default function VideoPage() {
                           <Plus className="w-4 h-4" />
                           New Project
                         </Button>
+                        {selectedProject !== 'none' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowRenameProject(!showRenameProject)}
+                            className="flex items-center gap-2"
+                          >
+                            <Edit className="w-4 h-4" />
+                            Rename
+                          </Button>
+                        )}
                       </div>
 
                       {showCreateProject && (
-                        <div className="space-y-3 p-4 border rounded-lg bg-muted/5">
+                        <div className="space-y-3 p-4 border rounded-lg bg-gradient-to-br from-muted/20 to-muted/10">
                           <div className="space-y-2">
-                            <Label htmlFor="newProjectName">Project Name</Label>
+                            <Label htmlFor="newProjectName" className="text-sm font-medium">Project Name</Label>
                             <Input
                               id="newProjectName"
-                              placeholder="Enter project name"
+                              placeholder="Enter a descriptive project name"
                               value={newProjectName}
                               onChange={(e) => setNewProjectName(e.target.value)}
+                              className="focus:ring-2 focus:ring-primary/20"
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="newProjectDescription">Description (optional)</Label>
+                            <Label htmlFor="newProjectDescription" className="text-sm font-medium">Description <span className="text-muted-foreground">(optional)</span></Label>
                             <Input
                               id="newProjectDescription"
-                              placeholder="Enter project description"
+                              placeholder="Brief description of the project"
                               value={newProjectDescription}
                               onChange={(e) => setNewProjectDescription(e.target.value)}
+                              className="focus:ring-2 focus:ring-primary/20"
                             />
                           </div>
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 pt-2">
                             <Button
                               onClick={handleCreateProject}
                               disabled={!newProjectName.trim() || createProjectMutation.isPending}
                               size="sm"
+                              className="flex-1"
                             >
                               {createProjectMutation.isPending ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
+                                <>
+                                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                  Creating...
+                                </>
                               ) : (
-                                'Create'
+                                <>
+                                  <Plus className="w-4 h-4 mr-2" />
+                                  Create Project
+                                </>
                               )}
                             </Button>
                             <Button
                               variant="outline"
                               onClick={() => setShowCreateProject(false)}
+                              size="sm"
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+
+                      {showRenameProject && selectedProject !== 'none' && (
+                        <div className="space-y-3 p-4 border rounded-lg bg-gradient-to-br from-blue-50/50 to-blue-100/30">
+                          <div className="space-y-2">
+                            <Label htmlFor="renameProjectName" className="text-sm font-medium">New Project Name</Label>
+                            <Input
+                              id="renameProjectName"
+                              placeholder="Enter new project name"
+                              value={renameProjectName}
+                              onChange={(e) => setRenameProjectName(e.target.value)}
+                              className="focus:ring-2 focus:ring-primary/20"
+                            />
+                          </div>
+                          <div className="flex gap-2 pt-2">
+                            <Button
+                              onClick={handleRenameProject}
+                              disabled={!renameProjectName.trim() || renameProjectMutation.isPending}
+                              size="sm"
+                              className="flex-1"
+                            >
+                              {renameProjectMutation.isPending ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                  Renaming...
+                                </>
+                              ) : (
+                                <>
+                                  <Edit className="w-4 h-4 mr-2" />
+                                  Rename Project
+                                </>
+                              )}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={() => setShowRenameProject(false)}
                               size="sm"
                             >
                               Cancel
@@ -1773,30 +1932,33 @@ export default function VideoPage() {
                   {/* Project Videos */}
                   <div className="space-y-3">
                     <Separator />
-                    <h4 className="text-sm font-medium">
+                    <h4 className="text-sm font-medium flex items-center gap-2">
+                      <VideoIcon className="w-4 h-4" />
                       {selectedProject === 'none' ? 'Unassigned Videos' : 'Project Videos'}
                     </h4>
                     
-                    <ProjectVideoPreview 
-                      selectedProject={selectedProject} 
-                      projects={projects || []}
-                      compact={true}
-                      onVideoPlay={(videoId) => console.log('Playing video:', videoId)}
-                      onVideoDelete={(videoId) => console.log('Deleting video:', videoId)}
-                    />
+                    <div className="max-h-[350px] overflow-y-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent pr-1">
+                      <ProjectVideoPreview 
+                        selectedProject={selectedProject} 
+                        projects={projects || []}
+                        compact={true}
+                        onVideoPlay={(videoId) => console.log('Playing video:', videoId)}
+                        onVideoDelete={(videoId) => console.log('Deleting video:', videoId)}
+                      />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
           </div>
 
-          {/* Results Panel - Multiple concurrent results */}
+          {/* Results Panel - Multiple concurrent results with integrated Job Tray */}
           {results.length > 0 && (
-            <div className="space-y-4 mt-8" data-result-panel>
+            <div className="space-y-6 mt-8" data-result-panel>
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-semibold flex items-center gap-2">
                   <Sparkles className="w-6 h-6 text-primary" />
-                  Results
+                  Results & Job Queue
                   <Badge variant="secondary" className="ml-2">
                     {results.length}
                   </Badge>
@@ -1821,8 +1983,45 @@ export default function VideoPage() {
                 </div>
               </div>
               
-              {/* Recent Results Grid */}
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {/* Job Status Summary */}
+              {(() => {
+                const pendingJobs = results.filter(r => r.status === 'pending').length;
+                const processingJobs = results.filter(r => r.status === 'processing').length;
+                const completedJobs = results.filter(r => r.status === 'completed').length;
+                const failedJobs = results.filter(r => r.status === 'failed').length;
+                
+                return (
+                  <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg border">
+                    {processingJobs > 0 && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                        <span>{processingJobs} generating</span>
+                      </div>
+                    )}
+                    {pendingJobs > 0 && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+                        <span>{pendingJobs} queued</span>
+                      </div>
+                    )}
+                    {completedJobs > 0 && (
+                      <div className="flex items-center gap-2 text-sm text-green-600">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span>{completedJobs} completed</span>
+                      </div>
+                    )}
+                    {failedJobs > 0 && (
+                      <div className="flex items-center gap-2 text-sm text-destructive">
+                        <div className="w-2 h-2 bg-destructive rounded-full"></div>
+                        <span>{failedJobs} failed</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+              
+              {/* Enhanced Results Grid with Job Tray Integration */}
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {results.slice(0, 5).map((result, index) => {
                   const isActive = activeResultVideoId === result.videoId;
                   const isCompleted = result.status === 'completed' && result.data;
@@ -1856,13 +2055,13 @@ export default function VideoPage() {
                   return (
                     <Card 
                       key={result.videoId}
-                      className={`cursor-pointer transition-all hover:shadow-md ${
-                        isActive ? 'ring-2 ring-primary shadow-lg' : ''
-                      } ${!isCompleted ? 'opacity-60' : ''}`}
+                      className={`transition-all duration-200 ${
+                        isActive ? 'ring-2 ring-primary shadow-lg' : 'hover:shadow-md'
+                      } ${!isCompleted ? 'opacity-70' : 'cursor-pointer'}`}
                       onClick={() => isCompleted && setActiveResultVideoId(result.videoId)}
                     >
                       <CardContent className="p-4 space-y-3">
-                        {/* Status Header */}
+                        {/* Enhanced Status Header */}
                         <div className="flex items-center justify-between">
                           <Badge 
                             variant={
@@ -1871,7 +2070,7 @@ export default function VideoPage() {
                               result.status === 'failed' ? 'destructive' :
                               'outline'
                             }
-                            className="text-xs font-medium"
+                            className="text-xs font-medium px-2 py-1"
                           >
                             {result.status === 'processing' && <Loader2 className="w-3 h-3 animate-spin mr-1" />}
                             {result.status === 'failed' && <AlertCircle className="w-3 h-3 mr-1" />}
@@ -1881,38 +2080,63 @@ export default function VideoPage() {
                              result.status === 'completed' ? 'Ready' :
                              result.status === 'failed' ? 'Failed' : 'Queued'}
                           </Badge>
-                          <span className="text-xs text-muted-foreground">#{index + 1}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">#{index + 1}</span>
+                            {isCompleted && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-6 w-6 p-0"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handlePlayVideo(result.videoId);
+                                }}
+                              >
+                                <Play className="w-3 h-3" />
+                              </Button>
+                            )}
+                          </div>
                         </div>
                         
-                        {/* Prompt Preview */}
+                        {/* Enhanced Prompt Preview */}
                         <div className="space-y-1">
                           <p className="text-sm font-medium text-foreground line-clamp-2 leading-relaxed">
                             {isCompleted && result.data ? result.data.prompt : result.promptAtSubmit}
                           </p>
                         </div>
                         
-                        {/* Elapsed Time & Model Info */}
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1">
+                        {/* Enhanced Time & Model Info */}
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="flex items-center gap-1 text-muted-foreground">
                             <Clock className="w-3 h-3" />
                             {getElapsedTime()}
                           </span>
                           {result.modelAtSubmit && (
-                            <span className="bg-muted px-2 py-1 rounded text-xs">
-                              {result.modelAtSubmit}
+                            <span className="bg-muted/60 px-2 py-1 rounded text-xs font-medium">
+                              {result.modelAtSubmit.replace('hailuo-02', 'HaiLuo')}
                             </span>
                           )}
                         </div>
                         
-                        {/* Progress indicator for processing */}
+                        {/* Enhanced Progress indicator */}
                         {result.status === 'processing' && (
-                          <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
-                            <div className="bg-primary h-1.5 rounded-full animate-pulse" 
-                                 style={{
-                                   width: '70%',
-                                   animation: 'progress-shimmer 2s infinite'
-                                 }}>
+                          <div className="space-y-2">
+                            <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                              <div className="bg-gradient-to-r from-primary to-primary/80 h-2 rounded-full animate-pulse transition-all duration-300" 
+                                   style={{
+                                     width: '75%',
+                                     animation: 'progress-shimmer 2s infinite ease-in-out'
+                                   }}>
+                              </div>
                             </div>
+                            <p className="text-xs text-center text-muted-foreground">Generating video...</p>
+                          </div>
+                        )}
+                        
+                        {/* Error message for failed jobs */}
+                        {result.status === 'failed' && (
+                          <div className="bg-destructive/10 border border-destructive/20 rounded-md p-2">
+                            <p className="text-xs text-destructive">Generation failed. Please try again.</p>
                           </div>
                         )}
                       </CardContent>
