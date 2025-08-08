@@ -68,6 +68,7 @@ export interface VideoCardProps {
   onUseReferenceImage?: (src: string) => void;
   className?: string;
   autoPlay?: boolean; // Auto-play the video when it loads
+  expanded?: boolean; // Whether to show video in expanded view (respects natural aspect ratio)
 }
 
 interface Project {
@@ -83,7 +84,8 @@ export default function VideoCard({
   onMove, 
   onUseReferenceImage,
   className,
-  autoPlay = false
+  autoPlay = false,
+  expanded = false
 }: VideoCardProps) {
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -357,8 +359,10 @@ export default function VideoCard({
   return (
     <Card className={cn("group relative overflow-hidden", className)} draggable={draggable}>
       <CardContent className="p-0">
-        {/* Video/Thumbnail Section */}
-        <div className="aspect-video bg-muted relative overflow-hidden">
+        {/* Video/Thumbnail Section - Responsive aspect ratio */}
+        <div className={`bg-muted relative overflow-hidden ${
+          expanded ? 'flex justify-center items-center' : 'aspect-video'
+        }`}>
           {/* Tasteful placeholder background */}
           {!hasThumbnail() && (
             <div 
@@ -380,7 +384,10 @@ export default function VideoCard({
               controls
               preload="metadata"
               poster={getPosterSrc() || undefined}
-              className="w-full h-full object-cover"
+              className={expanded 
+                ? "max-w-full max-h-[70vh] object-contain" 
+                : "w-full h-full object-cover"
+              }
               onPlay={() => setIsPlaying(true)}
               onPause={() => setIsPlaying(false)}
               onEnded={() => setIsPlaying(false)}
@@ -392,7 +399,10 @@ export default function VideoCard({
             <img
               src={getPosterSrc()!}
               alt={video.prompt}
-              className="w-full h-full object-cover"
+              className={expanded 
+                ? "max-w-full max-h-[70vh] object-contain" 
+                : "w-full h-full object-cover"
+              }
             />
           ) : null}
 

@@ -1808,16 +1808,26 @@ export default function VideoPage() {
                   
                   // Calculate elapsed time
                   const getElapsedTime = () => {
-                    const startTime = new Date(result.createdAt);
-                    const now = new Date();
-                    const diffMs = now.getTime() - startTime.getTime();
-                    const diffSeconds = Math.floor(diffMs / 1000);
-                    const diffMinutes = Math.floor(diffSeconds / 60);
-                    const diffHours = Math.floor(diffMinutes / 60);
+                    if (!result.submittedAt) return 'Unknown time';
                     
-                    if (diffHours > 0) return `${diffHours}h ${diffMinutes % 60}m ago`;
-                    if (diffMinutes > 0) return `${diffMinutes}m ${diffSeconds % 60}s ago`;
-                    return `${diffSeconds}s ago`;
+                    try {
+                      const startTime = new Date(result.submittedAt);
+                      const now = new Date();
+                      
+                      // Check if date is valid
+                      if (isNaN(startTime.getTime())) return 'Unknown time';
+                      
+                      const diffMs = now.getTime() - startTime.getTime();
+                      const diffSeconds = Math.floor(diffMs / 1000);
+                      const diffMinutes = Math.floor(diffSeconds / 60);
+                      const diffHours = Math.floor(diffMinutes / 60);
+                      
+                      if (diffHours > 0) return `${diffHours}h ${diffMinutes % 60}m ago`;
+                      if (diffMinutes > 0) return `${diffMinutes}m ${diffSeconds % 60}s ago`;
+                      return `${diffSeconds}s ago`;
+                    } catch (error) {
+                      return 'Unknown time';
+                    }
                   };
                   
                   return (
@@ -1873,8 +1883,13 @@ export default function VideoPage() {
                         
                         {/* Progress indicator for processing */}
                         {result.status === 'processing' && (
-                          <div className="w-full bg-muted rounded-full h-1.5">
-                            <div className="bg-primary h-1.5 rounded-full animate-pulse" style={{width: '60%'}}></div>
+                          <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+                            <div className="bg-primary h-1.5 rounded-full animate-pulse" 
+                                 style={{
+                                   width: '70%',
+                                   animation: 'progress-shimmer 2s infinite'
+                                 }}>
+                            </div>
                           </div>
                         )}
                       </CardContent>
@@ -1890,16 +1905,26 @@ export default function VideoPage() {
                 
                 // Calculate elapsed time for active result
                 const getActiveElapsedTime = () => {
-                  const startTime = new Date(activeResult.createdAt);
-                  const now = new Date();
-                  const diffMs = now.getTime() - startTime.getTime();
-                  const diffSeconds = Math.floor(diffMs / 1000);
-                  const diffMinutes = Math.floor(diffSeconds / 60);
-                  const diffHours = Math.floor(diffMinutes / 60);
+                  if (!activeResult.submittedAt) return 'Unknown time';
                   
-                  if (diffHours > 0) return `${diffHours}h ${diffMinutes % 60}m ago`;
-                  if (diffMinutes > 0) return `${diffMinutes}m ${diffSeconds % 60}s ago`;
-                  return `${diffSeconds}s ago`;
+                  try {
+                    const startTime = new Date(activeResult.submittedAt);
+                    const now = new Date();
+                    
+                    // Check if date is valid
+                    if (isNaN(startTime.getTime())) return 'Unknown time';
+                    
+                    const diffMs = now.getTime() - startTime.getTime();
+                    const diffSeconds = Math.floor(diffMs / 1000);
+                    const diffMinutes = Math.floor(diffSeconds / 60);
+                    const diffHours = Math.floor(diffMinutes / 60);
+                    
+                    if (diffHours > 0) return `${diffHours}h ${diffMinutes % 60}m ago`;
+                    if (diffMinutes > 0) return `${diffMinutes}m ${diffSeconds % 60}s ago`;
+                    return `${diffSeconds}s ago`;
+                  } catch (error) {
+                    return 'Unknown time';
+                  }
                 };
                 
                 if (activeResult.status === 'completed' && activeResult.data) {
@@ -1930,6 +1955,7 @@ export default function VideoPage() {
                             }}
                             className="w-full"
                             autoPlay={true}
+                            expanded={true}
                           />
                         </div>
                       </CardContent>
@@ -1986,8 +2012,13 @@ export default function VideoPage() {
                           {/* Progress Bar for Processing */}
                           {activeResult.status === 'processing' && (
                             <div className="w-full max-w-md">
-                              <div className="w-full bg-muted rounded-full h-2">
-                                <div className="bg-blue-500 h-2 rounded-full animate-pulse" style={{width: '70%'}}></div>
+                              <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                                <div className="bg-blue-500 h-2 rounded-full" 
+                                     style={{
+                                       width: '75%',
+                                       animation: 'progress-flow 3s infinite'
+                                     }}>
+                                </div>
                               </div>
                               <p className="text-xs text-muted-foreground text-center mt-2">
                                 This usually takes 30-60 seconds

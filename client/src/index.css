@@ -2,6 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Progress bar animations */
+@keyframes progress-shimmer {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(0%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes progress-flow {
+  0% { transform: translateX(-100%); opacity: 0.5; }
+  50% { transform: translateX(50%); opacity: 1; }
+  100% { transform: translateX(200%); opacity: 0.5; }
+}
+
 :root {
   --background: 0 0% 100%;
   --foreground: 20 14.3% 4.1%;
