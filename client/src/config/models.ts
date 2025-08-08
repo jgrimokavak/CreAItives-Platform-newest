@@ -22,5 +22,17 @@ export const VIDEO_MODELS: ModelDef[] = [
     recommended: true,
     badges: ['Cinematic', 'High Quality']
   },
-  // TODO: add more models as they become available
+  {
+    id: 'runway-gen3',
+    name: 'Runway Gen-3 Alpha',
+    summary: 'Fast video generation with motion control (1–2 min typical).',
+    details: [
+      'Optimized for quick generation times',
+      'Advanced motion and camera controls',
+      'Best for dynamic scenes and action',
+      'Supports 720p–1080p resolutions'
+    ],
+    recommended: false,
+    badges: ['Fast', 'Motion Control']
+  }
 ];

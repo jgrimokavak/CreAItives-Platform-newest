@@ -226,10 +226,12 @@ export function ModelSelector({ value, onChange, disabled = false }: ModelSelect
         })}
       </div>
       
-      {/* Accessibility hint */}
-      <p className="text-xs text-muted-foreground">
-        Use arrow keys to navigate, Enter or Space to select
-      </p>
+      {/* Accessibility hint - only show with multiple models */}
+      {VIDEO_MODELS.length > 1 && (
+        <p className="text-xs text-muted-foreground">
+          Use arrow keys to navigate, Enter or Space to select
+        </p>
+      )}
     </div>
   );
 }

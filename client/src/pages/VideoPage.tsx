@@ -911,7 +911,7 @@ function VideoGallery() {
 // Video generation form schema
 const videoGenerationSchema = z.object({
   prompt: z.string().min(1, 'Prompt is required').max(2000, 'Prompt must be less than 2000 characters'),
-  model: z.string().refine(id => MODEL_CONFIG.find(m => m.id === id), { message: 'Invalid model selected' }),
+  model: z.enum(['hailuo-02', 'runway-gen3']),
   resolution: z.enum(['512p', '768p', '1080p']),
   duration: z.number().int().min(6).max(10), // 6 or 10 seconds only  
   projectId: z.string().optional(),
