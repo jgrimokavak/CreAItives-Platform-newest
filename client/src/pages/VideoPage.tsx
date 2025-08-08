@@ -20,6 +20,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
   VideoIcon, 
   Video as VideoIconSm,
@@ -35,7 +36,10 @@ import {
   Plus,
   Download,
   Trash2,
-  ExternalLink
+  ExternalLink,
+  ChevronDown,
+  ChevronRight,
+  Folder
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
@@ -223,23 +227,37 @@ function ProjectVideoPreview({ selectedProject, projects, compact, onVideoPlay, 
 // Video Gallery Component
 function VideoGallery() {
   const { toast } = useToast();
-  const { data: videosResponse, isLoading } = useQuery<{items: any[]}>({
+  
+  // State for managing collapse state of project groups
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+
+  // Fetch projects with stats
+  const { data: projectsData, isLoading: projectsLoading } = useQuery({
+    queryKey: ['/api/projects', { withStats: true }],
+    queryFn: () => apiRequest('/api/projects?withStats=true'),
+  });
+
+  // Fetch all videos
+  const { data: videosResponse, isLoading: videosLoading } = useQuery<{items: Video[]}>({
     queryKey: ['/api/video'],
     queryFn: () => apiRequest('/api/video'),
   });
+
+  const isLoading = projectsLoading || videosLoading;
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
         <Loader2 className="w-8 h-8 animate-spin" />
-        <span className="ml-2">Loading videos...</span>
+        <span className="ml-2">Loading gallery...</span>
       </div>
     );
   }
 
-  const videos = videosResponse?.items || [];
+  const projects = projectsData || [];
+  const allVideos = videosResponse?.items || [];
 
-  if (!videos || videos.length === 0) {
+  if (allVideos.length === 0) {
     return (
       <div className="rounded-lg border bg-muted/5 p-8">
         <div className="text-center space-y-3">
@@ -253,23 +271,120 @@ function VideoGallery() {
     );
   }
 
+  // Group videos by projectId
+  const videoGroups: Record<string, Video[]> = {};
+  
+  // Initialize groups for all projects
+  projects.forEach((project: any) => {
+    videoGroups[project.id] = [];
+  });
+  
+  // Add unassigned group
+  videoGroups['unassigned'] = [];
+
+  // Group videos
+  allVideos.forEach((video) => {
+    const groupKey = video.projectId || 'unassigned';
+    if (!videoGroups[groupKey]) {
+      videoGroups[groupKey] = [];
+    }
+    videoGroups[groupKey].push(video);
+  });
+
+  // Filter out empty groups and sort
+  const nonEmptyGroups = Object.entries(videoGroups).filter(([_, videos]) => videos.length > 0);
+  
+  const toggleGroup = (groupId: string) => {
+    setCollapsedGroups(prev => ({
+      ...prev,
+      [groupId]: !prev[groupId]
+    }));
+  };
+
+  const getProjectName = (groupId: string) => {
+    if (groupId === 'unassigned') return 'Unassigned';
+    const project = projects.find((p: any) => p.id === groupId);
+    return project?.name || 'Unknown Project';
+  };
+
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-medium">Your Videos ({videos.length})</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {videos.map((video) => (
-          <VideoCard
-            key={video.id}
-            video={{
-              ...video,
-              model: video.model || 'hailuo-02',
-              status: video.status as 'pending' | 'processing' | 'completed' | 'failed',
-              createdAt: typeof video.createdAt === 'string' ? video.createdAt : video.createdAt?.toISOString() || null
-            }}
-            className="w-full"
-          />
-        ))}
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-medium">Video Gallery</h3>
+        <Badge variant="secondary">{allVideos.length} total videos</Badge>
       </div>
+
+      {nonEmptyGroups.length === 0 ? (
+        <div className="rounded-lg border bg-muted/5 p-8">
+          <div className="text-center space-y-3">
+            <Folder className="w-16 h-16 text-muted-foreground mx-auto" />
+            <h3 className="text-lg font-medium">No Video Groups</h3>
+            <p className="text-muted-foreground max-w-md mx-auto">
+              Videos will be organized by projects once you generate some content.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {nonEmptyGroups.map(([groupId, videos]) => {
+            const isCollapsed = collapsedGroups[groupId];
+            const projectName = getProjectName(groupId);
+            
+            return (
+              <Card key={groupId}>
+                <Collapsible open={!isCollapsed} onOpenChange={() => toggleGroup(groupId)}>
+                  <CollapsibleTrigger asChild>
+                    <CardHeader className="hover:bg-muted/50 cursor-pointer transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2">
+                            {isCollapsed ? (
+                              <ChevronRight className="w-4 h-4" />
+                            ) : (
+                              <ChevronDown className="w-4 h-4" />
+                            )}
+                            <Folder className="w-5 h-5 text-primary" />
+                          </div>
+                          <div>
+                            <CardTitle className="text-lg">{projectName}</CardTitle>
+                            {groupId !== 'unassigned' && (
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {projects.find((p: any) => p.id === groupId)?.description || ''}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <Badge variant="outline">
+                          {videos.length} video{videos.length !== 1 ? 's' : ''}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                  </CollapsibleTrigger>
+                  
+                  <CollapsibleContent>
+                    <CardContent className="pt-0">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {videos.map((video) => (
+                          <VideoCard
+                            key={video.id}
+                            video={{
+                              ...video,
+                              model: video.model || 'hailuo-02',
+                              status: video.status as 'pending' | 'processing' | 'completed' | 'failed',
+                              createdAt: typeof video.createdAt === 'string' ? video.createdAt : video.createdAt?.toISOString() || null
+                            }}
+                            className="w-full"
+                          />
+                        ))}
+                      </div>
+                    </CardContent>
+                  </CollapsibleContent>
+                </Collapsible>
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
