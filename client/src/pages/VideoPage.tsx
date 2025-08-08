@@ -49,11 +49,11 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
-import { cn } from '@/lib/utils';
 import SimpleGalleryPage from './SimpleGalleryPage';
 import ReferenceImageUpload from '@/components/ReferenceImageUpload';
 import type { Video } from '@shared/schema';
 import VideoCard from '@/components/VideoCard';
+import { JobTray, type JobTrayItem } from '@/components/JobTray';
 import { ModelSelector } from '@/components/ModelSelector';
 import { VIDEO_MODELS as MODEL_CONFIG } from '@/config/models';
 
@@ -985,6 +985,9 @@ export default function VideoPage() {
   const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false);
   const [recentlyGeneratedVideos, setRecentlyGeneratedVideos] = useState<string[]>([]);
   
+  // Job Tray state
+  const [jobTrayItems, setJobTrayItems] = useState<JobTrayItem[]>([]);
+  
   // Track active polling for each job
   const [activePolling, setActivePolling] = useState<Set<string>>(new Set());
   
@@ -1164,6 +1167,16 @@ export default function VideoPage() {
       if (data.video?.id) {
         const formValues = form.getValues();
         
+        // Add to Job Tray immediately
+        const newJob: JobTrayItem = {
+          id: data.video.id,
+          status: 'pending',
+          prompt: data.video.prompt || formValues.prompt,
+          model: data.video.model || formValues.model,
+          createdAt: Date.now()
+        };
+        setJobTrayItems(prev => [newJob, ...prev.slice(0, 4)]); // Keep max 5 jobs
+        
         // Add to Results array with form snapshot to prevent mismatches
         const newResult: ResultEntry = {
           videoId: data.video.id,
@@ -1209,6 +1222,8 @@ export default function VideoPage() {
         const response = await apiRequest(`/api/video/status/${videoId}`);
         
         if (response.status === 'completed') {
+          // Update Job Tray item
+          handleJobUpdate(videoId, 'completed');
           
           toast({
             title: 'Video Ready!',
@@ -1252,6 +1267,8 @@ export default function VideoPage() {
         }
         
         if (response.status === 'failed') {
+          // Update Job Tray item with error
+          handleJobUpdate(videoId, 'failed', response.error || 'Generation failed');
           
           // Update the specific result entry with failed status
           setResults(prev => prev.map(result => 
@@ -1277,7 +1294,7 @@ export default function VideoPage() {
         
         // Update Job Tray status to processing
         if (response.status === 'processing') {
-          // Status is already updated in the results state
+          handleJobUpdate(videoId, 'processing');
         }
         
         // Update results status for any non-completed/failed status
@@ -1313,12 +1330,7 @@ export default function VideoPage() {
         if (attempts < 5) {
           setTimeout(poll, 6000);
         } else {
-          // Update the result entry with failed status
-          setResults(prev => prev.map(result => 
-            result.videoId === videoId 
-              ? { ...result, status: 'failed' as const } 
-              : result
-          ));
+          handleJobUpdate(videoId, 'failed', 'Failed to check status');
           
           // Stop polling for this job
           setActivePolling(prev => {
@@ -1334,7 +1346,101 @@ export default function VideoPage() {
     poll();
   };
 
+  // Job Tray handlers
+  const handleJobUpdate = (jobId: string, status: JobTrayItem['status'], error?: string) => {
+    setJobTrayItems(prev => 
+      prev.map(job => 
+        job.id === jobId 
+          ? { ...job, status, error }
+          : job
+      )
+    );
+  };
 
+  const handleJobDismiss = (jobId: string) => {
+    setJobTrayItems(prev => prev.filter(job => job.id !== jobId));
+  };
+
+  const handlePlayVideo = async (videoId: string) => {
+    try {
+      // Fetch the full video data
+      const response = await apiRequest(`/api/video/status/${videoId}`);
+      
+      if (response.status === 'completed') {
+        // Update the specific result entry with fetched data
+        setResults(prev => {
+          const existingIndex = prev.findIndex(r => r.videoId === videoId);
+          if (existingIndex >= 0) {
+            // Update existing result
+            return prev.map(result => 
+              result.videoId === videoId 
+                ? { 
+                    ...result, 
+                    status: 'completed' as const,
+                    data: {
+                      ...response,
+                      model: response.model || 'hailuo-02',
+                      status: response.status as 'pending' | 'processing' | 'completed' | 'failed',
+                      createdAt: response.createdAt instanceof Date 
+                        ? response.createdAt.toISOString() 
+                        : response.createdAt || new Date().toISOString()
+                    }
+                  }
+                : result
+            );
+          } else {
+            // Create new result entry if not found
+            const newResult: ResultEntry = {
+              videoId,
+              submittedAt: Date.now(),
+              promptAtSubmit: response.prompt || 'Unknown prompt',
+              modelAtSubmit: response.model || 'hailuo-02',
+              status: 'completed',
+              data: {
+                ...response,
+                model: response.model || 'hailuo-02',
+                status: response.status as 'pending' | 'processing' | 'completed' | 'failed',
+                createdAt: response.createdAt instanceof Date 
+                  ? response.createdAt.toISOString() 
+                  : response.createdAt || new Date().toISOString()
+              }
+            };
+            return [newResult, ...prev.slice(0, 4)];
+          }
+        });
+        
+        // Set as active result and scroll to Result panel
+        setActiveResultVideoId(videoId);
+        
+        setTimeout(() => {
+          const resultPanel = document.querySelector('[data-result-panel]');
+          if (resultPanel) {
+            resultPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 100);
+      }
+    } catch (error) {
+      console.error('Error playing video:', error);
+      toast({
+        title: 'Playback Error',
+        description: 'Could not load video for playback.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleJumpToResult = (videoId: string) => {
+    // Set this video as the active result and scroll to Result panel
+    setActiveResultVideoId(videoId);
+    
+    // Scroll to Result panel smoothly
+    setTimeout(() => {
+      const resultPanel = document.querySelector('[data-result-panel]');
+      if (resultPanel) {
+        resultPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  };
 
   // Handle duration and resolution validation
   useEffect(() => {
@@ -1684,10 +1790,9 @@ export default function VideoPage() {
             </div>
           </div>
 
-          {/* Results Panel - Gallery-style with integrated Job Tray */}
+          {/* Results Panel - Multiple concurrent results */}
           {results.length > 0 && (
-            <div className="space-y-6 mt-8" data-result-panel>
-              {/* Results Header */}
+            <div className="space-y-4 mt-8" data-result-panel>
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-semibold flex items-center gap-2">
                   <Sparkles className="w-6 h-6 text-primary" />
@@ -1715,12 +1820,12 @@ export default function VideoPage() {
                   </Button>
                 </div>
               </div>
-
-              {/* Results Grid - Gallery Style */}
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {results.map((result, index) => {
+              
+              {/* Recent Results Grid */}
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {results.slice(0, 5).map((result, index) => {
+                  const isActive = activeResultVideoId === result.videoId;
                   const isCompleted = result.status === 'completed' && result.data;
-                  const hasReferenceImage = result.data?.firstFrameImage || result.data?.referenceImageUrl;
                   
                   // Calculate elapsed time
                   const getElapsedTime = () => {
@@ -1730,6 +1835,7 @@ export default function VideoPage() {
                       const startTime = new Date(result.submittedAt);
                       const now = new Date();
                       
+                      // Check if date is valid
                       if (isNaN(startTime.getTime())) return 'Unknown time';
                       
                       const diffMs = now.getTime() - startTime.getTime();
@@ -1737,6 +1843,8 @@ export default function VideoPage() {
                       const diffMinutes = Math.floor(diffSeconds / 60);
                       const diffHours = Math.floor(diffMinutes / 60);
                       
+                      // For completed jobs, stop the clock to show total generation time
+                      // For processing jobs, show elapsed time
                       if (diffHours > 0) return `${diffHours}h ${diffMinutes % 60}m`;
                       if (diffMinutes > 0) return `${diffMinutes}m ${diffSeconds % 60}s`;
                       return `${diffSeconds}s`;
@@ -1744,80 +1852,18 @@ export default function VideoPage() {
                       return 'Unknown time';
                     }
                   };
-
+                  
                   return (
-                    <div 
+                    <Card 
                       key={result.videoId}
-                      className={cn(
-                        "bg-card rounded-lg overflow-hidden shadow-sm border transition-all group cursor-pointer",
-                        "border-border hover:shadow-lg hover:border-primary/20"
-                      )}
+                      className={`cursor-pointer transition-all hover:shadow-md ${
+                        isActive ? 'ring-2 ring-primary shadow-lg' : ''
+                      } ${!isCompleted ? 'opacity-60' : ''}`}
                       onClick={() => isCompleted && setActiveResultVideoId(result.videoId)}
                     >
-                      {/* Video Thumbnail/Preview */}
-                      <div className="relative pb-[56.25%] bg-muted">
-                        {isCompleted && result.data ? (
-                          <div className="absolute inset-0">
-                            <video 
-                              src={result.data.url || undefined}
-                              poster={result.data.thumbUrl || undefined}
-                              className="w-full h-full object-cover"
-                              muted
-                              preload="metadata"
-                            />
-                            {/* Play overlay */}
-                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                              <div className="bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg">
-                                <Play className="w-6 h-6 text-gray-900 fill-gray-900" />
-                              </div>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            {result.status === 'processing' && (
-                              <div className="flex flex-col items-center gap-2">
-                                <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-                                <div className="w-24 bg-muted-foreground/20 rounded-full h-1 overflow-hidden">
-                                  <div className="bg-blue-500 h-1 rounded-full animate-pulse" 
-                                       style={{ width: '60%' }}>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                            {result.status === 'failed' && (
-                              <AlertCircle className="w-8 h-8 text-red-500" />
-                            )}
-                            {result.status === 'pending' && (
-                              <Clock className="w-8 h-8 text-orange-500" />
-                            )}
-                          </div>
-                        )}
-
-                        {/* Prompt Number Badge */}
-                        <div className="absolute top-2 left-2">
-                          <Badge 
-                            variant="secondary" 
-                            className="bg-background/90 backdrop-blur-sm text-xs font-semibold shadow-sm"
-                          >
-                            #{index + 1}
-                          </Badge>
-                        </div>
-
-                        {/* Reference Image Indicator - only if actually used */}
-                        {hasReferenceImage && (
-                          <div className="absolute top-2 right-2">
-                            <Badge 
-                              variant="outline" 
-                              className="bg-background/90 backdrop-blur-sm text-xs shadow-sm border-blue-200 text-blue-700"
-                            >
-                              <ImageIcon className="w-3 h-3 mr-1" />
-                              Ref
-                            </Badge>
-                          </div>
-                        )}
-
-                        {/* Status Badge */}
-                        <div className="absolute bottom-2 right-2">
+                      <CardContent className="p-4 space-y-3">
+                        {/* Status Header */}
+                        <div className="flex items-center justify-between">
                           <Badge 
                             variant={
                               result.status === 'completed' ? 'default' :
@@ -1825,7 +1871,7 @@ export default function VideoPage() {
                               result.status === 'failed' ? 'destructive' :
                               'outline'
                             }
-                            className="bg-background/90 backdrop-blur-sm text-xs shadow-sm"
+                            className="text-xs font-medium"
                           >
                             {result.status === 'processing' && <Loader2 className="w-3 h-3 animate-spin mr-1" />}
                             {result.status === 'failed' && <AlertCircle className="w-3 h-3 mr-1" />}
@@ -1835,132 +1881,194 @@ export default function VideoPage() {
                              result.status === 'completed' ? 'Ready' :
                              result.status === 'failed' ? 'Failed' : 'Queued'}
                           </Badge>
+                          <span className="text-xs text-muted-foreground">#{index + 1}</span>
                         </div>
-
-                        {/* Download button for completed videos */}
-                        {isCompleted && (
-                          <div className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-8 w-8 p-0 bg-background/90 backdrop-blur-sm shadow-sm hover:bg-background"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                // Handle download
-                                const link = document.createElement('a');
-                                link.href = result.data!.url!;
-                                link.download = `video-${result.videoId}.mp4`;
-                                link.click();
-                              }}
-                            >
-                              <Download className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Card Content - matching Gallery style */}
-                      <CardContent className="p-3">
-                        <div className="space-y-2">
-                          {/* Prompt */}
+                        
+                        {/* Prompt Preview */}
+                        <div className="space-y-1">
                           <p className="text-sm font-medium text-foreground line-clamp-2 leading-relaxed">
                             {isCompleted && result.data ? result.data.prompt : result.promptAtSubmit}
                           </p>
-                          
-                          {/* Metadata */}
-                          <div className="flex items-center justify-between text-xs text-muted-foreground">
-                            <div className="flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              {getElapsedTime()}
+                        </div>
+                        
+                        {/* Elapsed Time & Model Info */}
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {getElapsedTime()}
+                          </span>
+                          {result.modelAtSubmit && (
+                            <span className="bg-muted px-2 py-1 rounded text-xs">
+                              {result.modelAtSubmit}
+                            </span>
+                          )}
+                        </div>
+                        
+                        {/* Progress indicator for processing */}
+                        {result.status === 'processing' && (
+                          <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+                            <div className="bg-primary h-1.5 rounded-full animate-pulse" 
+                                 style={{
+                                   width: '70%',
+                                   animation: 'progress-shimmer 2s infinite'
+                                 }}>
                             </div>
-                            {result.modelAtSubmit && (
-                              <Badge variant="outline" className="text-xs py-0 px-1.5">
-                                {result.modelAtSubmit}
-                              </Badge>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+              
+              {/* Active Result Display - Main Video Player */}
+              {(() => {
+                const activeResult = results.find(r => r.videoId === activeResultVideoId);
+                if (!activeResult) return null;
+                
+                // Calculate elapsed time for active result
+                const getActiveElapsedTime = () => {
+                  if (!activeResult.submittedAt) return 'Unknown time';
+                  
+                  try {
+                    const startTime = new Date(activeResult.submittedAt);
+                    const now = new Date();
+                    
+                    // Check if date is valid
+                    if (isNaN(startTime.getTime())) return 'Unknown time';
+                    
+                    const diffMs = now.getTime() - startTime.getTime();
+                    const diffSeconds = Math.floor(diffMs / 1000);
+                    const diffMinutes = Math.floor(diffSeconds / 60);
+                    const diffHours = Math.floor(diffMinutes / 60);
+                    
+                    // For completed jobs, stop the clock to show total generation time
+                    // For processing jobs, show elapsed time  
+                    if (diffHours > 0) return `${diffHours}h ${diffMinutes % 60}m`;
+                    if (diffMinutes > 0) return `${diffMinutes}m ${diffSeconds % 60}s`;
+                    return `${diffSeconds}s`;
+                  } catch (error) {
+                    return 'Unknown time';
+                  }
+                };
+                
+                if (activeResult.status === 'completed' && activeResult.data) {
+                  return (
+                    <Card className="shadow-lg">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="w-5 h-5 text-green-500" />
+                            <CardTitle className="text-lg">Video Ready</CardTitle>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Clock className="w-4 h-4" />
+                            {getActiveElapsedTime()}
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <div className="max-w-2xl">
+                          <VideoCard
+                            key={activeResult.data.id} // IMPORTANT: forces remount when ID changes
+                            video={{
+                              ...activeResult.data,
+                              status: activeResult.data.status as 'pending' | 'processing' | 'completed' | 'failed',
+                              createdAt: activeResult.data.createdAt instanceof Date 
+                                ? activeResult.data.createdAt.toISOString() 
+                                : activeResult.data.createdAt
+                            }}
+                            className="w-full"
+                            autoPlay={true}
+                            expanded={true}
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                } else {
+                  return (
+                    <Card className="shadow-lg">
+                      <CardContent className="p-6">
+                        <div className="flex flex-col items-center justify-center space-y-4 py-8">
+                          {/* Status Icon & Animation */}
+                          <div className="relative">
+                            {activeResult.status === 'processing' && (
+                              <>
+                                <Loader2 className="w-12 h-12 animate-spin text-blue-500" />
+                                <div className="absolute inset-0 rounded-full border-2 border-blue-200 animate-ping"></div>
+                              </>
+                            )}
+                            {activeResult.status === 'failed' && (
+                              <AlertCircle className="w-12 h-12 text-red-500" />
+                            )}
+                            {activeResult.status === 'pending' && (
+                              <Clock className="w-12 h-12 text-yellow-500" />
                             )}
                           </div>
-
-                          {/* Additional metadata for completed videos */}
-                          {isCompleted && result.data && (
-                            <div className="flex items-center justify-between text-xs text-muted-foreground pt-1">
-                              {result.data.resolution && (
-                                <span>{result.data.resolution}</span>
-                              )}
-                              {result.data.duration && (
-                                <span>{result.data.duration}s</span>
-                              )}
-                              {result.data.createdAt && (
-                                <span>
-                                  {new Date(result.data.createdAt).toLocaleDateString()}
+                          
+                          {/* Status Message */}
+                          <div className="text-center space-y-2">
+                            <p className="text-xl font-semibold">
+                              {activeResult.status === 'processing' && 'Generating Your Video'}
+                              {activeResult.status === 'failed' && 'Generation Failed'}
+                              {activeResult.status === 'pending' && 'Queued for Generation'}
+                            </p>
+                            <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
+                              {activeResult.promptAtSubmit}
+                            </p>
+                            
+                            {/* Elapsed Time */}
+                            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mt-3">
+                              <Clock className="w-4 h-4" />
+                              <span>Started {getActiveElapsedTime()}</span>
+                            </div>
+                            
+                            {/* Model Info */}
+                            {activeResult.modelAtSubmit && (
+                              <div className="mt-3">
+                                <span className="bg-muted px-3 py-1 rounded-full text-xs">
+                                  {activeResult.modelAtSubmit}
                                 </span>
-                              )}
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Progress Bar for Processing */}
+                          {activeResult.status === 'processing' && (
+                            <div className="w-full max-w-md">
+                              <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                                <div className="bg-blue-500 h-2 rounded-full" 
+                                     style={{
+                                       width: '75%',
+                                       animation: 'progress-flow 3s infinite'
+                                     }}>
+                                </div>
+                              </div>
+                              <p className="text-xs text-muted-foreground text-center mt-2">
+                                This usually takes 3-6 minutes
+                              </p>
                             </div>
                           )}
                         </div>
                       </CardContent>
-                    </div>
+                    </Card>
                   );
-                })}
-              </div>
-
-              {/* Integrated Job Tray Panel */}
-              {results.some(r => r.status === 'pending' || r.status === 'processing') && (
-                <Card className="border-dashed">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
-                      Active Jobs
-                      <Badge variant="outline" className="text-xs">
-                        {results.filter(r => r.status === 'pending' || r.status === 'processing').length}
-                      </Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="space-y-2">
-                      {results
-                        .filter(r => r.status === 'pending' || r.status === 'processing')
-                        .map((result, index) => (
-                        <div key={result.videoId} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
-                          <div className="flex items-center gap-3 min-w-0 flex-1">
-                            <div className="flex-shrink-0">
-                              {result.status === 'processing' ? (
-                                <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
-                              ) : (
-                                <Clock className="w-4 h-4 text-orange-500" />
-                              )}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="text-sm font-medium truncate">{result.promptAtSubmit}</p>
-                              <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                                <span>{result.status === 'processing' ? 'Processing' : 'Queued'}</span>
-                                {result.modelAtSubmit && (
-                                  <>
-                                    <span>•</span>
-                                    <span>{result.modelAtSubmit}</span>
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
-                            onClick={() => {
-                              setResults(prev => prev.filter(r => r.videoId !== result.videoId));
-                            }}
-                          >
-                            <X className="w-3 h-3" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+                }
+              })()}
             </div>
           )}
-
+          
+          {/* Job Tray - Only show on Create tab */}
+          {activeTab === 'create' && (
+            <JobTray
+              jobs={jobTrayItems}
+              onJobUpdate={handleJobUpdate}
+              onJobDismiss={handleJobDismiss}
+              onPlayVideo={handlePlayVideo}
+              onJumpToResult={handleJumpToResult}
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="gallery" className="space-y-6">
