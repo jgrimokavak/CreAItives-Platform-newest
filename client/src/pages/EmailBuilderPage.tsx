@@ -1,7 +1,4 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -111,45 +108,11 @@ export default function EmailBuilderPage() {
     }
   }, [selectedComponent]);
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    
-    if (!over || active.id === over.id) return;
-    
-    setEmailComponents(prev => {
-      const oldIndex = prev.findIndex(item => item.id === active.id);
-      const newIndex = prev.findIndex(item => item.id === over.id);
-      
-      if (oldIndex === -1 || newIndex === -1) return prev;
-      
-      const newArray = [...prev];
-      const [movedItem] = newArray.splice(oldIndex, 1);
-      newArray.splice(newIndex, 0, movedItem);
-      
-      return newArray;
-    });
-  };
 
-  const SortableEmailComponent = ({ component }: { component: EmailComponent }) => {
-    const {
-      attributes,
-      listeners,
-      setNodeRef,
-      transform,
-      transition,
-      isDragging,
-    } = useSortable({ id: component.id });
 
-    const style = {
-      transform: CSS.Transform.toString(transform),
-      transition,
-      opacity: isDragging ? 0.5 : 1,
-    };
-
+  const EmailComponentItem = ({ component }: { component: EmailComponent }) => {
     return (
       <div
-        ref={setNodeRef}
-        style={style}
         className={`group relative border rounded-lg p-4 mb-2 cursor-pointer transition-all ${
           selectedComponent === component.id
             ? 'border-blue-500 bg-blue-50'
@@ -159,13 +122,6 @@ export default function EmailBuilderPage() {
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div
-              {...attributes}
-              {...listeners}
-              className="cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <GripVertical className="h-4 w-4 text-gray-400" />
-            </div>
             <span className="text-sm font-medium capitalize">{component.type}</span>
           </div>
           <Button
@@ -528,22 +484,14 @@ export default function EmailBuilderPage() {
                         <p className="text-sm">Add components from the panel on the left</p>
                       </div>
                     ) : (
-                      <DndContext
-                        collisionDetection={closestCenter}
-                        onDragEnd={handleDragEnd}
-                      >
-                        <SortableContext
-                          items={emailComponents.map(c => c.id)}
-                          strategy={verticalListSortingStrategy}
-                        >
-                          {emailComponents.map(component => (
-                            <SortableEmailComponent
-                              key={component.id}
-                              component={component}
-                            />
-                          ))}
-                        </SortableContext>
-                      </DndContext>
+                      <>
+                        {emailComponents.map(component => (
+                          <EmailComponentItem
+                            key={component.id}
+                            component={component}
+                          />
+                        ))}
+                      </>
                     )}
                   </div>
                 </CardContent>
