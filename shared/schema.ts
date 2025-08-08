@@ -276,11 +276,16 @@ export const projects = pgTable("projects", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
+  gcsFolder: text("gcs_folder").notNull(), // GCS folder path for project assets
+  videoCount: integer("video_count").default(0).notNull(), // Count of videos in project
   userId: text("user_id").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const insertProjectSchema = createInsertSchema(projects);
+export const insertProjectSchema = createInsertSchema(projects).omit({
+  createdAt: true,
+  updatedAt: true,
+});
 export type InsertProject = z.infer<typeof insertProjectSchema>;
 export type Project = typeof projects.$inferSelect;

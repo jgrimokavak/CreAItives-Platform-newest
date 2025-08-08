@@ -32,10 +32,13 @@ router.post('/', async (req, res) => {
     const { name, description } = validationResult.data;
 
     // Create project  
+    const projectId = crypto.randomUUID();
     const projectData = {
-      id: crypto.randomUUID(),
+      id: projectId,
       name,
       description: description || null,
+      gcsFolder: `projects/${projectId}`, // GCS folder path for project assets
+      videoCount: 0,
       userId,
     };
     

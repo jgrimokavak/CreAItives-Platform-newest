@@ -1,0 +1,40 @@
+client:536 WebSocket connection to 'wss://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/?token=-Cy4JHABw1o-' failed: 
+setupWebSocket @ client:536
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=-Cy4JHABw1o-' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+chunk-WERSD76P.js?v=3144c6a4:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+VideoPage.tsx:226 [DIAGNOSTIC] Loading VIDEO_MODELS configuration
+VideoPage.tsx:246 [DIAGNOSTIC] VIDEO_MODELS loaded: Object
+websocket.ts:17 [DIAGNOSTIC] WebSocket URL construction: Object
+main.tsx:13 SW registered:  ServiceWorkerRegistration
+video:1 <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">
+websocket.ts:40 WebSocket connected
+api/projects:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+queryClient.ts:14  POST https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/api/projects 500 (Internal Server Error)
+apiRequest @ queryClient.ts:14
+mutationFn @ VideoPage.tsx:368
+fn @ @tanstack_react-query.js?v=3144c6a4:1189
+run @ @tanstack_react-query.js?v=3144c6a4:494
+start @ @tanstack_react-query.js?v=3144c6a4:536
+execute @ @tanstack_react-query.js?v=3144c6a4:1225
+await in execute
+mutate @ @tanstack_react-query.js?v=3144c6a4:2630
+(anonymous) @ @tanstack_react-query.js?v=3144c6a4:3295
+handleCreateProject @ VideoPage.tsx:545
+callCallback2 @ chunk-WERSD76P.js?v=3144c6a4:3674
+invokeGuardedCallbackDev @ chunk-WERSD76P.js?v=3144c6a4:3699
+invokeGuardedCallback @ chunk-WERSD76P.js?v=3144c6a4:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-WERSD76P.js?v=3144c6a4:3736
+executeDispatch @ chunk-WERSD76P.js?v=3144c6a4:7014
+processDispatchQueueItemsInOrder @ chunk-WERSD76P.js?v=3144c6a4:7034
+processDispatchQueue @ chunk-WERSD76P.js?v=3144c6a4:7043
+dispatchEventsForPlugins @ chunk-WERSD76P.js?v=3144c6a4:7051
+(anonymous) @ chunk-WERSD76P.js?v=3144c6a4:7174
+batchedUpdates$1 @ chunk-WERSD76P.js?v=3144c6a4:18913
+batchedUpdates @ chunk-WERSD76P.js?v=3144c6a4:3579
+dispatchEventForPluginEventSystem @ chunk-WERSD76P.js?v=3144c6a4:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-WERSD76P.js?v=3144c6a4:5478
+dispatchEvent @ chunk-WERSD76P.js?v=3144c6a4:5472
+dispatchDiscreteEvent @ chunk-WERSD76P.js?v=3144c6a4:5449
