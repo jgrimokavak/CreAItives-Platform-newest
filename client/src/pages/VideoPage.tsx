@@ -22,6 +22,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   VideoIcon, 
+  Video as VideoIconSm,
   Sparkles, 
   Play, 
   Settings, 
@@ -33,12 +34,14 @@ import {
   FolderOpen,
   Plus,
   Download,
-  Trash2
+  Trash2,
+  ExternalLink
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import SimpleGalleryPage from './SimpleGalleryPage';
 import ReferenceImageUpload from '@/components/ReferenceImageUpload';
+import type { Video } from '@shared/schema';
 
 // Video Gallery Component
 function VideoGallery() {
@@ -274,6 +277,7 @@ export default function VideoPage() {
   const [generationProgress, setGenerationProgress] = useState<string>('');
   const [firstFrameImagePreview, setFirstFrameImagePreview] = useState<string | null>(null);
   const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false);
+  const [recentlyGeneratedVideos, setRecentlyGeneratedVideos] = useState<string[]>([]);
 
   // Form setup
   const form = useForm<VideoGenerationForm>({
@@ -296,6 +300,13 @@ export default function VideoPage() {
   const { data: projects, isLoading: projectsLoading, refetch: refetchProjects } = useQuery<Project[]>({
     queryKey: ['/api/projects'],
     queryFn: () => apiRequest('/api/projects'),
+    retry: false,
+  });
+
+  // Fetch recent videos
+  const { data: recentVideos, isLoading: recentVideosLoading } = useQuery<{ items: Video[]; nextCursor: string | null }>({
+    queryKey: ['/api/video', 'recent'],
+    queryFn: () => apiRequest('/api/video?limit=5&status=completed'),
     retry: false,
   });
 
@@ -365,6 +376,8 @@ export default function VideoPage() {
       setShowCreateProject(false);
       setNewProjectName('');
       setNewProjectDescription('');
+      // Invalidate and refetch projects
+      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
       refetchProjects();
       toast({
         title: 'Project Created',
@@ -436,10 +449,11 @@ export default function VideoPage() {
             description: 'Your video has been generated successfully.',
           });
           
-          // Refresh gallery if on gallery tab
-          if (activeTab === 'gallery') {
-            queryClient.invalidateQueries({ queryKey: ['/api/video'] });
-          }
+          // Always refresh videos to show in recent videos section
+          queryClient.invalidateQueries({ queryKey: ['/api/video'] });
+          
+          // Add to recently generated videos for immediate display
+          setRecentlyGeneratedVideos(prev => [videoId, ...prev.slice(0, 4)]);
           
           setGeneratingVideoId(null);
           setGenerationProgress('');
@@ -893,6 +907,83 @@ export default function VideoPage() {
                       <li>Upload first frame image to control aspect ratio</li>
                     </ul>
                   </div>
+                </CardContent>
+              </Card>
+
+              {/* Recent Videos Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Clock className="w-5 h-5" />
+                    Recent Videos
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {recentVideosLoading ? (
+                    <div className="flex items-center justify-center p-4">
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span className="ml-2">Loading recent videos...</span>
+                    </div>
+                  ) : recentVideos?.items?.length > 0 ? (
+                    <div className="space-y-3">
+                      {recentVideos.items.slice(0, 3).map((video) => (
+                        <div key={video.id} className="flex gap-3 p-2 rounded-lg border bg-muted/20 hover:bg-muted/40 transition-colors">
+                          {video.thumbUrl ? (
+                            <img
+                              src={video.thumbUrl}
+                              alt={video.prompt}
+                              className="w-16 h-12 rounded object-cover bg-muted"
+                            />
+                          ) : (
+                            <div className="w-16 h-12 rounded bg-muted flex items-center justify-center">
+                              <VideoIconSm className="w-6 h-6 text-muted-foreground" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium line-clamp-1">{video.prompt}</p>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                              <span>{video.resolution}</span>
+                              <span>•</span>
+                              <span>{video.duration}s</span>
+                              {video.status === 'completed' && (
+                                <>
+                                  <span>•</span>
+                                  <Badge variant="outline" className="text-xs px-1.5 py-0">
+                                    Ready
+                                  </Badge>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                          {video.url && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              asChild
+                            >
+                              <a href={video.url} target="_blank" rel="noopener noreferrer">
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setActiveTab('gallery')}
+                        className="w-full mt-2"
+                      >
+                        View All Videos
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="text-center py-6">
+                      <VideoIconSm className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+                      <p className="text-sm text-muted-foreground">No videos yet</p>
+                      <p className="text-xs text-muted-foreground">Generate your first video above!</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>

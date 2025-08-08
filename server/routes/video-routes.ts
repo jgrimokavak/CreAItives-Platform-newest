@@ -251,6 +251,60 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// Move video to project
+router.patch('/:id/move', async (req, res) => {
+  try {
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    // Validate request body
+    const { projectId } = req.body;
+    if (projectId !== null && typeof projectId !== 'string') {
+      return res.status(400).json({ error: 'Project ID must be a string or null' });
+    }
+
+    const video = await storage.getVideoById(req.params.id);
+    if (!video) {
+      return res.status(404).json({ error: 'Video not found' });
+    }
+
+    // Ensure user can only move their own videos (or is admin)
+    if (video.userId !== userId && user?.claims?.role !== 'admin') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    // If projectId is provided, verify it exists and belongs to the user
+    if (projectId) {
+      const project = await storage.getProjectById(projectId);
+      if (!project) {
+        return res.status(404).json({ error: 'Project not found' });
+      }
+      if (project.userId !== userId && user?.claims?.role !== 'admin') {
+        return res.status(403).json({ error: 'Access denied to project' });
+      }
+    }
+
+    // Update video with new project
+    const updatedVideo = await storage.updateVideo(req.params.id, { projectId });
+    if (!updatedVideo) {
+      return res.status(404).json({ error: 'Video not found' });
+    }
+
+    res.json({
+      success: true,
+      video: updatedVideo,
+      message: 'Video moved successfully'
+    });
+
+  } catch (error: any) {
+    console.error('Move video error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Background job polling function
 async function pollVideoJob(videoId: string, jobId: string, provider: any) {
   const maxAttempts = 30; // Maximum polling attempts (5 minutes with 10s intervals)
