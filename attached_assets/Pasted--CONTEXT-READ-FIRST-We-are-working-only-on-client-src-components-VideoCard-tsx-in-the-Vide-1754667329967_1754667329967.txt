@@ -1,0 +1,53 @@
+# CONTEXT (READ FIRST)
+We are working **only** on `client/src/components/VideoCard.tsx` in the Video Creation app.
+Do **not** change dependencies, package.json, vite config, page layouts, routes, or schemas.
+Do **not** touch other files unless importing existing shadcn components (`Dialog`, `Tooltip`, etc.).
+The goal is to refine the VideoCard UI/UX with minimal risk.
+## Current behavior (confirmed):
+The card renders `<video controls>` **and** an **overlay “Quick Play”** button → two play controls.
+Poster uses only `video.thumbUrl`, so missing thumbs look like a gray screen.
+Actions are mostly in the overflow menu; download isn’t visible at-a-glance.
+Prompt is truncated; there’s no “view full” or “copy prompt”.
+There may be a `firstFrameImage` (base64) available on the video (schema supports it), but it isn’t shown.
+---
+# TASK — Refine VideoCard (remove duplicate play; add visible download; prompt actions; reference image; better poster)
+**File:** `client/src/components/VideoCard.tsx`
+## 1) Single play control
+**Remove** the overlay “Quick Play Button” that sits over the video surface.
+Keep the native `<video controls>` as the **only** play UI.
+Ensure `onPlay/onPause/onEnded` state still works if used elsewhere.
+## 2) Visible Download button
+In the top-right card actions (where the 3-dots menu lives), add a small **Download** icon button that calls the same download logic used in the menu.
+Keep the menu item too (both are fine). Show a tiny spinner if a blob is being prepared.
+## 3) Prompt UX: “View full” + “Copy prompt”
+Keep the prompt clamped to 2 lines in the card.
+Add a subtle **“View full”** link/icon next to (or under) the truncated prompt that opens a **Dialog**:
+Title: “Prompt”
+Body: full prompt in a scrollable area
+Buttons: **Copy** (copies full prompt to clipboard), **Close**
+Add **“Copy prompt”** to the overflow menu as well.
+Use existing shadcn `Dialog`/`Button`/`Textarea`/`ScrollArea` if available; otherwise a simple dialog is fine.
+## 4) Reference image chip (if available)
+If `video.firstFrameImage` (base64 data URL) **or** `video.thumbUrl` exists, show a small **thumbnail chip** on the media area corner.
+Clicking it opens a preview (Dialog or Popover) with:
+**Copy image** (copy data URL to clipboard if base64; for URLs, fetch → blob → clipboard if possible; else fall back to opening in new tab).
+**Use as reference** → call an optional prop:
+      ```ts
+      onUseReferenceImage?: (src: string) => void
+      ```
+      If not provided, no-op.
+This chip is a hint that the asset can be reused later in the Create form.
+## 5) Better poster fallback
+`<video poster={video.thumbUrl ?? video.firstFrameImage ?? undefined} … />`
+If neither is present, render the existing neutral placeholder **behind** the video element so you don’t get a flat gray look.
+## 6) Menu cleanup
+Remove the **Play** entry from the overflow menu (since we rely on native controls).
+Keep: **Download**, **Move to…**, **Delete**, **Copy prompt**.
+---
+# ACCEPTANCE
+Only **one** play control (native). No overlay play button remains.
+A **visible Download** icon button exists and works.
+Prompt: “View full” opens a dialog with the full text and a **Copy** button; “Copy prompt” also appears in the menu.
+If a reference image exists (`thumbUrl` or `firstFrameImage`), a chip is shown; preview opens; **Copy image** works; `onUseReferenceImage` is called if provided.
+Poster uses `thumbUrl` → `firstFrameImage` → placeholder fallback; no more blank/gray until play.
+No changes outside `VideoCard.tsx` except importing existing shadcn UI pieces.
