@@ -53,6 +53,7 @@ import SimpleGalleryPage from './SimpleGalleryPage';
 import ReferenceImageUpload from '@/components/ReferenceImageUpload';
 import type { Video } from '@shared/schema';
 import VideoCard from '@/components/VideoCard';
+import { JobTray, type JobTrayItem } from '@/components/JobTray';
 
 
 
@@ -362,7 +363,7 @@ function VideoGallery() {
       }]);
 
       const targetName = targetProjectId 
-        ? projects.find(p => p.id === targetProjectId)?.name || 'Unknown Project'
+        ? projects.find((p: Project) => p.id === targetProjectId)?.name || 'Unknown Project'
         : 'Unassigned';
 
       toast({
@@ -974,6 +975,9 @@ export default function VideoPage() {
   const [firstFrameImagePreview, setFirstFrameImagePreview] = useState<string | null>(null);
   const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false);
   const [recentlyGeneratedVideos, setRecentlyGeneratedVideos] = useState<string[]>([]);
+  
+  // Job Tray state
+  const [jobTrayItems, setJobTrayItems] = useState<JobTrayItem[]>([]);
 
   // Form setup
   const form = useForm<VideoGenerationForm>({
@@ -1109,8 +1113,17 @@ export default function VideoPage() {
         description: 'Processing will take 3-6 minutes. We\'ll notify you when complete.',
       });
       
-      // Start polling for video status
+      // Add to Job Tray immediately
       if (data.video?.id) {
+        const newJob: JobTrayItem = {
+          id: data.video.id,
+          status: 'pending',
+          prompt: data.video.prompt || form.getValues('prompt'),
+          model: data.video.model || 'hailuo-02',
+          createdAt: Date.now()
+        };
+        setJobTrayItems(prev => [newJob, ...prev.slice(0, 4)]); // Keep max 5 jobs
+        
         setGeneratingVideoId(data.video.id);
         setGenerationProgress('Starting video generation...');
         pollVideoStatus(data.video.id);
@@ -1211,6 +1224,44 @@ export default function VideoPage() {
 
     // Start polling
     poll();
+  };
+
+  // Job Tray handlers
+  const handleJobUpdate = (jobId: string, status: JobTrayItem['status'], error?: string) => {
+    setJobTrayItems(prev => 
+      prev.map(job => 
+        job.id === jobId 
+          ? { ...job, status, error }
+          : job
+      )
+    );
+  };
+
+  const handleJobDismiss = (jobId: string) => {
+    setJobTrayItems(prev => prev.filter(job => job.id !== jobId));
+  };
+
+  const handlePlayVideo = (videoId: string) => {
+    // This could trigger video playback in the VideoCard
+    console.log('Playing video:', videoId);
+  };
+
+  const handleJumpToResult = (videoId: string) => {
+    // Set this video as the last created video to show in Result panel
+    const jobItem = jobTrayItems.find(job => job.id === videoId);
+    if (jobItem && jobItem.status === 'completed') {
+      // Fetch the full video data and set as last created
+      apiRequest(`/api/video/status/${videoId}`)
+        .then(response => {
+          setLastCreatedVideo({
+            ...response,
+            model: response.model || 'hailuo-02',
+            status: response.status as 'pending' | 'processing' | 'completed' | 'failed',
+            createdAt: response.createdAt || new Date().toISOString()
+          });
+        })
+        .catch(console.error);
+    }
   };
 
   // Handle duration and resolution validation
@@ -1466,14 +1517,14 @@ export default function VideoPage() {
 
             {/* Right Column - Project Panel (4/12 columns) */}
             <div className="lg:col-span-4">
-              <Card>
+              <Card className="lg:sticky lg:top-6 lg:max-h-[calc(100vh-8rem)]">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <FolderOpen className="w-5 h-5" />
                     Project Panel
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 lg:max-h-[calc(100vh-12rem)] lg:overflow-y-auto">
                   {/* Project Selection */}
                   {projectsLoading ? (
                     <div className="flex items-center gap-2">
@@ -1598,13 +1649,27 @@ export default function VideoPage() {
                 <CardContent className="p-4">
                   <div className="max-w-md">
                     <VideoCard
-                      video={lastCreatedVideo}
+                      video={{
+                        ...lastCreatedVideo,
+                        status: lastCreatedVideo.status as 'pending' | 'processing' | 'completed' | 'failed'
+                      }}
                       className="w-full"
                     />
                   </div>
                 </CardContent>
               </Card>
             </div>
+          )}
+          
+          {/* Job Tray - Only show on Create tab */}
+          {activeTab === 'create' && (
+            <JobTray
+              jobs={jobTrayItems}
+              onJobUpdate={handleJobUpdate}
+              onJobDismiss={handleJobDismiss}
+              onPlayVideo={handlePlayVideo}
+              onJumpToResult={handleJumpToResult}
+            />
           )}
         </TabsContent>
 

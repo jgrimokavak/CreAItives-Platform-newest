@@ -1,0 +1,43 @@
+# GOAL
+1) Add a **Job Tray** to the bottom of the **Create** tab so users can queue multiple generations and see live status (pending/processing/completed/failed) without leaving the page. 
+2) Fix the **Create** tab layout so the **Project Panel (right column)** does **not** push the **Result** panel down. The right panel should be a tidy, scrollable area within the column. 
+3) Keep everything else working exactly as-is (no dependency changes).
+# CONTEXT
+Page: `client/src/pages/VideoPage.tsx` (Create tab: form on left, project panel on right, Result panel below both).
+Videos display with `VideoCard` including poster thumbnails; this should not change.
+We want to begin “Power Mode” gradually by making the right column act like a contained panel that can scroll independently on taller lists.
+# REQUIREMENTS
+## A) Job Tray (bottom of Create tab)
+Add a small, sticky **Job Tray** component shown at the **bottom of the Create tab**, below the Result panel.
+Behavior:
+When `POST /api/video/generate` is called, immediately add a new job to the tray with `id`, `status` (`pending`/`processing` to start), and minimal metadata (prompt/model).
+Poll each active job’s status every ~5–8s (or reuse existing status fetch) until it becomes `completed` or `failed`.
+For `completed`: show quick actions (Play → focuses the Result card; optional Download).
+Allow dismissing completed/failed jobs from the tray.
+Implementation notes:
+No new dependencies. Basic React state + existing API is fine (fetch `/api/video/:id`).
+Keep at most the last ~5 finished jobs visible unless dismissed.
+## B) Create tab layout: contain the right panel, don’t push Result down
+Current issue: the **Project Panel** overextends vertically and pushes the **Result** panel far down, sometimes leaving an awkward gap between the form and Result.
+Target outcome:
+The two-column grid remains.
+The **right column’s card content** becomes **scrollable inside the column** when it overflows, so the overall grid height is governed by the left column or viewport, not by the right list length.
+Acceptable approaches (choose what’s cleanest in this codebase):
+Add a responsive **max height** to the right column card (e.g., `max-h-[calc(100vh-<header+tabs+padding>px)]`) with `overflow-auto`.
+Or make the right column **`lg:sticky` with a `top` offset** equal to the header/tabs height, and set `max-h` + `overflow-auto` on the card’s content area.
+Constraints:
+Do **not** change the global layout or tab structure.
+Do **not** introduce horizontal scroll.
+Preserve the existing spacing rhythm (gaps and padding).
+Ensure keyboard accessibility remains good.
+# DO NOTS
+Do not modify dependencies or package.json.
+Do not change Gallery behavior.
+Do not refactor routes or schema.
+Keep changes focused on `VideoPage.tsx` and a new lightweight `JobTray` component (and any tiny style tweaks/components needed).
+# ACCEPTANCE
+I can click **Generate** multiple times; each request appears in the **Job Tray** and updates status independently.
+When a video completes, I can **play it** directly or jump focus to the Result card.
+The **right Project Panel** is scrollable when it has many items and **no longer pushes** the **Result** panel down.
+The form + Result stay visually “connected”; no big empty gap between them.
+No regressions: VideoCard UI, gallery, bulk move/delete, and create flow still work.
