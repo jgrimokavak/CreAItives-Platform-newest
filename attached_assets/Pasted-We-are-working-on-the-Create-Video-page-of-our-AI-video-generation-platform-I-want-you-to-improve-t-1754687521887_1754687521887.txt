@@ -1,0 +1,14 @@
+We are working on the Create Video page of our AI video generation platform. I want you to improve the Results section so it looks and behaves cleaner, while making it consistent with the Gallery view but without changing any code that controls the Gallery page itself.
+Goals:
+Show multiple results – The Results section should display all recent video generations (from this session) in a grid or list layout, instead of only showing one at a time. The cards should be visually consistent with the Gallery cards (thumbnail, play controls, metadata, etc.), but you must reuse styles or components in a way that does not alter the Gallery page.
+Match prompt & video correctly – Ensure each result card displays the correct video for the correct prompt, even if videos finish out of order.
+Integrate Job Tray – Move the Job Tray into the Results section as a panel beneath the results grid, keeping the same functionality and statuses (Processing, Completed). It should feel like part of the page, not a floating widget.
+Compact header – Move the blue prompt label (#1, etc.) into the top area of the video card rather than floating above the Results title. Remove unnecessary extra vertical space.
+Responsive layout – On large screens, show results in multiple columns. On smaller screens, stack vertically.
+Video Card Refinement – Clean up the card UI:
+	•	Make it match the style of the Gallery view exactly for visual consistency, but do not touch Gallery code — copy styles or use shared components without altering Gallery behavior.
+	•	Only show the reference image icon if a reference image was actually used for that generation.
+	•	Keep the download button, completed label, and metadata neatly aligned.
+	•	Make sure the play UI doesn’t clash with overlay buttons.
+Important: The Gallery view should remain fully functional and unaffected by these changes. The updates should be isolated to the Create Video page and its Results section.
+The main idea: After generating videos, I should see all my results and their statuses at once, in a clean, organized layout, without mismatches between prompts and videos.
