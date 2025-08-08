@@ -1148,28 +1148,34 @@ export default function VideoPage() {
   });
 
   const renameProjectMutation = useMutation({
-    mutationFn: async (renameData: { projectId: string; name: string }) => {
+    mutationFn: async (renameData: { projectId: string; name: string; description?: string }) => {
+      const updateData: { name: string; description?: string } = { name: renameData.name };
+      if (renameData.description !== undefined) {
+        updateData.description = renameData.description;
+      }
+      
       return await apiRequest(`/api/projects/${renameData.projectId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: renameData.name }),
+        body: JSON.stringify(updateData),
       });
     },
     onSuccess: (updatedProject) => {
       setShowRenameProject(false);
       setRenameProjectName('');
+      setRenameProjectDescription('');
       // Invalidate and refetch projects
       queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
       refetchProjects();
       toast({
-        title: 'Project Renamed',
-        description: `Project has been renamed to "${updatedProject.name}".`,
+        title: 'Project Updated',
+        description: `Project has been updated successfully.`,
       });
     },
     onError: () => {
       toast({
-        title: 'Rename Failed',
-        description: 'Could not rename project. Please try again.',
+        title: 'Update Failed',
+        description: 'Could not update project. Please try again.',
         variant: 'destructive',
       });
     },
