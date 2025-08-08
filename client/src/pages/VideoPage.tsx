@@ -48,11 +48,12 @@ import VideoCard from '@/components/VideoCard';
 interface ProjectVideoPreviewProps {
   selectedProject: string;
   projects: Project[];
+  compact?: boolean;
   onVideoPlay: (videoId: string) => void;
   onVideoDelete: (videoId: string) => void;
 }
 
-function ProjectVideoPreview({ selectedProject, projects, onVideoPlay, onVideoDelete }: ProjectVideoPreviewProps) {
+function ProjectVideoPreview({ selectedProject, projects, compact, onVideoPlay, onVideoDelete }: ProjectVideoPreviewProps) {
   const { toast } = useToast();
   
   // Fetch project details with videos
@@ -91,14 +92,15 @@ function ProjectVideoPreview({ selectedProject, projects, onVideoPlay, onVideoDe
             </div>
           ) : unassignedVideos?.items?.length ? (
             <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className={compact ? "grid grid-cols-1 gap-2" : "grid grid-cols-1 sm:grid-cols-2 gap-4"}>
                 {unassignedVideos.items.slice(0, 8).map((video) => (
                   <VideoCard 
                     key={video.id}
                     video={{
                       ...video,
                       model: video.model || 'hailuo-02',
-                      status: video.status as 'pending' | 'processing' | 'completed' | 'failed'
+                      status: video.status as 'pending' | 'processing' | 'completed' | 'failed',
+                      createdAt: typeof video.createdAt === 'string' ? video.createdAt : video.createdAt?.toISOString() || null
                     }}
                     className="w-full"
                   />
@@ -178,14 +180,15 @@ function ProjectVideoPreview({ selectedProject, projects, onVideoPlay, onVideoDe
           </div>
         ) : projectDetails?.videos?.length ? (
           <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className={compact ? "grid grid-cols-1 gap-2" : "grid grid-cols-1 sm:grid-cols-2 gap-4"}>
               {projectDetails.videos.slice(0, 8).map((video: Video) => (
                 <VideoCard 
                   key={video.id}
                   video={{
                     ...video,
                     model: video.model || 'hailuo-02',
-                    status: video.status as 'pending' | 'processing' | 'completed' | 'failed'
+                    status: video.status as 'pending' | 'processing' | 'completed' | 'failed',
+                    createdAt: typeof video.createdAt === 'string' ? video.createdAt : video.createdAt?.toISOString() || null
                   }}
                   className="w-full"
                 />
@@ -260,7 +263,8 @@ function VideoGallery() {
             video={{
               ...video,
               model: video.model || 'hailuo-02',
-              status: video.status as 'pending' | 'processing' | 'completed' | 'failed'
+              status: video.status as 'pending' | 'processing' | 'completed' | 'failed',
+              createdAt: typeof video.createdAt === 'string' ? video.createdAt : video.createdAt?.toISOString() || null
             }}
             className="w-full"
           />
@@ -335,6 +339,7 @@ export default function VideoPage() {
   const [newProjectDescription, setNewProjectDescription] = useState('');
   const [generatingVideoId, setGeneratingVideoId] = useState<string | null>(null);
   const [generationProgress, setGenerationProgress] = useState<string>('');
+  const [lastCreatedVideo, setLastCreatedVideo] = useState<Video | null>(null);
   const [firstFrameImagePreview, setFirstFrameImagePreview] = useState<string | null>(null);
   const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false);
   const [recentlyGeneratedVideos, setRecentlyGeneratedVideos] = useState<string[]>([]);
@@ -515,6 +520,14 @@ export default function VideoPage() {
           // Add to recently generated videos for immediate display
           setRecentlyGeneratedVideos(prev => [videoId, ...prev.slice(0, 4)]);
           
+          // Set the last created video for the Result panel
+          setLastCreatedVideo({
+            ...response,
+            model: response.model || 'hailuo-02',
+            status: response.status as 'pending' | 'processing' | 'completed' | 'failed',
+            createdAt: response.createdAt || new Date().toISOString()
+          });
+          
           setGeneratingVideoId(null);
           setGenerationProgress('');
           return;
@@ -638,101 +651,10 @@ export default function VideoPage() {
         </TabsList>
 
         <TabsContent value="create" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column - Generation Form */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Project Selection */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FolderOpen className="w-5 h-5" />
-                    Project Selection
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {projectsLoading ? (
-                    <div className="flex items-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Loading projects...</span>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="space-y-2">
-                        <Label>Select Project</Label>
-                        <Select value={selectedProject} onValueChange={setSelectedProject}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Choose a project (optional)" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">No Project</SelectItem>
-                            {projects?.map((project) => (
-                              <SelectItem key={project.id} value={project.id}>
-                                {project.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setShowCreateProject(!showCreateProject)}
-                          className="flex items-center gap-2"
-                        >
-                          <Plus className="w-4 h-4" />
-                          New Project
-                        </Button>
-                      </div>
-
-                      {showCreateProject && (
-                        <div className="space-y-3 p-4 border rounded-lg bg-muted/5">
-                          <div className="space-y-2">
-                            <Label htmlFor="newProjectName">Project Name</Label>
-                            <Input
-                              id="newProjectName"
-                              placeholder="Enter project name"
-                              value={newProjectName}
-                              onChange={(e) => setNewProjectName(e.target.value)}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="newProjectDescription">Description (optional)</Label>
-                            <Input
-                              id="newProjectDescription"
-                              placeholder="Enter project description"
-                              value={newProjectDescription}
-                              onChange={(e) => setNewProjectDescription(e.target.value)}
-                            />
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              onClick={handleCreateProject}
-                              disabled={!newProjectName.trim() || createProjectMutation.isPending}
-                              size="sm"
-                            >
-                              {createProjectMutation.isPending ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                              ) : (
-                                'Create'
-                              )}
-                            </Button>
-                            <Button
-                              variant="outline"
-                              onClick={() => setShowCreateProject(false)}
-                              size="sm"
-                            >
-                              Cancel
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </CardContent>
-              </Card>
-
+          {/* Two-column layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Left Column - Generation Form (8/12 columns) */}
+            <div className="lg:col-span-8 space-y-6">
               {/* Video Generation Form */}
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <Card>
@@ -822,33 +744,33 @@ export default function VideoPage() {
                           </SelectContent>
                         </Select>
                       </div>
-                    </div>
 
-                    {/* Duration */}
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2">
-                        <Clock className="w-4 h-4" />
-                        Duration
-                      </Label>
-                      <Select
-                        value={form.watch('duration')?.toString()}
-                        onValueChange={(value) => {
-                          // Handle different duration formats for different models
-                          if (VIDEO_MODELS[currentModel]?.supportsDurationInt) {
-                            form.setValue('duration', parseInt(value));
-                          } else {
-                            form.setValue('duration', value as any);
-                          }
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="6">6 seconds</SelectItem>
-                          <SelectItem value="10">10 seconds (768p only)</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      {/* Duration */}
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2">
+                          <Clock className="w-4 h-4" />
+                          Duration
+                        </Label>
+                        <Select
+                          value={form.watch('duration')?.toString()}
+                          onValueChange={(value) => {
+                            // Handle different duration formats for different models
+                            if (VIDEO_MODELS[currentModel]?.supportsDurationInt) {
+                              form.setValue('duration', parseInt(value));
+                            } else {
+                              form.setValue('duration', value as any);
+                            }
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="6">6 seconds</SelectItem>
+                            <SelectItem value="10">10 seconds (768p only)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
 
                     <Separator />
@@ -856,8 +778,6 @@ export default function VideoPage() {
                     {/* Model-specific Options */}
                     {currentModel === 'hailuo-02' && (
                       <>
-                        <Separator />
-                        
                         {/* Prompt Optimizer for Hailuo-02 */}
                         <div className="flex items-center justify-between">
                           <div>
@@ -883,10 +803,6 @@ export default function VideoPage() {
                         />
                       </>
                     )}
-
-                    <Separator />
-
-
                   </CardContent>
                 </Card>
 
@@ -911,16 +827,148 @@ export default function VideoPage() {
               </form>
             </div>
 
-            {/* Right Column - Project Video Preview (3/5 of the width) */}
-            <div className="lg:col-span-3">
-              <ProjectVideoPreview 
-                selectedProject={selectedProject} 
-                projects={projects || []}
-                onVideoPlay={(videoId) => console.log('Playing video:', videoId)}
-                onVideoDelete={(videoId) => console.log('Deleting video:', videoId)}
-              />
+            {/* Right Column - Project Panel (4/12 columns) */}
+            <div className="lg:col-span-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FolderOpen className="w-5 h-5" />
+                    Project Panel
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Project Selection */}
+                  {projectsLoading ? (
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Loading projects...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="space-y-2">
+                        <Label>Select Project</Label>
+                        <Select value={selectedProject} onValueChange={setSelectedProject}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Choose a project (optional)" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">No Project</SelectItem>
+                            {projects?.map((project) => (
+                              <SelectItem key={project.id} value={project.id}>
+                                {project.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowCreateProject(!showCreateProject)}
+                          className="flex items-center gap-2"
+                        >
+                          <Plus className="w-4 h-4" />
+                          New Project
+                        </Button>
+                      </div>
+
+                      {showCreateProject && (
+                        <div className="space-y-3 p-4 border rounded-lg bg-muted/5">
+                          <div className="space-y-2">
+                            <Label htmlFor="newProjectName">Project Name</Label>
+                            <Input
+                              id="newProjectName"
+                              placeholder="Enter project name"
+                              value={newProjectName}
+                              onChange={(e) => setNewProjectName(e.target.value)}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="newProjectDescription">Description (optional)</Label>
+                            <Input
+                              id="newProjectDescription"
+                              placeholder="Enter project description"
+                              value={newProjectDescription}
+                              onChange={(e) => setNewProjectDescription(e.target.value)}
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              onClick={handleCreateProject}
+                              disabled={!newProjectName.trim() || createProjectMutation.isPending}
+                              size="sm"
+                            >
+                              {createProjectMutation.isPending ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                'Create'
+                              )}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={() => setShowCreateProject(false)}
+                              size="sm"
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {/* Project Videos */}
+                  <div className="space-y-3">
+                    <Separator />
+                    <h4 className="text-sm font-medium">
+                      {selectedProject === 'none' ? 'Unassigned Videos' : 'Project Videos'}
+                    </h4>
+                    
+                    <ProjectVideoPreview 
+                      selectedProject={selectedProject} 
+                      projects={projects || []}
+                      compact={true}
+                      onVideoPlay={(videoId) => console.log('Playing video:', videoId)}
+                      onVideoDelete={(videoId) => console.log('Deleting video:', videoId)}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
+
+          {/* Result Panel - Full width at bottom */}
+          {lastCreatedVideo && (
+            <div className="space-y-4 mt-8">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-semibold flex items-center gap-2">
+                  <Sparkles className="w-6 h-6 text-primary" />
+                  Result
+                </h3>
+                <Button
+                  variant="outline"
+                  onClick={() => setActiveTab('gallery')}
+                  className="flex items-center gap-2"
+                >
+                  <FolderOpen className="w-4 h-4" />
+                  Open in Gallery
+                </Button>
+              </div>
+              
+              <Card>
+                <CardContent className="p-4">
+                  <div className="max-w-md">
+                    <VideoCard
+                      video={lastCreatedVideo}
+                      className="w-full"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="gallery" className="space-y-6">

@@ -1,0 +1,51 @@
+# CONTEXT
+We are improving the **Video Creation** page of a web app.
+Current state:
+The page generates videos via `POST /api/video/generate` and stores them in object storage.
+Users can select a project before generating a video, and videos are linked to a `projectId` (or `null` if unassigned).
+The UI now has a two-column layout in the Create tab:
+Left: generation form
+Right: project panel listing videos for the selected project
+Bottom: Result panel showing the most recently generated video
+The `VideoCard` component is used wherever videos are displayed for consistent inline playback, Delete, and Move actions.
+Goal for this step:
+Transform the **Gallery tab** so videos are organized into collapsible groups (“folders”) by project, plus an “Unassigned” group.
+---
+# BEFORE STARTING
+Run type-check and start the dev server. 
+   If there are any build or runtime errors from the current code, fix them first.
+Verify:
+The Gallery tab currently renders a flat list of videos using `VideoCard`.
+The `/api/projects?withStats=true` endpoint returns a list of projects with their IDs, names, and counts.
+The `/api/video` endpoint returns all videos with their `projectId` values.
+---
+# TASK: Restructure the Gallery tab to show collapsible project groups
+## 1. Fetch data
+Inside `function VideoGallery()` in `client/src/pages/VideoPage.tsx`:
+Fetch projects with stats:
+  ```ts
+  const { data: projects } = useQuery(['/api/projects?withStats=true']);
+	•	Fetch all videos:
+const { data: videos } = useQuery(['/api/video']);
+Group videos
+	•	Group videos by their projectId.
+	•	For each project in projects, create a group containing its videos.
+	•	Create an “Unassigned” group for videos where projectId === null.
+Collapsible UI
+	•	Use Shadcn’s Collapsible component to make each group expandable/collapsible.
+	•	Group header:
+	•	Folder icon
+	•	Project name (or “Unassigned” for null projectId)
+	•	Badge showing the number of videos in that group
+	•	Group body:
+	•	Responsive grid of VideoCard components for the group’s videos.
+UX details
+	•	Groups with videos should start expanded.
+	•	Groups without videos can start collapsed.
+	•	Remember collapse state in local component state so toggling a group doesn’t reset on re-render.
+⸻
+ACCEPTANCE CRITERIA
+	•	The Gallery tab shows videos grouped under collapsible headers: one per project and one for Unassigned.
+	•	Each group uses the same VideoCard component for videos.
+	•	Collapsing and expanding groups works without breaking video playback.
+	•	Counts in headers match the actual number of videos in the group.

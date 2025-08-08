@@ -1,0 +1,67 @@
+# CONTEXT
+We are improving the **Video Creation** page of a web app.
+
+Current state:
+The page generates videos using `POST /api/video/generate`.
+Generated videos are stored in object storage and shown in the Gallery.
+Users can select a project before generating a video.
+The UI has a generation form and some project-related elements, but the layout is messy.
+A new `VideoCard` component exists and is used to display videos in a consistent way with inline playback, Delete, and Move actions.
+
+Goals for this step:
+Restructure the **Create** tab into a clean two-column layout (form on the left, project panel on the right).
+Ensure that when a project is selected, its videos appear in the right panel and `projectId` is sent when generating a video.
+Add a **Result panel** at the bottom to immediately display the most recently generated video.
+
+---
+
+# BEFORE STARTING
+Run type-check and start the dev server.  
+   If there are errors from the current code, fix them first.
+Verify:
+`VideoCard` renders without errors wherever videos are shown.
+Inline video playback works.
+Delete and Move actions are functional.
+
+---
+
+# TASK: Create a two-column layout in the Create tab and add a Result panel
+
+## 1. Two-column layout
+**In** `client/src/pages/VideoPage.tsx`, inside `TabsContent value="create"`:
+Use a responsive grid:
+**Left column** (lg: span 8):
+Keep the existing **generation form** (prompt, model, resolution, duration, AI Enhance, etc.).
+Preserve all `react-hook-form` logic.
+**Right column** (lg: span 4):
+**Project Panel**:
+Project selector dropdown (already present).
+"New Project" button (already present).
+Below that, list videos for the **selected project** using the `VideoCard` component.
+If “none” is selected, show Unassigned videos using `VideoCard`.
+
+## 2. Ensure `projectId` is sent when generating
+When the user changes the project in the selector:
+Store the selected `projectId` in component state.
+Include it in the payload for `POST /api/video/generate`:
+    ```ts
+    { prompt, model, resolution, duration, projectId }
+    ```
+Allow `null` for the “none” option.
+
+## 3. Bottom Result panel
+Add a full-width section **below both columns** titled **“Result”**.
+After a successful `POST /api/video/generate`, store the returned video object in a `lastCreatedVideo` state.
+Render that video with the `VideoCard` component.
+Add a button **“Open in Gallery”** that switches to the Gallery tab (use the existing `Tabs` control to change the active tab).
+
+---
+
+# ACCEPTANCE CRITERIA
+Desktop: two-column layout (form on left, project panel on right).
+Mobile: columns stack vertically.
+Generating a video:
+Immediately shows it in the bottom Result panel with inline playback.
+Also appears in the right Project Panel list.
+Switching projects updates the right panel with that project’s videos.
+`projectId` is correctly sent and saved with each generated video.
