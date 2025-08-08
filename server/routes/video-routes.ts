@@ -29,26 +29,30 @@ router.post('/generate', async (req, res) => {
 
     const { model, projectId, referenceImage, ...inputs } = validationResult.data;
 
+    // Create video record in database first to get the videoId
+    const videoId = crypto.randomUUID();
+    
     // Handle reference image upload to object storage if provided
     let referenceImageUrl: string | null = null;
     if (referenceImage) {
+      console.log(`[TRACE] Reference image provided, uploading for video ${videoId}`);
       try {
         // Parse base64 image data
         const base64Data = referenceImage.replace(/^data:image\/[a-z]+;base64,/, '');
         const imageBuffer = Buffer.from(base64Data, 'base64');
+        console.log(`[TRACE] Parsed reference image buffer: ${imageBuffer.length} bytes`);
         
-        // Upload to object storage
+        // Upload to object storage using the actual video ID
         const objectStorage = new ObjectStorageService();
-        referenceImageUrl = await objectStorage.uploadReferenceImage(imageBuffer, crypto.randomUUID());
-        console.log(`[TRACE] Reference image uploaded: ${referenceImageUrl}`);
+        referenceImageUrl = await objectStorage.uploadReferenceImage(imageBuffer, videoId);
+        console.log(`[TRACE] Reference image uploaded successfully: ${referenceImageUrl}`);
       } catch (uploadError) {
         console.error('Failed to upload reference image:', uploadError);
         // Continue without reference image - don't fail the entire request
       }
+    } else {
+      console.log(`[TRACE] No reference image provided for video ${videoId}`);
     }
-
-    // Create video record in database
-    const videoId = crypto.randomUUID();
     const video = await storage.saveVideo({
       id: videoId,
       prompt: inputs.prompt,
