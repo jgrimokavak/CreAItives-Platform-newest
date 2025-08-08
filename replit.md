@@ -26,7 +26,7 @@ Preferred communication style: Simple, everyday language.
 - **Architecture**: Unified provider adapter pattern for frictionless model addition; enhanced UI components for consistent file upload experiences.
 
 #### AI Video Generation
-- **Features**: Project-based organization, AI-enhanced prompts, configurable aspect ratios, resolutions, durations, optional audio generation, person generation controls, seed support.
+- **Features**: Project-based organization with localStorage project memory, AI-enhanced prompts, configurable aspect ratios, resolutions, durations, optional audio generation, person generation controls, seed support, enhanced card-style model selector with keyboard navigation.
 
 #### Car Design Visualization System
 - **Data**: Google Sheets integration for a live car database and dynamic color management.
@@ -47,7 +47,7 @@ Preferred communication style: Simple, everyday language.
 
 #### Core Architectural Decisions
 - **Database**: Drizzle ORM with PostgreSQL for type-safe queries and flexible schema management.
-- **AI Model Integration**: Multi-provider approach with a unified API layer to reduce vendor lock-in and optimize model selection. A provider adapter pattern enables frictionless model addition by implementing a `BaseProvider` interface and central configuration.
+- **AI Model Integration**: Multi-provider approach with a unified API layer to reduce vendor lock-in and optimize model selection. A provider adapter pattern enables frictionless model addition by implementing a `BaseProvider` interface and central configuration. Enhanced card-style model selector component with keyboard navigation and expandable model details.
 - **Email Rendering**: MJML chosen for robust cross-client compatibility.
 - **Real-time Updates**: Custom WebSocket implementation for job progress and gallery updates, with session-based authentication.
 - **File Storage**: Replit Object Storage with persistent cloud storage and complete environment isolation.

@@ -54,6 +54,8 @@ import ReferenceImageUpload from '@/components/ReferenceImageUpload';
 import type { Video } from '@shared/schema';
 import VideoCard from '@/components/VideoCard';
 import { JobTray, type JobTrayItem } from '@/components/JobTray';
+import { ModelSelector } from '@/components/ModelSelector';
+import { VIDEO_MODELS as MODEL_CONFIG } from '@/config/models';
 
 
 
@@ -909,7 +911,7 @@ function VideoGallery() {
 // Video generation form schema
 const videoGenerationSchema = z.object({
   prompt: z.string().min(1, 'Prompt is required').max(2000, 'Prompt must be less than 2000 characters'),
-  model: z.enum(['hailuo-02']),
+  model: z.string().refine(id => MODEL_CONFIG.find(m => m.id === id), { message: 'Invalid model selected' }),
   resolution: z.enum(['512p', '768p', '1080p']),
   duration: z.number().int().min(6).max(10), // 6 or 10 seconds only  
   projectId: z.string().optional(),
@@ -1017,6 +1019,40 @@ export default function VideoPage() {
     retry: false,
   });
 
+  // Project preselection with localStorage memory
+  useEffect(() => {
+    if (projects && projects.length > 0 && selectedProject === 'none') {
+      // Check if there's a remembered project in localStorage
+      const lastSelectedProjectId = localStorage.getItem('lastSelectedProjectId');
+      
+      if (lastSelectedProjectId) {
+        // Check if the remembered project still exists
+        const rememberedProject = projects.find(p => p.id === lastSelectedProjectId);
+        if (rememberedProject) {
+          setSelectedProject(lastSelectedProjectId);
+          return;
+        }
+      }
+      
+      // If no remembered project or it doesn't exist anymore, select the first project
+      const firstProject = projects[0];
+      if (firstProject) {
+        setSelectedProject(firstProject.id);
+        localStorage.setItem('lastSelectedProjectId', firstProject.id);
+      }
+    }
+  }, [projects, selectedProject]);
+
+  // Handle project selection changes and update localStorage
+  const handleProjectChange = (projectId: string) => {
+    setSelectedProject(projectId);
+    if (projectId !== 'none') {
+      localStorage.setItem('lastSelectedProjectId', projectId);
+    } else {
+      localStorage.removeItem('lastSelectedProjectId');
+    }
+  };
+
   // Fetch recent videos
   const { data: recentVideos, isLoading: recentVideosLoading } = useQuery<{ items: Video[]; nextCursor: string | null }>({
     queryKey: ['/api/video', 'recent'],
@@ -1086,7 +1122,7 @@ export default function VideoPage() {
       });
     },
     onSuccess: (newProject) => {
-      setSelectedProject(newProject.id);
+      handleProjectChange(newProject.id);
       setShowCreateProject(false);
       setNewProjectName('');
       setNewProjectDescription('');
@@ -1492,26 +1528,11 @@ export default function VideoPage() {
                     {/* Model Selection */}
                     <div className="space-y-2">
                       <Label>AI Model</Label>
-                      <Select
+                      <ModelSelector
                         value={form.watch('model')}
-                        onValueChange={(value) => form.setValue('model', value as any)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Object.entries(VIDEO_MODELS).map(([key, model]) => (
-                            <SelectItem key={key} value={key}>
-                              <div className="flex flex-col items-start">
-                                <span className="font-medium">{model.label}</span>
-                                <span className="text-sm text-muted-foreground">
-                                  {model.description}
-                                </span>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        onChange={(modelId) => form.setValue('model', modelId, { shouldDirty: true })}
+                        disabled={generateVideoMutation.isPending}
+                      />
                     </div>
 
                     <Separator />
@@ -1677,7 +1698,7 @@ export default function VideoPage() {
                     <>
                       <div className="space-y-2">
                         <Label>Select Project</Label>
-                        <Select value={selectedProject} onValueChange={setSelectedProject}>
+                        <Select value={selectedProject} onValueChange={handleProjectChange}>
                           <SelectTrigger>
                             <SelectValue placeholder="Choose a project (optional)" />
                           </SelectTrigger>
