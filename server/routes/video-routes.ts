@@ -4,6 +4,7 @@ import { generateVideoSchema, insertVideoSchema } from '@shared/schema';
 import { storage } from '../storage';
 import { ProviderRegistry } from '../providers/provider-registry';
 import crypto from 'crypto';
+import { ObjectStorageService } from '../objectStorage';
 
 const router = express.Router();
 const providerRegistry = new ProviderRegistry();
@@ -26,7 +27,25 @@ router.post('/generate', async (req, res) => {
       });
     }
 
-    const { model, projectId, ...inputs } = validationResult.data;
+    const { model, projectId, referenceImage, ...inputs } = validationResult.data;
+
+    // Handle reference image upload to object storage if provided
+    let referenceImageUrl: string | null = null;
+    if (referenceImage) {
+      try {
+        // Parse base64 image data
+        const base64Data = referenceImage.replace(/^data:image\/[a-z]+;base64,/, '');
+        const imageBuffer = Buffer.from(base64Data, 'base64');
+        
+        // Upload to object storage
+        const objectStorage = new ObjectStorageService();
+        referenceImageUrl = await objectStorage.uploadReferenceImage(imageBuffer, crypto.randomUUID());
+        console.log(`[TRACE] Reference image uploaded: ${referenceImageUrl}`);
+      } catch (uploadError) {
+        console.error('Failed to upload reference image:', uploadError);
+        // Continue without reference image - don't fail the entire request
+      }
+    }
 
     // Create video record in database
     const videoId = crypto.randomUUID();
@@ -40,6 +59,7 @@ router.post('/generate', async (req, res) => {
       userId: userId,
       projectId: projectId || null,
       firstFrameImage: inputs.firstFrameImage || null,
+      referenceImageUrl: referenceImageUrl, // Store the persistent reference image URL
       promptOptimizer: inputs.promptOptimizer !== false, // default to true
       aspectRatio: '16:9', // Default aspect ratio for hailuo-02
       environment: process.env.NODE_ENV === 'production' ? 'prod' : 'dev',

@@ -131,6 +131,7 @@ export const generateVideoSchema = z.object({
   duration: z.number().int().min(6).max(10), // 6 or 10 seconds only
   projectId: z.string().optional(),
   firstFrameImage: z.string().optional(), // determines aspect ratio
+  referenceImage: z.string().optional(), // base64 reference image to be stored in object storage
   promptOptimizer: z.boolean().default(true),
 });
 
@@ -144,6 +145,7 @@ export const videoModelSchemas = {
     duration: z.number().int().min(6).max(10),
     promptOptimizer: z.boolean().optional(),
     firstFrameImage: z.string().optional(),
+    referenceImage: z.string().optional(), // base64 reference image to be stored in object storage
   }),
 };
 
@@ -256,6 +258,7 @@ export const videos = pgTable("videos", {
   projectId: text("project_id"),
   userId: text("user_id").notNull(),
   firstFrameImage: text("first_frame_image"), // base64 encoded first frame image for hailuo-02
+  referenceImageUrl: text("reference_image_url"), // persistent reference image URL in object storage
   promptOptimizer: boolean("prompt_optimizer").default(true),
   thumbUrl: text("thumb_url"),
   fullUrl: text("full_url"),

@@ -104,7 +104,7 @@
     "node-cron": "^3.0.3",
     "node-fetch": "^3.3.2",
     "openai": "^4.104.0",
-    "openid-client": "^6.6.2",
+    "openid-client": "^6.6.3",
     "p-queue": "^8.1.0",
     "papaparse": "^5.5.2",
     "passport": "^0.7.0",
