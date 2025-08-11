@@ -90,13 +90,13 @@ interface ProjectGroupProps {
   originalGroupSize: number;
   isSelectMode: boolean;
   selectedVideos: Set<string>;
+  memberCount?: number;
   onToggleGroup: (groupId: string) => void;
   onToggleVideoSelection: (videoId: string) => void;
   onSelectAllInGroup: (videos: Video[]) => void;
   onMove?: (videoId: string, projectId: string | null) => void;
   onDeleteProject?: (projectId: string) => void;
   onDuplicateProject?: (projectId: string, name: string) => void;
-
   onExportProject?: (projectId: string, name: string) => void;
 }
 
@@ -109,6 +109,7 @@ function ProjectGroup({
   originalGroupSize,
   isSelectMode,
   selectedVideos,
+  memberCount,
   onToggleGroup,
   onToggleVideoSelection,
   onSelectAllInGroup,
@@ -284,6 +285,12 @@ function ProjectGroup({
                       <div className="flex items-center gap-2">
                         <div className={`w-3 h-3 rounded-full ${videos.length > 0 ? 'bg-green-500' : 'bg-gray-300'}`} />
                         <CardTitle className="text-lg font-semibold">{projectName}</CardTitle>
+                        {groupId !== 'unassigned' && memberCount && memberCount > 0 && (
+                          <Badge variant="secondary" className="ml-2 bg-blue-100 text-blue-800 border-blue-200">
+                            <Users className="w-3 h-3 mr-1" />
+                            {memberCount + 1} members
+                          </Badge>
+                        )}
                       </div>
                       {groupId !== 'unassigned' && (
                         <DropdownMenu>
@@ -926,6 +933,14 @@ function VideoGallery() {
     queryFn: () => apiRequest('/api/projects?withStats=true'),
     staleTime: 30000, // Cache for 30 seconds
   });
+
+  // Fetch project member counts for shared folder badges
+  const { data: memberCountsData } = useQuery<{ memberCounts: Record<string, number> }>({
+    queryKey: ['/api/projects/member-counts'],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const projectMemberCounts = memberCountsData?.memberCounts || {};
 
   // Fetch all videos with pagination
   const { data: videosResponse, isLoading: videosLoading, refetch: refetchVideos } = useQuery<{items: Video[]}>({
@@ -1666,6 +1681,7 @@ function VideoGallery() {
                 originalGroupSize={originalGroupSize}
                 isSelectMode={isSelectMode}
                 selectedVideos={selectedVideos}
+                memberCount={projectMemberCounts[groupId]}
                 onToggleGroup={toggleGroup}
                 onToggleVideoSelection={toggleVideoSelection}
                 onSelectAllInGroup={(videos) => {

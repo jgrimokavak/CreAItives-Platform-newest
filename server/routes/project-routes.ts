@@ -62,6 +62,24 @@ router.post('/', async (req, res) => {
   }
 });
 
+// Get project member counts for shared folder badges
+router.get('/member-counts', async (req, res) => {
+  try {
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const memberCounts = await storage.getProjectMemberCounts(userId);
+    res.json({ memberCounts });
+
+  } catch (error: any) {
+    console.error('Get project member counts error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // List user's projects
 router.get('/', async (req, res) => {
   try {

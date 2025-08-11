@@ -81,6 +81,7 @@ export interface IStorage {
   reorderProjects(userId: string, projectIds: string[]): Promise<void>;
   permanentDeleteProject(projectId: string, deleteVideos?: boolean): Promise<void>;
   createProjectExportZip(project: Project, videos: Video[]): Promise<{success: boolean; downloadUrl?: string; error?: string}>;
+  getProjectMemberCounts(userId: string): Promise<Record<string, number>>;
 }
 
 // Database storage implementation
@@ -1454,6 +1455,46 @@ export class DatabaseStorage implements IStorage {
       .limit(1);
 
     return !!membership;
+  }
+
+  async getProjectMemberCounts(userId: string): Promise<Record<string, number>> {
+    // Get all projects that the user owns or is a member of
+    const ownedProjects = await db
+      .select({ id: projects.id })
+      .from(projects)
+      .where(eq(projects.userId, userId));
+
+    const memberProjects = await db
+      .select({ projectId: projectMembers.projectId })
+      .from(projectMembers)
+      .where(eq(projectMembers.userId, userId));
+
+    const allProjectIds = [
+      ...ownedProjects.map(p => p.id),
+      ...memberProjects.map(p => p.projectId)
+    ];
+
+    if (allProjectIds.length === 0) {
+      return {};
+    }
+
+    // Get member counts for all accessible projects
+    const memberCounts = await db
+      .select({
+        projectId: projectMembers.projectId,
+        memberCount: sql<number>`COUNT(*)`.as('memberCount')
+      })
+      .from(projectMembers)
+      .where(inArray(projectMembers.projectId, allProjectIds))
+      .groupBy(projectMembers.projectId);
+
+    // Convert to Record format
+    const result: Record<string, number> = {};
+    memberCounts.forEach(({ projectId, memberCount }) => {
+      result[projectId] = memberCount;
+    });
+
+    return result;
   }
 
   async searchUsers(query: string, excludeUserId: string): Promise<User[]> {
