@@ -282,7 +282,7 @@ export const projects = pgTable("projects", {
   videoCount: integer("video_count").default(0).notNull(), // Count of videos in project
   userId: text("user_id").notNull(),
   orderIndex: integer("order_index").default(0).notNull(), // For custom project ordering
-  archivedAt: timestamp("archived_at"), // Soft delete timestamp for archival
+  deletedAt: timestamp("deleted_at"), // Soft delete timestamp for archival  
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

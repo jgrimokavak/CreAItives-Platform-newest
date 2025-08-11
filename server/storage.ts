@@ -751,7 +751,7 @@ export class DatabaseStorage implements IStorage {
     const conditions = [eq(projects.userId, userId)];
     
     if (!showArchived) {
-      conditions.push(isNull(projects.archivedAt));
+      conditions.push(isNull(projects.deletedAt));
     }
 
     return await db
@@ -822,7 +822,7 @@ export class DatabaseStorage implements IStorage {
     
     const conditions = [eq(projects.userId, userId)];
     if (!showArchived) {
-      conditions.push(isNull(projects.archivedAt));
+      conditions.push(isNull(projects.deletedAt));
     }
     
     // Get projects with video counts using SQL aggregation, filtered by environment
@@ -835,7 +835,7 @@ export class DatabaseStorage implements IStorage {
         videoCount: projects.videoCount,
         userId: projects.userId,
         orderIndex: projects.orderIndex,
-        archivedAt: projects.archivedAt,
+        archivedAt: projects.deletedAt,
         createdAt: projects.createdAt,
         updatedAt: projects.updatedAt,
         totalVideos: sql<number>`COALESCE(COUNT(CASE WHEN ${videos.environment} = ${currentEnv} THEN ${videos.id} END), 0)`.as('totalVideos'),
@@ -846,11 +846,12 @@ export class DatabaseStorage implements IStorage {
       .from(projects)
       .leftJoin(videos, eq(projects.id, videos.projectId))
       .where(and(...conditions))
-      .groupBy(projects.id, projects.orderIndex, projects.archivedAt)
+      .groupBy(projects.id, projects.orderIndex, projects.deletedAt)
       .orderBy(asc(projects.orderIndex), desc(projects.createdAt));
 
     return projectsWithStats.map(p => ({
       ...p,
+      deletedAt: p.archivedAt, // Map archivedAt to deletedAt for consistency
       videoCount: p.totalVideos,
       completedCount: p.completedCount,
       processingCount: p.processingCount,
@@ -967,7 +968,7 @@ export class DatabaseStorage implements IStorage {
     const [archivedProject] = await db
       .update(projects)
       .set({ 
-        archivedAt: new Date(),
+        deletedAt: new Date(),
         updatedAt: new Date()
       })
       .where(eq(projects.id, projectId))
@@ -980,7 +981,7 @@ export class DatabaseStorage implements IStorage {
     const [restoredProject] = await db
       .update(projects)
       .set({ 
-        archivedAt: null,
+        deletedAt: null,
         updatedAt: new Date()
       })
       .where(eq(projects.id, projectId))

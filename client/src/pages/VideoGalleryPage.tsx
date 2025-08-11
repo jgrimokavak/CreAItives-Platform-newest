@@ -112,7 +112,7 @@ function SortableProjectCard({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const isArchived = !!project.archivedAt;
+  const isArchived = !!project.deletedAt;
 
   return (
     <Card
@@ -597,7 +597,7 @@ export default function VideoGalleryPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent>
-                            {projects.filter(p => !p.archivedAt).map((project) => (
+                            {projects.filter(p => !p.deletedAt).map((project) => (
                               <DropdownMenuItem
                                 key={project.id}
                                 onClick={() => handleBulkMoveVideos(project.id)}
