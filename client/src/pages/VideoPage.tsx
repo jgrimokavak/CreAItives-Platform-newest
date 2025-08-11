@@ -59,10 +59,7 @@ import {
   Eye,
   Archive
 } from 'lucide-react';
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
-import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import SimpleGalleryPage from './SimpleGalleryPage';
@@ -267,7 +264,6 @@ function VideoGallery() {
   
   // Project management state
   const [showArchived, setShowArchived] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
   const [confirmDeleteProject, setConfirmDeleteProject] = useState<string | null>(null);
   
   // Undo state
@@ -592,61 +588,7 @@ function VideoGallery() {
     }
   };
 
-  // Drag and drop functions
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
 
-  const handleDragStart = () => {
-    setIsDragging(true);
-  };
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    setIsDragging(false);
-    const { active, over } = event;
-
-    if (active.id !== over?.id) {
-      const activeIndex = projects.findIndex((project: any) => project.id === active.id);
-      const overIndex = projects.findIndex((project: any) => project.id === over?.id);
-
-      if (activeIndex !== -1 && overIndex !== -1) {
-        const newProjects = arrayMove(projects, activeIndex, overIndex);
-        const projectIds = newProjects.map((p: any) => p.id);
-        
-        // Optimistic update
-        queryClient.setQueryData(['/api/projects', { withStats: true, includeArchived: showArchived }], newProjects);
-        
-        // Call reorder API
-        reorderProjects(projectIds);
-      }
-    }
-  };
-
-  const reorderProjects = async (projectIds: string[]) => {
-    try {
-      await apiRequest('/api/projects/reorder', {
-        method: 'PATCH',
-        body: { projectIds }
-      });
-      
-      toast({
-        title: "Success",
-        description: "Projects reordered successfully",
-      });
-    } catch (error) {
-      console.error('Reorder projects error:', error);
-      // Revert optimistic update on error
-      refetchProjects();
-      toast({
-        title: "Error",
-        description: "Failed to reorder projects",
-        variant: "destructive",
-      });
-    }
-  };
 
   // Undo functions
   const undoMove = async (videos: Video[], originalProjectIds: (string | null)[]) => {
@@ -692,12 +634,7 @@ function VideoGallery() {
     });
   };
 
-  const toggleGroup = (groupId: string) => {
-    setCollapsedGroups(prev => ({
-      ...prev,
-      [groupId]: !prev[groupId]
-    }));
-  };
+
 
   const getProjectName = (groupId: string) => {
     if (groupId === 'unassigned') return 'Unassigned';
@@ -1141,7 +1078,7 @@ function VideoGallery() {
         </Card>
       )}
 
-      {/* Project Groups with Drag and Drop */}
+      {/* Project Groups */}
       {nonEmptyGroups.length === 0 ? (
         <div className="rounded-lg border bg-muted/5 p-8">
           <div className="text-center space-y-3">
