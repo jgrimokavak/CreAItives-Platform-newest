@@ -1072,6 +1072,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/video', videoRoutes);
   app.use('/api/projects', projectRoutes);
   
+  // User search endpoint for collaborative projects
+  app.get('/api/users/search', async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const { q } = req.query;
+      if (!q || typeof q !== 'string' || q.trim().length < 2) {
+        return res.status(400).json({ error: 'Search query must be at least 2 characters' });
+      }
+
+      // Search users by email or name (excluding current user)
+      const users = await storage.searchUsers(q.trim(), userId);
+      
+      res.json({
+        success: true,
+        users: users.map(user => ({
+          id: user.id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          profileImageUrl: user.profileImageUrl,
+          displayName: user.firstName && user.lastName 
+            ? `${user.firstName} ${user.lastName}` 
+            : user.firstName || user.email
+        }))
+      });
+
+    } catch (error: any) {
+      console.error('User search error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+  
   // Add model routes (includes /api/models endpoint)
   app.use('/api', modelRoutes);
   

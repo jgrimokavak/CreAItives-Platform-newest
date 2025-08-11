@@ -1,4 +1,4 @@
-import { users, images, pageSettings, videos, projects, type User, type UpsertUser, type GeneratedImage, type PageSettings, type InsertPageSettings, type Video, type InsertVideo, type Project, type InsertProject } from "@shared/schema";
+import { users, images, pageSettings, videos, projects, projectMembers, type User, type UpsertUser, type GeneratedImage, type PageSettings, type InsertPageSettings, type Video, type InsertVideo, type Project, type InsertProject, type ProjectMember, type InsertProjectMember } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, isNull, isNotNull, and, ilike, lt, sql, or, not, inArray, ne } from "drizzle-orm";
 import * as fs from "fs";
@@ -67,6 +67,14 @@ export interface IStorage {
   updateProject(id: string, updates: Partial<Project>): Promise<Project | undefined>;
   deleteProject(id: string): Promise<void>;
   getProjectWithVideos(projectId: string, userId: string): Promise<{ project: Project; videos: Video[] } | null>;
+  
+  // Project membership operations for collaboration
+  addProjectMember(projectId: string, userId: string, addedBy?: string): Promise<ProjectMember>;
+  removeProjectMember(projectId: string, userId: string): Promise<void>;
+  getProjectMembers(projectId: string): Promise<ProjectMember[]>;
+  getProjectMembersWithDetails(projectId: string): Promise<(ProjectMember & { user: User })[]>;
+  getUserProjectMemberships(userId: string): Promise<ProjectMember[]>;
+  hasProjectAccess(projectId: string, userId: string): Promise<boolean>;
   
   // New project management operations
   duplicateProject(projectId: string, userId: string, includeVideos?: boolean): Promise<Project>;
@@ -789,17 +797,54 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllProjects(userId: string, showArchived = false): Promise<Project[]> {
-    const conditions = [eq(projects.userId, userId)];
-    
+    // Get projects where user is owner OR member
+    const ownerConditions = [eq(projects.userId, userId)];
     if (!showArchived) {
-      conditions.push(isNull(projects.deletedAt));
+      ownerConditions.push(isNull(projects.deletedAt));
     }
 
-    return await db
+    // Projects owned by user
+    const ownedProjects = await db
       .select()
       .from(projects)
-      .where(and(...conditions))
+      .where(and(...ownerConditions))
       .orderBy(asc(projects.orderIndex), desc(projects.createdAt));
+
+    // Projects where user is a member
+    const memberConditions = [ne(projects.userId, userId)]; // Exclude already owned projects
+    if (!showArchived) {
+      memberConditions.push(isNull(projects.deletedAt));
+    }
+
+    const memberProjects = await db
+      .select({
+        id: projects.id,
+        name: projects.name,
+        description: projects.description,
+        gcsFolder: projects.gcsFolder,
+        videoCount: projects.videoCount,
+        userId: projects.userId,
+        orderIndex: projects.orderIndex,
+        deletedAt: projects.deletedAt,
+        createdAt: projects.createdAt,
+        updatedAt: projects.updatedAt,
+      })
+      .from(projects)
+      .innerJoin(projectMembers, eq(projects.id, projectMembers.projectId))
+      .where(and(
+        eq(projectMembers.userId, userId),
+        ...memberConditions
+      ))
+      .orderBy(asc(projects.orderIndex), desc(projects.createdAt));
+
+    // Combine and sort all projects
+    const allProjects = [...ownedProjects, ...memberProjects];
+    return allProjects.sort((a, b) => {
+      if (a.orderIndex !== b.orderIndex) {
+        return a.orderIndex - b.orderIndex;
+      }
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
   }
 
   async getProjectById(id: string): Promise<Project | undefined> {
@@ -816,21 +861,26 @@ export class DatabaseStorage implements IStorage {
     totalDuration: number;
   } | null> {
     // Get project
+    // Check if user has access to this project (owner or member)
+    const hasAccess = await this.hasProjectAccess(projectId, userId);
+    if (!hasAccess) {
+      return null;
+    }
+
     const project = await this.getProjectById(projectId);
-    if (!project || project.userId !== userId) {
+    if (!project) {
       return null;
     }
 
     // Get current environment to filter videos
     const currentEnv = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
 
-    // Get all videos for this project, filtered by environment
+    // Get all videos for this project, filtered by environment (no userId filter for collaborative projects)
     const projectVideos = await db
       .select()
       .from(videos)
       .where(and(
         eq(videos.projectId, projectId),
-        eq(videos.userId, userId),
         eq(videos.environment, currentEnv)
       ))
       .orderBy(desc(videos.createdAt));
@@ -861,12 +911,10 @@ export class DatabaseStorage implements IStorage {
     // Get current environment to filter videos
     const currentEnv = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
     
-    const conditions = [eq(projects.userId, userId)];
-    if (!showArchived) {
-      conditions.push(isNull(projects.deletedAt));
-    }
+    // Get projects where user is owner OR member
+    const archiveCondition = showArchived ? [] : [isNull(projects.deletedAt)];
     
-    // Get projects with video counts using SQL aggregation, filtered by environment
+    // Union query to get both owned projects and member projects with stats
     const projectsWithStats = await db
       .select({
         id: projects.id,
@@ -886,11 +934,27 @@ export class DatabaseStorage implements IStorage {
       })
       .from(projects)
       .leftJoin(videos, eq(projects.id, videos.projectId))
-      .where(and(...conditions))
+      .leftJoin(projectMembers, eq(projects.id, projectMembers.projectId))
+      .where(and(
+        or(
+          eq(projects.userId, userId), // User owns the project
+          eq(projectMembers.userId, userId) // User is a member
+        ),
+        ...archiveCondition
+      ))
       .groupBy(projects.id, projects.orderIndex, projects.deletedAt)
       .orderBy(asc(projects.orderIndex), desc(projects.createdAt));
 
-    return projectsWithStats.map(p => ({
+    // Remove duplicates that might occur from the join
+    const uniqueProjects = projectsWithStats.reduce((acc, project) => {
+      const existing = acc.find(p => p.id === project.id);
+      if (!existing) {
+        acc.push(project);
+      }
+      return acc;
+    }, [] as typeof projectsWithStats);
+
+    return uniqueProjects.map(p => ({
       ...p,
       deletedAt: p.archivedAt, // Map archivedAt to deletedAt for consistency
       videoCount: p.totalVideos,
@@ -1250,6 +1314,115 @@ export class DatabaseStorage implements IStorage {
         error: error.message || 'Unknown error occurred'
       };
     }
+  }
+
+  // Project membership operations for collaboration
+  async addProjectMember(projectId: string, userId: string, addedBy?: string): Promise<ProjectMember> {
+    const memberId = crypto.randomUUID();
+    const [member] = await db
+      .insert(projectMembers)
+      .values({
+        id: memberId,
+        projectId,
+        userId,
+        addedBy
+      })
+      .returning();
+    return member;
+  }
+
+  async removeProjectMember(projectId: string, userId: string): Promise<void> {
+    await db
+      .delete(projectMembers)
+      .where(and(
+        eq(projectMembers.projectId, projectId),
+        eq(projectMembers.userId, userId)
+      ));
+  }
+
+  async getProjectMembers(projectId: string): Promise<ProjectMember[]> {
+    return await db
+      .select()
+      .from(projectMembers)
+      .where(eq(projectMembers.projectId, projectId))
+      .orderBy(asc(projectMembers.addedAt));
+  }
+
+  async getProjectMembersWithDetails(projectId: string): Promise<(ProjectMember & { user: User })[]> {
+    const result = await db
+      .select({
+        id: projectMembers.id,
+        projectId: projectMembers.projectId,
+        userId: projectMembers.userId,
+        addedAt: projectMembers.addedAt,
+        addedBy: projectMembers.addedBy,
+        user: users
+      })
+      .from(projectMembers)
+      .innerJoin(users, eq(projectMembers.userId, users.id))
+      .where(eq(projectMembers.projectId, projectId))
+      .orderBy(asc(projectMembers.addedAt));
+
+    return result.map(row => ({
+      id: row.id,
+      projectId: row.projectId,
+      userId: row.userId,
+      addedAt: row.addedAt,
+      addedBy: row.addedBy,
+      user: row.user
+    }));
+  }
+
+  async getUserProjectMemberships(userId: string): Promise<ProjectMember[]> {
+    return await db
+      .select()
+      .from(projectMembers)
+      .where(eq(projectMembers.userId, userId))
+      .orderBy(asc(projectMembers.addedAt));
+  }
+
+  async hasProjectAccess(projectId: string, userId: string): Promise<boolean> {
+    // Check if user is the project owner
+    const [project] = await db
+      .select({ userId: projects.userId })
+      .from(projects)
+      .where(eq(projects.id, projectId))
+      .limit(1);
+
+    if (project?.userId === userId) {
+      return true;
+    }
+
+    // Check if user is a project member
+    const [membership] = await db
+      .select({ id: projectMembers.id })
+      .from(projectMembers)
+      .where(and(
+        eq(projectMembers.projectId, projectId),
+        eq(projectMembers.userId, userId)
+      ))
+      .limit(1);
+
+    return !!membership;
+  }
+
+  async searchUsers(query: string, excludeUserId: string): Promise<User[]> {
+    const searchTerm = `%${query.toLowerCase()}%`;
+    
+    return await db
+      .select()
+      .from(users)
+      .where(and(
+        ne(users.id, excludeUserId), // Exclude the current user
+        or(
+          sql`LOWER(${users.email}) LIKE ${searchTerm}`,
+          sql`LOWER(${users.firstName}) LIKE ${searchTerm}`,
+          sql`LOWER(${users.lastName}) LIKE ${searchTerm}`,
+          sql`LOWER(CONCAT(${users.firstName}, ' ', ${users.lastName})) LIKE ${searchTerm}`
+        )
+      ))
+      .limit(10)
+      .orderBy(asc(users.email));
   }
 }
 

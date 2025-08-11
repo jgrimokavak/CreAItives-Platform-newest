@@ -389,4 +389,145 @@ router.post('/:id/export', async (req, res) => {
   }
 });
 
+// Project Membership Management Routes
+
+// Add member to project
+router.post('/:id/members', async (req, res) => {
+  try {
+    const user = req.user as any;
+    const currentUserId = user?.claims?.sub;
+    if (!currentUserId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const { userId } = req.body;
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    // Check if current user has access to this project (can only add members if you have access)
+    const hasAccess = await storage.hasProjectAccess(req.params.id, currentUserId);
+    if (!hasAccess) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    // Check if user being added exists
+    const userToAdd = await storage.getUser(userId);
+    if (!userToAdd) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if user is already a member or owner
+    const isAlreadyMember = await storage.hasProjectAccess(req.params.id, userId);
+    if (isAlreadyMember) {
+      return res.status(400).json({ error: 'User is already a member of this project' });
+    }
+
+    // Add the member
+    await storage.addProjectMember(req.params.id, userId, currentUserId);
+
+    res.json({
+      success: true,
+      message: `${userToAdd.firstName || userToAdd.email} added to project successfully`
+    });
+
+  } catch (error: any) {
+    console.error('Add project member error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Remove member from project
+router.delete('/:id/members/:userId', async (req, res) => {
+  try {
+    const user = req.user as any;
+    const currentUserId = user?.claims?.sub;
+    if (!currentUserId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    // Check if current user has access to this project
+    const hasAccess = await storage.hasProjectAccess(req.params.id, currentUserId);
+    if (!hasAccess) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    // Get project to check ownership
+    const project = await storage.getProjectById(req.params.id);
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    // Cannot remove the project owner
+    if (project.userId === req.params.userId) {
+      return res.status(400).json({ error: 'Cannot remove project owner' });
+    }
+
+    // Remove the member
+    await storage.removeProjectMember(req.params.id, req.params.userId);
+
+    res.json({
+      success: true,
+      message: 'Member removed from project successfully'
+    });
+
+  } catch (error: any) {
+    console.error('Remove project member error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get project members with user details
+router.get('/:id/members', async (req, res) => {
+  try {
+    const user = req.user as any;
+    const currentUserId = user?.claims?.sub;
+    if (!currentUserId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    // Check if current user has access to this project
+    const hasAccess = await storage.hasProjectAccess(req.params.id, currentUserId);
+    if (!hasAccess) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    // Get project owner
+    const project = await storage.getProjectById(req.params.id);
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    const projectOwner = await storage.getUser(project.userId);
+
+    // Get project members
+    const members = await storage.getProjectMembersWithDetails(req.params.id);
+
+    res.json({
+      success: true,
+      owner: projectOwner ? {
+        id: projectOwner.id,
+        firstName: projectOwner.firstName,
+        lastName: projectOwner.lastName,
+        email: projectOwner.email,
+        profileImageUrl: projectOwner.profileImageUrl,
+        role: 'owner'
+      } : null,
+      members: members.map(member => ({
+        id: member.user.id,
+        firstName: member.user.firstName,
+        lastName: member.user.lastName,
+        email: member.user.email,
+        profileImageUrl: member.user.profileImageUrl,
+        addedAt: member.addedAt,
+        role: 'member'
+      }))
+    });
+
+  } catch (error: any) {
+    console.error('Get project members error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;

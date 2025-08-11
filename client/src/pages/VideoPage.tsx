@@ -72,6 +72,7 @@ import SimpleGalleryPage from './SimpleGalleryPage';
 import ReferenceImageUpload from '@/components/ReferenceImageUpload';
 import type { Video } from '@shared/schema';
 import VideoCard from '@/components/VideoCard';
+import ProjectMemberManager from '@/components/ProjectMemberManager';
 
 import { ModelSelector } from '@/components/ModelSelector';
 import { VIDEO_MODELS as MODEL_CONFIG } from '@/config/models';
@@ -2591,6 +2592,18 @@ export default function VideoPage() {
                         >
                           <Plus className="w-4 h-4" />
                         </Button>
+                        
+                        {/* Project Member Management - only show for selected projects */}
+                        {selectedProject && selectedProject !== 'none' && (
+                          <ProjectMemberManager 
+                            projectId={selectedProject}
+                            trigger={
+                              <Button variant="outline" size="icon" className="h-9 w-9">
+                                <Users className="w-4 h-4" />
+                              </Button>
+                            }
+                          />
+                        )}
                       </div>
 
                       {/* Simplified Create Project Form */}

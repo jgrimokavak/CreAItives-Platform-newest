@@ -30,6 +30,7 @@ Preferred communication style: Simple, everyday language.
 - **Environment Isolation**: Videos are stored with environment tags ('dev' or 'prod') and filtered by environment to prevent cross-environment data mixing. Uses REPLIT_DEPLOYMENT environment variable for detection.
 - **Gallery Location**: All video-related functionality is centralized in the `/video` route, which includes both video management and project editing capabilities.
 - **Simplified Project Panel**: Streamlined project panel with minimal UI - includes project selection dropdown, compact create button, and clean two-column video grid preview. Component called `SimplifiedProjectVideos` features video thumbnails, click-to-play functionality, download buttons, and helpful usage legends. Rename functionality removed from panel (available in video gallery).
+- **Collaborative Projects**: Full project collaboration system with member management - users can add team members to projects with equal permissions for shared video generation and management. Database includes `project_members` table with many-to-many relationships. Backend includes complete API for adding/removing members, user search, and access control. Frontend features ProjectMemberManager component with user search, member management UI, and intuitive member controls integrated into video generation interface.
 
 #### Car Design Visualization System
 - **Data**: Google Sheets integration for a live car database and dynamic color management.

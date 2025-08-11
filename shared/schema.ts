@@ -294,9 +294,27 @@ export const projects = pgTable("projects", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Project membership table for collaboration
+export const projectMembers = pgTable("project_members", {
+  id: text("id").primaryKey(),
+  projectId: text("project_id").notNull(),
+  userId: text("user_id").notNull(),
+  addedAt: timestamp("added_at").defaultNow().notNull(),
+  addedBy: text("added_by"), // Optional for audit trail
+}, (table) => [
+  // Composite unique constraint to prevent duplicate memberships
+  index("idx_project_members_unique").on(table.projectId, table.userId),
+  index("idx_project_members_project").on(table.projectId),
+  index("idx_project_members_user").on(table.userId),
+]);
+
 export const insertProjectSchema = createInsertSchema(projects).omit({
   createdAt: true,
   updatedAt: true,
+});
+
+export const insertProjectMemberSchema = createInsertSchema(projectMembers).omit({
+  addedAt: true,
 });
 
 // Schema for project management operations
@@ -320,6 +338,8 @@ export const deleteProjectSchema = z.object({
 
 export type InsertProject = z.infer<typeof insertProjectSchema>;
 export type Project = typeof projects.$inferSelect;
+export type InsertProjectMember = z.infer<typeof insertProjectMemberSchema>;
+export type ProjectMember = typeof projectMembers.$inferSelect;
 export type DuplicateProject = z.infer<typeof duplicateProjectSchema>;
 export type ReorderProjects = z.infer<typeof reorderProjectsSchema>;
 export type ArchiveProject = z.infer<typeof archiveProjectSchema>;
