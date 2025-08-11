@@ -62,8 +62,7 @@ import {
   Eye,
   EyeOff,
   Info,
-  Trash,
-  XCircle
+  Trash
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
@@ -471,116 +470,7 @@ function ProjectGroup({
   );
 }
 
-// Simplified component for displaying project videos in a compact grid
-interface SimplifiedProjectVideosProps {
-  selectedProject: string;
-}
-
-function SimplifiedProjectVideos({ selectedProject }: SimplifiedProjectVideosProps) {
-  // Fetch project details with videos
-  const { data: projectDetails, isLoading: projectLoading } = useQuery({
-    queryKey: ['/api/projects', selectedProject, 'details'],
-    queryFn: () => selectedProject === 'none' ? 
-      Promise.resolve(null) : 
-      apiRequest(`/api/projects/${selectedProject}/details`),
-    enabled: selectedProject !== 'none',
-  });
-
-  // Fetch unassigned videos when no project is selected
-  const { data: unassignedVideos, isLoading: unassignedLoading } = useQuery<{items: Video[]}>({
-    queryKey: ['/api/video', 'unassigned'],
-    queryFn: () => apiRequest('/api/video?projectId=null'),
-    enabled: selectedProject === 'none',
-  });
-
-  const isLoading = selectedProject === 'none' ? unassignedLoading : projectLoading;
-  const videos = selectedProject === 'none' 
-    ? unassignedVideos?.items || []
-    : projectDetails?.videos || [];
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  if (videos.length === 0) {
-    return (
-      <div className="text-center py-8 text-muted-foreground">
-        <VideoIcon className="w-8 h-8 mx-auto mb-2 opacity-50" />
-        <p className="text-sm">No videos yet</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid grid-cols-2 gap-2">
-      {videos.map((video) => (
-        <MiniVideoCard key={video.id} video={video} />
-      ))}
-    </div>
-  );
-}
-
-// Mini video card component for compact display
-function MiniVideoCard({ video }: { video: Video }) {
-  const [isHovered, setIsHovered] = useState(false);
-  
-  const formatDuration = (seconds: number | null) => {
-    if (!seconds) return '0s';
-    return `${seconds}s`;
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'text-green-500';
-      case 'processing': return 'text-blue-500';
-      case 'failed': return 'text-red-500';
-      default: return 'text-gray-500';
-    }
-  };
-
-  return (
-    <div 
-      className="relative aspect-video rounded-lg overflow-hidden border bg-muted/20 hover:border-primary/50 transition-all cursor-pointer"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      {video.thumbnailUrl ? (
-        <img 
-          src={video.thumbnailUrl} 
-          alt={video.prompt || 'Video thumbnail'}
-          className="w-full h-full object-cover"
-        />
-      ) : (
-        <div className="w-full h-full flex items-center justify-center bg-muted/50">
-          <VideoIcon className="w-6 h-6 text-muted-foreground" />
-        </div>
-      )}
-      
-      {/* Overlay with video info */}
-      <div className={`absolute inset-0 bg-black/60 flex flex-col justify-end p-2 transition-opacity ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
-        <p className="text-white text-xs line-clamp-2 mb-1">
-          {video.prompt || 'No prompt'}
-        </p>
-        <div className="flex items-center justify-between">
-          <span className="text-white/80 text-xs">
-            {formatDuration(video.duration)}
-          </span>
-          <span className={`text-xs ${getStatusColor(video.status)}`}>
-            {video.status === 'completed' && <CheckCircle className="w-3 h-3" />}
-            {video.status === 'processing' && <Loader2 className="w-3 h-3 animate-spin" />}
-            {video.status === 'failed' && <XCircle className="w-3 h-3" />}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ProjectVideoPreview Component for the right column (keeping for backwards compatibility)
+// ProjectVideoPreview Component for the right column
 interface ProjectVideoPreviewProps {
   selectedProject: string;
   projects: Project[];
@@ -1650,7 +1540,11 @@ export default function VideoPage() {
   const [selectedProject, setSelectedProject] = useState<string>('none');
   const [activeTab, setActiveTab] = useState<'create' | 'gallery'>('create');
   const [showCreateProject, setShowCreateProject] = useState(false);
+  const [showRenameProject, setShowRenameProject] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
+  const [newProjectDescription, setNewProjectDescription] = useState('');
+  const [renameProjectName, setRenameProjectName] = useState('');
+  const [renameProjectDescription, setRenameProjectDescription] = useState('');
   const [firstFrameImagePreview, setFirstFrameImagePreview] = useState<string | null>(null);
   const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false);
   const [recentlyGeneratedVideos, setRecentlyGeneratedVideos] = useState<string[]>([]);
@@ -1783,7 +1677,7 @@ export default function VideoPage() {
 
   // Create project mutation
   const createProjectMutation = useMutation({
-    mutationFn: async (projectData: { name: string }) => {
+    mutationFn: async (projectData: { name: string; description?: string }) => {
       return await apiRequest('/api/projects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1794,6 +1688,7 @@ export default function VideoPage() {
       handleProjectChange(newProject.id);
       setShowCreateProject(false);
       setNewProjectName('');
+      setNewProjectDescription('');
       // Invalidate and refetch projects
       queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
       refetchProjects();
@@ -1806,6 +1701,40 @@ export default function VideoPage() {
       toast({
         title: 'Project Creation Failed',
         description: 'Could not create project. Please try again.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const renameProjectMutation = useMutation({
+    mutationFn: async (renameData: { projectId: string; name: string; description?: string }) => {
+      const updateData: { name: string; description?: string } = { name: renameData.name };
+      if (renameData.description !== undefined) {
+        updateData.description = renameData.description;
+      }
+      
+      return await apiRequest(`/api/projects/${renameData.projectId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updateData),
+      });
+    },
+    onSuccess: (updatedProject) => {
+      setShowRenameProject(false);
+      setRenameProjectName('');
+      setRenameProjectDescription('');
+      // Invalidate and refetch projects
+      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+      refetchProjects();
+      toast({
+        title: 'Project Updated',
+        description: `Project has been updated successfully.`,
+      });
+    },
+    onError: () => {
+      toast({
+        title: 'Update Failed',
+        description: 'Could not update project. Please try again.',
         variant: 'destructive',
       });
     },
@@ -2161,6 +2090,17 @@ export default function VideoPage() {
     if (newProjectName.trim()) {
       createProjectMutation.mutate({
         name: newProjectName.trim(),
+        description: newProjectDescription.trim() || undefined,
+      });
+    }
+  };
+
+  const handleRenameProject = () => {
+    if (renameProjectName.trim() && selectedProject !== 'none') {
+      renameProjectMutation.mutate({
+        projectId: selectedProject,
+        name: renameProjectName.trim(),
+        description: renameProjectDescription.trim() || undefined,
       });
     }
   };
@@ -2418,73 +2358,211 @@ export default function VideoPage() {
               </form>
             </div>
 
-            {/* Simplified Project Panel (4/12 columns) */}
+            {/* Enhanced Right Column - Project Panel (4/12 columns) */}
             <div className="lg:col-span-4">
-              <Card className="lg:sticky lg:top-6 lg:max-h-[calc(100vh-8rem)]">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg font-medium">Project</CardTitle>
+              <Card className="lg:sticky lg:top-6 lg:max-h-[calc(100vh-8rem)] border-0 shadow-md bg-gradient-to-br from-background to-muted/20">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-3 text-xl">
+                    <div className="p-2 rounded-lg bg-blue-500/10">
+                      <FolderOpen className="w-6 h-6 text-blue-500" />
+                    </div>
+                    Project Panel
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Organize your videos into projects
+                  </p>
                 </CardHeader>
-                <CardContent className="space-y-4 lg:max-h-[calc(100vh-12rem)] lg:overflow-y-auto">
-                  {/* Project Selection with inline new button */}
+                <CardContent className="space-y-6 lg:max-h-[calc(100vh-12rem)] lg:overflow-y-auto lg:pr-2">
+                  {/* Enhanced Project Selection */}
                   {projectsLoading ? (
-                    <div className="flex items-center justify-center p-4">
-                      <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                    <div className="flex items-center justify-center gap-2 p-8">
+                      <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                      <span className="text-sm text-muted-foreground">Loading projects...</span>
                     </div>
                   ) : (
                     <>
-                      <div className="flex items-center gap-2">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <FolderOpen className="w-4 h-4 text-primary" />
+                          <Label className="text-sm font-semibold">Select Project</Label>
+                        </div>
                         <Select value={selectedProject} onValueChange={handleProjectChange}>
-                          <SelectTrigger className="flex-1">
-                            <SelectValue placeholder="Select project" />
+                          <SelectTrigger className="h-12 focus:ring-2 focus:ring-primary/20 bg-background/50">
+                            <SelectValue placeholder="Choose a project (optional)" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="none">No Project</SelectItem>
+                            <SelectItem value="none" className="py-3">
+                              <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-muted-foreground/50" />
+                                <span>No Project</span>
+                              </div>
+                            </SelectItem>
                             {projects?.map((project) => (
-                              <SelectItem key={project.id} value={project.id}>
-                                {project.name}
+                              <SelectItem key={project.id} value={project.id} className="py-3">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-2 h-2 rounded-full bg-blue-500" />
+                                  <span>{project.name}</span>
+                                </div>
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
+                      </div>
+                      
+                      {/* Enhanced Action Buttons */}
+                      <div className="flex items-center gap-3">
                         <Button
-                          variant="ghost"
-                          size="icon"
+                          variant="outline"
+                          size="sm"
                           onClick={() => setShowCreateProject(!showCreateProject)}
-                          className="h-10 w-10"
+                          className="flex-1 h-10 flex items-center justify-center gap-2 hover:bg-primary/5 border-primary/20 hover:border-primary/30 transition-all duration-200"
                         >
                           <Plus className="w-4 h-4" />
+                          New Project
                         </Button>
+                        {selectedProject !== 'none' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              const project = projects?.find(p => p.id === selectedProject);
+                              setRenameProjectName(project?.name || '');
+                              setRenameProjectDescription(project?.description || '');
+                              setShowRenameProject(!showRenameProject);
+                            }}
+                            className="h-10 px-4 flex items-center gap-2 hover:bg-blue-500/10 text-blue-600 hover:text-blue-700 transition-all duration-200"
+                          >
+                            <Edit className="w-4 h-4" />
+                            Rename
+                          </Button>
+                        )}
                       </div>
 
-                      {/* Compact Create Project Form */}
+                      {/* Enhanced Create Project Form */}
                       {showCreateProject && (
-                        <div className="space-y-3 p-3 border rounded-lg bg-muted/30">
-                          <Input
-                            placeholder="Project name"
-                            value={newProjectName}
-                            onChange={(e) => setNewProjectName(e.target.value)}
-                            className="h-9"
-                          />
-                          <div className="flex gap-2">
+                        <div className="space-y-4 p-5 border rounded-xl bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20 shadow-sm">
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="p-1.5 rounded-lg bg-primary/10">
+                              <Plus className="w-4 h-4 text-primary" />
+                            </div>
+                            <h3 className="font-semibold text-sm">Create New Project</h3>
+                          </div>
+                          <div className="space-y-3">
+                            <div className="space-y-2">
+                              <Label htmlFor="newProjectName" className="text-sm font-semibold flex items-center gap-1">
+                                Project Name <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                id="newProjectName"
+                                placeholder="Enter a descriptive project name"
+                                value={newProjectName}
+                                onChange={(e) => setNewProjectName(e.target.value)}
+                                className="h-11 focus:ring-2 focus:ring-primary/20 bg-background/80"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="newProjectDescription" className="text-sm font-semibold">
+                                Description <span className="text-muted-foreground font-normal">(optional)</span>
+                              </Label>
+                              <Input
+                                id="newProjectDescription"
+                                placeholder="Brief description of the project"
+                                value={newProjectDescription}
+                                onChange={(e) => setNewProjectDescription(e.target.value)}
+                                className="h-11 focus:ring-2 focus:ring-primary/20 bg-background/80"
+                              />
+                            </div>
+                          </div>
+                          <div className="flex gap-2 pt-3">
                             <Button
                               onClick={handleCreateProject}
                               disabled={!newProjectName.trim() || createProjectMutation.isPending}
                               size="sm"
-                              className="flex-1"
+                              className="flex-1 h-10 bg-primary hover:bg-primary/90 shadow-sm hover:shadow-md transition-all duration-200"
                             >
                               {createProjectMutation.isPending ? (
-                                <Loader2 className="w-3 h-3 animate-spin" />
+                                <>
+                                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                  Creating...
+                                </>
                               ) : (
-                                'Create'
+                                <>
+                                  <Plus className="w-4 h-4 mr-2" />
+                                  Create Project
+                                </>
                               )}
                             </Button>
                             <Button
-                              variant="ghost"
-                              onClick={() => {
-                                setShowCreateProject(false);
-                                setNewProjectName('');
-                              }}
+                              variant="outline"
+                              onClick={() => setShowCreateProject(false)}
                               size="sm"
+                              className="h-10 hover:bg-muted/50 transition-colors duration-200"
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Enhanced Rename Project Form */}
+                      {showRenameProject && selectedProject !== 'none' && (
+                        <div className="space-y-4 p-5 border rounded-xl bg-gradient-to-br from-blue-50/50 to-blue-100/30 border-blue-200/50 shadow-sm">
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="p-1.5 rounded-lg bg-blue-500/10">
+                              <Edit className="w-4 h-4 text-blue-500" />
+                            </div>
+                            <h3 className="font-semibold text-sm">Rename Project</h3>
+                          </div>
+                          <div className="space-y-3">
+                            <div className="space-y-2">
+                              <Label htmlFor="renameProjectName" className="text-sm font-semibold flex items-center gap-1">
+                                Project Name <span className="text-red-500">*</span>
+                              </Label>
+                              <Input
+                                id="renameProjectName"
+                                placeholder="Enter new project name"
+                                value={renameProjectName}
+                                onChange={(e) => setRenameProjectName(e.target.value)}
+                                className="h-11 focus:ring-2 focus:ring-blue-500/20 bg-background/80"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="renameProjectDescription" className="text-sm font-semibold">
+                                Description <span className="text-muted-foreground font-normal">(optional)</span>
+                              </Label>
+                              <Input
+                                id="renameProjectDescription"
+                                placeholder="Brief description of the project"
+                                value={renameProjectDescription}
+                                onChange={(e) => setRenameProjectDescription(e.target.value)}
+                                className="h-11 focus:ring-2 focus:ring-blue-500/20 bg-background/80"
+                              />
+                            </div>
+                          </div>
+                          <div className="flex gap-2 pt-3">
+                            <Button
+                              onClick={handleRenameProject}
+                              disabled={!renameProjectName.trim() || renameProjectMutation.isPending}
+                              size="sm"
+                              className="flex-1 h-10 bg-blue-500 hover:bg-blue-600 text-white shadow-sm hover:shadow-md transition-all duration-200"
+                            >
+                              {renameProjectMutation.isPending ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                  Renaming...
+                                </>
+                              ) : (
+                                <>
+                                  <Edit className="w-4 h-4 mr-2" />
+                                  Rename Project
+                                </>
+                              )}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={() => setShowRenameProject(false)}
+                              size="sm"
+                              className="h-10 hover:bg-muted/50 transition-colors duration-200"
                             >
                               Cancel
                             </Button>
@@ -2494,11 +2572,40 @@ export default function VideoPage() {
                     </>
                   )}
 
-                  {/* Project Videos Grid */}
-                  <div className="space-y-2">
-                    <SimplifiedProjectVideos 
-                      selectedProject={selectedProject} 
-                    />
+                  {/* Enhanced Project Videos Section */}
+                  <div className="space-y-4">
+                    {/* Enhanced Visual Separator */}
+                    <div className="relative">
+                      <Separator className="bg-gradient-to-r from-transparent via-border to-transparent" />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="bg-background px-3 py-1 rounded-full border shadow-sm">
+                          <span className="text-xs text-muted-foreground font-medium">Videos</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Enhanced Video Section Header */}
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 rounded-lg bg-blue-500/10">
+                        <VideoIcon className="w-4 h-4 text-blue-500" />
+                      </div>
+                      <h4 className="text-sm font-semibold">
+                        {selectedProject === 'none' ? 'Unassigned Videos' : 'Project Videos'}
+                      </h4>
+                    </div>
+                    
+                    {/* Enhanced Video Container */}
+                    <div className="bg-muted/20 rounded-lg border p-3 shadow-sm">
+                      <div className="max-h-[350px] overflow-y-auto scrollbar-thin scrollbar-thumb-muted/50 scrollbar-track-transparent pr-2 -mr-2">
+                        <ProjectVideoPreview 
+                          selectedProject={selectedProject} 
+                          projects={projects || []}
+                          compact={true}
+                          onVideoPlay={(videoId) => console.log('Playing video:', videoId)}
+                          onVideoDelete={(videoId) => console.log('Deleting video:', videoId)}
+                        />
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
