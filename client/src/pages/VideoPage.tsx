@@ -612,11 +612,7 @@ function VideoGallery() {
   const { toast } = useToast();
   
   // State for managing collapse state of project groups - default all collapsed for performance
-  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>(() => {
-    // Initialize all groups as collapsed by default
-    const initialState: Record<string, boolean> = {};
-    return initialState;
-  });
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
   
   // Filter and selection state
   const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'processing' | 'failed'>('all');
@@ -746,6 +742,13 @@ function VideoGallery() {
       }
       return newSelection;
     });
+  };
+
+  const handleToggleGroup = (groupId: string) => {
+    setCollapsedGroups(prev => ({
+      ...prev,
+      [groupId]: !prev[groupId] // Toggle: if undefined (collapsed by default), becomes false (expanded)
+    }));
   };
 
   const selectAllVisibleVideos = (videos: Video[]) => {
@@ -1356,7 +1359,8 @@ function VideoGallery() {
       ) : (
         <div className="space-y-4">
           {nonEmptyGroups.map(([groupId, videos]: [string, Video[]]) => {
-            const isCollapsed = collapsedGroups[groupId];
+            // Default to collapsed (true) if not explicitly set to false
+            const isCollapsed = collapsedGroups[groupId] !== false;
             const projectName = getProjectName(groupId);
             const originalGroupSize = allVideos.filter((v: Video) => 
               (v.projectId || 'unassigned') === groupId
