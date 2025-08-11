@@ -1,0 +1,93 @@
+# Prompt for Replit — **Video Gallery (existing)**: Project Delete ⇒ Videos Become Unassigned + Unassigned UX
+## Extended Context
+We want projects to act as **organizational containers** only. Deleting a project must **not** delete its videos. Instead, those videos become **unassigned** (no project) and appear in a polished **Unassigned** section within the **existing Video Gallery**. 
+Do **not** create new pages/routes/components and do **not** modify the Create Video, Image, or Car areas.
+Before coding, **review the current Video Gallery implementation** (components, data fetching, routes, schema usage) and plan how to extend it in place.
+## Goals (User Outcomes)
+1) **Project Deletion ⇒ Videos Become Unassigned**
+Deleting a project clears `project_id` on all its videos (videos stay in DB and storage).
+Video deletion remains as-is via video card or bulk actions (unchanged behavior).
+2) **Refined “Unassigned” Presentation**
+Replace the current faux “Unassigned” project card with a **dedicated Unassigned section**:
+Header: **“Videos without a project”**
+Subtext explaining why items appear here.
+Clear actions to **Move selected to project…** and **Create project & move**.
+3) **Quality-of-Life for Unassigned**
+**Bulk select** and **bulk move** to a chosen project.
+Per‑card overflow menu: **Move to project…** (+ “Create new project & move”).
+Sorting, filtering (Status/Date/Search), and counts work for Unassigned like any other group.
+Scope isolation: modify the **existing Video Gallery** only.
+## Placement & UX (match current visuals)
+Keep the filter bar (Status / Date Range / Search Prompts / Clear Filters) unchanged.
+**Project actions (⋯)** on each project row:
+Open
+Duplicate project (existing or no-op change)
+Archive project… (unchanged behavior)
+Divider
+**Delete project… (safe)** → modal copy must state: *“Videos will **not** be deleted. They will be moved to **Videos without a project**.”*
+**Unassigned section**:
+Header: **“Videos without a project”**
+Subtext: “These are videos created without a project or whose project was deleted.”
+Controls (when selection is active): **Move selected to project…** and **Create project & move**
+Per-card overflow: **Move to project…** / **Create project & move**
+## Data / API (High-Level; adapt to current code)
+**Schema:** Ensure `videos.project_id` is **nullable**. If currently NOT NULL, add a backward-compatible migration (nullable; default unchanged).
+**Delete project endpoint:** When a project is deleted, **transactionally**:
+  1) `UPDATE videos SET project_id = NULL WHERE project_id = :projectId`
+  2) `DELETE FROM projects WHERE id = :projectId`
+**Unassigned queries:** Gallery must include `videos` where `project_id IS NULL`.
+**Move video(s) to project:** Ensure endpoints exist to set `project_id` for a single video and for a list of IDs (bulk).
+**No video deletion** occurs as part of project deletion.
+## Non‑Goals / Guardrails
+Do **not** delete videos when deleting a project.
+Do **not** create a new gallery or route; work within the **current Video Gallery**.
+Do **not** add project controls to the Create Video view.
+Do not touch Image or Car sections.
+## Acceptance Criteria
+Deleting a project:
+Shows a modal that clearly states videos won’t be deleted and will move to **Videos without a project**.
+After confirmation, the project is gone; its videos appear in the Unassigned section.
+Unassigned section:
+Clearly labeled with helper text.
+Supports **bulk select** and **bulk move**; per‑card **Move to project…**.
+Sorting/filtering/search work as expected.
+No regressions to existing project actions (duplicate, archive) and no layout breakage.
+## Accessibility & Performance
+All actions keyboard-accessible (including bulk selection and “move” flows).
+Bulk reassignment and Unassigned rendering are responsive with no noticeable jank.
+## Telemetry (if available)
+`project_deleted_to_unassigned` `{project_id, reassigned_count}`
+`video_moved_to_project` `{video_ids, target_project_id, count}`
+(Optional) `unassigned_assign_created_project` `{new_project_id, count}`
+---
+## **Implementation Roadmap (do in this order)**
+**Self‑Audit (no code changes)**
+Locate the **existing Video Gallery** components, data hooks/stores, and routes used to fetch projects/videos.
+Inspect `shared/schema` and server routes for `projects` and `videos` to confirm current constraints (e.g., `videos.project_id` nullability) and available endpoints.
+**Schema & Migrations**
+If needed, make `videos.project_id` **NULLABLE** (backward-compatible migration).
+Add/verify an index on `videos.project_id` for efficient reassignment/listing.
+**Backend Endpoints (Transactional)**
+**Project delete**: implement transactional flow that first sets `project_id = NULL` for associated videos, then deletes the project row.
+**Move video(s) to project**: confirm or implement endpoints for single and bulk assignment (`video_ids[]`, `target_project_id`).
+**Gallery Data Layer**
+Update gallery queries to include an **Unassigned** bucket (`project_id IS NULL`).
+Ensure filters (Status/Date/Search) continue to apply to Unassigned.
+**UI: Project Delete Modal**
+Update the project row **Delete** modal copy to clearly state the new semantics.
+On success, refresh the gallery list and show a success toast referencing **Videos without a project**.
+**UI: Unassigned Section**
+Implement the **“Videos without a project”** section with helper text.
+Enable **bulk selection** inside this section and add **Move selected to project…** and **Create project & move** actions.
+Add per‑card overflow **Move to project…** (+ create & move).
+Ensure counts, sorting, and filtering work consistently.
+**QA & Tests**
+**Unit**: API methods (project delete ⇒ videos reassigned), bulk move actions.
+**Integration/E2E**:
+Delete project ⇒ videos appear in Unassigned.
+Bulk move from Unassigned ⇒ videos move to chosen project.
+Filters/search/sort behave consistently with Unassigned included.
+**Docs & Telemetry**
+Update the README/inline docs for the new delete semantics.
+Emit telemetry events and verify they carry correct IDs/counts.
+Deliver as a single PR with a brief plan in the description (audit summary, files touched, migration details), confirming that all changes **modify the existing Video Gallery** rather than creating a new one.
