@@ -1,6 +1,6 @@
 import { users, images, pageSettings, videos, projects, type User, type UpsertUser, type GeneratedImage, type PageSettings, type InsertPageSettings, type Video, type InsertVideo, type Project, type InsertProject } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, asc, isNull, isNotNull, and, ilike, lt, sql, or, not, inArray } from "drizzle-orm";
+import { eq, desc, asc, isNull, isNotNull, and, ilike, lt, sql, or, not, inArray, ne } from "drizzle-orm";
 import * as fs from "fs";
 import * as path from "path";
 import { push } from "./ws";
@@ -722,8 +722,15 @@ export class DatabaseStorage implements IStorage {
       return false;
     }
 
+    // Get current environment to ensure we only check within the same environment
+    const currentEnv = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
+
     // Check if any other videos reference the same URLs (excluding the video being deleted)
-    const conditions: any[] = [ne(videos.id, videoId)];
+    // IMPORTANT: Only check within the same environment for proper isolation
+    const conditions: any[] = [
+      ne(videos.id, videoId),
+      eq(videos.environment, currentEnv) // Environment isolation
+    ];
     
     if (videoUrl && thumbUrl) {
       conditions.push(or(eq(videos.url, videoUrl), eq(videos.thumbUrl, thumbUrl)));
@@ -742,7 +749,7 @@ export class DatabaseStorage implements IStorage {
     // Delete files only if no other videos reference them
     const shouldDelete = referencingVideos.length === 0;
     
-    console.log(`Reference check for video ${videoId}: ${shouldDelete ? 'DELETE' : 'KEEP'} files (${referencingVideos.length} other references found)`);
+    console.log(`Reference check for video ${videoId} in ${currentEnv}: ${shouldDelete ? 'DELETE' : 'KEEP'} files (${referencingVideos.length} other references found)`);
     
     return shouldDelete;
   }
