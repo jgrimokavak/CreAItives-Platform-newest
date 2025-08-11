@@ -267,7 +267,14 @@ export const videos = pgTable("videos", {
   completedAt: timestamp("completed_at"),
   environment: text("environment").default("dev").notNull(), // 'dev' | 'prod'
   size: integer("size").default(0), // File size in bytes
-});
+}, (table) => [
+  // Performance indexes for common queries
+  index("idx_videos_user_env").on(table.userId, table.environment),
+  index("idx_videos_created_at").on(table.createdAt),
+  index("idx_videos_project_id").on(table.projectId),
+  index("idx_videos_status").on(table.status),
+  index("idx_videos_environment").on(table.environment),
+]);
 
 export const insertVideoSchema = createInsertSchema(videos);
 export type InsertVideo = z.infer<typeof insertVideoSchema>;

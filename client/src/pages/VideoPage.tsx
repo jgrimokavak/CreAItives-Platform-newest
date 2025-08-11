@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -636,21 +636,25 @@ function VideoGallery() {
   const { data: projectsData, isLoading: projectsLoading } = useQuery({
     queryKey: ['/api/projects', { withStats: true }],
     queryFn: () => apiRequest('/api/projects?withStats=true'),
+    staleTime: 30000, // Cache for 30 seconds
   });
 
-  // Fetch all videos
+  // Fetch all videos with pagination
   const { data: videosResponse, isLoading: videosLoading, refetch: refetchVideos } = useQuery<{items: Video[]}>({
-    queryKey: ['/api/video'],
-    queryFn: () => apiRequest('/api/video'),
+    queryKey: ['/api/video', 'all'],
+    queryFn: () => apiRequest('/api/video?limit=100'), // Limit initial load
+    staleTime: 10000, // Cache for 10 seconds
   });
 
   const isLoading = projectsLoading || videosLoading;
   const projects = projectsData || [];
   const allVideos = videosResponse?.items || [];
 
-  // Filter and selection functions
-  const filterVideos = (videos: Video[]) => {
-    return videos.filter(video => {
+  // Memoized filtering for performance
+  const filteredVideos = useMemo(() => {
+    if (!allVideos.length) return [];
+    
+    return allVideos.filter(video => {
       // Status filter
       if (statusFilter !== 'all' && video.status !== statusFilter) {
         return false;
@@ -673,7 +677,7 @@ function VideoGallery() {
       
       return true;
     });
-  };
+  }, [allVideos, statusFilter, dateFilter, searchQuery]);
 
   const toggleSelectMode = () => {
     setIsSelectMode(!isSelectMode);
@@ -1047,50 +1051,51 @@ function VideoGallery() {
     );
   }
 
-  // Apply filters to all videos first
-  const filteredVideos = filterVideos(allVideos);
-
-  // Group filtered videos by projectId
-  const videoGroups: Record<string, Video[]> = {};
-  
-  // Initialize groups for all projects
-  projects.forEach((project: any) => {
-    videoGroups[project.id] = [];
-  });
-  
-  // Add unassigned group
-  videoGroups['unassigned'] = [];
-
-  // Group filtered videos
-  filteredVideos.forEach((video) => {
-    const groupKey = video.projectId || 'unassigned';
-    if (!videoGroups[groupKey]) {
-      videoGroups[groupKey] = [];
-    }
-    videoGroups[groupKey].push(video);
-  });
-
-  // Filter out empty groups and sort
-  const nonEmptyGroups = Object.entries(videoGroups)
-    .filter(([_, videos]) => videos.length > 0)
-    .sort(([groupIdA, videosA], [groupIdB, videosB]) => {
-      if (groupIdA === 'unassigned') return 1;
-      if (groupIdB === 'unassigned') return -1;
-      
-      const projectA = projects.find((p: any) => p.id === groupIdA);
-      const projectB = projects.find((p: any) => p.id === groupIdB);
-      
-      switch (projectSort) {
-        case 'name':
-          return (projectA?.name || '').localeCompare(projectB?.name || '');
-        case 'date':
-          return new Date(projectB?.createdAt || 0).getTime() - new Date(projectA?.createdAt || 0).getTime();
-        case 'videos':
-          return videosB.length - videosA.length;
-        default:
-          return 0;
-      }
+  // Memoized video grouping and sorting for performance
+  const { videoGroups, nonEmptyGroups } = useMemo(() => {
+    const groups: Record<string, Video[]> = {};
+    
+    // Initialize groups for all projects
+    projects.forEach((project: any) => {
+      groups[project.id] = [];
     });
+    
+    // Add unassigned group
+    groups['unassigned'] = [];
+
+    // Group filtered videos
+    filteredVideos.forEach((video: Video) => {
+      const groupKey = video.projectId || 'unassigned';
+      if (!groups[groupKey]) {
+        groups[groupKey] = [];
+      }
+      groups[groupKey].push(video);
+    });
+
+    // Filter out empty groups and sort
+    const nonEmpty = Object.entries(groups)
+      .filter(([_, videos]) => videos.length > 0)
+      .sort(([groupIdA, videosA], [groupIdB, videosB]) => {
+        if (groupIdA === 'unassigned') return 1;
+        if (groupIdB === 'unassigned') return -1;
+        
+        const projectA = projects.find((p: any) => p.id === groupIdA);
+        const projectB = projects.find((p: any) => p.id === groupIdB);
+        
+        switch (projectSort) {
+          case 'name':
+            return (projectA?.name || '').localeCompare(projectB?.name || '');
+          case 'date':
+            return new Date(projectB?.createdAt || 0).getTime() - new Date(projectA?.createdAt || 0).getTime();
+          case 'videos':
+            return videosB.length - videosA.length;
+          default:
+            return 0;
+        }
+      });
+
+    return { videoGroups: groups, nonEmptyGroups: nonEmpty };
+  }, [filteredVideos, projects, projectSort]);
 
   return (
     <div className="space-y-6">
@@ -1346,10 +1351,10 @@ function VideoGallery() {
         </div>
       ) : (
         <div className="space-y-4">
-          {nonEmptyGroups.map(([groupId, videos]) => {
+          {nonEmptyGroups.map(([groupId, videos]: [string, Video[]]) => {
             const isCollapsed = collapsedGroups[groupId];
             const projectName = getProjectName(groupId);
-            const originalGroupSize = allVideos.filter(v => 
+            const originalGroupSize = allVideos.filter((v: Video) => 
               (v.projectId || 'unassigned') === groupId
             ).length;
             
