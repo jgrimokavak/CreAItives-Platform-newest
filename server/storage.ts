@@ -1185,11 +1185,32 @@ export class DatabaseStorage implements IStorage {
                 const videoExtension = pathMatch[1].split('.').pop() || 'mp4';
                 const safeVideoName = `video_${videoIndex}.${videoExtension}`;
                 
+                // The value is an array containing a Buffer as the first element
+                let videoBuffer: Buffer;
+                if (Array.isArray(value) && value.length > 0 && Buffer.isBuffer(value[0])) {
+                  // Object Storage returns an array with the Buffer as first element
+                  videoBuffer = value[0];
+                } else if (Buffer.isBuffer(value)) {
+                  videoBuffer = value;
+                } else if (value instanceof Uint8Array) {
+                  videoBuffer = Buffer.from(value);
+                } else if (Array.isArray(value)) {
+                  // Fallback for other array types - should not happen
+                  console.warn(`Unexpected array type for ${safeVideoName}, attempting conversion`);
+                  videoBuffer = Buffer.alloc(0); // Empty buffer as fallback
+                } else {
+                  // Log what we got for debugging
+                  console.log(`Unexpected value type for ${safeVideoName}:`, typeof value, (value as any)?.constructor?.name);
+                  videoBuffer = Buffer.from(value as any);
+                }
+                
+                console.log(`Downloaded video file: ${safeVideoName} (${videoBuffer.length} bytes)`);
+                
                 videoFiles.push({
                   name: safeVideoName,
-                  data: Buffer.isBuffer(value) ? value : Buffer.from(value)
+                  data: videoBuffer
                 });
-                console.log(`Downloaded video file: ${safeVideoName}`);
+                
               } else {
                 console.warn(`Failed to download video file: ${pathMatch[1]}, error: ${error}`);
               }
@@ -1222,8 +1243,12 @@ export class DatabaseStorage implements IStorage {
         
         // Add video files
         videoFiles.forEach(videoFile => {
-          archive.append(videoFile.data, { name: videoFile.name });
-          console.log(`Added video to ZIP: ${videoFile.name}`);
+          if (videoFile.data && videoFile.data.length > 0) {
+            archive.append(videoFile.data, { name: videoFile.name });
+            console.log(`Added video to ZIP: ${videoFile.name} (${videoFile.data.length} bytes)`);
+          } else {
+            console.warn(`Skipping empty video file: ${videoFile.name}`);
+          }
         });
         
         console.log(`Added ${videoFiles.length} video files to export ZIP`);
