@@ -309,19 +309,34 @@ router.patch('/:id/move', async (req, res) => {
       return res.status(404).json({ error: 'Video not found' });
     }
 
-    // Ensure user can only move their own videos (or is admin)
-    if (video.userId !== userId && user?.claims?.role !== 'admin') {
-      return res.status(403).json({ error: 'Access denied' });
+    // Check if user can move this video:
+    // 1. User owns the video, OR
+    // 2. User is admin, OR  
+    // 3. Video is in a project where user is a member
+    let canMoveVideo = false;
+    if (video.userId === userId || user?.claims?.role === 'admin') {
+      canMoveVideo = true;
+    } else if (video.projectId) {
+      // Check if user has access to the video's current project
+      const hasAccessToCurrentProject = await storage.hasProjectAccess(video.projectId, userId);
+      canMoveVideo = hasAccessToCurrentProject;
     }
 
-    // If projectId is provided, verify it exists and belongs to the user
+    if (!canMoveVideo) {
+      return res.status(403).json({ error: 'Access denied - you can only move your own videos or videos in projects you have access to' });
+    }
+
+    // If projectId is provided, verify it exists and user has access to it
     if (projectId) {
       const project = await storage.getProjectById(projectId);
       if (!project) {
         return res.status(404).json({ error: 'Project not found' });
       }
-      if (project.userId !== userId && user?.claims?.role !== 'admin') {
-        return res.status(403).json({ error: 'Access denied to project' });
+      
+      // Check if user has access to destination project
+      const hasAccessToDestProject = await storage.hasProjectAccess(projectId, userId);
+      if (!hasAccessToDestProject && user?.claims?.role !== 'admin') {
+        return res.status(403).json({ error: 'Access denied to destination project' });
       }
     }
 
@@ -369,7 +384,7 @@ router.patch('/bulk/move', async (req, res) => {
       return res.status(400).json({ error: 'targetProjectId must be a string or null' });
     }
 
-    // Verify all videos exist and belong to the user
+    // Verify all videos exist and user has access to move them
     const videos = await Promise.all(
       videoIds.map(id => storage.getVideoById(id))
     );
@@ -378,19 +393,36 @@ router.patch('/bulk/move', async (req, res) => {
       if (!video) {
         return res.status(404).json({ error: 'One or more videos not found' });
       }
-      if (video.userId !== userId && user?.claims?.role !== 'admin') {
-        return res.status(403).json({ error: 'Access denied to one or more videos' });
+      
+      // Check if user can move this video:
+      // 1. User owns the video, OR
+      // 2. User is admin, OR  
+      // 3. Video is in a project where user is a member
+      let canMoveVideo = false;
+      if (video.userId === userId || user?.claims?.role === 'admin') {
+        canMoveVideo = true;
+      } else if (video.projectId) {
+        // Check if user has access to the video's current project
+        const hasAccessToCurrentProject = await storage.hasProjectAccess(video.projectId, userId);
+        canMoveVideo = hasAccessToCurrentProject;
+      }
+
+      if (!canMoveVideo) {
+        return res.status(403).json({ error: 'Access denied to one or more videos - you can only move your own videos or videos in projects you have access to' });
       }
     }
 
-    // If targetProjectId is provided, verify it exists and belongs to the user
+    // If targetProjectId is provided, verify it exists and user has access to it
     if (targetProjectId) {
       const project = await storage.getProjectById(targetProjectId);
       if (!project) {
         return res.status(404).json({ error: 'Target project not found' });
       }
-      if (project.userId !== userId && user?.claims?.role !== 'admin') {
-        return res.status(403).json({ error: 'Access denied to target project' });
+      
+      // Check if user has access to destination project
+      const hasAccessToDestProject = await storage.hasProjectAccess(targetProjectId, userId);
+      if (!hasAccessToDestProject && user?.claims?.role !== 'admin') {
+        return res.status(403).json({ error: 'Access denied to destination project' });
       }
     }
 
