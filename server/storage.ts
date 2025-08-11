@@ -715,6 +715,38 @@ export class DatabaseStorage implements IStorage {
     await db.delete(videos).where(eq(videos.id, id));
   }
 
+  // Check if video files should be deleted (reference counting)
+  async shouldDeleteVideoFiles(videoId: string, videoUrl: string | null, thumbUrl: string | null): Promise<boolean> {
+    // If no URLs to check, no files to delete
+    if (!videoUrl && !thumbUrl) {
+      return false;
+    }
+
+    // Check if any other videos reference the same URLs (excluding the video being deleted)
+    const conditions: any[] = [ne(videos.id, videoId)];
+    
+    if (videoUrl && thumbUrl) {
+      conditions.push(or(eq(videos.url, videoUrl), eq(videos.thumbUrl, thumbUrl)));
+    } else if (videoUrl) {
+      conditions.push(eq(videos.url, videoUrl));
+    } else if (thumbUrl) {
+      conditions.push(eq(videos.thumbUrl, thumbUrl));
+    }
+
+    const referencingVideos = await db
+      .select({ id: videos.id })
+      .from(videos)
+      .where(and(...conditions))
+      .limit(1); // We only need to know if ANY exist
+
+    // Delete files only if no other videos reference them
+    const shouldDelete = referencingVideos.length === 0;
+    
+    console.log(`Reference check for video ${videoId}: ${shouldDelete ? 'DELETE' : 'KEEP'} files (${referencingVideos.length} other references found)`);
+    
+    return shouldDelete;
+  }
+
   // Bulk move videos to a project
   async bulkMoveVideos(videoIds: string[], targetProjectId: string | null): Promise<void> {
     await db

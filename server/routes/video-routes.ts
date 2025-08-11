@@ -238,36 +238,42 @@ router.delete('/:id', async (req, res) => {
       return res.status(403).json({ error: 'Access denied' });
     }
 
-    // Delete from object storage if it exists
+    // Check if other videos reference the same files before deleting from storage
     try {
-      if (video.url && video.url.includes('/api/object-storage/video/')) {
-        // Extract the storage path from the URL
-        const pathMatch = video.url.match(/\/api\/object-storage\/video\/(.+)/);
-        if (pathMatch) {
-          const { Client } = await import('@replit/object-storage');
-          const client = new Client();
-          const { ok, error } = await client.delete(pathMatch[1]);
-          if (ok) {
-            console.log(`Deleted video file from storage: ${pathMatch[1]}`);
-          } else {
-            console.error(`Failed to delete video from storage: ${error}`);
-          }
-        }
-      }
+      const shouldDeleteFiles = await storage.shouldDeleteVideoFiles(req.params.id, video.url, video.thumbUrl);
       
-      // Also delete thumbnail if it exists in object storage
-      if (video.thumbUrl && video.thumbUrl.includes('/api/object-storage/video/')) {
-        const thumbMatch = video.thumbUrl.match(/\/api\/object-storage\/video\/(.+)/);
-        if (thumbMatch) {
-          const { Client } = await import('@replit/object-storage');
-          const client = new Client();
-          const { ok, error } = await client.delete(thumbMatch[1]);
-          if (ok) {
-            console.log(`Deleted video thumbnail from storage: ${thumbMatch[1]}`);
-          } else {
-            console.error(`Failed to delete video thumbnail from storage: ${error}`);
+      if (shouldDeleteFiles) {
+        if (video.url && video.url.includes('/api/object-storage/video/')) {
+          // Extract the storage path from the URL
+          const pathMatch = video.url.match(/\/api\/object-storage\/video\/(.+)/);
+          if (pathMatch) {
+            const { Client } = await import('@replit/object-storage');
+            const client = new Client();
+            const { ok, error } = await client.delete(pathMatch[1]);
+            if (ok) {
+              console.log(`Deleted video file from storage: ${pathMatch[1]} (last reference)`);
+            } else {
+              console.error(`Failed to delete video from storage: ${error}`);
+            }
           }
         }
+        
+        // Also delete thumbnail if it exists in object storage
+        if (video.thumbUrl && video.thumbUrl.includes('/api/object-storage/video/')) {
+          const thumbMatch = video.thumbUrl.match(/\/api\/object-storage\/video\/(.+)/);
+          if (thumbMatch) {
+            const { Client } = await import('@replit/object-storage');
+            const client = new Client();
+            const { ok, error } = await client.delete(thumbMatch[1]);
+            if (ok) {
+              console.log(`Deleted video thumbnail from storage: ${thumbMatch[1]} (last reference)`);
+            } else {
+              console.error(`Failed to delete video thumbnail from storage: ${error}`);
+            }
+          }
+        }
+      } else {
+        console.log(`Skipping file deletion for video ${req.params.id} - other videos still reference these files`);
       }
     } catch (storageError) {
       console.error('Error deleting video from storage:', storageError);
