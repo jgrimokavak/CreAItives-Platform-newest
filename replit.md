@@ -26,8 +26,9 @@ Preferred communication style: Simple, everyday language.
 - **Architecture**: Unified provider adapter pattern for frictionless model addition; enhanced UI components for consistent file upload experiences.
 
 #### AI Video Generation
-- **Features**: Project-based organization with localStorage project memory, AI-enhanced prompts, configurable aspect ratios, resolutions, durations, optional audio generation, person generation controls, seed support, enhanced card-style model selector with keyboard navigation.
+- **Features**: Project-based organization with localStorage project memory, AI-enhanced prompts, configurable aspect ratios, resolutions, durations, optional audio generation, person generation controls, seed support, enhanced card-style model selector with keyboard navigation, inline project editing (name and description).
 - **Environment Isolation**: Videos are stored with environment tags ('dev' or 'prod') and filtered by environment to prevent cross-environment data mixing. Uses REPLIT_DEPLOYMENT environment variable for detection.
+- **Gallery Location**: All video-related functionality is centralized in the `/video` route, which includes both video management and project editing capabilities.
 
 #### Car Design Visualization System
 - **Data**: Google Sheets integration for a live car database and dynamic color management.
