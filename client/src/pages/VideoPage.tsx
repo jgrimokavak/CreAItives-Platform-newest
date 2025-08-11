@@ -46,7 +46,9 @@ import {
   Square,
   MoveIcon,
   X,
-  Edit
+  Edit,
+  Edit2,
+  Save
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
@@ -59,6 +61,225 @@ import { ModelSelector } from '@/components/ModelSelector';
 import { VIDEO_MODELS as MODEL_CONFIG } from '@/config/models';
 
 
+
+// ProjectGroup Component for the collapsible project folders
+interface ProjectGroupProps {
+  groupId: string;
+  videos: Video[];
+  projectName: string;
+  projects: any[];
+  isCollapsed: boolean;
+  originalGroupSize: number;
+  isSelectMode: boolean;
+  selectedVideos: Set<string>;
+  onToggleGroup: (groupId: string) => void;
+  onToggleVideoSelection: (videoId: string) => void;
+  onSelectAllInGroup: (videos: Video[]) => void;
+  onMove?: (videoId: string, projectId: string | null) => void;
+}
+
+function ProjectGroup({ 
+  groupId, 
+  videos, 
+  projectName, 
+  projects, 
+  isCollapsed, 
+  originalGroupSize,
+  isSelectMode,
+  selectedVideos,
+  onToggleGroup,
+  onToggleVideoSelection,
+  onSelectAllInGroup,
+  onMove
+}: ProjectGroupProps) {
+  const { toast } = useToast();
+  const [isEditingProject, setIsEditingProject] = useState(false);
+  const [editName, setEditName] = useState(projectName);
+  const [editDescription, setEditDescription] = useState(
+    projects.find((p: any) => p.id === groupId)?.description || ''
+  );
+  
+  const handleSaveEdit = async () => {
+    if (groupId !== 'unassigned' && editName.trim()) {
+      try {
+        await apiRequest(`/api/projects/${groupId}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ 
+            name: editName.trim(), 
+            description: editDescription.trim() || undefined 
+          })
+        });
+        queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+        toast({
+          title: "Project updated",
+          description: `"${editName}" has been updated successfully.`,
+        });
+        setIsEditingProject(false);
+      } catch (error: any) {
+        toast({
+          title: "Update failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    }
+  };
+  
+  return (
+    <Card>
+      <Collapsible open={!isCollapsed} onOpenChange={() => onToggleGroup(groupId)}>
+        <CollapsibleTrigger asChild>
+          <CardHeader className="hover:bg-muted/50 cursor-pointer transition-colors group">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3 flex-1">
+                <div className="flex items-center gap-2">
+                  {isCollapsed ? (
+                    <ChevronRight className="w-4 h-4" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4" />
+                  )}
+                  <Folder className="w-5 h-5 text-primary" />
+                </div>
+                {isEditingProject && groupId !== 'unassigned' ? (
+                  <div className="flex-1 space-y-2" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        placeholder="Project name"
+                        className="h-8"
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleSaveEdit();
+                          }
+                          if (e.key === 'Escape') {
+                            setEditName(projectName);
+                            setEditDescription(projects.find((p: any) => p.id === groupId)?.description || '');
+                            setIsEditingProject(false);
+                          }
+                        }}
+                      />
+                      <Button size="sm" variant="ghost" onClick={handleSaveEdit}>
+                        <Save className="w-4 h-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => {
+                        setEditName(projectName);
+                        setEditDescription(projects.find((p: any) => p.id === groupId)?.description || '');
+                        setIsEditingProject(false);
+                      }}>
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    <Input
+                      value={editDescription}
+                      onChange={(e) => setEditDescription(e.target.value)}
+                      placeholder="Project description (optional)"
+                      className="h-8 text-sm"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleSaveEdit();
+                        }
+                        if (e.key === 'Escape') {
+                          setEditName(projectName);
+                          setEditDescription(projects.find((p: any) => p.id === groupId)?.description || '');
+                          setIsEditingProject(false);
+                        }
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-lg">{projectName}</CardTitle>
+                      {groupId !== 'unassigned' && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsEditingProject(true);
+                          }}
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                    {groupId !== 'unassigned' && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {projects.find((p: any) => p.id === groupId)?.description || ''}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline">
+                  {videos.length}{originalGroupSize !== videos.length && ` of ${originalGroupSize}`} video{originalGroupSize !== 1 ? 's' : ''}
+                </Badge>
+                {isSelectMode && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSelectAllInGroup(videos);
+                    }}
+                  >
+                    {videos.every(v => selectedVideos.has(v.id)) ? (
+                      <CheckSquare className="w-4 h-4" />
+                    ) : (
+                      <Square className="w-4 h-4" />
+                    )}
+                  </Button>
+                )}
+              </div>
+            </div>
+          </CardHeader>
+        </CollapsibleTrigger>
+        
+        <CollapsibleContent>
+          <CardContent className="pt-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {videos.map((video) => (
+                <div 
+                  key={video.id}
+                  className={`relative ${isSelectMode ? 'cursor-pointer' : ''}`}
+                  onClick={() => isSelectMode && onToggleVideoSelection(video.id)}
+                >
+                  {isSelectMode && (
+                    <div className="absolute top-2 left-2 z-10">
+                      <div className="bg-background/80 backdrop-blur-sm rounded-full p-1">
+                        {selectedVideos.has(video.id) ? (
+                          <CheckSquare className="w-5 h-5 text-primary" />
+                        ) : (
+                          <Square className="w-5 h-5 text-muted-foreground" />
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  <VideoCard
+                    video={{
+                      ...video,
+                      model: video.model || 'hailuo-02',
+                      status: video.status as 'pending' | 'processing' | 'completed' | 'failed',
+                      createdAt: typeof video.createdAt === 'string' ? video.createdAt : video.createdAt?.toISOString() || null
+                    }}
+                    className={`w-full ${isSelectMode && selectedVideos.has(video.id) ? 'ring-2 ring-primary' : ''}`}
+                    onMove={onMove}
+                  />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </CollapsibleContent>
+      </Collapsible>
+    </Card>
+  );
+}
 
 // ProjectVideoPreview Component for the right column
 interface ProjectVideoPreviewProps {
@@ -802,105 +1023,40 @@ function VideoGallery() {
             ).length;
             
             return (
-              <Card key={groupId}>
-                <Collapsible open={!isCollapsed} onOpenChange={() => toggleGroup(groupId)}>
-                  <CollapsibleTrigger asChild>
-                    <CardHeader className="hover:bg-muted/50 cursor-pointer transition-colors">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-2">
-                            {isCollapsed ? (
-                              <ChevronRight className="w-4 h-4" />
-                            ) : (
-                              <ChevronDown className="w-4 h-4" />
-                            )}
-                            <Folder className="w-5 h-5 text-primary" />
-                          </div>
-                          <div>
-                            <CardTitle className="text-lg">{projectName}</CardTitle>
-                            {groupId !== 'unassigned' && (
-                              <p className="text-sm text-muted-foreground mt-1">
-                                {projects.find((p: any) => p.id === groupId)?.description || ''}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline">
-                            {videos.length}{originalGroupSize !== videos.length && ` of ${originalGroupSize}`} video{originalGroupSize !== 1 ? 's' : ''}
-                          </Badge>
-                          {isSelectMode && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const groupVideoIds = videos.map(v => v.id);
-                                const allSelected = groupVideoIds.every(id => selectedVideos.has(id));
-                                
-                                if (allSelected) {
-                                  setSelectedVideos(prev => {
-                                    const newSet = new Set(prev);
-                                    groupVideoIds.forEach(id => newSet.delete(id));
-                                    return newSet;
-                                  });
-                                } else {
-                                  setSelectedVideos(prev => {
-                                    const newSet = new Set(prev);
-                                    groupVideoIds.forEach(id => newSet.add(id));
-                                    return newSet;
-                                  });
-                                }
-                              }}
-                            >
-                              {videos.every(v => selectedVideos.has(v.id)) ? (
-                                <CheckSquare className="w-4 h-4" />
-                              ) : (
-                                <Square className="w-4 h-4" />
-                              )}
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </CardHeader>
-                  </CollapsibleTrigger>
+              <ProjectGroup
+                key={groupId}
+                groupId={groupId}
+                videos={videos}
+                projectName={projectName}
+                projects={projects}
+                isCollapsed={isCollapsed}
+                originalGroupSize={originalGroupSize}
+                isSelectMode={isSelectMode}
+                selectedVideos={selectedVideos}
+                onToggleGroup={toggleGroup}
+                onToggleVideoSelection={toggleVideoSelection}
+                onSelectAllInGroup={(videos) => {
+                  const groupVideoIds = videos.map(v => v.id);
+                  const allSelected = groupVideoIds.every(id => selectedVideos.has(id));
                   
-                  <CollapsibleContent>
-                    <CardContent className="pt-0">
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {videos.map((video) => (
-                          <div 
-                            key={video.id}
-                            className={`relative ${isSelectMode ? 'cursor-pointer' : ''}`}
-                            onClick={() => isSelectMode && toggleVideoSelection(video.id)}
-                          >
-                            {isSelectMode && (
-                              <div className="absolute top-2 left-2 z-10">
-                                <div className="bg-background/80 backdrop-blur-sm rounded-full p-1">
-                                  {selectedVideos.has(video.id) ? (
-                                    <CheckSquare className="w-5 h-5 text-primary" />
-                                  ) : (
-                                    <Square className="w-5 h-5 text-muted-foreground" />
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                            <VideoCard
-                              video={{
-                                ...video,
-                                model: video.model || 'hailuo-02',
-                                status: video.status as 'pending' | 'processing' | 'completed' | 'failed',
-                                createdAt: typeof video.createdAt === 'string' ? video.createdAt : video.createdAt?.toISOString() || null
-                              }}
-                              className={`w-full ${isSelectMode && selectedVideos.has(video.id) ? 'ring-2 ring-primary' : ''}`}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </CollapsibleContent>
-                </Collapsible>
-              </Card>
+                  if (allSelected) {
+                    setSelectedVideos(prev => {
+                      const newSet = new Set(prev);
+                      groupVideoIds.forEach(id => newSet.delete(id));
+                      return newSet;
+                    });
+                  } else {
+                    setSelectedVideos(prev => {
+                      const newSet = new Set(prev);
+                      groupVideoIds.forEach(id => newSet.add(id));
+                      return newSet;
+                    });
+                  }
+                }}
+                onMove={(videoId, projectId) => {
+                  bulkMoveVideosMutation.mutate({ videoIds: [videoId], targetProjectId: projectId });
+                }}
+              />
             );
           })}
         </div>
