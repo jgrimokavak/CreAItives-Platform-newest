@@ -815,28 +815,26 @@ function SimplifiedProjectVideos({ selectedProject, projects }: SimplifiedProjec
                 {video.status === 'completed' && (
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-md flex items-center justify-center gap-2">
                     <Button
-                      size="sm"
+                      size="icon"
                       variant="secondary"
-                      className="h-8 px-3 text-xs"
+                      className="h-7 w-7"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleDownloadVideo(video);
                       }}
                     >
-                      <Download className="w-3 h-3 mr-1" />
-                      Download
+                      <Download className="w-3 h-3" />
                     </Button>
                     <Button
-                      size="sm"
+                      size="icon"
                       variant="secondary"
-                      className="h-8 px-3 text-xs"
+                      className="h-7 w-7"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleCopyPrompt(video);
                       }}
                     >
-                      <Copy className="w-3 h-3 mr-1" />
-                      Copy Prompt
+                      <Copy className="w-3 h-3" />
                     </Button>
                   </div>
                 )}
