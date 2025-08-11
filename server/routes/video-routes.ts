@@ -184,6 +184,7 @@ router.get('/:id', async (req, res) => {
 // List user's videos
 router.get('/', async (req, res) => {
   try {
+    const startTime = Date.now();
     const user = req.user as any;
     const userId = user?.claims?.sub;
     if (!userId) {
@@ -191,6 +192,8 @@ router.get('/', async (req, res) => {
     }
 
     const { projectId, status, limit, cursor } = req.query;
+    
+    console.log(`[VIDEO API] Fetching videos for user ${userId} with params:`, { projectId, status, limit, cursor });
     
     const videos = await storage.getAllVideos({
       userId,
@@ -200,8 +203,12 @@ router.get('/', async (req, res) => {
       cursor: cursor as string,
     });
 
+    console.log(`[VIDEO API] Retrieved ${videos.items?.length || 0} videos in ${Date.now() - startTime}ms`);
+
     // Filter out failed videos from the gallery
     const successfulVideos = videos.items?.filter(video => video.status !== 'failed') || [];
+
+    console.log(`[VIDEO API] Returning ${successfulVideos.length} successful videos after filtering`);
 
     res.json({
       items: successfulVideos
