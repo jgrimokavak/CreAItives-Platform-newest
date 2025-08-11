@@ -655,6 +655,7 @@ interface SimplifiedProjectVideosProps {
 
 function SimplifiedProjectVideos({ selectedProject, projects }: SimplifiedProjectVideosProps) {
   const { toast } = useToast();
+  const [playingVideo, setPlayingVideo] = useState<string | null>(null);
   
   // Fetch project details with videos
   const { data: projectDetails, isLoading: projectLoading } = useQuery({
@@ -675,6 +676,41 @@ function SimplifiedProjectVideos({ selectedProject, projects }: SimplifiedProjec
   const isLoading = selectedProject === 'none' ? unassignedLoading : projectLoading;
   const videos = selectedProject === 'none' ? unassignedVideos?.items : projectDetails?.videos;
 
+  const handlePlayVideo = (video: Video) => {
+    if (video.status === 'completed' && video.url) {
+      setPlayingVideo(video.id);
+      window.open(video.url, '_blank');
+    }
+  };
+
+  const handleDownloadVideo = async (video: Video) => {
+    if (video.status === 'completed' && video.url) {
+      try {
+        const response = await fetch(video.url);
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `video-${video.id}.mp4`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        toast({
+          title: 'Download started',
+          description: 'Your video is downloading...',
+        });
+      } catch (error) {
+        toast({
+          title: 'Download failed',
+          description: 'Could not download the video',
+          variant: 'destructive',
+        });
+      }
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -691,53 +727,99 @@ function SimplifiedProjectVideos({ selectedProject, projects }: SimplifiedProjec
         <p className="text-xs text-muted-foreground">
           No videos yet
         </p>
+        <p className="text-[10px] text-muted-foreground/70 mt-1">
+          Select a project above to organize your generated videos
+        </p>
       </div>
     );
   }
 
+  // Generate thumbnail URL for videos
+  const getVideoThumbnail = (video: Video) => {
+    // If video has a thumbnail URL, use it
+    if (video.thumbUrl) return video.thumbUrl;
+    
+    // If video is completed and has a URL, generate a thumbnail placeholder
+    if (video.status === 'completed' && video.url) {
+      // For MP4 videos, we can't generate thumbnails client-side easily
+      // So we'll show a video icon with status
+      return null;
+    }
+    
+    return null;
+  };
+
   return (
-    <div className="grid grid-cols-2 gap-2 max-h-[400px] overflow-y-auto pr-1">
-      {videos.map((video: Video) => (
-        <div key={video.id} className="relative group">
-          {video.thumbnailUrl ? (
-            <div className="aspect-video rounded-md overflow-hidden bg-muted">
-              <img 
-                src={video.thumbnailUrl} 
-                alt={video.prompt || 'Video thumbnail'}
-                className="w-full h-full object-cover"
-              />
-              {/* Status overlay */}
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-white/90">
-                    {video.duration}s
-                  </span>
-                  {video.status === 'processing' && (
-                    <Loader2 className="w-3 h-3 animate-spin text-white/90" />
-                  )}
-                  {video.status === 'completed' && (
-                    <CheckCircle className="w-3 h-3 text-green-400" />
-                  )}
-                  {video.status === 'failed' && (
-                    <XCircle className="w-3 h-3 text-red-400" />
-                  )}
+    <div className="space-y-2">
+      <p className="text-[10px] text-muted-foreground/70 px-1">
+        Click to play • Hold to see details • Download available for completed videos
+      </p>
+      <div className="grid grid-cols-2 gap-2 max-h-[380px] overflow-y-auto pr-1">
+        {videos.map((video: Video) => {
+          const thumbnail = getVideoThumbnail(video);
+          return (
+            <div key={video.id} className="relative group">
+              <div 
+                className="aspect-video rounded-md overflow-hidden bg-muted cursor-pointer relative"
+                onClick={() => handlePlayVideo(video)}
+              >
+                {thumbnail ? (
+                  <img 
+                    src={thumbnail} 
+                    alt={video.prompt || 'Video thumbnail'}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-muted to-muted/50">
+                    <VideoIcon className="w-6 h-6 text-muted-foreground/50 mb-1" />
+                    {video.status === 'completed' && (
+                      <Play className="w-4 h-4 text-primary/70" />
+                    )}
+                  </div>
+                )}
+                
+                {/* Status overlay */}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-white/90">
+                      {video.duration || 6}s
+                    </span>
+                    {video.status === 'processing' && (
+                      <Loader2 className="w-3 h-3 animate-spin text-white/90" />
+                    )}
+                    {video.status === 'completed' && (
+                      <CheckCircle className="w-3 h-3 text-green-400" />
+                    )}
+                    {video.status === 'failed' && (
+                      <XCircle className="w-3 h-3 text-red-400" />
+                    )}
+                  </div>
                 </div>
+
+                {/* Download button for completed videos */}
+                {video.status === 'completed' && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDownloadVideo(video);
+                    }}
+                    className="absolute top-1 right-1 p-1 bg-black/50 rounded hover:bg-black/70 transition-colors opacity-0 group-hover:opacity-100"
+                  >
+                    <Download className="w-3 h-3 text-white" />
+                  </button>
+                )}
+              </div>
+              
+              {/* Hover tooltip with prompt */}
+              <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity rounded-md p-2 flex items-center justify-center pointer-events-none">
+                <p className="text-[10px] text-white text-center line-clamp-3">
+                  {video.prompt || 'No prompt'}
+                </p>
               </div>
             </div>
-          ) : (
-            <div className="aspect-video rounded-md bg-muted flex items-center justify-center">
-              <VideoIcon className="w-6 h-6 text-muted-foreground/50" />
-            </div>
-          )}
-          
-          {/* Hover tooltip with prompt */}
-          <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity rounded-md p-2 flex items-center justify-center pointer-events-none">
-            <p className="text-[10px] text-white text-center line-clamp-3">
-              {video.prompt || 'No prompt'}
-            </p>
-          </div>
-        </div>
-      ))}
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -2502,9 +2584,16 @@ export default function VideoPage() {
                   <Separator className="my-2" />
                   
                   <div className="space-y-3">
-                    <h4 className="text-sm font-medium text-muted-foreground">
-                      {selectedProject === 'none' ? 'Unassigned Videos' : 'Project Videos'}
-                    </h4>
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-medium text-muted-foreground">
+                        {selectedProject === 'none' ? 'Unassigned Videos' : 'Project Videos'}
+                      </h4>
+                      {selectedProject === 'none' && (
+                        <span className="text-[10px] text-muted-foreground/60">
+                          Select a project to organize
+                        </span>
+                      )}
+                    </div>
                     
                     <SimplifiedProjectVideos 
                       selectedProject={selectedProject} 
