@@ -130,26 +130,47 @@ function ProjectGroup({
   const handleSaveEdit = async () => {
     if (groupId !== 'unassigned' && editName.trim()) {
       try {
-        await apiRequest(`/api/projects/${groupId}`, {
+        console.log('Saving project edit:', { name: editName.trim(), description: editDescription.trim() || undefined });
+        
+        const response = await apiRequest(`/api/projects/${groupId}`, {
           method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
           body: JSON.stringify({ 
             name: editName.trim(), 
-            description: editDescription.trim() || undefined 
+            description: editDescription.trim() || null 
           })
         });
-        queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+        
+        console.log('Project update response:', response);
+        
+        // Invalidate multiple related queries to ensure UI updates
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['/api/projects'] }),
+          queryClient.invalidateQueries({ queryKey: ['/api/projects', groupId] }),
+          queryClient.invalidateQueries({ queryKey: ['/api/projects', groupId, 'details'] })
+        ]);
+        
         toast({
-          title: "Project updated",
-          description: `"${editName}" has been updated successfully.`,
+          title: "Project updated successfully",
+          description: `"${editName.trim()}" has been updated.`,
         });
         setIsEditingProject(false);
       } catch (error: any) {
+        console.error('Project update error:', error);
         toast({
           title: "Update failed",
-          description: error.message,
+          description: error.message || "Failed to update project",
           variant: "destructive",
         });
       }
+    } else {
+      toast({
+        title: "Invalid input",
+        description: "Project name cannot be empty",
+        variant: "destructive",
+      });
     }
   };
   
@@ -173,54 +194,87 @@ function ProjectGroup({
                   )}
                 </div>
                 {isEditingProject && groupId !== 'unassigned' ? (
-                  <div className="flex-1 space-y-2" onClick={(e) => e.stopPropagation()}>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        value={editName}
-                        onChange={(e) => setEditName(e.target.value)}
-                        placeholder="Project name"
-                        className="h-8"
-                        autoFocus
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            handleSaveEdit();
-                          }
-                          if (e.key === 'Escape') {
+                  <div className="flex-1" onClick={(e) => e.stopPropagation()}>
+                    <div className="bg-background/95 backdrop-blur-sm rounded-lg border p-4 space-y-3 shadow-sm">
+                      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
+                        <Edit2 className="w-4 h-4" />
+                        Edit Project Details
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-xs font-medium text-muted-foreground block mb-1">
+                            Project Name
+                          </label>
+                          <Input
+                            value={editName}
+                            onChange={(e) => setEditName(e.target.value)}
+                            placeholder="Enter project name"
+                            className="h-9 border-2 focus:border-primary transition-colors"
+                            autoFocus
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleSaveEdit();
+                              }
+                              if (e.key === 'Escape') {
+                                setEditName(projectName);
+                                setEditDescription(projects.find((p: any) => p.id === groupId)?.description || '');
+                                setIsEditingProject(false);
+                              }
+                            }}
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="text-xs font-medium text-muted-foreground block mb-1">
+                            Description (Optional)
+                          </label>
+                          <Input
+                            value={editDescription}
+                            onChange={(e) => setEditDescription(e.target.value)}
+                            placeholder="Add a description for this project"
+                            className="h-9 border-2 focus:border-primary transition-colors"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleSaveEdit();
+                              }
+                              if (e.key === 'Escape') {
+                                setEditName(projectName);
+                                setEditDescription(projects.find((p: any) => p.id === groupId)?.description || '');
+                                setIsEditingProject(false);
+                              }
+                            }}
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 pt-2">
+                        <Button 
+                          size="sm" 
+                          onClick={handleSaveEdit}
+                          className="h-8 px-3 bg-primary hover:bg-primary/90"
+                          disabled={!editName.trim()}
+                        >
+                          <Save className="w-3 h-3 mr-1" />
+                          Save Changes
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => {
                             setEditName(projectName);
                             setEditDescription(projects.find((p: any) => p.id === groupId)?.description || '');
                             setIsEditingProject(false);
-                          }
-                        }}
-                      />
-                      <Button size="sm" variant="ghost" onClick={handleSaveEdit}>
-                        <Save className="w-4 h-4" />
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => {
-                        setEditName(projectName);
-                        setEditDescription(projects.find((p: any) => p.id === groupId)?.description || '');
-                        setIsEditingProject(false);
-                      }}>
-                        <X className="w-4 h-4" />
-                      </Button>
+                          }}
+                          className="h-8 px-3"
+                        >
+                          <X className="w-3 h-3 mr-1" />
+                          Cancel
+                        </Button>
+                      </div>
                     </div>
-                    <Input
-                      value={editDescription}
-                      onChange={(e) => setEditDescription(e.target.value)}
-                      placeholder="Project description (optional)"
-                      className="h-8 text-sm"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          handleSaveEdit();
-                        }
-                        if (e.key === 'Escape') {
-                          setEditName(projectName);
-                          setEditDescription(projects.find((p: any) => p.id === groupId)?.description || '');
-                          setIsEditingProject(false);
-                        }
-                      }}
-                    />
                   </div>
                 ) : (
                   <div className="flex-1">
