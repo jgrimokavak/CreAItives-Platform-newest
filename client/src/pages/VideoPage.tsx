@@ -29,6 +29,7 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { 
   VideoIcon, 
   Video as VideoIconSm,
@@ -655,7 +656,7 @@ interface SimplifiedProjectVideosProps {
 
 function SimplifiedProjectVideos({ selectedProject, projects }: SimplifiedProjectVideosProps) {
   const { toast } = useToast();
-  const [playingVideo, setPlayingVideo] = useState<string | null>(null);
+  const [playingVideo, setPlayingVideo] = useState<Video | null>(null);
   
   // Fetch project details with videos
   const { data: projectDetails, isLoading: projectLoading } = useQuery({
@@ -678,8 +679,25 @@ function SimplifiedProjectVideos({ selectedProject, projects }: SimplifiedProjec
 
   const handlePlayVideo = (video: Video) => {
     if (video.status === 'completed' && video.url) {
-      setPlayingVideo(video.id);
-      window.open(video.url, '_blank');
+      setPlayingVideo(video);
+    }
+  };
+
+  const handleCopyPrompt = async (video: Video) => {
+    if (video.prompt) {
+      try {
+        await navigator.clipboard.writeText(video.prompt);
+        toast({
+          title: 'Prompt copied',
+          description: 'Video prompt copied to clipboard',
+        });
+      } catch (error) {
+        toast({
+          title: 'Copy failed',
+          description: 'Could not copy prompt to clipboard',
+          variant: 'destructive',
+        });
+      }
     }
   };
 
@@ -750,10 +768,7 @@ function SimplifiedProjectVideos({ selectedProject, projects }: SimplifiedProjec
   };
 
   return (
-    <div className="space-y-2">
-      <p className="text-[10px] text-muted-foreground/70 px-1">
-        Click to play • Hold to see details • Download available for completed videos
-      </p>
+    <>
       <div className="grid grid-cols-2 gap-2 max-h-[380px] overflow-y-auto pr-1">
         {videos.map((video: Video) => {
           const thumbnail = getVideoThumbnail(video);
@@ -796,31 +811,73 @@ function SimplifiedProjectVideos({ selectedProject, projects }: SimplifiedProjec
                   </div>
                 </div>
 
-                {/* Download button for completed videos */}
+                {/* Hover buttons for completed videos */}
                 {video.status === 'completed' && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDownloadVideo(video);
-                    }}
-                    className="absolute top-1 right-1 p-1 bg-black/50 rounded hover:bg-black/70 transition-colors opacity-0 group-hover:opacity-100"
-                  >
-                    <Download className="w-3 h-3 text-white" />
-                  </button>
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-md flex items-center justify-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="h-8 px-3 text-xs"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDownloadVideo(video);
+                      }}
+                    >
+                      <Download className="w-3 h-3 mr-1" />
+                      Download
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="h-8 px-3 text-xs"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCopyPrompt(video);
+                      }}
+                    >
+                      <Copy className="w-3 h-3 mr-1" />
+                      Copy Prompt
+                    </Button>
+                  </div>
                 )}
-              </div>
-              
-              {/* Hover tooltip with prompt */}
-              <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity rounded-md p-2 flex items-center justify-center pointer-events-none">
-                <p className="text-[10px] text-white text-center line-clamp-3">
-                  {video.prompt || 'No prompt'}
-                </p>
               </div>
             </div>
           );
         })}
       </div>
-    </div>
+
+      {/* Video Player Modal */}
+      {playingVideo && (
+        <Dialog open={!!playingVideo} onOpenChange={() => setPlayingVideo(null)}>
+          <DialogContent className="max-w-4xl w-full p-0">
+            <div className="relative">
+              <video
+                src={playingVideo.url || ''}
+                controls
+                autoPlay
+                className="w-full h-auto max-h-[70vh] rounded-lg"
+                onEnded={() => setPlayingVideo(null)}
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white"
+                onClick={() => setPlayingVideo(null)}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            {playingVideo.prompt && (
+              <div className="p-4 border-t">
+                <p className="text-sm text-muted-foreground">
+                  <strong>Prompt:</strong> {playingVideo.prompt}
+                </p>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
   );
 }
 
@@ -2584,15 +2641,13 @@ export default function VideoPage() {
                   <Separator className="my-2" />
                   
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between">
+                    <div>
                       <h4 className="text-sm font-medium text-muted-foreground">
                         {selectedProject === 'none' ? 'Unassigned Videos' : 'Project Videos'}
                       </h4>
-                      {selectedProject === 'none' && (
-                        <span className="text-[10px] text-muted-foreground/60">
-                          Select a project to organize
-                        </span>
-                      )}
+                      <p className="text-[10px] text-muted-foreground/70 mt-1">
+                        Select a project to generate videos inside the project.
+                      </p>
                     </div>
                     
                     <SimplifiedProjectVideos 
