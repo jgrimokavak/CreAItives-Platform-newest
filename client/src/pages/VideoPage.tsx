@@ -48,7 +48,14 @@ import {
   X,
   Edit,
   Edit2,
-  Save
+  Save,
+  MoreVertical,
+  Copy,
+  FolderClosed,
+  Eye,
+  EyeOff,
+  Info,
+  Trash
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
@@ -76,6 +83,8 @@ interface ProjectGroupProps {
   onToggleVideoSelection: (videoId: string) => void;
   onSelectAllInGroup: (videos: Video[]) => void;
   onMove?: (videoId: string, projectId: string | null) => void;
+  onDeleteProject?: (projectId: string) => void;
+  onDuplicateProject?: (projectId: string, name: string) => void;
 }
 
 function ProjectGroup({ 
@@ -90,7 +99,9 @@ function ProjectGroup({
   onToggleGroup,
   onToggleVideoSelection,
   onSelectAllInGroup,
-  onMove
+  onMove,
+  onDeleteProject,
+  onDuplicateProject
 }: ProjectGroupProps) {
   const { toast } = useToast();
   const [isEditingProject, setIsEditingProject] = useState(false);
@@ -98,6 +109,11 @@ function ProjectGroup({
   const [editDescription, setEditDescription] = useState(
     projects.find((p: any) => p.id === groupId)?.description || ''
   );
+  const [showInfo, setShowInfo] = useState(false);
+  
+  const project = projects.find((p: any) => p.id === groupId);
+  const createdAt = project?.createdAt ? new Date(project.createdAt).toLocaleDateString() : null;
+  const totalDuration = videos.reduce((sum, v) => sum + (Number(v.duration) || 0), 0);
   
   const handleSaveEdit = async () => {
     if (groupId !== 'unassigned' && editName.trim()) {
@@ -126,7 +142,7 @@ function ProjectGroup({
   };
   
   return (
-    <Card>
+    <Card className={`transition-all ${!isCollapsed && videos.length > 0 ? 'ring-1 ring-primary/10' : ''}`}>
       <Collapsible open={!isCollapsed} onOpenChange={() => onToggleGroup(groupId)}>
         <CollapsibleTrigger asChild>
           <CardHeader className="hover:bg-muted/50 cursor-pointer transition-colors group">
@@ -134,11 +150,15 @@ function ProjectGroup({
               <div className="flex items-center gap-3 flex-1">
                 <div className="flex items-center gap-2">
                   {isCollapsed ? (
-                    <ChevronRight className="w-4 h-4" />
+                    <ChevronRight className="w-4 h-4 transition-transform" />
                   ) : (
-                    <ChevronDown className="w-4 h-4" />
+                    <ChevronDown className="w-4 h-4 transition-transform" />
                   )}
-                  <Folder className="w-5 h-5 text-primary" />
+                  {isCollapsed ? (
+                    <FolderClosed className="w-5 h-5 text-primary" />
+                  ) : (
+                    <FolderOpen className="w-5 h-5 text-primary" />
+                  )}
                 </div>
                 {isEditingProject && groupId !== 'unassigned' ? (
                   <div className="flex-1 space-y-2" onClick={(e) => e.stopPropagation()}>
@@ -195,32 +215,94 @@ function ProjectGroup({
                     <div className="flex items-center gap-2">
                       <CardTitle className="text-lg">{projectName}</CardTitle>
                       {groupId !== 'unassigned' && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setIsEditingProject(true);
-                          }}
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </Button>
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 p-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setIsEditingProject(true);
+                            }}
+                            title="Edit project"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 p-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowInfo(!showInfo);
+                            }}
+                            title="Project info"
+                          >
+                            <Info className="w-4 h-4" />
+                          </Button>
+                          {onDuplicateProject && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 p-0"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onDuplicateProject(groupId, projectName);
+                              }}
+                              title="Duplicate project"
+                            >
+                              <Copy className="w-4 h-4" />
+                            </Button>
+                          )}
+                          {onDeleteProject && videos.length === 0 && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 p-0 text-destructive hover:text-destructive"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (confirm(`Delete project "${projectName}"? This action cannot be undone.`)) {
+                                  onDeleteProject(groupId);
+                                }
+                              }}
+                              title="Delete empty project"
+                            >
+                              <Trash className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </>
                       )}
                     </div>
-                    {groupId !== 'unassigned' && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {projects.find((p: any) => p.id === groupId)?.description || ''}
-                      </p>
-                    )}
+                    <div className="space-y-1">
+                      {groupId !== 'unassigned' && project?.description && (
+                        <p className="text-sm text-muted-foreground">
+                          {project.description}
+                        </p>
+                      )}
+                      {showInfo && groupId !== 'unassigned' && (
+                        <div className="text-xs text-muted-foreground space-y-0.5 mt-2 p-2 bg-muted/30 rounded">
+                          {createdAt && <div>Created: {createdAt}</div>}
+                          <div>Total videos: {videos.length}</div>
+                          {totalDuration > 0 && <div>Total duration: {totalDuration}s</div>}
+                          <div>Project ID: {groupId.slice(0, 8)}...</div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant="outline">
-                  {videos.length}{originalGroupSize !== videos.length && ` of ${originalGroupSize}`} video{originalGroupSize !== 1 ? 's' : ''}
-                </Badge>
-                {isSelectMode && (
+                <div className="flex flex-col items-end gap-1">
+                  <Badge variant={videos.length === 0 ? 'secondary' : 'outline'} className="whitespace-nowrap">
+                    {videos.length}{originalGroupSize !== videos.length && ` of ${originalGroupSize}`} video{originalGroupSize !== 1 ? 's' : ''}
+                  </Badge>
+                  {videos.length > 0 && (
+                    <Badge variant="secondary" className="text-xs">
+                      {isCollapsed ? 'Click to expand' : 'Click to collapse'}
+                    </Badge>
+                  )}
+                </div>
+                {isSelectMode && videos.length > 0 && (
                   <Button
                     variant="ghost"
                     size="sm"
@@ -228,6 +310,7 @@ function ProjectGroup({
                       e.stopPropagation();
                       onSelectAllInGroup(videos);
                     }}
+                    title="Select all in group"
                   >
                     {videos.every(v => selectedVideos.has(v.id)) ? (
                       <CheckSquare className="w-4 h-4" />
@@ -766,6 +849,52 @@ function VideoGallery() {
     return project?.name || 'Unknown Project';
   };
 
+  const handleDeleteProject = async (projectId: string) => {
+    try {
+      await apiRequest(`/api/projects/${projectId}`, {
+        method: 'DELETE',
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+      
+      toast({
+        title: 'Project deleted',
+        description: 'The empty project has been deleted successfully.',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Delete failed',
+        description: error.message || 'Could not delete project',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDuplicateProject = async (projectId: string, originalName: string) => {
+    try {
+      const response = await apiRequest('/api/projects', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: `${originalName} (Copy)`,
+          description: `Duplicated from ${originalName}`,
+        }),
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+      
+      toast({
+        title: 'Project duplicated',
+        description: `"${originalName} (Copy)" has been created.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Duplication failed',
+        description: error.message || 'Could not duplicate project',
+        variant: 'destructive',
+      });
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -1053,9 +1182,28 @@ function VideoGallery() {
                     });
                   }
                 }}
-                onMove={(videoId, projectId) => {
-                  bulkMoveVideosMutation.mutate({ videoIds: [videoId], targetProjectId: projectId });
+                onMove={async (videoId, projectId) => {
+                  try {
+                    await apiRequest(`/api/video/${videoId}/move`, {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ projectId }),
+                    });
+                    refetchVideos();
+                    toast({
+                      title: 'Video moved',
+                      description: `Video moved to ${projectId ? getProjectName(projectId) : 'Unassigned'}`,
+                    });
+                  } catch (error) {
+                    toast({
+                      title: 'Move failed',
+                      description: 'Could not move video',
+                      variant: 'destructive',
+                    });
+                  }
                 }}
+                onDeleteProject={handleDeleteProject}
+                onDuplicateProject={handleDuplicateProject}
               />
             );
           })}
