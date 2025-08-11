@@ -17,6 +17,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from '@/components/ui/dropdown-menu';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -85,6 +93,8 @@ interface ProjectGroupProps {
   onMove?: (videoId: string, projectId: string | null) => void;
   onDeleteProject?: (projectId: string) => void;
   onDuplicateProject?: (projectId: string, name: string) => void;
+  onArchiveProject?: (projectId: string) => void;
+  onExportProject?: (projectId: string, name: string) => void;
 }
 
 function ProjectGroup({ 
@@ -101,7 +111,9 @@ function ProjectGroup({
   onSelectAllInGroup,
   onMove,
   onDeleteProject,
-  onDuplicateProject
+  onDuplicateProject,
+  onArchiveProject,
+  onExportProject
 }: ProjectGroupProps) {
   const { toast } = useToast();
   const [isEditingProject, setIsEditingProject] = useState(false);
@@ -142,10 +154,10 @@ function ProjectGroup({
   };
   
   return (
-    <Card className={`transition-all ${!isCollapsed && videos.length > 0 ? 'ring-1 ring-primary/10' : ''}`}>
+    <Card className={`transition-all duration-200 hover:shadow-md ${!isCollapsed && videos.length > 0 ? 'ring-1 ring-primary/20 shadow-sm' : ''} ${videos.length > 0 ? 'border-green-200' : 'border-gray-200'}`}>
       <Collapsible open={!isCollapsed} onOpenChange={() => onToggleGroup(groupId)}>
         <CollapsibleTrigger asChild>
-          <CardHeader className="hover:bg-muted/50 cursor-pointer transition-colors group">
+          <CardHeader className="hover:bg-gradient-to-r hover:from-primary/5 hover:to-primary/10 cursor-pointer transition-all duration-200 group backdrop-blur-sm">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3 flex-1">
                 <div className="flex items-center gap-2">
@@ -212,65 +224,103 @@ function ProjectGroup({
                   </div>
                 ) : (
                   <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <CardTitle className="text-lg">{projectName}</CardTitle>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-3 h-3 rounded-full ${videos.length > 0 ? 'bg-green-500' : 'bg-gray-300'}`} />
+                        <CardTitle className="text-lg font-semibold">{projectName}</CardTitle>
+                      </div>
                       {groupId !== 'unassigned' && (
-                        <>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 p-0"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setIsEditingProject(true);
-                            }}
-                            title="Edit project"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 p-0"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setShowInfo(!showInfo);
-                            }}
-                            title="Project info"
-                          >
-                            <Info className="w-4 h-4" />
-                          </Button>
-                          {onDuplicateProject && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 p-0"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onDuplicateProject(groupId, projectName);
-                              }}
-                              title="Duplicate project"
+                              className="opacity-0 group-hover:opacity-100 transition-all h-8 w-8 p-0 hover:bg-primary/10"
+                              onClick={(e) => e.stopPropagation()}
                             >
-                              <Copy className="w-4 h-4" />
+                              <MoreVertical className="w-4 h-4" />
                             </Button>
-                          )}
-                          {onDeleteProject && videos.length === 0 && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 p-0 text-destructive hover:text-destructive"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (confirm(`Delete project "${projectName}"? This action cannot be undone.`)) {
-                                  onDeleteProject(groupId);
-                                }
-                              }}
-                              title="Delete empty project"
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent 
+                            align="end" 
+                            className="w-48"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <DropdownMenuLabel className="font-medium">
+                              Project Actions
+                            </DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            
+                            <DropdownMenuItem
+                              onClick={() => setIsEditingProject(true)}
+                              className="cursor-pointer"
                             >
-                              <Trash className="w-4 h-4" />
-                            </Button>
-                          )}
-                        </>
+                              <Edit2 className="w-4 h-4 mr-2" />
+                              Edit Details
+                            </DropdownMenuItem>
+                            
+                            <DropdownMenuItem
+                              onClick={() => setShowInfo(!showInfo)}
+                              className="cursor-pointer"
+                            >
+                              <Info className="w-4 h-4 mr-2" />
+                              {showInfo ? 'Hide Info' : 'Show Info'}
+                            </DropdownMenuItem>
+                            
+                            <DropdownMenuSeparator />
+                            
+                            {onDuplicateProject && (
+                              <DropdownMenuItem
+                                onClick={() => onDuplicateProject(groupId, projectName)}
+                                className="cursor-pointer"
+                              >
+                                <Copy className="w-4 h-4 mr-2" />
+                                Duplicate Project
+                              </DropdownMenuItem>
+                            )}
+                            
+                            {onExportProject && (
+                              <DropdownMenuItem
+                                onClick={() => onExportProject(groupId, projectName)}
+                                className="cursor-pointer"
+                              >
+                                <Download className="w-4 h-4 mr-2" />
+                                Export Data
+                              </DropdownMenuItem>
+                            )}
+                            
+                            {onArchiveProject && videos.length > 0 && (
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  if (confirm(`Archive project "${projectName}"? This will hide it from the main view.`)) {
+                                    onArchiveProject(groupId);
+                                  }
+                                }}
+                                className="cursor-pointer"
+                              >
+                                <FolderClosed className="w-4 h-4 mr-2" />
+                                Archive Project
+                              </DropdownMenuItem>
+                            )}
+                            
+                            {onDeleteProject && videos.length === 0 && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    if (confirm(`Delete project "${projectName}"? This action cannot be undone.`)) {
+                                      onDeleteProject(groupId);
+                                    }
+                                  }}
+                                  className="cursor-pointer text-destructive focus:text-destructive"
+                                >
+                                  <Trash className="w-4 h-4 mr-2" />
+                                  Delete Project
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       )}
                     </div>
                     <div className="space-y-1">
@@ -280,11 +330,33 @@ function ProjectGroup({
                         </p>
                       )}
                       {showInfo && groupId !== 'unassigned' && (
-                        <div className="text-xs text-muted-foreground space-y-0.5 mt-2 p-2 bg-muted/30 rounded">
-                          {createdAt && <div>Created: {createdAt}</div>}
-                          <div>Total videos: {videos.length}</div>
-                          {totalDuration > 0 && <div>Total duration: {totalDuration}s</div>}
-                          <div>Project ID: {groupId.slice(0, 8)}...</div>
+                        <div className="text-xs space-y-1 mt-3 p-3 bg-gradient-to-r from-muted/40 to-muted/20 rounded-lg border border-muted/50">
+                          <div className="grid grid-cols-2 gap-2">
+                            {createdAt && (
+                              <div className="flex items-center gap-1">
+                                <Clock className="w-3 h-3 text-muted-foreground" />
+                                <span className="text-muted-foreground">Created:</span>
+                                <span className="font-medium">{createdAt}</span>
+                              </div>
+                            )}
+                            <div className="flex items-center gap-1">
+                              <VideoIcon className="w-3 h-3 text-muted-foreground" />
+                              <span className="text-muted-foreground">Videos:</span>
+                              <span className="font-medium">{videos.length}</span>
+                            </div>
+                            {totalDuration > 0 && (
+                              <div className="flex items-center gap-1">
+                                <Play className="w-3 h-3 text-muted-foreground" />
+                                <span className="text-muted-foreground">Duration:</span>
+                                <span className="font-medium">{totalDuration}s</span>
+                              </div>
+                            )}
+                            <div className="flex items-center gap-1">
+                              <Info className="w-3 h-3 text-muted-foreground" />
+                              <span className="text-muted-foreground">ID:</span>
+                              <span className="font-mono text-xs">{groupId.slice(0, 8)}...</span>
+                            </div>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -296,11 +368,6 @@ function ProjectGroup({
                   <Badge variant={videos.length === 0 ? 'secondary' : 'outline'} className="whitespace-nowrap">
                     {videos.length}{originalGroupSize !== videos.length && ` of ${originalGroupSize}`} video{originalGroupSize !== 1 ? 's' : ''}
                   </Badge>
-                  {videos.length > 0 && (
-                    <Badge variant="secondary" className="text-xs">
-                      {isCollapsed ? 'Click to expand' : 'Click to collapse'}
-                    </Badge>
-                  )}
                 </div>
                 {isSelectMode && videos.length > 0 && (
                   <Button
@@ -874,6 +941,7 @@ function VideoGallery() {
     try {
       const response = await apiRequest('/api/projects', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: `${originalName} (Copy)`,
           description: `Duplicated from ${originalName}`,
@@ -890,6 +958,64 @@ function VideoGallery() {
       toast({
         title: 'Duplication failed',
         description: error.message || 'Could not duplicate project',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleArchiveProject = async (projectId: string) => {
+    try {
+      await apiRequest(`/api/projects/${projectId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deletedAt: new Date().toISOString() }),
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+      
+      toast({
+        title: 'Project archived',
+        description: 'Project has been archived successfully.',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Archive failed',
+        description: error.message || 'Could not archive project',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleExportProject = async (projectId: string, projectName: string) => {
+    try {
+      const projectDetails = await apiRequest(`/api/projects/${projectId}/details`);
+      const exportData = {
+        project: projectDetails,
+        exportedAt: new Date().toISOString(),
+        totalVideos: projectDetails.videos?.length || 0,
+      };
+      
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+        type: 'application/json',
+      });
+      
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${projectName.replace(/[^a-zA-Z0-9]/g, '_')}_export.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: 'Project exported',
+        description: `"${projectName}" has been exported successfully.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Export failed',
+        description: error.message || 'Could not export project',
         variant: 'destructive',
       });
     }
@@ -941,16 +1067,92 @@ function VideoGallery() {
     videoGroups[groupKey].push(video);
   });
 
+  // Project sorting
+  const [projectSort, setProjectSort] = useState<'name' | 'date' | 'videos'>('name');
+  
   // Filter out empty groups and sort
-  const nonEmptyGroups = Object.entries(videoGroups).filter(([_, videos]) => videos.length > 0);
+  const nonEmptyGroups = Object.entries(videoGroups)
+    .filter(([_, videos]) => videos.length > 0)
+    .sort(([groupIdA, videosA], [groupIdB, videosB]) => {
+      if (groupIdA === 'unassigned') return 1;
+      if (groupIdB === 'unassigned') return -1;
+      
+      const projectA = projects.find((p: any) => p.id === groupIdA);
+      const projectB = projects.find((p: any) => p.id === groupIdB);
+      
+      switch (projectSort) {
+        case 'name':
+          return (projectA?.name || '').localeCompare(projectB?.name || '');
+        case 'date':
+          return new Date(projectB?.createdAt || 0).getTime() - new Date(projectA?.createdAt || 0).getTime();
+        case 'videos':
+          return videosB.length - videosA.length;
+        default:
+          return 0;
+      }
+    });
 
   return (
     <div className="space-y-6">
       {/* Gallery Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium">Video Gallery</h3>
-        <div className="flex items-center gap-2">
-          <Badge variant="secondary">{filteredVideos.length} of {allVideos.length} videos</Badge>
+        <div className="flex items-center gap-4">
+          <h3 className="text-xl font-semibold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+            Video Gallery
+          </h3>
+          <Badge variant="secondary" className="font-medium">
+            {filteredVideos.length} of {allVideos.length} videos
+          </Badge>
+        </div>
+        <div className="flex items-center gap-3">
+          {/* Project sorting */}
+          <div className="flex items-center gap-2">
+            <Label className="text-sm font-medium">Sort by:</Label>
+            <Select value={projectSort} onValueChange={(value: any) => setProjectSort(value)}>
+              <SelectTrigger className="w-32 h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name">Name</SelectItem>
+                <SelectItem value="date">Date Created</SelectItem>
+                <SelectItem value="videos">Video Count</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Quick create project */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+              const name = prompt('Enter project name:');
+              if (name?.trim()) {
+                try {
+                  await apiRequest('/api/projects', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: name.trim() }),
+                  });
+                  queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+                  toast({
+                    title: 'Project created',
+                    description: `"${name}" has been created successfully.`,
+                  });
+                } catch (error: any) {
+                  toast({
+                    title: 'Creation failed',
+                    description: error.message || 'Could not create project',
+                    variant: 'destructive',
+                  });
+                }
+              }
+            }}
+            className="gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            New Project
+          </Button>
+          
           <Button
             variant={isSelectMode ? "default" : "outline"}
             size="sm"
@@ -1204,6 +1406,8 @@ function VideoGallery() {
                 }}
                 onDeleteProject={handleDeleteProject}
                 onDuplicateProject={handleDuplicateProject}
+                onArchiveProject={handleArchiveProject}
+                onExportProject={handleExportProject}
               />
             );
           })}
