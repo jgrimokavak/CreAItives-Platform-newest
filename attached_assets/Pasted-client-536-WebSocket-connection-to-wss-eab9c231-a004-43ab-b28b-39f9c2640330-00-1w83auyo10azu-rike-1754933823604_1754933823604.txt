@@ -1,0 +1,137 @@
+client:536 WebSocket connection to 'wss://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/?token=Qk-t9lGhQdaT' failed: 
+setupWebSocket @ client:536
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=Qk-t9lGhQdaT' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+chunk-GR7IK2KQ.js?v=a9138b18:21507 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+VideoPage.tsx:1434 [DIAGNOSTIC] Loading VIDEO_MODELS configuration
+VideoPage.tsx:1454 [DIAGNOSTIC] VIDEO_MODELS loaded: Object
+websocket.ts:17 [DIAGNOSTIC] WebSocket URL construction: Object
+main.tsx:13 SW registered:  ServiceWorkerRegistration
+video:1 <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">
+websocket.ts:40 WebSocket connected
+chunk-GR7IK2KQ.js?v=a9138b18:521 Warning: React has detected a change in the order of Hooks called by VideoGallery. This will lead to bugs and errors if not fixed. For more information, read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks
+
+   Previous render            Next render
+   ------------------------------------------------------
+1. useState                   useState
+2. useEffect                  useEffect
+3. useState                   useState
+4. useState                   useState
+5. useState                   useState
+6. useState                   useState
+7. useState                   useState
+8. useState                   useState
+9. useState                   useState
+10. useContext                useContext
+11. useContext                useContext
+12. useContext                useContext
+13. useEffect                 useEffect
+14. useState                  useState
+15. useCallback               useCallback
+16. useSyncExternalStore      useSyncExternalStore
+17. useEffect                 useEffect
+18. useContext                useContext
+19. useContext                useContext
+20. useContext                useContext
+21. useEffect                 useEffect
+22. useState                  useState
+23. useCallback               useCallback
+24. useSyncExternalStore      useSyncExternalStore
+25. useEffect                 useEffect
+26. undefined                 useState
+   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    at VideoGallery (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/VideoPage.tsx:1143:21)
+    at div
+    at https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-BVU7LN4J.js?v=a9138b18:43:13
+    at Presence (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-GSNBQ2SI.js?v=a9138b18:24:11)
+    at https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=a9138b18:178:13
+    at _c5 (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/ui/tabs.tsx:72:12)
+    at div
+    at https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-BVU7LN4J.js?v=a9138b18:43:13
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-ICBGNCCI.js?v=a9138b18:38:15)
+    at https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=a9138b18:55:7
+    at div
+    at VideoPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/VideoPage.tsx:2263:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:85:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=a9138b18:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=a9138b18:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=PmeVrhS2jkIrKJYfimm46:40:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=a9138b18:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-ICBGNCCI.js?v=a9138b18:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=a9138b18:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=a9138b18:2934:3)
+    at App
+printWarning @ chunk-GR7IK2KQ.js?v=a9138b18:521
+chunk-GR7IK2KQ.js?v=a9138b18:12281 Uncaught Error: Rendered more hooks than during the previous render.
+    at updateWorkInProgressHook (chunk-GR7IK2KQ.js?v=a9138b18:12281:21)
+    at updateReducer (chunk-GR7IK2KQ.js?v=a9138b18:12330:22)
+    at updateState (chunk-GR7IK2KQ.js?v=a9138b18:12624:18)
+    at Object.useState (chunk-GR7IK2KQ.js?v=a9138b18:13356:24)
+    at useState (chunk-SWWKLSON.js?v=a9138b18:1066:29)
+    at VideoGallery (VideoPage.tsx:1071:41)
+    at renderWithHooks (chunk-GR7IK2KQ.js?v=a9138b18:12151:26)
+    at updateFunctionComponent (chunk-GR7IK2KQ.js?v=a9138b18:14557:28)
+    at beginWork (chunk-GR7IK2KQ.js?v=a9138b18:15892:22)
+    at HTMLUnknownElement.callCallback2 (chunk-GR7IK2KQ.js?v=a9138b18:3674:22)
+chunk-GR7IK2KQ.js?v=a9138b18:12281 Uncaught Error: Rendered more hooks than during the previous render.
+    at updateWorkInProgressHook (chunk-GR7IK2KQ.js?v=a9138b18:12281:21)
+    at updateReducer (chunk-GR7IK2KQ.js?v=a9138b18:12330:22)
+    at updateState (chunk-GR7IK2KQ.js?v=a9138b18:12624:18)
+    at Object.useState (chunk-GR7IK2KQ.js?v=a9138b18:13356:24)
+    at useState (chunk-SWWKLSON.js?v=a9138b18:1066:29)
+    at VideoGallery (VideoPage.tsx:1071:41)
+    at renderWithHooks (chunk-GR7IK2KQ.js?v=a9138b18:12151:26)
+    at updateFunctionComponent (chunk-GR7IK2KQ.js?v=a9138b18:14557:28)
+    at beginWork (chunk-GR7IK2KQ.js?v=a9138b18:15892:22)
+    at HTMLUnknownElement.callCallback2 (chunk-GR7IK2KQ.js?v=a9138b18:3674:22)
+chunk-GR7IK2KQ.js?v=a9138b18:14016 The above error occurred in the <VideoGallery> component:
+
+    at VideoGallery (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/VideoPage.tsx:1143:21)
+    at div
+    at https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-BVU7LN4J.js?v=a9138b18:43:13
+    at Presence (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-GSNBQ2SI.js?v=a9138b18:24:11)
+    at https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=a9138b18:178:13
+    at _c5 (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/ui/tabs.tsx:72:12)
+    at div
+    at https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-BVU7LN4J.js?v=a9138b18:43:13
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-ICBGNCCI.js?v=a9138b18:38:15)
+    at https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=a9138b18:55:7
+    at div
+    at VideoPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/VideoPage.tsx:2263:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:85:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=a9138b18:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=a9138b18:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=PmeVrhS2jkIrKJYfimm46:40:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=a9138b18:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-ICBGNCCI.js?v=a9138b18:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=a9138b18:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=a9138b18:2934:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+logCapturedError @ chunk-GR7IK2KQ.js?v=a9138b18:14016
+chunk-GR7IK2KQ.js?v=a9138b18:9129 Uncaught Error: Rendered more hooks than during the previous render.
+    at updateWorkInProgressHook (chunk-GR7IK2KQ.js?v=a9138b18:12281:21)
+    at updateReducer (chunk-GR7IK2KQ.js?v=a9138b18:12330:22)
+    at updateState (chunk-GR7IK2KQ.js?v=a9138b18:12624:18)
+    at Object.useState (chunk-GR7IK2KQ.js?v=a9138b18:13356:24)
+    at useState (chunk-SWWKLSON.js?v=a9138b18:1066:29)
+    at VideoGallery (VideoPage.tsx:1071:41)
+    at renderWithHooks (chunk-GR7IK2KQ.js?v=a9138b18:12151:26)
+    at updateFunctionComponent (chunk-GR7IK2KQ.js?v=a9138b18:14557:28)
+    at beginWork (chunk-GR7IK2KQ.js?v=a9138b18:15892:22)
+    at beginWork$1 (chunk-GR7IK2KQ.js?v=a9138b18:19721:22)

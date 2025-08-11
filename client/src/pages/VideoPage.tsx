@@ -628,6 +628,9 @@ function VideoGallery() {
     originalProjectIds?: (string | null)[];
     timestamp: number;
   }>>([]);
+  
+  // Project sorting
+  const [projectSort, setProjectSort] = useState<'name' | 'date' | 'videos'>('name');
 
   // Fetch projects with stats
   const { data: projectsData, isLoading: projectsLoading } = useQuery({
@@ -1067,9 +1070,6 @@ function VideoGallery() {
     videoGroups[groupKey].push(video);
   });
 
-  // Project sorting
-  const [projectSort, setProjectSort] = useState<'name' | 'date' | 'videos'>('name');
-  
   // Filter out empty groups and sort
   const nonEmptyGroups = Object.entries(videoGroups)
     .filter(([_, videos]) => videos.length > 0)
