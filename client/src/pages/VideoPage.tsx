@@ -1053,22 +1053,27 @@ function VideoGallery() {
 
   const handleDuplicateProject = async (projectId: string, originalName: string) => {
     try {
-      const response = await apiRequest('/api/projects', {
+      console.log('Duplicating project:', { projectId, originalName });
+      
+      const response = await apiRequest(`/api/projects/${projectId}/duplicate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: `${originalName} (Copy)`,
-          description: `Duplicated from ${originalName}`,
+          includeVideos: false // For now, just duplicate the project structure
         }),
       });
       
-      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+      console.log('Project duplication response:', response);
+      
+      // Invalidate queries to refresh the project list
+      await queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
       
       toast({
-        title: 'Project duplicated',
-        description: `"${originalName} (Copy)" has been created.`,
+        title: 'Project duplicated successfully',
+        description: `"${originalName}" has been duplicated.`,
       });
     } catch (error: any) {
+      console.error('Project duplication error:', error);
       toast({
         title: 'Duplication failed',
         description: error.message || 'Could not duplicate project',
