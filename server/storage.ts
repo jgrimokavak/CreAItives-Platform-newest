@@ -56,19 +56,10 @@ export interface IStorage {
 
   // Project operations
   createProject(project: InsertProject): Promise<Project>;
-  getAllProjects(userId: string, showArchived?: boolean): Promise<Project[]>;
-  getProjectsWithStats(userId: string, showArchived?: boolean): Promise<Project[]>;
+  getAllProjects(userId: string): Promise<Project[]>;
   getProjectById(id: string): Promise<Project | undefined>;
   updateProject(id: string, updates: Partial<Project>): Promise<Project | undefined>;
   deleteProject(id: string): Promise<void>;
-  getProjectWithVideos(projectId: string, userId: string): Promise<{ project: Project; videos: Video[] } | null>;
-  
-  // New project management operations
-  duplicateProject(projectId: string, userId: string, includeVideos?: boolean): Promise<Project>;
-  archiveProject(projectId: string): Promise<Project>;
-  restoreProject(projectId: string): Promise<Project>;
-  reorderProjects(userId: string, projectIds: string[]): Promise<void>;
-  permanentDeleteProject(projectId: string, deleteVideos?: boolean): Promise<void>;
 }
 
 // Database storage implementation
@@ -719,18 +710,12 @@ export class DatabaseStorage implements IStorage {
     return createdProject;
   }
 
-  async getAllProjects(userId: string, showArchived = false): Promise<Project[]> {
-    const conditions = [eq(projects.userId, userId)];
-    
-    if (!showArchived) {
-      conditions.push(isNull(projects.archivedAt));
-    }
-
+  async getAllProjects(userId: string): Promise<Project[]> {
     return await db
       .select()
       .from(projects)
-      .where(and(...conditions))
-      .orderBy(asc(projects.orderIndex), desc(projects.createdAt));
+      .where(eq(projects.userId, userId))
+      .orderBy(desc(projects.createdAt));
   }
 
   async getProjectById(id: string): Promise<Project | undefined> {
@@ -783,7 +768,7 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  async getProjectsWithStats(userId: string, showArchived = false): Promise<Array<Project & {
+  async getProjectsWithStats(userId: string): Promise<Array<Project & {
     videoCount: number;
     completedCount: number;
     processingCount: number;
@@ -791,11 +776,6 @@ export class DatabaseStorage implements IStorage {
   }>> {
     // Get current environment to filter videos
     const currentEnv = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
-    
-    const conditions = [eq(projects.userId, userId)];
-    if (!showArchived) {
-      conditions.push(isNull(projects.archivedAt));
-    }
     
     // Get projects with video counts using SQL aggregation, filtered by environment
     const projectsWithStats = await db
@@ -806,8 +786,6 @@ export class DatabaseStorage implements IStorage {
         gcsFolder: projects.gcsFolder,
         videoCount: projects.videoCount,
         userId: projects.userId,
-        orderIndex: projects.orderIndex,
-        archivedAt: projects.archivedAt,
         createdAt: projects.createdAt,
         updatedAt: projects.updatedAt,
         totalVideos: sql<number>`COALESCE(COUNT(CASE WHEN ${videos.environment} = ${currentEnv} THEN ${videos.id} END), 0)`.as('totalVideos'),
@@ -817,9 +795,9 @@ export class DatabaseStorage implements IStorage {
       })
       .from(projects)
       .leftJoin(videos, eq(projects.id, videos.projectId))
-      .where(and(...conditions))
-      .groupBy(projects.id, projects.orderIndex, projects.archivedAt)
-      .orderBy(asc(projects.orderIndex), desc(projects.createdAt));
+      .where(eq(projects.userId, userId))
+      .groupBy(projects.id)
+      .orderBy(desc(projects.createdAt));
 
     return projectsWithStats.map(p => ({
       ...p,
@@ -870,133 +848,6 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date() 
       })
       .where(eq(projects.id, projectId));
-  }
-
-  // Project management operations
-  async duplicateProject(projectId: string, userId: string, includeVideos = false): Promise<Project> {
-    const originalProject = await this.getProjectById(projectId);
-    if (!originalProject) {
-      throw new Error('Project not found');
-    }
-
-    // Generate unique name for duplicate
-    let baseName = `Copy of ${originalProject.name}`;
-    let duplicateName = baseName;
-    let counter = 1;
-
-    // Check if name already exists and increment counter
-    while (true) {
-      const existing = await db
-        .select()
-        .from(projects)
-        .where(and(
-          eq(projects.userId, userId),
-          eq(projects.name, duplicateName)
-        ))
-        .limit(1);
-
-      if (existing.length === 0) break;
-      
-      counter++;
-      duplicateName = `${baseName} (${counter})`;
-    }
-
-    // Get max order index for this user
-    const maxOrderResult = await db
-      .select({ maxOrder: sql<number>`MAX(${projects.orderIndex})` })
-      .from(projects)
-      .where(eq(projects.userId, userId));
-    
-    const maxOrder = maxOrderResult[0]?.maxOrder || 0;
-
-    // Create the duplicate project
-    const duplicateId = crypto.randomUUID();
-    const duplicateData = {
-      id: duplicateId,
-      name: duplicateName,
-      description: originalProject.description,
-      gcsFolder: `projects/${duplicateId}`,
-      videoCount: 0,
-      userId,
-      orderIndex: maxOrder + 1,
-    };
-
-    const [duplicatedProject] = await db
-      .insert(projects)
-      .values(duplicateData)
-      .returning();
-
-    // TODO: Implement video duplication if includeVideos is true
-    // This would require duplicating video files in object storage
-    if (includeVideos) {
-      console.log('Video duplication not yet implemented');
-    }
-
-    return duplicatedProject;
-  }
-
-  async archiveProject(projectId: string): Promise<Project> {
-    const [archivedProject] = await db
-      .update(projects)
-      .set({ 
-        archivedAt: new Date(),
-        updatedAt: new Date()
-      })
-      .where(eq(projects.id, projectId))
-      .returning();
-    
-    return archivedProject;
-  }
-
-  async restoreProject(projectId: string): Promise<Project> {
-    const [restoredProject] = await db
-      .update(projects)
-      .set({ 
-        archivedAt: null,
-        updatedAt: new Date()
-      })
-      .where(eq(projects.id, projectId))
-      .returning();
-    
-    return restoredProject;
-  }
-
-  async reorderProjects(userId: string, projectIds: string[]): Promise<void> {
-    // Update the order index for each project
-    const updates = projectIds.map((id, index) => 
-      db
-        .update(projects)
-        .set({ 
-          orderIndex: index,
-          updatedAt: new Date()
-        })
-        .where(and(
-          eq(projects.id, id),
-          eq(projects.userId, userId)
-        ))
-    );
-
-    // Execute all updates
-    await Promise.all(updates);
-  }
-
-  async permanentDeleteProject(projectId: string, deleteVideos = false): Promise<void> {
-    if (deleteVideos) {
-      // Delete all videos in this project
-      await db.delete(videos).where(eq(videos.projectId, projectId));
-      
-      // TODO: Also delete video files from object storage
-      console.log('Video file deletion from object storage not yet implemented');
-    } else {
-      // Move all videos in this project to no project (null)
-      await db
-        .update(videos)
-        .set({ projectId: null })
-        .where(eq(videos.projectId, projectId));
-    }
-    
-    // Delete the project
-    await db.delete(projects).where(eq(projects.id, projectId));
   }
 }
 
