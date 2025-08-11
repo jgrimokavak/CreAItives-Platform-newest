@@ -1,0 +1,61 @@
+client:536 WebSocket connection to 'wss://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/?token=wM1V56rNZAwK' failed: 
+setupWebSocket @ client:536
+(anonymous) @ client:531
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=wM1V56rNZAwK' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+setupWebSocket @ client:536
+fallback @ client:509
+(anonymous) @ client:555
+chunk-GR7IK2KQ.js?v=a9138b18:21507 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+VideoPage.tsx:1506 [DIAGNOSTIC] Loading VIDEO_MODELS configuration
+VideoPage.tsx:1526 [DIAGNOSTIC] VIDEO_MODELS loaded: {modelKeys: Array(1), models: {…}}
+websocket.ts:17 [DIAGNOSTIC] WebSocket URL construction: {protocol: 'wss:', hostname: 'eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev', port: '', fullUrl: 'wss://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/ws', windowLocation: {…}}
+main.tsx:13 SW registered:  ServiceWorkerRegistration {installing: null, waiting: null, active: ServiceWorker, navigationPreload: NavigationPreloadManager, scope: 'https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/', …}
+video:1 <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">
+websocket.ts:40 WebSocket connected
+VideoPage.tsx:1056 Duplicating project: {projectId: 'b9137282-d9a1-487c-a4e6-7930b1b454ae', originalName: 'testing edit details 2'}
+queryClient.ts:14  POST https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/api/projects/b9137282-d9a1-487c-a4e6-7930b1b454ae/duplicate 400 (Bad Request)
+apiRequest @ queryClient.ts:14
+handleDuplicateProject @ VideoPage.tsx:1058
+onClick @ VideoPage.tsx:328
+handleEvent @ chunk-5Q5YC75F.js?v=a9138b18:4
+callCallback2 @ chunk-GR7IK2KQ.js?v=a9138b18:3674
+invokeGuardedCallbackDev @ chunk-GR7IK2KQ.js?v=a9138b18:3699
+invokeGuardedCallback @ chunk-GR7IK2KQ.js?v=a9138b18:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-GR7IK2KQ.js?v=a9138b18:3736
+executeDispatch @ chunk-GR7IK2KQ.js?v=a9138b18:7014
+processDispatchQueueItemsInOrder @ chunk-GR7IK2KQ.js?v=a9138b18:7034
+processDispatchQueue @ chunk-GR7IK2KQ.js?v=a9138b18:7043
+dispatchEventsForPlugins @ chunk-GR7IK2KQ.js?v=a9138b18:7051
+(anonymous) @ chunk-GR7IK2KQ.js?v=a9138b18:7174
+batchedUpdates$1 @ chunk-GR7IK2KQ.js?v=a9138b18:18881
+batchedUpdates @ chunk-GR7IK2KQ.js?v=a9138b18:3579
+dispatchEventForPluginEventSystem @ chunk-GR7IK2KQ.js?v=a9138b18:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-GR7IK2KQ.js?v=a9138b18:5478
+dispatchEvent @ chunk-GR7IK2KQ.js?v=a9138b18:5472
+dispatchDiscreteEvent @ chunk-GR7IK2KQ.js?v=a9138b18:5449
+VideoPage.tsx:1076 Project duplication error: Error: 400: {"error":"Invalid input","details":[{"code":"invalid_type","expected":"string","received":"undefined","path":["projectId"],"message":"Required"}]}
+    at throwIfResNotOk (queryClient.ts:6:11)
+    at async apiRequest (queryClient.ts:19:3)
+    at async handleDuplicateProject (VideoPage.tsx:1058:24)
+handleDuplicateProject @ VideoPage.tsx:1076
+await in handleDuplicateProject
+onClick @ VideoPage.tsx:328
+handleEvent @ chunk-5Q5YC75F.js?v=a9138b18:4
+callCallback2 @ chunk-GR7IK2KQ.js?v=a9138b18:3674
+invokeGuardedCallbackDev @ chunk-GR7IK2KQ.js?v=a9138b18:3699
+invokeGuardedCallback @ chunk-GR7IK2KQ.js?v=a9138b18:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-GR7IK2KQ.js?v=a9138b18:3736
+executeDispatch @ chunk-GR7IK2KQ.js?v=a9138b18:7014
+processDispatchQueueItemsInOrder @ chunk-GR7IK2KQ.js?v=a9138b18:7034
+processDispatchQueue @ chunk-GR7IK2KQ.js?v=a9138b18:7043
+dispatchEventsForPlugins @ chunk-GR7IK2KQ.js?v=a9138b18:7051
+(anonymous) @ chunk-GR7IK2KQ.js?v=a9138b18:7174
+batchedUpdates$1 @ chunk-GR7IK2KQ.js?v=a9138b18:18881
+batchedUpdates @ chunk-GR7IK2KQ.js?v=a9138b18:3579
+dispatchEventForPluginEventSystem @ chunk-GR7IK2KQ.js?v=a9138b18:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-GR7IK2KQ.js?v=a9138b18:5478
+dispatchEvent @ chunk-GR7IK2KQ.js?v=a9138b18:5472
+dispatchDiscreteEvent @ chunk-GR7IK2KQ.js?v=a9138b18:5449

@@ -1059,6 +1059,7 @@ function VideoGallery() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          projectId: projectId, // Required by the validation schema
           includeVideos: false // For now, just duplicate the project structure
         }),
       });
