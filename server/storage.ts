@@ -955,10 +955,52 @@ export class DatabaseStorage implements IStorage {
       .values(duplicateData)
       .returning();
 
-    // TODO: Implement video duplication if includeVideos is true
-    // This would require duplicating video files in object storage
+    // Duplicate video records if includeVideos is true
     if (includeVideos) {
-      console.log('Video duplication not yet implemented');
+      console.log('Duplicating video records for project:', duplicateId);
+      
+      // Get all videos from the original project
+      const originalVideos = await db
+        .select()
+        .from(videos)
+        .where(eq(videos.projectId, projectId));
+      
+      console.log(`Found ${originalVideos.length} videos to duplicate`);
+      
+      // Create new video records pointing to the same files
+      if (originalVideos.length > 0) {
+        const duplicatedVideoData = originalVideos.map(video => ({
+          id: crypto.randomUUID(), // New unique ID
+          projectId: duplicateId, // Point to the new project
+          userId: video.userId,
+          prompt: video.prompt,
+          model: video.model, // Correct field name
+          url: video.url, // Same file URL - shared storage
+          thumbUrl: video.thumbUrl, // Same thumbnail URL
+          fullUrl: video.fullUrl, // Same full URL
+          status: video.status,
+          duration: video.duration,
+          resolution: video.resolution, // Required field
+          aspectRatio: video.aspectRatio,
+          referenceImageUrl: video.referenceImageUrl,
+          firstFrameImage: video.firstFrameImage,
+          jobId: video.jobId,
+          promptOptimizer: video.promptOptimizer,
+          environment: video.environment,
+          error: video.error,
+          size: video.size
+        }));
+        
+        await db.insert(videos).values(duplicatedVideoData);
+        
+        // Update the video count for the duplicated project
+        await db
+          .update(projects)
+          .set({ videoCount: originalVideos.length })
+          .where(eq(projects.id, duplicateId));
+          
+        console.log(`Successfully duplicated ${originalVideos.length} video records`);
+      }
     }
 
     return duplicatedProject;
