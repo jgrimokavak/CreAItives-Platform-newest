@@ -288,7 +288,7 @@ function ProjectGroup({
                         {groupId !== 'unassigned' && memberCount && memberCount > 0 && (
                           <Badge variant="secondary" className="ml-2 bg-blue-100 text-blue-800 border-blue-200">
                             <Users className="w-3 h-3 mr-1" />
-                            {memberCount + 1} members
+                            Shared
                           </Badge>
                         )}
                       </div>

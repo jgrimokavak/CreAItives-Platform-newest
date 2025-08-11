@@ -1469,14 +1469,17 @@ export class DatabaseStorage implements IStorage {
       .from(projectMembers)
       .where(eq(projectMembers.userId, userId));
 
-    const allProjectIds = [
+    // Combine and deduplicate project IDs
+    const allProjectIds = Array.from(new Set([
       ...ownedProjects.map(p => p.id),
       ...memberProjects.map(p => p.projectId)
-    ];
+    ]));
 
     if (allProjectIds.length === 0) {
       return {};
     }
+
+    console.log('[DEBUG] Getting member counts for projects:', allProjectIds);
 
     // Get member counts for all accessible projects
     const memberCounts = await db
@@ -1488,12 +1491,15 @@ export class DatabaseStorage implements IStorage {
       .where(inArray(projectMembers.projectId, allProjectIds))
       .groupBy(projectMembers.projectId);
 
+    console.log('[DEBUG] Raw member counts from DB:', memberCounts);
+
     // Convert to Record format
     const result: Record<string, number> = {};
     memberCounts.forEach(({ projectId, memberCount }) => {
       result[projectId] = memberCount;
     });
 
+    console.log('[DEBUG] Final member counts result:', result);
     return result;
   }
 
