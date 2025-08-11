@@ -5,6 +5,8 @@ import * as fs from "fs";
 import * as path from "path";
 import { push } from "./ws";
 import crypto from "crypto";
+import archiver from "archiver";
+import { createWriteStream } from "fs";
 
 // Define storage interface
 export interface IStorage {
@@ -55,6 +57,7 @@ export interface IStorage {
   deleteVideo(id: string): Promise<void>;
   bulkMoveVideos(videoIds: string[], targetProjectId: string | null): Promise<void>;
   getUnassignedVideos(userId: string): Promise<Video[]>;
+  getVideosByProject(projectId: string): Promise<Video[]>;
 
   // Project operations
   createProject(project: InsertProject): Promise<Project>;
@@ -71,6 +74,7 @@ export interface IStorage {
   restoreProject(projectId: string): Promise<Project>;
   reorderProjects(userId: string, projectIds: string[]): Promise<void>;
   permanentDeleteProject(projectId: string, deleteVideos?: boolean): Promise<void>;
+  createProjectExportZip(project: Project, videos: Video[]): Promise<{success: boolean; downloadUrl?: string; error?: string}>;
 }
 
 // Database storage implementation
@@ -1107,6 +1111,146 @@ export class DatabaseStorage implements IStorage {
     
     // Delete the project
     await db.delete(projects).where(eq(projects.id, projectId));
+  }
+
+  async getVideosByProject(projectId: string): Promise<Video[]> {
+    const currentEnv = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
+    
+    return await db
+      .select()
+      .from(videos)
+      .where(and(
+        eq(videos.projectId, projectId),
+        eq(videos.environment, currentEnv)
+      ))
+      .orderBy(desc(videos.createdAt));
+  }
+
+  async createProjectExportZip(project: Project, projectVideos: Video[]): Promise<{success: boolean; downloadUrl?: string; error?: string}> {
+    try {
+      console.log(`Creating export ZIP for project: ${project.name} with ${projectVideos.length} videos`);
+
+      // Create descriptive filename with timestamp
+      const timestamp = new Date().toISOString().replace(/[:T.-]/g, "").slice(0, 14); // YYYYMMDDHHMMSS
+      const safeName = project.name.replace(/[^a-zA-Z0-9]/g, '_');
+      const zipFilename = `project_export_${safeName}_${timestamp}.zip`;
+      
+      // Create paths
+      const tmpZipPath = path.join("/tmp", zipFilename);
+      const downloadDir = path.join(process.cwd(), "downloads");
+      const downloadZipPath = path.join(downloadDir, zipFilename);
+      
+      // Ensure downloads directory exists
+      if (!fs.existsSync(downloadDir)) {
+        fs.mkdirSync(downloadDir, { recursive: true });
+      }
+
+      // Create prompts text file content
+      let promptsContent = `Project: ${project.name}\n`;
+      if (project.description) {
+        promptsContent += `Description: ${project.description}\n`;
+      }
+      promptsContent += `Exported: ${new Date().toISOString()}\n`;
+      promptsContent += `Total Videos: ${projectVideos.length}\n\n`;
+      promptsContent += "=" .repeat(50) + "\n\n";
+      
+      projectVideos.forEach((video, index) => {
+        promptsContent += `Video ${index + 1}:\n`;
+        promptsContent += `Prompt: ${video.prompt}\n`;
+        promptsContent += `Model: ${video.model}\n`;
+        promptsContent += `Resolution: ${video.resolution}\n`;
+        promptsContent += `Duration: ${video.duration}\n`;
+        if (video.aspectRatio) promptsContent += `Aspect Ratio: ${video.aspectRatio}\n`;
+        promptsContent += `Created: ${video.createdAt}\n`;
+        promptsContent += "\n" + "-".repeat(30) + "\n\n";
+      });
+
+      // Download video files first
+      const videoFiles: { name: string; data: Buffer }[] = [];
+      const { Client } = await import('@replit/object-storage');
+      const client = new Client();
+      
+      for (let i = 0; i < projectVideos.length; i++) {
+        const video = projectVideos[i];
+        if (video.url && video.url.includes('/api/object-storage/video/')) {
+          try {
+            // Extract storage path from URL
+            const pathMatch = video.url.match(/\/api\/object-storage\/video\/(.+)/);
+            if (pathMatch) {
+              const { ok, value, error } = await client.downloadAsBytes(pathMatch[1]);
+              
+              if (ok && value) {
+                // Generate safe filename for video
+                const videoIndex = String(i + 1).padStart(2, '0');
+                const videoExtension = pathMatch[1].split('.').pop() || 'mp4';
+                const safeVideoName = `video_${videoIndex}.${videoExtension}`;
+                
+                videoFiles.push({
+                  name: safeVideoName,
+                  data: Buffer.isBuffer(value) ? value : Buffer.from(value)
+                });
+                console.log(`Downloaded video file: ${safeVideoName}`);
+              } else {
+                console.warn(`Failed to download video file: ${pathMatch[1]}, error: ${error}`);
+              }
+            }
+          } catch (videoError) {
+            console.error(`Error downloading video:`, videoError);
+          }
+        }
+      }
+
+      // Create ZIP file
+      await new Promise<void>((resolve, reject) => {
+        const output = createWriteStream(tmpZipPath);
+        const archive = archiver("zip", { zlib: { level: 9 } });
+        
+        output.on("close", () => {
+          console.log(`Export ZIP created: ${tmpZipPath}, size: ${archive.pointer()} bytes`);
+          resolve();
+        });
+        
+        archive.on("error", (err) => {
+          console.error(`Error creating export ZIP:`, err);
+          reject(err);
+        });
+        
+        archive.pipe(output);
+        
+        // Add prompts text file
+        archive.append(promptsContent, { name: 'prompts.txt' });
+        
+        // Add video files
+        videoFiles.forEach(videoFile => {
+          archive.append(videoFile.data, { name: videoFile.name });
+          console.log(`Added video to ZIP: ${videoFile.name}`);
+        });
+        
+        console.log(`Added ${videoFiles.length} video files to export ZIP`);
+        archive.finalize();
+      });
+
+      // Move ZIP to downloads directory
+      if (fs.existsSync(tmpZipPath)) {
+        fs.copyFileSync(tmpZipPath, downloadZipPath);
+        fs.unlinkSync(tmpZipPath); // Clean up temp file
+      }
+
+      const downloadUrl = `/downloads/${zipFilename}`;
+      console.log(`Project export ZIP ready for download: ${downloadUrl}`);
+      
+      return { 
+        success: true, 
+        downloadUrl
+      };
+
+    } catch (error: any) {
+      console.error('Failed to create project export ZIP:', error);
+      return { 
+        success: false, 
+        error: error.message || 'Unknown error occurred'
+      };
+    }
   }
 }
 

@@ -393,4 +393,60 @@ router.delete('/:id/permanent', async (req, res) => {
   }
 });
 
+// Export project as ZIP with videos and prompts
+router.post('/:id/export', async (req, res) => {
+  try {
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const project = await storage.getProjectById(req.params.id);
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    if (project.userId !== userId && user?.claims?.role !== 'admin') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    // Get all videos for this project
+    const videos = await storage.getVideosByProject(req.params.id);
+    
+    if (videos.length === 0) {
+      return res.status(400).json({ error: 'No videos found in this project' });
+    }
+
+    // Filter only completed videos with actual files
+    const completedVideos = videos.filter((video: any) => 
+      video.status === 'completed' && video.url && video.url.trim() !== ''
+    );
+
+    if (completedVideos.length === 0) {
+      return res.status(400).json({ error: 'No completed videos with files found in this project' });
+    }
+
+    // Create export ZIP file
+    const zipResult = await storage.createProjectExportZip(project, completedVideos);
+    
+    if (zipResult.success) {
+      res.json({
+        success: true,
+        downloadUrl: zipResult.downloadUrl,
+        message: `Project "${project.name}" exported successfully with ${completedVideos.length} video(s)`
+      });
+    } else {
+      res.status(500).json({ 
+        error: 'Failed to create export', 
+        details: zipResult.error 
+      });
+    }
+
+  } catch (error: any) {
+    console.error('Export project error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;

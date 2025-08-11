@@ -339,7 +339,7 @@ function ProjectGroup({
                                 className="cursor-pointer"
                               >
                                 <Download className="w-4 h-4 mr-2" />
-                                Export Data
+                                Export Project
                               </DropdownMenuItem>
                             )}
                             
@@ -1122,30 +1122,32 @@ function VideoGallery() {
 
   const handleExportProject = async (projectId: string, projectName: string) => {
     try {
-      const projectDetails = await apiRequest(`/api/projects/${projectId}/details`);
-      const exportData = {
-        project: projectDetails,
-        exportedAt: new Date().toISOString(),
-        totalVideos: projectDetails.videos?.length || 0,
-      };
-      
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], {
-        type: 'application/json',
+      // Show loading toast
+      const loadingToast = toast({
+        title: 'Preparing export...',
+        description: 'Downloading videos and creating ZIP file. This may take a moment.',
       });
-      
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${projectName.replace(/[^a-zA-Z0-9]/g, '_')}_export.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      
-      toast({
-        title: 'Project exported',
-        description: `"${projectName}" has been exported successfully.`,
+
+      const exportResult = await apiRequest(`/api/projects/${projectId}/export`, {
+        method: 'POST',
       });
+
+      if (exportResult.success && exportResult.downloadUrl) {
+        // Trigger download
+        const link = document.createElement('a');
+        link.href = exportResult.downloadUrl;
+        link.download = `${projectName.replace(/[^a-zA-Z0-9]/g, '_')}_export.zip`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        toast({
+          title: 'Project exported',
+          description: `"${projectName}" has been exported as a ZIP file with videos and prompts.`,
+        });
+      } else {
+        throw new Error(exportResult.error || 'Export failed');
+      }
     } catch (error: any) {
       toast({
         title: 'Export failed',
