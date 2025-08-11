@@ -1,0 +1,76 @@
+# Prompt for Replit — **Video Gallery only**: Archive/Delete, Duplicate, Reorder (Projects)
+
+**Extended Context**
+The Video Gallery is the section of the application where users can browse all their video projects and see the videos within them. This is a separate area from the “Create Video” view, which has its own project selection panel and creation tools.  
+Currently, the Video Gallery lists projects and allows users to open them to view videos, but **project management tools are minimal** — there’s no ability to archive, delete, duplicate, or reorder projects directly from the gallery.
+
+The goal is to give users **full control over their projects** from within the Video Gallery **without cluttering the Create Video UI**. All project management actions will live **exclusively** in the Video Gallery.  
+We already have backend support for creating and renaming projects (`project-routes.ts`), as well as the `projects` table in the shared schema. The backend can be extended to support archive (soft delete), permanent delete, duplication, and reordering.
+
+**Goal (User outcomes)**
+1) **Archive / Delete Projects**
+Archive (soft delete) a video project directly from the Video Gallery so it’s hidden from the default view but can be restored later.
+Restore an archived project to make it visible again.
+Permanently delete a project via a confirmation flow, with an optional checkbox to also delete its associated videos/assets.
+
+2) **Duplicate Project**
+Duplicate a project from the Video Gallery.
+New project name format: **“Copy of {Original Name}”** (append counter if the name already exists).
+Copy only settings by default; duplicating videos is optional and can be implemented if straightforward.
+
+3) **Reorder Projects**
+Drag-and-drop projects in the Video Gallery list/grid to set a custom display order.
+Order persists across reloads (store in DB or another persistent store).
+
+**Placement & UX (Video Gallery ONLY)**
+Each project card/row in the Video Gallery gets a **Project actions** overflow menu (⋯) containing:
+“Open”
+“Duplicate project”
+“Archive project…”
+Divider
+“Delete permanently…” (danger action)
+Add a **filter/toggle** in the gallery’s top bar: **Show archived** (off by default).
+When a user archives or deletes the currently open project, automatically navigate to a safe “All Projects” view or select another available project.
+**Undo for Archive**: show a toast/snackbar with **Undo** (restores within ~30s).
+**Delete permanently**: confirmation modal with **type-the-project-name** field and a small, **unchecked by default** checkbox: “Also delete videos and assets (irreversible).”
+**Reorder**: add drag handles to project cards/rows; provide keyboard fallback for accessibility.
+
+**Data/API (high-level)**
+Archive: set `deleted_at` or similar field in the DB.
+Restore: clear the archive flag.
+Permanent delete: remove project record and, if requested, its videos/assets.
+Duplicate: create a new project entry with copied metadata (and optionally videos).
+Reorder: store an `order_index` or similar field for custom sort.
+
+**Non-Goals / Guardrails**
+No changes to the **Create Video** project panel or sidebar.
+No changes to **Image** or **Car** sections or galleries.
+Preserve all existing styles, spacing, and test IDs in the Video Gallery.
+
+**Acceptance Criteria**
+**Archive**
+Archiving removes the project from default view.
+“Show archived” reveals archived projects with an **Archived** badge.
+Undo restores the project in its original position.
+**Delete permanently**
+Requires name confirmation.
+Optional checkbox for deleting videos/assets.
+Success removes the project from all views.
+**Duplicate**
+Creates a new project instantly, preselected or highlighted in the gallery.
+Name follows “Copy of {Original Name}” convention with counter suffixes.
+**Reorder**
+Drag-and-drop changes order visually and persists after reload.
+**Fallback navigation**
+If the current project is archived/deleted, navigate to a safe gallery state.
+**Scope isolation**
+All changes confined to the Video Gallery UI.
+
+**Accessibility & Performance**
+All actions are keyboard reachable; drag-and-drop has a keyboard fallback.
+The gallery remains responsive during reordering and filter changes.
+
+**Telemetry (if available)**
+Track `project_archived`, `project_restored`, `project_deleted_hard`, `project_duplicated`, `project_reordered` events with relevant IDs.
+
+Please implement these improvements **exclusively in the Video Gallery**, keeping the rest of the app untouched.
