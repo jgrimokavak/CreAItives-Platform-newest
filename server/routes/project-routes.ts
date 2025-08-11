@@ -77,13 +77,14 @@ router.get('/', async (req, res) => {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    const { withStats } = req.query;
+    const { withStats, includeArchived } = req.query;
+    const showArchived = includeArchived === 'true';
     
     if (withStats === 'true') {
-      const projectsWithStats = await storage.getProjectsWithStats(userId);
+      const projectsWithStats = await storage.getProjectsWithStats(userId, showArchived);
       res.json(projectsWithStats);
     } else {
-      const projects = await storage.getAllProjects(userId);
+      const projects = await storage.getAllProjects(userId, showArchived);
       res.json(projects);
     }
 
@@ -192,7 +193,147 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Delete project
+// Archive project (soft delete)
+router.patch('/:id/archive', async (req, res) => {
+  try {
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const project = await storage.getProjectById(req.params.id);
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    // Ensure user can only archive their own projects (or is admin)
+    if (project.userId !== userId && user?.claims?.role !== 'admin') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const archivedProject = await storage.archiveProject(req.params.id);
+    res.json({ 
+      success: true, 
+      ...archivedProject,
+      message: 'Project archived successfully' 
+    });
+
+  } catch (error: any) {
+    console.error('Archive project error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Restore archived project
+router.patch('/:id/restore', async (req, res) => {
+  try {
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const project = await storage.getProjectById(req.params.id);
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    // Ensure user can only restore their own projects (or is admin)
+    if (project.userId !== userId && user?.claims?.role !== 'admin') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const restoredProject = await storage.restoreProject(req.params.id);
+    res.json({ 
+      success: true, 
+      ...restoredProject,
+      message: 'Project restored successfully' 
+    });
+
+  } catch (error: any) {
+    console.error('Restore project error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Duplicate project
+router.post('/:id/duplicate', async (req, res) => {
+  try {
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const project = await storage.getProjectById(req.params.id);
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    // Ensure user can only duplicate their own projects (or is admin)
+    if (project.userId !== userId && user?.claims?.role !== 'admin') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const duplicatedProject = await storage.duplicateProject(req.params.id, userId);
+    res.json({
+      success: true,
+      ...duplicatedProject,
+      message: 'Project duplicated successfully'
+    });
+
+  } catch (error: any) {
+    console.error('Duplicate project error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Reorder projects
+router.patch('/reorder', async (req, res) => {
+  try {
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    // Validate input
+    const reorderSchema = z.object({
+      projectIds: z.array(z.string()).min(1),
+    });
+
+    const validationResult = reorderSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      return res.status(400).json({ 
+        error: 'Invalid input', 
+        details: validationResult.error.issues 
+      });
+    }
+
+    const { projectIds } = validationResult.data;
+
+    // Verify all projects belong to user (security check)
+    for (const projectId of projectIds) {
+      const project = await storage.getProjectById(projectId);
+      if (!project || (project.userId !== userId && user?.claims?.role !== 'admin')) {
+        return res.status(403).json({ error: 'Access denied to one or more projects' });
+      }
+    }
+
+    await storage.reorderProjects(userId, projectIds);
+    res.json({ 
+      success: true, 
+      message: 'Projects reordered successfully' 
+    });
+
+  } catch (error: any) {
+    console.error('Reorder projects error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Delete project permanently
 router.delete('/:id', async (req, res) => {
   try {
     const user = req.user as any;
@@ -212,7 +353,7 @@ router.delete('/:id', async (req, res) => {
     }
 
     await storage.deleteProject(req.params.id);
-    res.json({ success: true, message: 'Project deleted successfully' });
+    res.json({ success: true, message: 'Project deleted permanently' });
 
   } catch (error: any) {
     console.error('Delete project error:', error);

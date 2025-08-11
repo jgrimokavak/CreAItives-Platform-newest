@@ -21,6 +21,10 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { 
   VideoIcon, 
   Video as VideoIconSm,
@@ -46,8 +50,19 @@ import {
   Square,
   MoveIcon,
   X,
-  Edit
+  Edit,
+  MoreVertical,
+  Copy,
+  RotateCcw,
+  GripVertical,
+  EyeOff,
+  Eye,
+  Archive
 } from 'lucide-react';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import SimpleGalleryPage from './SimpleGalleryPage';
@@ -250,6 +265,11 @@ function VideoGallery() {
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedVideos, setSelectedVideos] = useState<Set<string>>(new Set());
   
+  // Project management state
+  const [showArchived, setShowArchived] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [confirmDeleteProject, setConfirmDeleteProject] = useState<string | null>(null);
+  
   // Undo state
   const [undoStack, setUndoStack] = useState<Array<{
     type: 'move' | 'delete';
@@ -258,10 +278,10 @@ function VideoGallery() {
     timestamp: number;
   }>>([]);
 
-  // Fetch projects with stats
-  const { data: projectsData, isLoading: projectsLoading } = useQuery({
-    queryKey: ['/api/projects', { withStats: true }],
-    queryFn: () => apiRequest('/api/projects?withStats=true'),
+  // Fetch projects with stats (including archived if showArchived is true)
+  const { data: projectsData, isLoading: projectsLoading, refetch: refetchProjects } = useQuery({
+    queryKey: ['/api/projects', { withStats: true, includeArchived: showArchived }],
+    queryFn: () => apiRequest(`/api/projects?withStats=true&includeArchived=${showArchived}`),
   });
 
   // Fetch all videos
@@ -327,6 +347,10 @@ function VideoGallery() {
 
   const clearSelection = () => {
     setSelectedVideos(new Set());
+  };
+
+  const toggleGroup = (groupId: string) => {
+    setCollapsedGroups(prev => ({ ...prev, [groupId]: !prev[groupId] }));
   };
 
   // Bulk action functions
@@ -452,39 +476,175 @@ function VideoGallery() {
 
   const bulkDownloadVideos = async () => {
     const videosToDownload = allVideos.filter(v => selectedVideos.has(v.id) && v.url);
-    
+
     if (videosToDownload.length === 0) {
       toast({
         title: 'No videos to download',
-        description: 'Selected videos are not ready for download.',
+        description: 'Selected videos do not have downloadable URLs',
         variant: 'destructive',
       });
       return;
     }
 
-    toast({
-      title: 'Starting downloads',
-      description: `Downloading ${videosToDownload.length} video(s)...`,
+    videosToDownload.forEach(video => {
+      const link = document.createElement('a');
+      link.href = video.url!;
+      link.download = `video-${video.id}.mp4`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     });
 
-    for (const video of videosToDownload) {
-      if (video.url) {
-        try {
-          const response = await fetch(video.url);
-          const blob = await response.blob();
-          const url = URL.createObjectURL(blob);
-          
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `video-${video.id}.mp4`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(url);
-        } catch (error) {
-          console.error(`Failed to download video ${video.id}:`, error);
-        }
+    toast({
+      title: 'Download started',
+      description: `Downloading ${videosToDownload.length} video(s)`,
+    });
+  };
+
+  // Project management functions
+  const archiveProject = async (projectId: string) => {
+    try {
+      await apiRequest(`/api/projects/${projectId}/archive`, {
+        method: 'PATCH'
+      });
+      
+      refetchProjects();
+      toast({
+        title: "Success",
+        description: "Project archived successfully",
+        action: (
+          <Button variant="outline" size="sm" onClick={() => restoreProject(projectId)}>
+            Undo
+          </Button>
+        ),
+      });
+    } catch (error) {
+      console.error('Archive project error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to archive project",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const restoreProject = async (projectId: string) => {
+    try {
+      await apiRequest(`/api/projects/${projectId}/restore`, {
+        method: 'PATCH'
+      });
+      
+      refetchProjects();
+      toast({
+        title: "Success",
+        description: "Project restored successfully",
+      });
+    } catch (error) {
+      console.error('Restore project error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to restore project",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const duplicateProject = async (projectId: string) => {
+    try {
+      await apiRequest(`/api/projects/${projectId}/duplicate`, {
+        method: 'POST'
+      });
+      
+      refetchProjects();
+      toast({
+        title: "Success",
+        description: "Project duplicated successfully",
+      });
+    } catch (error) {
+      console.error('Duplicate project error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to duplicate project",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const deleteProject = async (projectId: string) => {
+    try {
+      await apiRequest(`/api/projects/${projectId}`, {
+        method: 'DELETE'
+      });
+      
+      refetchProjects();
+      refetchVideos();
+      toast({
+        title: "Success",
+        description: "Project deleted permanently",
+      });
+    } catch (error) {
+      console.error('Delete project error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete project",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Drag and drop functions
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragStart = () => {
+    setIsDragging(true);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    setIsDragging(false);
+    const { active, over } = event;
+
+    if (active.id !== over?.id) {
+      const activeIndex = projects.findIndex((project: any) => project.id === active.id);
+      const overIndex = projects.findIndex((project: any) => project.id === over?.id);
+
+      if (activeIndex !== -1 && overIndex !== -1) {
+        const newProjects = arrayMove(projects, activeIndex, overIndex);
+        const projectIds = newProjects.map((p: any) => p.id);
+        
+        // Optimistic update
+        queryClient.setQueryData(['/api/projects', { withStats: true, includeArchived: showArchived }], newProjects);
+        
+        // Call reorder API
+        reorderProjects(projectIds);
       }
+    }
+  };
+
+  const reorderProjects = async (projectIds: string[]) => {
+    try {
+      await apiRequest('/api/projects/reorder', {
+        method: 'PATCH',
+        body: { projectIds }
+      });
+      
+      toast({
+        title: "Success",
+        description: "Projects reordered successfully",
+      });
+    } catch (error) {
+      console.error('Reorder projects error:', error);
+      // Revert optimistic update on error
+      refetchProjects();
+      toast({
+        title: "Error",
+        description: "Failed to reorder projects",
+        variant: "destructive",
+      });
     }
   };
 
@@ -594,6 +754,196 @@ function VideoGallery() {
   // Filter out empty groups and sort
   const nonEmptyGroups = Object.entries(videoGroups).filter(([_, videos]) => videos.length > 0);
 
+  // Create sortable project component
+  const SortableProject = ({ project, videos, isArchived }: { project: any, videos: Video[], isArchived: boolean }) => {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+    } = useSortable({ id: project.id });
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+    };
+
+    const groupId = project.id;
+    const projectName = project.name;
+    const isCollapsed = collapsedGroups[groupId];
+    const originalGroupSize = projects.find((p: any) => p.id === groupId)?.videoCount || videos.length;
+
+    return (
+      <Card
+        ref={setNodeRef}
+        style={style}
+        className={`${isDragging ? 'opacity-50' : ''} ${isArchived ? 'bg-muted/20 border-dashed' : ''}`}
+      >
+        <Collapsible
+          open={!isCollapsed}
+          onOpenChange={(open) => setCollapsedGroups(prev => ({ ...prev, [groupId]: !open }))}
+        >
+          <CollapsibleTrigger asChild>
+            <CardHeader className="hover:bg-muted/30 transition-colors cursor-pointer group">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {/* Drag Handle */}
+                  <div
+                    {...attributes}
+                    {...listeners}
+                    className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-muted/50 transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <GripVertical className="w-4 h-4 text-muted-foreground" />
+                  </div>
+
+                  {/* Collapse Icon */}
+                  {isCollapsed ? (
+                    <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                  )}
+
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold">
+                      {projectName.substring(0, 2).toUpperCase()}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <CardTitle className="text-lg">{projectName}</CardTitle>
+                        {isArchived && (
+                          <Badge variant="secondary" className="text-xs">
+                            <Archive className="w-3 h-3 mr-1" />
+                            Archived
+                          </Badge>
+                        )}
+                      </div>
+                      {project.description && (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {project.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline">
+                    {videos.length}{originalGroupSize !== videos.length && ` of ${originalGroupSize}`} video{originalGroupSize !== 1 ? 's' : ''}
+                  </Badge>
+                  {isSelectMode && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const groupVideoIds = videos.map(v => v.id);
+                        const allSelected = groupVideoIds.every(id => selectedVideos.has(id));
+                        
+                        if (allSelected) {
+                          setSelectedVideos(prev => {
+                            const newSet = new Set(prev);
+                            groupVideoIds.forEach(id => newSet.delete(id));
+                            return newSet;
+                          });
+                        } else {
+                          setSelectedVideos(prev => {
+                            const newSet = new Set(prev);
+                            groupVideoIds.forEach(id => newSet.add(id));
+                            return newSet;
+                          });
+                        }
+                      }}
+                    >
+                      {videos.every(v => selectedVideos.has(v.id)) ? (
+                        <CheckSquare className="w-4 h-4" />
+                      ) : (
+                        <Square className="w-4 h-4" />
+                      )}
+                    </Button>
+                  )}
+
+                  {/* Project Actions Menu */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => duplicateProject(project.id)}>
+                        <Copy className="w-4 h-4 mr-2" />
+                        Duplicate Project
+                      </DropdownMenuItem>
+                      {isArchived ? (
+                        <DropdownMenuItem onClick={() => restoreProject(project.id)}>
+                          <RotateCcw className="w-4 h-4 mr-2" />
+                          Restore Project
+                        </DropdownMenuItem>
+                      ) : (
+                        <DropdownMenuItem onClick={() => archiveProject(project.id)}>
+                          <Archive className="w-4 h-4 mr-2" />
+                          Archive Project
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        onClick={() => setConfirmDeleteProject(project.id)}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete Permanently
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+            </CardHeader>
+          </CollapsibleTrigger>
+          
+          <CollapsibleContent>
+            <CardContent className="pt-0">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {videos.map((video) => (
+                  <div 
+                    key={video.id}
+                    className={`relative ${isSelectMode ? 'cursor-pointer' : ''}`}
+                    onClick={() => isSelectMode && toggleVideoSelection(video.id)}
+                  >
+                    {isSelectMode && (
+                      <div className="absolute top-2 left-2 z-10">
+                        <div className="bg-background/80 backdrop-blur-sm rounded-full p-1">
+                          {selectedVideos.has(video.id) ? (
+                            <CheckSquare className="w-5 h-5 text-primary" />
+                          ) : (
+                            <Square className="w-5 h-5 text-muted-foreground" />
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    <VideoCard
+                      video={{
+                        ...video,
+                        model: video.model || 'hailuo-02',
+                        status: video.status as 'pending' | 'processing' | 'completed' | 'failed',
+                        createdAt: typeof video.createdAt === 'string' ? video.createdAt : video.createdAt?.toISOString() || null
+                      }}
+                      className={`w-full ${isSelectMode && selectedVideos.has(video.id) ? 'ring-2 ring-primary' : ''}`}
+                    />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </CollapsibleContent>
+        </Collapsible>
+      </Card>
+    );
+  };
+
   return (
     <div className="space-y-6">
       {/* Gallery Header */}
@@ -615,7 +965,7 @@ function VideoGallery() {
 
       {/* Filter Bar */}
       <Card className="p-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           {/* Status Filter */}
           <div className="space-y-2">
             <Label className="text-sm font-medium flex items-center gap-2">
@@ -665,6 +1015,24 @@ function VideoGallery() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pr-8"
             />
+          </div>
+
+          {/* Show Archived Toggle */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium flex items-center gap-2">
+              {showArchived ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+              Show Archived
+            </Label>
+            <div className="flex items-center space-x-2 pt-2">
+              <Switch
+                checked={showArchived}
+                onCheckedChange={setShowArchived}
+                id="show-archived"
+              />
+              <Label htmlFor="show-archived" className="text-sm">
+                {showArchived ? 'Showing archived' : 'Hiding archived'}
+              </Label>
+            </div>
           </div>
 
           {/* Clear Filters */}
@@ -773,7 +1141,7 @@ function VideoGallery() {
         </Card>
       )}
 
-      {/* Video Groups */}
+      {/* Project Groups with Drag and Drop */}
       {nonEmptyGroups.length === 0 ? (
         <div className="rounded-lg border bg-muted/5 p-8">
           <div className="text-center space-y-3">
@@ -793,72 +1161,98 @@ function VideoGallery() {
           </div>
         </div>
       ) : (
-        <div className="space-y-4">
-          {nonEmptyGroups.map(([groupId, videos]) => {
-            const isCollapsed = collapsedGroups[groupId];
-            const projectName = getProjectName(groupId);
-            const originalGroupSize = allVideos.filter(v => 
-              (v.projectId || 'unassigned') === groupId
-            ).length;
-            
-            return (
-              <Card key={groupId}>
-                <Collapsible open={!isCollapsed} onOpenChange={() => toggleGroup(groupId)}>
-                  <CollapsibleTrigger asChild>
-                    <CardHeader className="hover:bg-muted/50 cursor-pointer transition-colors">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-2">
-                            {isCollapsed ? (
-                              <ChevronRight className="w-4 h-4" />
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={projects.map((p: any) => p.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="space-y-4">
+              {/* Regular Projects */}
+              {projects
+                .filter((project: any) => {
+                  const videos = videoGroups[project.id] || [];
+                  return videos.length > 0;
+                })
+                .map((project: any) => {
+                  const videos = videoGroups[project.id] || [];
+                  const isArchived = !!project.deletedAt;
+                  return (
+                    <SortableProject
+                      key={project.id}
+                      project={project}
+                      videos={videos}
+                      isArchived={isArchived}
+                    />
+                  );
+                })}
+              
+              {/* Unassigned Videos (not sortable) */}
+              {videoGroups['unassigned'] && videoGroups['unassigned'].length > 0 && (
+                <Card>
+                  <Collapsible
+                    open={!collapsedGroups['unassigned']}
+                    onOpenChange={(open) => setCollapsedGroups(prev => ({ ...prev, 'unassigned': !open }))}
+                  >
+                    <CollapsibleTrigger asChild>
+                      <CardHeader className="hover:bg-muted/30 transition-colors cursor-pointer group">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            {collapsedGroups['unassigned'] ? (
+                              <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
                             ) : (
-                              <ChevronDown className="w-4 h-4" />
+                              <ChevronDown className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
                             )}
-                            <Folder className="w-5 h-5 text-primary" />
-                          </div>
-                          <div>
-                            <CardTitle className="text-lg">{projectName}</CardTitle>
-                            {groupId !== 'unassigned' && (
+                            
+                            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center text-white font-semibold">
+                              UN
+                            </div>
+                            
+                            <div>
+                              <CardTitle className="text-lg">Unassigned</CardTitle>
                               <p className="text-sm text-muted-foreground mt-1">
-                                {projects.find((p: any) => p.id === groupId)?.description || ''}
+                                Videos not assigned to any project
                               </p>
-                            )}
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline">
-                            {videos.length}{originalGroupSize !== videos.length && ` of ${originalGroupSize}`} video{originalGroupSize !== 1 ? 's' : ''}
-                          </Badge>
-                          {isSelectMode && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const groupVideoIds = videos.map(v => v.id);
-                                const allSelected = groupVideoIds.every(id => selectedVideos.has(id));
-                                
-                                if (allSelected) {
-                                  setSelectedVideos(prev => {
-                                    const newSet = new Set(prev);
-                                    groupVideoIds.forEach(id => newSet.delete(id));
-                                    return newSet;
-                                  });
-                                } else {
-                                  setSelectedVideos(prev => {
-                                    const newSet = new Set(prev);
-                                    groupVideoIds.forEach(id => newSet.add(id));
-                                    return newSet;
-                                  });
-                                }
-                              }}
-                            >
-                              {videos.every(v => selectedVideos.has(v.id)) ? (
-                                <CheckSquare className="w-4 h-4" />
-                              ) : (
-                                <Square className="w-4 h-4" />
-                              )}
-                            </Button>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline">
+                              {videoGroups['unassigned'].length} video{videoGroups['unassigned'].length !== 1 ? 's' : ''}
+                            </Badge>
+                            {isSelectMode && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const groupVideoIds = videoGroups['unassigned'].map(v => v.id);
+                                  const allSelected = groupVideoIds.every(id => selectedVideos.has(id));
+                                  
+                                  if (allSelected) {
+                                    setSelectedVideos(prev => {
+                                      const newSet = new Set(prev);
+                                      groupVideoIds.forEach(id => newSet.delete(id));
+                                      return newSet;
+                                    });
+                                  } else {
+                                    setSelectedVideos(prev => {
+                                      const newSet = new Set(prev);
+                                      groupVideoIds.forEach(id => newSet.add(id));
+                                      return newSet;
+                                    });
+                                  }
+                                }}
+                              >
+                                {videoGroups['unassigned'].every(v => selectedVideos.has(v.id)) ? (
+                                  <CheckSquare className="w-4 h-4" />
+                                ) : (
+                                  <Square className="w-4 h-4" />
+                                )}
+                              </Button>
                           )}
                         </div>
                       </div>
@@ -868,7 +1262,7 @@ function VideoGallery() {
                   <CollapsibleContent>
                     <CardContent className="pt-0">
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {videos.map((video) => (
+                        {videoGroups['unassigned'].map((video) => (
                           <div 
                             key={video.id}
                             className={`relative ${isSelectMode ? 'cursor-pointer' : ''}`}
@@ -901,10 +1295,38 @@ function VideoGallery() {
                   </CollapsibleContent>
                 </Collapsible>
               </Card>
-            );
-          })}
-        </div>
+              )}
+            </div>
+          </SortableContext>
+        </DndContext>
       )}
+
+      {/* Confirmation Dialogs */}
+      <AlertDialog open={!!confirmDeleteProject} onOpenChange={() => setConfirmDeleteProject(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Project Permanently?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. The project and all its associated data will be permanently deleted.
+              Videos in this project will become unassigned.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (confirmDeleteProject) {
+                  deleteProject(confirmDeleteProject);
+                  setConfirmDeleteProject(null);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete Permanently
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
