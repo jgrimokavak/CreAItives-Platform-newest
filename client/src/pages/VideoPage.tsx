@@ -325,6 +325,20 @@ function ProjectGroup({
                             
                             <DropdownMenuSeparator />
                             
+                            <DropdownMenuItem asChild>
+                              <ProjectMemberManager 
+                                projectId={groupId}
+                                trigger={
+                                  <div className="flex items-center cursor-pointer px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground">
+                                    <Users className="w-4 h-4 mr-2" />
+                                    Manage Members
+                                  </div>
+                                }
+                              />
+                            </DropdownMenuItem>
+                            
+                            <DropdownMenuSeparator />
+                            
                             {onDuplicateProject && (
                               <DropdownMenuItem
                                 onClick={() => onDuplicateProject(groupId, projectName)}
