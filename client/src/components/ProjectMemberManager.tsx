@@ -53,7 +53,7 @@ export default function ProjectMemberManager({ projectId, trigger }: ProjectMemb
 
   // Fetch project members
   const { data: membersData, isLoading: membersLoading } = useQuery<ProjectMembersResponse>({
-    queryKey: ['/api/projects', projectId, 'members'],
+    queryKey: [`/api/projects/${projectId}/members`],
     enabled: open
   });
 

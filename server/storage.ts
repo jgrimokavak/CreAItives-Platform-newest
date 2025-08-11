@@ -681,30 +681,80 @@ export class DatabaseStorage implements IStorage {
     // Get current environment to filter videos
     const currentEnv = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
     
-    let query = db.select().from(videos) as any;
-    const conditions = [];
-    
-    // CRITICAL: Filter by environment to prevent cross-environment issues
-    conditions.push(eq(videos.environment, currentEnv));
-    
-    if (userId) conditions.push(eq(videos.userId, userId));
-    if (projectId) conditions.push(eq(videos.projectId, projectId));
-    if (status) conditions.push(eq(videos.status, status));
-    if (cursor) conditions.push(lt(videos.createdAt, new Date(cursor)));
-    
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions));
+    // If fetching by userId, we need to get videos from:
+    // 1. Projects owned by the user
+    // 2. Projects where the user is a member
+    if (userId && !projectId) {
+      // Get all project IDs where user has access
+      const ownedProjects = await db
+        .select({ id: projects.id })
+        .from(projects)
+        .where(eq(projects.userId, userId));
+      
+      const memberProjects = await db
+        .select({ projectId: projectMembers.projectId })
+        .from(projectMembers)
+        .where(eq(projectMembers.userId, userId));
+      
+      const accessibleProjectIds = [
+        ...ownedProjects.map(p => p.id),
+        ...memberProjects.map(p => p.projectId)
+      ];
+      
+      // Build query for videos
+      const conditions: any[] = [
+        eq(videos.environment, currentEnv),
+        or(
+          eq(videos.userId, userId), // Videos created by user
+          and(
+            isNotNull(videos.projectId),
+            inArray(videos.projectId, accessibleProjectIds.length > 0 ? accessibleProjectIds : ['none'])
+          ) // Videos in accessible projects
+        )
+      ];
+      
+      if (status) conditions.push(eq(videos.status, status));
+      if (cursor) conditions.push(lt(videos.createdAt, new Date(cursor)));
+      
+      const videoList = await db
+        .select()
+        .from(videos)
+        .where(and(...conditions))
+        .orderBy(desc(videos.createdAt))
+        .limit(limit + 1);
+      
+      const hasMore = videoList.length > limit;
+      const items = hasMore ? videoList.slice(0, -1) : videoList;
+      const nextCursor = hasMore ? items[items.length - 1]?.createdAt?.toISOString() || null : null;
+      
+      return { items, nextCursor };
+    } else {
+      // Original logic for specific project or no user filter
+      let query = db.select().from(videos) as any;
+      const conditions = [];
+      
+      // CRITICAL: Filter by environment to prevent cross-environment issues
+      conditions.push(eq(videos.environment, currentEnv));
+      
+      if (userId) conditions.push(eq(videos.userId, userId));
+      if (projectId) conditions.push(eq(videos.projectId, projectId));
+      if (status) conditions.push(eq(videos.status, status));
+      if (cursor) conditions.push(lt(videos.createdAt, new Date(cursor)));
+      
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+      
+      const videoList = await query
+        .orderBy(desc(videos.createdAt))
+        .limit(limit + 1);
+      
+      const hasMore = videoList.length > limit;
+      const items = hasMore ? videoList.slice(0, -1) : videoList;
+      const nextCursor = hasMore ? items[items.length - 1]?.createdAt?.toISOString() || null : null;
+      
+      return { items, nextCursor };
     }
-    
-    const videoList = await query
-      .orderBy(desc(videos.createdAt))
-      .limit(limit + 1);
-    
-    const hasMore = videoList.length > limit;
-    const items = hasMore ? videoList.slice(0, -1) : videoList;
-    const nextCursor = hasMore ? items[items.length - 1]?.createdAt?.toISOString() || null : null;
-    
-    return { items, nextCursor };
   }
 
   async getVideoById(id: string): Promise<Video | undefined> {
