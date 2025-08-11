@@ -70,8 +70,6 @@ export interface IStorage {
   
   // New project management operations
   duplicateProject(projectId: string, userId: string, includeVideos?: boolean): Promise<Project>;
-  archiveProject(projectId: string): Promise<Project>;
-  restoreProject(projectId: string): Promise<Project>;
   reorderProjects(userId: string, projectIds: string[]): Promise<void>;
   permanentDeleteProject(projectId: string, deleteVideos?: boolean): Promise<void>;
   createProjectExportZip(project: Project, videos: Video[]): Promise<{success: boolean; downloadUrl?: string; error?: string}>;
@@ -1049,31 +1047,7 @@ export class DatabaseStorage implements IStorage {
     return duplicatedProject;
   }
 
-  async archiveProject(projectId: string): Promise<Project> {
-    const [archivedProject] = await db
-      .update(projects)
-      .set({ 
-        deletedAt: new Date(),
-        updatedAt: new Date()
-      })
-      .where(eq(projects.id, projectId))
-      .returning();
-    
-    return archivedProject;
-  }
 
-  async restoreProject(projectId: string): Promise<Project> {
-    const [restoredProject] = await db
-      .update(projects)
-      .set({ 
-        deletedAt: null,
-        updatedAt: new Date()
-      })
-      .where(eq(projects.id, projectId))
-      .returning();
-    
-    return restoredProject;
-  }
 
   async reorderProjects(userId: string, projectIds: string[]): Promise<void> {
     // Update the order index for each project

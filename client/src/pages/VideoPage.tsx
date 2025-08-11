@@ -59,7 +59,6 @@ import {
   Save,
   MoreVertical,
   Copy,
-  FolderClosed,
   Eye,
   EyeOff,
   Info,
@@ -93,7 +92,7 @@ interface ProjectGroupProps {
   onMove?: (videoId: string, projectId: string | null) => void;
   onDeleteProject?: (projectId: string) => void;
   onDuplicateProject?: (projectId: string, name: string) => void;
-  onArchiveProject?: (projectId: string) => void;
+
   onExportProject?: (projectId: string, name: string) => void;
 }
 
@@ -112,7 +111,6 @@ function ProjectGroup({
   onMove,
   onDeleteProject,
   onDuplicateProject,
-  onArchiveProject,
   onExportProject
 }: ProjectGroupProps) {
   const { toast } = useToast();
@@ -188,7 +186,7 @@ function ProjectGroup({
                     <ChevronDown className="w-4 h-4 transition-transform" />
                   )}
                   {isCollapsed ? (
-                    <FolderClosed className="w-5 h-5 text-primary" />
+                    <Folder className="w-5 h-5 text-primary" />
                   ) : (
                     <FolderOpen className="w-5 h-5 text-primary" />
                   )}
@@ -343,20 +341,7 @@ function ProjectGroup({
                               </DropdownMenuItem>
                             )}
                             
-                            {onArchiveProject && videos.length > 0 && (
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  if (confirm(`Archive project "${projectName}"? This will hide it from the main view.`)) {
-                                    onArchiveProject(groupId);
-                                  }
-                                }}
-                                className="cursor-pointer"
-                              >
-                                <FolderClosed className="w-4 h-4 mr-2" />
-                                Archive Project
-                              </DropdownMenuItem>
-                            )}
-                            
+
                             {onDeleteProject && videos.length === 0 && (
                               <>
                                 <DropdownMenuSeparator />
@@ -1097,28 +1082,7 @@ function VideoGallery() {
     }
   };
 
-  const handleArchiveProject = async (projectId: string) => {
-    try {
-      await apiRequest(`/api/projects/${projectId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ deletedAt: new Date().toISOString() }),
-      });
-      
-      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
-      
-      toast({
-        title: 'Project archived',
-        description: 'Project has been archived successfully.',
-      });
-    } catch (error: any) {
-      toast({
-        title: 'Archive failed',
-        description: error.message || 'Could not archive project',
-        variant: 'destructive',
-      });
-    }
-  };
+
 
   const handleExportProject = async (projectId: string, projectName: string) => {
     try {
@@ -1495,7 +1459,6 @@ function VideoGallery() {
                 }}
                 onDeleteProject={handleDeleteProject}
                 onDuplicateProject={handleDuplicateProject}
-                onArchiveProject={handleArchiveProject}
                 onExportProject={handleExportProject}
               />
             );

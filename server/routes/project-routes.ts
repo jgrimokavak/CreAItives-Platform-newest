@@ -269,67 +269,7 @@ router.post('/:id/duplicate', async (req, res) => {
   }
 });
 
-// Archive project (soft delete)
-router.post('/:id/archive', async (req, res) => {
-  try {
-    const user = req.user as any;
-    const userId = user?.claims?.sub;
-    if (!userId) {
-      return res.status(401).json({ error: 'Authentication required' });
-    }
 
-    const project = await storage.getProjectById(req.params.id);
-    if (!project) {
-      return res.status(404).json({ error: 'Project not found' });
-    }
-
-    if (project.userId !== userId && user?.claims?.role !== 'admin') {
-      return res.status(403).json({ error: 'Access denied' });
-    }
-
-    const archivedProject = await storage.archiveProject(req.params.id);
-    res.json({
-      success: true,
-      ...archivedProject,
-      message: 'Project archived successfully'
-    });
-
-  } catch (error: any) {
-    console.error('Archive project error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// Restore project from archive
-router.post('/:id/restore', async (req, res) => {
-  try {
-    const user = req.user as any;
-    const userId = user?.claims?.sub;
-    if (!userId) {
-      return res.status(401).json({ error: 'Authentication required' });
-    }
-
-    const project = await storage.getProjectById(req.params.id);
-    if (!project) {
-      return res.status(404).json({ error: 'Project not found' });
-    }
-
-    if (project.userId !== userId && user?.claims?.role !== 'admin') {
-      return res.status(403).json({ error: 'Access denied' });
-    }
-
-    const restoredProject = await storage.restoreProject(req.params.id);
-    res.json({
-      success: true,
-      ...restoredProject,
-      message: 'Project restored successfully'
-    });
-
-  } catch (error: any) {
-    console.error('Restore project error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
 
 // Reorder projects
 router.post('/reorder', async (req, res) => {
