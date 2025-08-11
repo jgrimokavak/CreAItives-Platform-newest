@@ -1,0 +1,21 @@
+client:536 WebSocket connection to 'wss://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/?token=IckzrhcRUANj' failed: 
+setupWebSocket @ client:536
+(anonymous) @ client:531
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=IckzrhcRUANj' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+setupWebSocket @ client:536
+fallback @ client:509
+(anonymous) @ client:555
+chunk-GR7IK2KQ.js?v=a9138b18:21507 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+VideoPage.tsx:1507 [DIAGNOSTIC] Loading VIDEO_MODELS configuration
+VideoPage.tsx:1527 [DIAGNOSTIC] VIDEO_MODELS loaded: {modelKeys: Array(1), models: {…}}
+websocket.ts:17 [DIAGNOSTIC] WebSocket URL construction: {protocol: 'wss:', hostname: 'eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev', port: '', fullUrl: 'wss://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/ws', windowLocation: {…}}
+main.tsx:13 SW registered:  ServiceWorkerRegistration {installing: null, waiting: null, active: ServiceWorker, navigationPreload: NavigationPreloadManager, scope: 'https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/', …}
+video:1 <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">
+websocket.ts:40 WebSocket connected
+VideoPage.tsx:1056 Duplicating project: {projectId: '9ef2d4c5-7ee9-41a3-b924-f6eacd34ac29', originalName: 'Test project 1'}
+VideoPage.tsx:1067 Project duplication response: {success: true, id: 'eb999177-0aff-405c-990f-168551e4b1e2', name: 'Copy of Test project 1 (2)', description: 'Test project 1 description', gcsFolder: 'projects/eb999177-0aff-405c-990f-168551e4b1e2', …}
+VideoPage.tsx:1056 Duplicating project: {projectId: '9ef2d4c5-7ee9-41a3-b924-f6eacd34ac29', originalName: 'Test project 1'}
+VideoPage.tsx:1067 Project duplication response: {success: true, id: '986d93ce-68fb-4327-bca6-65e55ad8c206', name: 'Copy of Test project 1 (3)', description: 'Test project 1 description', gcsFolder: 'projects/986d93ce-68fb-4327-bca6-65e55ad8c206', …}

@@ -754,9 +754,14 @@ function VideoGallery() {
       groups[groupKey].push(video);
     });
 
-    // Filter out empty groups and sort
-    const nonEmpty = Object.entries(groups)
-      .filter(([_, videos]) => videos.length > 0)
+    // Include all project groups (both with and without videos) and sort
+    const allGroups = Object.entries(groups)
+      .filter(([groupId, _]) => {
+        // Always include unassigned if it has videos
+        if (groupId === 'unassigned') return groups['unassigned'].length > 0;
+        // Include all actual projects (even if empty)
+        return projects.find((p: any) => p.id === groupId);
+      })
       .sort(([groupIdA, videosA], [groupIdB, videosB]) => {
         if (groupIdA === 'unassigned') return 1;
         if (groupIdB === 'unassigned') return -1;
@@ -776,7 +781,7 @@ function VideoGallery() {
         }
       });
 
-    return { videoGroups: groups, nonEmptyGroups: nonEmpty };
+    return { videoGroups: groups, nonEmptyGroups: allGroups };
   }, [filteredVideos, projects, projectSort]);
 
   const toggleSelectMode = () => {
@@ -1066,12 +1071,21 @@ function VideoGallery() {
       
       console.log('Project duplication response:', response);
       
-      // Invalidate queries to refresh the project list
-      await queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+      // Invalidate all project-related queries to refresh the UI
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['/api/projects'] }),
+        queryClient.invalidateQueries({ queryKey: ['/api/video'] }),
+        queryClient.refetchQueries({ queryKey: ['/api/projects'] })
+      ]);
+      
+      // Small delay to ensure UI updates properly
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+      }, 500);
       
       toast({
         title: 'Project duplicated successfully',
-        description: `"${originalName}" has been duplicated.`,
+        description: `"${response.name}" has been created.`,
       });
     } catch (error: any) {
       console.error('Project duplication error:', error);
