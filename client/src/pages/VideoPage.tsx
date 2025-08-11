@@ -54,7 +54,7 @@ import SimpleGalleryPage from './SimpleGalleryPage';
 import ReferenceImageUpload from '@/components/ReferenceImageUpload';
 import type { Video } from '@shared/schema';
 import VideoCard from '@/components/VideoCard';
-import { JobTray, type JobTrayItem } from '@/components/JobTray';
+
 import { ModelSelector } from '@/components/ModelSelector';
 import { VIDEO_MODELS as MODEL_CONFIG } from '@/config/models';
 
@@ -989,8 +989,7 @@ export default function VideoPage() {
   const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false);
   const [recentlyGeneratedVideos, setRecentlyGeneratedVideos] = useState<string[]>([]);
   
-  // Job Tray state
-  const [jobTrayItems, setJobTrayItems] = useState<JobTrayItem[]>([]);
+
   
   // Track active polling for each job
   const [activePolling, setActivePolling] = useState<Set<string>>(new Set());
@@ -1205,15 +1204,7 @@ export default function VideoPage() {
       if (data.video?.id) {
         const formValues = form.getValues();
         
-        // Add to Job Tray immediately
-        const newJob: JobTrayItem = {
-          id: data.video.id,
-          status: 'pending',
-          prompt: data.video.prompt || formValues.prompt,
-          model: data.video.model || formValues.model,
-          createdAt: Date.now()
-        };
-        setJobTrayItems(prev => [newJob, ...prev.slice(0, 4)]); // Keep max 5 jobs
+
         
         // Add to Results array with form snapshot to prevent mismatches
         const newResult: ResultEntry = {
@@ -1261,7 +1252,12 @@ export default function VideoPage() {
         
         if (response.status === 'completed') {
           // Update Job Tray item
-          handleJobUpdate(videoId, 'completed');
+          // Update results with completed status
+          setResults(prev => prev.map(result => 
+            result.videoId === videoId 
+              ? { ...result, status: 'completed' as const }
+              : result
+          ));
           
           toast({
             title: 'Video Ready!',
@@ -1305,8 +1301,6 @@ export default function VideoPage() {
         }
         
         if (response.status === 'failed') {
-          // Update Job Tray item with error
-          handleJobUpdate(videoId, 'failed', response.error || 'Generation failed');
           
           // Update the specific result entry with failed status
           setResults(prev => prev.map(result => 
@@ -1330,10 +1324,7 @@ export default function VideoPage() {
           return;
         }
         
-        // Update Job Tray status to processing
-        if (response.status === 'processing') {
-          handleJobUpdate(videoId, 'processing');
-        }
+
         
         // Update results status for any non-completed/failed status
         setResults(prev => prev.map(result => 
@@ -1346,8 +1337,12 @@ export default function VideoPage() {
         if (attempts < maxAttempts) {
           setTimeout(poll, 6000); // Poll every 6 seconds
         } else {
-          // Timeout
-          handleJobUpdate(videoId, 'failed', 'Generation timed out');
+          // Timeout - update results with failed status
+          setResults(prev => prev.map(result => 
+            result.videoId === videoId 
+              ? { ...result, status: 'failed' as const }
+              : result
+          ));
           toast({
             title: 'Generation Timeout',
             description: 'Video generation is taking longer than expected. Please check back later.',
@@ -1368,7 +1363,7 @@ export default function VideoPage() {
         if (attempts < 5) {
           setTimeout(poll, 6000);
         } else {
-          handleJobUpdate(videoId, 'failed', 'Failed to check status');
+
           
           // Stop polling for this job
           setActivePolling(prev => {
@@ -1384,20 +1379,7 @@ export default function VideoPage() {
     poll();
   };
 
-  // Job Tray handlers
-  const handleJobUpdate = (jobId: string, status: JobTrayItem['status'], error?: string) => {
-    setJobTrayItems(prev => 
-      prev.map(job => 
-        job.id === jobId 
-          ? { ...job, status, error }
-          : job
-      )
-    );
-  };
 
-  const handleJobDismiss = (jobId: string) => {
-    setJobTrayItems(prev => prev.filter(job => job.id !== jobId));
-  };
 
   const handlePlayVideo = async (videoId: string) => {
     try {
@@ -1478,6 +1460,39 @@ export default function VideoPage() {
         resultPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }, 100);
+  };
+
+  // Download functionality (previously in Job Tray)
+  const handleDownload = async (videoId: string) => {
+    try {
+      const response = await fetch(`/api/object-storage/video/dev/video-generations/${videoId}.mp4`);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `video-${videoId}.mp4`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast({ title: 'Video download started' });
+    } catch (error) {
+      toast({
+        title: 'Failed to download video',
+        description: 'An error occurred while downloading',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  // Dismiss functionality (previously in Job Tray)  
+  const handleDismissResult = (videoId: string) => {
+    setResults(prev => prev.filter(result => result.videoId !== videoId));
+    // If we're dismissing the active result, clear the active selection
+    if (activeResultVideoId === videoId) {
+      setActiveResultVideoId(null);
+    }
   };
 
   // Handle duration and resolution validation
@@ -2105,7 +2120,7 @@ export default function VideoPage() {
                 );
               })()}
               
-              {/* Enhanced Results Grid with Job Tray Integration */}
+              {/* Enhanced Results Grid - Integrated Job Management */}
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {results.slice(0, 5).map((result, index) => {
                   const isActive = activeResultVideoId === result.videoId;
@@ -2165,19 +2180,49 @@ export default function VideoPage() {
                              result.status === 'completed' ? 'Ready' :
                              result.status === 'failed' ? 'Failed' : 'Queued'}
                           </Badge>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1">
                             <span className="text-xs text-muted-foreground">#{index + 1}</span>
                             {isCompleted && (
+                              <>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="h-6 w-6 p-0"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handlePlayVideo(result.videoId);
+                                  }}
+                                  title="Play video"
+                                >
+                                  <Play className="w-3 h-3" />
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="h-6 w-6 p-0"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDownload(result.videoId);
+                                  }}
+                                  title="Download video"
+                                >
+                                  <Download className="w-3 h-3" />
+                                </Button>
+                              </>
+                            )}
+                            {/* Dismiss button for completed or failed results */}
+                            {(result.status === 'completed' || result.status === 'failed') && (
                               <Button 
                                 variant="ghost" 
                                 size="sm" 
-                                className="h-6 w-6 p-0"
+                                className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handlePlayVideo(result.videoId);
+                                  handleDismissResult(result.videoId);
                                 }}
+                                title="Dismiss result"
                               >
-                                <Play className="w-3 h-3" />
+                                <X className="w-3 h-3" />
                               </Button>
                             )}
                           </div>
@@ -2368,16 +2413,7 @@ export default function VideoPage() {
             </div>
           )}
           
-          {/* Job Tray - Only show on Create tab */}
-          {activeTab === 'create' && (
-            <JobTray
-              jobs={jobTrayItems}
-              onJobUpdate={handleJobUpdate}
-              onJobDismiss={handleJobDismiss}
-              onPlayVideo={handlePlayVideo}
-              onJumpToResult={handleJumpToResult}
-            />
-          )}
+
         </TabsContent>
 
         <TabsContent value="gallery" className="space-y-6">
