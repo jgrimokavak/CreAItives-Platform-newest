@@ -379,7 +379,10 @@ router.delete('/:id/permanent', async (req, res) => {
     }
 
     await storage.permanentDeleteProject(req.params.id, deleteVideos === true);
-    res.json({ success: true, message: 'Project permanently deleted' });
+    const message = deleteVideos 
+      ? 'Project permanently deleted with all videos'
+      : 'Project permanently deleted. Videos moved to "Videos without a project"';
+    res.json({ success: true, message });
 
   } catch (error: any) {
     console.error('Permanent delete project error:', error);

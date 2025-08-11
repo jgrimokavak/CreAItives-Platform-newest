@@ -1,6 +1,6 @@
 import { users, images, pageSettings, videos, projects, type User, type UpsertUser, type GeneratedImage, type PageSettings, type InsertPageSettings, type Video, type InsertVideo, type Project, type InsertProject } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, asc, isNull, isNotNull, and, ilike, lt, sql, or, not } from "drizzle-orm";
+import { eq, desc, asc, isNull, isNotNull, and, ilike, lt, sql, or, not, inArray } from "drizzle-orm";
 import * as fs from "fs";
 import * as path from "path";
 import { push } from "./ws";
@@ -53,6 +53,8 @@ export interface IStorage {
   getVideoById(id: string): Promise<Video | undefined>;
   updateVideo(id: string, updates: Partial<Video>): Promise<Video | undefined>;
   deleteVideo(id: string): Promise<void>;
+  bulkMoveVideos(videoIds: string[], targetProjectId: string | null): Promise<void>;
+  getUnassignedVideos(userId: string): Promise<Video[]>;
 
   // Project operations
   createProject(project: InsertProject): Promise<Project>;
@@ -711,6 +713,32 @@ export class DatabaseStorage implements IStorage {
 
   async deleteVideo(id: string): Promise<void> {
     await db.delete(videos).where(eq(videos.id, id));
+  }
+
+  // Bulk move videos to a project
+  async bulkMoveVideos(videoIds: string[], targetProjectId: string | null): Promise<void> {
+    await db
+      .update(videos)
+      .set({ 
+        projectId: targetProjectId,
+        updatedAt: new Date()
+      })
+      .where(inArray(videos.id, videoIds));
+  }
+
+  // Get unassigned videos (videos without a project)
+  async getUnassignedVideos(userId: string): Promise<Video[]> {
+    const currentEnv = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
+    
+    return await db
+      .select()
+      .from(videos)
+      .where(and(
+        eq(videos.userId, userId),
+        eq(videos.environment, currentEnv),
+        isNull(videos.projectId)
+      ))
+      .orderBy(desc(videos.createdAt));
   }
 
   // Enhanced Project operations with advanced features

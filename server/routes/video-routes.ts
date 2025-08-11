@@ -338,6 +338,100 @@ router.patch('/:id/move', async (req, res) => {
   }
 });
 
+// Bulk move videos to a project
+router.patch('/bulk/move', async (req, res) => {
+  try {
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    // Validate request body
+    const { videoIds, targetProjectId } = req.body;
+    if (!Array.isArray(videoIds) || videoIds.length === 0) {
+      return res.status(400).json({ error: 'videoIds must be a non-empty array' });
+    }
+    if (targetProjectId !== null && typeof targetProjectId !== 'string') {
+      return res.status(400).json({ error: 'targetProjectId must be a string or null' });
+    }
+
+    // Verify all videos exist and belong to the user
+    const videos = await Promise.all(
+      videoIds.map(id => storage.getVideoById(id))
+    );
+    
+    for (const video of videos) {
+      if (!video) {
+        return res.status(404).json({ error: 'One or more videos not found' });
+      }
+      if (video.userId !== userId && user?.claims?.role !== 'admin') {
+        return res.status(403).json({ error: 'Access denied to one or more videos' });
+      }
+    }
+
+    // If targetProjectId is provided, verify it exists and belongs to the user
+    if (targetProjectId) {
+      const project = await storage.getProjectById(targetProjectId);
+      if (!project) {
+        return res.status(404).json({ error: 'Target project not found' });
+      }
+      if (project.userId !== userId && user?.claims?.role !== 'admin') {
+        return res.status(403).json({ error: 'Access denied to target project' });
+      }
+    }
+
+    // Perform bulk move
+    await storage.bulkMoveVideos(videoIds, targetProjectId);
+
+    // Update video counts for affected projects
+    const affectedProjectIds = new Set<string>();
+    for (const video of videos) {
+      if (video?.projectId) affectedProjectIds.add(video.projectId);
+    }
+    if (targetProjectId) affectedProjectIds.add(targetProjectId);
+
+    for (const projectId of Array.from(affectedProjectIds)) {
+      await storage.updateProjectVideoCount(projectId);
+    }
+
+    res.json({
+      success: true,
+      message: `${videoIds.length} videos moved successfully`,
+      movedCount: videoIds.length
+    });
+
+  } catch (error: any) {
+    console.error('Bulk move videos error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get unassigned videos (videos without a project)
+router.get('/unassigned', async (req, res) => {
+  try {
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const unassignedVideos = await storage.getUnassignedVideos(userId);
+    
+    // Filter out failed videos
+    const successfulVideos = unassignedVideos.filter(video => video.status !== 'failed');
+
+    res.json({
+      videos: successfulVideos,
+      count: successfulVideos.length
+    });
+
+  } catch (error: any) {
+    console.error('Get unassigned videos error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Background job polling function
 async function pollVideoJob(videoId: string, jobId: string, provider: any) {
   const maxAttempts = 30; // Maximum polling attempts (5 minutes with 10s intervals)
