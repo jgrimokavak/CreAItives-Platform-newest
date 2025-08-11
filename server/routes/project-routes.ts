@@ -148,8 +148,11 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Update project
-router.put('/:id', async (req, res) => {
+// Update project (supports both PUT and PATCH)
+router.patch('/:id', updateProjectHandler);
+router.put('/:id', updateProjectHandler);
+
+async function updateProjectHandler(req: express.Request, res: express.Response) {
   try {
     const user = req.user as any;
     const userId = user?.claims?.sub;
@@ -196,7 +199,7 @@ router.put('/:id', async (req, res) => {
     console.error('Update project error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
-});
+}
 
 // Delete project
 router.delete('/:id', async (req, res) => {

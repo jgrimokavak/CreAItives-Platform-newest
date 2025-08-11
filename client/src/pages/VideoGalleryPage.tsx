@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   Dialog,
   DialogContent,
@@ -47,7 +48,11 @@ import {
   GripVertical,
   Filter,
   Search,
-  Plus
+  Plus,
+  Edit2,
+  Info,
+  Save,
+  X
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
@@ -87,6 +92,7 @@ interface ProjectCardProps {
   onArchive: (projectId: string) => void;
   onRestore: (projectId: string) => void;
   onDelete: (projectId: string) => void;
+  onEdit: (projectId: string, name: string, description?: string) => void;
 }
 
 function SortableProjectCard({ 
@@ -95,8 +101,13 @@ function SortableProjectCard({
   onDuplicate, 
   onArchive, 
   onRestore, 
-  onDelete 
+  onDelete,
+  onEdit 
 }: ProjectCardProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState(project.name);
+  const [editDescription, setEditDescription] = useState(project.description || '');
+  
   const {
     attributes,
     listeners,
@@ -113,6 +124,19 @@ function SortableProjectCard({
   };
 
   const isArchived = !!project.deletedAt;
+  
+  const handleSaveEdit = () => {
+    if (editName.trim()) {
+      onEdit(project.id, editName.trim(), editDescription.trim() || undefined);
+      setIsEditing(false);
+    }
+  };
+  
+  const handleCancelEdit = () => {
+    setEditName(project.name);
+    setEditDescription(project.description || '');
+    setIsEditing(false);
+  };
 
   return (
     <Card
@@ -129,66 +153,114 @@ function SortableProjectCard({
       </div>
 
       <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex-1 pr-8">
-            <CardTitle className="text-lg flex items-center gap-2">
+        {isEditing ? (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
               <div className="p-1.5 rounded-lg bg-primary/10">
                 <VideoIcon className="w-4 h-4 text-primary" />
               </div>
-              <span className="truncate">{project.name}</span>
-              {isArchived && (
-                <Badge variant="secondary" className="ml-2">
-                  <Archive className="w-3 h-3 mr-1" />
-                  Archived
-                </Badge>
-              )}
-            </CardTitle>
-            {project.description && (
-              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                {project.description}
-              </p>
-            )}
-          </div>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                <MoreHorizontal className="w-4 h-4" />
+              <Input
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="Project name"
+                className="flex-1"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSaveEdit();
+                  if (e.key === 'Escape') handleCancelEdit();
+                }}
+              />
+              <Button size="sm" variant="ghost" onClick={handleSaveEdit}>
+                <Save className="w-4 h-4" />
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Project actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => onOpen(project.id)}>
-                <FolderOpen className="w-4 h-4 mr-2" />
-                Open
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onDuplicate(project.id)}>
-                <Copy className="w-4 h-4 mr-2" />
-                Duplicate project
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              {isArchived ? (
-                <DropdownMenuItem onClick={() => onRestore(project.id)}>
-                  <ArchiveRestore className="w-4 h-4 mr-2" />
-                  Restore project
-                </DropdownMenuItem>
-              ) : (
-                <DropdownMenuItem onClick={() => onArchive(project.id)}>
-                  <Archive className="w-4 h-4 mr-2" />
-                  Archive project...
-                </DropdownMenuItem>
+              <Button size="sm" variant="ghost" onClick={handleCancelEdit}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            <Textarea
+              value={editDescription}
+              onChange={(e) => setEditDescription(e.target.value)}
+              placeholder="Project description (optional)"
+              className="text-sm min-h-[60px]"
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') handleCancelEdit();
+              }}
+            />
+          </div>
+        ) : (
+          <div className="flex items-start justify-between">
+            <div className="flex-1 pr-8">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-primary/10">
+                  <VideoIcon className="w-4 h-4 text-primary" />
+                </div>
+                <span className="truncate">{project.name}</span>
+                {isArchived && (
+                  <Badge variant="secondary" className="ml-2">
+                    <Archive className="w-3 h-3 mr-1" />
+                    Archived
+                  </Badge>
+                )}
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="opacity-0 group-hover:opacity-100 transition-opacity ml-1"
+                  onClick={() => setIsEditing(true)}
+                >
+                  <Edit2 className="w-3 h-3" />
+                </Button>
+              </CardTitle>
+              {project.description && (
+                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                  {project.description}
+                </p>
               )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                onClick={() => onDelete(project.id)}
-                className="text-destructive focus:text-destructive"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete permanently...
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+            </div>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                  <MoreHorizontal className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Project actions</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => setIsEditing(true)}>
+                  <Edit2 className="w-4 h-4 mr-2" />
+                  Edit project
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onOpen(project.id)}>
+                  <FolderOpen className="w-4 h-4 mr-2" />
+                  Open
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onDuplicate(project.id)}>
+                  <Copy className="w-4 h-4 mr-2" />
+                  Duplicate project
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {isArchived ? (
+                  <DropdownMenuItem onClick={() => onRestore(project.id)}>
+                    <ArchiveRestore className="w-4 h-4 mr-2" />
+                    Restore project
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem onClick={() => onArchive(project.id)}>
+                    <Archive className="w-4 h-4 mr-2" />
+                    Archive project...
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  onClick={() => onDelete(project.id)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete permanently...
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
       </CardHeader>
       
       <CardContent>
@@ -270,6 +342,28 @@ export default function VideoGalleryPage() {
     onError: (error) => {
       toast({
         title: "Duplication failed", 
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  const updateProjectMutation = useMutation({
+    mutationFn: ({ projectId, name, description }: { projectId: string; name: string; description?: string }) =>
+      apiRequest(`/api/projects/${projectId}`, { 
+        method: 'PATCH', 
+        body: JSON.stringify({ name, description }) 
+      }),
+    onSuccess: (data) => {
+      toast({
+        title: "Project updated",
+        description: `"${data.name}" has been updated successfully.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Update failed",
         description: error.message,
         variant: "destructive",
       });
@@ -707,6 +801,9 @@ export default function VideoGalleryPage() {
                           onArchive={(id) => archiveProjectMutation.mutate(id)}
                           onRestore={(id) => restoreProjectMutation.mutate(id)}
                           onDelete={setDeleteConfirmProject}
+                          onEdit={(projectId, name, description) => {
+                            updateProjectMutation.mutate({ projectId, name, description });
+                          }}
                         />
                       ))}
                     </SortableContext>
