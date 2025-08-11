@@ -611,8 +611,12 @@ function ProjectVideoPreview({ selectedProject, projects, compact, onVideoPlay, 
 function VideoGallery() {
   const { toast } = useToast();
   
-  // State for managing collapse state of project groups
-  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+  // State for managing collapse state of project groups - default all collapsed for performance
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>(() => {
+    // Initialize all groups as collapsed by default
+    const initialState: Record<string, boolean> = {};
+    return initialState;
+  });
   
   // Filter and selection state
   const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'processing' | 'failed'>('all');
@@ -650,7 +654,7 @@ function VideoGallery() {
   const projects = projectsData || [];
   const allVideos = videosResponse?.items || [];
 
-  // Memoized filtering for performance
+  // Memoized filtering for performance - moved before any conditional returns
   const filteredVideos = useMemo(() => {
     if (!allVideos.length) return [];
     
@@ -678,6 +682,52 @@ function VideoGallery() {
       return true;
     });
   }, [allVideos, statusFilter, dateFilter, searchQuery]);
+  
+  // Memoized video grouping and sorting - moved before any conditional returns
+  const { videoGroups, nonEmptyGroups } = useMemo(() => {
+    const groups: Record<string, Video[]> = {};
+    
+    // Initialize groups for all projects
+    projects.forEach((project: any) => {
+      groups[project.id] = [];
+    });
+    
+    // Add unassigned group
+    groups['unassigned'] = [];
+
+    // Group filtered videos
+    filteredVideos.forEach((video: Video) => {
+      const groupKey = video.projectId || 'unassigned';
+      if (!groups[groupKey]) {
+        groups[groupKey] = [];
+      }
+      groups[groupKey].push(video);
+    });
+
+    // Filter out empty groups and sort
+    const nonEmpty = Object.entries(groups)
+      .filter(([_, videos]) => videos.length > 0)
+      .sort(([groupIdA, videosA], [groupIdB, videosB]) => {
+        if (groupIdA === 'unassigned') return 1;
+        if (groupIdB === 'unassigned') return -1;
+        
+        const projectA = projects.find((p: any) => p.id === groupIdA);
+        const projectB = projects.find((p: any) => p.id === groupIdB);
+        
+        switch (projectSort) {
+          case 'name':
+            return (projectA?.name || '').localeCompare(projectB?.name || '');
+          case 'date':
+            return new Date(projectB?.createdAt || 0).getTime() - new Date(projectA?.createdAt || 0).getTime();
+          case 'videos':
+            return videosB.length - videosA.length;
+          default:
+            return 0;
+        }
+      });
+
+    return { videoGroups: groups, nonEmptyGroups: nonEmpty };
+  }, [filteredVideos, projects, projectSort]);
 
   const toggleSelectMode = () => {
     setIsSelectMode(!isSelectMode);
@@ -1050,52 +1100,6 @@ function VideoGallery() {
       </div>
     );
   }
-
-  // Memoized video grouping and sorting for performance
-  const { videoGroups, nonEmptyGroups } = useMemo(() => {
-    const groups: Record<string, Video[]> = {};
-    
-    // Initialize groups for all projects
-    projects.forEach((project: any) => {
-      groups[project.id] = [];
-    });
-    
-    // Add unassigned group
-    groups['unassigned'] = [];
-
-    // Group filtered videos
-    filteredVideos.forEach((video: Video) => {
-      const groupKey = video.projectId || 'unassigned';
-      if (!groups[groupKey]) {
-        groups[groupKey] = [];
-      }
-      groups[groupKey].push(video);
-    });
-
-    // Filter out empty groups and sort
-    const nonEmpty = Object.entries(groups)
-      .filter(([_, videos]) => videos.length > 0)
-      .sort(([groupIdA, videosA], [groupIdB, videosB]) => {
-        if (groupIdA === 'unassigned') return 1;
-        if (groupIdB === 'unassigned') return -1;
-        
-        const projectA = projects.find((p: any) => p.id === groupIdA);
-        const projectB = projects.find((p: any) => p.id === groupIdB);
-        
-        switch (projectSort) {
-          case 'name':
-            return (projectA?.name || '').localeCompare(projectB?.name || '');
-          case 'date':
-            return new Date(projectB?.createdAt || 0).getTime() - new Date(projectA?.createdAt || 0).getTime();
-          case 'videos':
-            return videosB.length - videosA.length;
-          default:
-            return 0;
-        }
-      });
-
-    return { videoGroups: groups, nonEmptyGroups: nonEmpty };
-  }, [filteredVideos, projects, projectSort]);
 
   return (
     <div className="space-y-6">
