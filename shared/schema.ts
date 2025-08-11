@@ -281,8 +281,8 @@ export const projects = pgTable("projects", {
   gcsFolder: text("gcs_folder").notNull(), // GCS folder path for project assets
   videoCount: integer("video_count").default(0).notNull(), // Count of videos in project
   userId: text("user_id").notNull(),
-  deletedAt: timestamp("deleted_at"), // For soft delete (archiving)
   orderIndex: integer("order_index").default(0).notNull(), // For custom project ordering
+  archivedAt: timestamp("archived_at"), // Soft delete timestamp for archival
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -291,5 +291,29 @@ export const insertProjectSchema = createInsertSchema(projects).omit({
   createdAt: true,
   updatedAt: true,
 });
+
+// Schema for project management operations
+export const duplicateProjectSchema = z.object({
+  projectId: z.string(),
+  includeVideos: z.boolean().optional().default(false),
+});
+
+export const reorderProjectsSchema = z.object({
+  projectIds: z.array(z.string()), // Array of project IDs in desired order
+});
+
+export const archiveProjectSchema = z.object({
+  projectId: z.string(),
+});
+
+export const deleteProjectSchema = z.object({
+  projectId: z.string(),
+  deleteVideos: z.boolean().optional().default(false),
+});
+
 export type InsertProject = z.infer<typeof insertProjectSchema>;
 export type Project = typeof projects.$inferSelect;
+export type DuplicateProject = z.infer<typeof duplicateProjectSchema>;
+export type ReorderProjects = z.infer<typeof reorderProjectsSchema>;
+export type ArchiveProject = z.infer<typeof archiveProjectSchema>;
+export type DeleteProject = z.infer<typeof deleteProjectSchema>;
