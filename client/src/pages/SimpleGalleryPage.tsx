@@ -58,8 +58,14 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
   const [_, navigate] = useLocation();
   const { setMode, setSourceImages } = useEditor();
   
-  // Real data from database
+  // Real data from database with pagination
   const [images, setImages] = useState<GalleryImage[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const itemsPerPage = 50;
   
   // Handle search submission
   const handleSearch = () => {
@@ -72,9 +78,14 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
     setSearchTerm('');
   };
   
-  // Fetch gallery images
-  const fetchImages = async () => {
-    setLoading(true);
+  // Fetch gallery images with pagination
+  const fetchImages = async (cursor: string | null = null, append: boolean = false) => {
+    if (append) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+      setCurrentPage(1);
+    }
     setError(null);
     
     try {
@@ -84,6 +95,8 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       if (searchTerm && searchTerm.trim() !== '') {
         params.append('q', searchTerm.trim()); // Backend expects 'q' parameter
       }
+      if (cursor) params.append('cursor', cursor);
+      params.append('limit', itemsPerPage.toString());
       
       const url = `/api/gallery?${params.toString()}`;
       
@@ -105,11 +118,22 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       // Ensure images have proper URLs
       const formattedImages = data.items || [];
       
-      // Clear selection when filter changes
-      setSelectedIds([]);
+      // Clear selection when not appending
+      if (!append) {
+        setSelectedIds([]);
+      }
       
       // Update the images
-      setImages(formattedImages);
+      if (append) {
+        setImages(prev => [...prev, ...formattedImages]);
+      } else {
+        setImages(formattedImages);
+      }
+      
+      // Update pagination state
+      setNextCursor(data.nextCursor || null);
+      setHasNextPage(!!data.nextCursor);
+      
     } catch (err) {
       console.error('Error fetching gallery:', err);
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
@@ -121,7 +145,15 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       });
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
+  };
+
+  // Load next page
+  const loadNextPage = () => {
+    if (!hasNextPage || loadingMore) return;
+    setCurrentPage(prev => prev + 1);
+    fetchImages(nextCursor, true);
   };
   
   // Toggle selection
@@ -168,10 +200,10 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
     }
   };
   
-  // Select all images
+  // Select all visible images
   const selectAll = () => {
     setSelectionMode('selecting');
-    setSelectedIds(images.map(img => img.id));
+    setSelectedIds(filteredImages.map(img => img.id));
   };
   
   // Clear selection
@@ -471,7 +503,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
     };
   };
   
-  // Apply filters to images
+  // Apply filters to images (now only applies to display since filtering is done server-side)
   const applyFilters = (images: GalleryImage[]) => {
     if (!activeFilters.models.length) {
       return images;
@@ -510,14 +542,16 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
     });
   };
 
-  // Final filtered images
+  // Since server-side filtering is now handled, we show all images from current pages
+  // Client-side filtering is only used for model filtering as a secondary filter
   const filteredImages = applyFilters(images);
   
   // Get available filter options
   const filterOptions = getFilterOptions(images);
   
-  // Fetch images when component mounts, mode changes, or starred filter changes
+  // Fetch images when component mounts, mode changes, or filters change
   useEffect(() => {
+    // Reset pagination and fetch fresh data when filters change
     fetchImages();
     
     // Also refresh gallery when new images are created
@@ -531,14 +565,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
     return () => {
       window.removeEventListener('gallery-updated', handleWebSocketMessage);
     };
-  }, [mode, activeFilters.starred]);
-  
-  // Separate effect for search term changes
-  useEffect(() => {
-    // Always fetch images when the search term changes
-    // This allows showing all images when search is cleared
-    fetchImages();
-  }, [searchTerm]);
+  }, [mode, activeFilters.starred, activeFilters.models.join(','), searchTerm]);
   
   // Keyboard shortcuts
   useEffect(() => {
@@ -587,7 +614,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       <div className="flex flex-col justify-center items-center h-[70vh] text-center">
         <div className="bg-red-50 border border-red-100 rounded-lg p-8 shadow-sm max-w-md">
           <p className="text-red-500 mb-4 text-lg">{error}</p>
-          <Button onClick={fetchImages} className="gap-2">
+          <Button onClick={() => fetchImages()} className="gap-2">
             <RotateCcw className="h-4 w-4" />
             Try Again
           </Button>
@@ -685,7 +712,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
               )}>
                 {selectedIds.length > 0
                   ? `${selectedIds.length} selected`
-                  : `${filteredImages.length} ${mode === 'trash' ? 'items' : 'images'}`
+                  : `${images.length} ${mode === 'trash' ? 'items' : 'images'}`
                 }
               </span>
               
@@ -1078,7 +1105,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
                 {filteredImages.length}
               </span> 
               <span>
-                {filteredImages.length === 1 ? 'result' : 'results'} 
+                {filteredImages.length === 1 ? 'result' : 'results'} on this page
                 {(activeFilters.starred || activeFilters.models.length > 0) ? ' with applied filters' : ''}
               </span>
             </div>
@@ -1140,6 +1167,40 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
           />
         ))}
       </div>
+      
+      {/* Pagination controls */}
+      {(hasNextPage || currentPage > 1) && (
+        <div className="flex flex-col items-center gap-4 p-6 border-t border-border mt-6">
+          {/* Page info */}
+          <div className="text-sm text-muted-foreground text-center">
+            Showing page {currentPage} • {images.length} images loaded
+            {hasNextPage && ` • More available`}
+          </div>
+          
+          {/* Load more button */}
+          {hasNextPage && (
+            <Button
+              onClick={loadNextPage}
+              disabled={loadingMore}
+              variant="outline"
+              size="lg"
+              className="gap-2 min-w-[140px]"
+            >
+              {loadingMore ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                <>
+                  Load More
+                  <span className="text-xs opacity-70">({itemsPerPage} more)</span>
+                </>
+              )}
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
 };
