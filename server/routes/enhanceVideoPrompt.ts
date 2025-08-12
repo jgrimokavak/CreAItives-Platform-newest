@@ -13,7 +13,7 @@ const videoPromptCache = new NodeCache({
 
 // Schema for the request body
 const bodySchema = z.object({
-  text: z.string().min(3),
+  text: z.string().min(3).max(5000), // Support prompts up to 5000 characters
   model: z.enum(["minimax-hailuo-02"]), // Currently only supporting this video model
   image: z.string().optional(), // Base64 encoded reference image
 });
@@ -157,7 +157,7 @@ router.post("/enhance-video-prompt", async (req, res) => {
       model: "gpt-4o", // Using GPT-4o for better quality and vision capabilities
       messages,
       response_format: { type: "json_object" },
-      max_tokens: 800, // Increased for longer prompts
+      max_tokens: 2000, // Increased to handle prompts up to 5000 characters
       temperature: 0.7,
     });
     
