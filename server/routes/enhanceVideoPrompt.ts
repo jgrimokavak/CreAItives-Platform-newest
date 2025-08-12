@@ -157,12 +157,44 @@ router.post("/enhance-video-prompt", async (req, res) => {
       model: "gpt-4o", // Using GPT-4o for better quality and vision capabilities
       messages,
       response_format: { type: "json_object" },
-      max_tokens: 300, // Slightly higher for video prompts which tend to be more descriptive
+      max_tokens: 800, // Increased for longer prompts
+      temperature: 0.7,
     });
     
-    // Parse the result
+    // Parse the result with better error handling
     const content = completion.choices[0].message.content as string;
-    const result = JSON.parse(content);
+    console.log('Raw OpenAI response length:', content?.length);
+    console.log('Raw OpenAI response preview:', content?.substring(0, 200));
+    
+    if (!content) {
+      throw new Error('Empty response from OpenAI');
+    }
+    
+    let result;
+    try {
+      result = JSON.parse(content);
+    } catch (parseError: any) {
+      console.error('JSON parse error:', parseError.message);
+      console.error('Content that failed to parse:', content);
+      
+      // Try to extract JSON from the content if it's partially malformed
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          result = JSON.parse(jsonMatch[0]);
+          console.log('Successfully recovered JSON from partial response');
+        } catch (recoveryError) {
+          throw new Error(`Failed to parse OpenAI response as JSON. Content: ${content.substring(0, 500)}...`);
+        }
+      } else {
+        throw new Error(`OpenAI response is not valid JSON. Content: ${content.substring(0, 500)}...`);
+      }
+    }
+    
+    // Validate the result structure
+    if (!result.prompt) {
+      throw new Error('OpenAI response missing required "prompt" field');
+    }
     
     // Add to cache
     videoPromptCache.set(cacheKey, result);
