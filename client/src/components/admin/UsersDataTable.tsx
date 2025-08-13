@@ -58,7 +58,7 @@ export default function UsersDataTable({
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(25);
   const [search, setSearch] = useState('');
-  const [sortBy, setSortBy] = useState<'lastLoginAt' | 'createdAt' | 'email' | 'firstName' | 'imageCount' | 'videoCount' | 'projectCount'>('lastLoginAt');
+  const [sortBy, setSortBy] = useState<'lastLoginAt' | 'createdAt' | 'email' | 'imageCount' | 'videoCount' | 'projectCount'>('lastLoginAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   
   // Local filters (in addition to global ones)
@@ -263,15 +263,6 @@ export default function UsersDataTable({
                 </TableHead>
                 <TableHead 
                   className="cursor-pointer select-none"
-                  onClick={() => handleSort('firstName')}
-                >
-                  <div className="flex items-center space-x-1">
-                    <span>Name</span>
-                    {getSortIcon('firstName')}
-                  </div>
-                </TableHead>
-                <TableHead 
-                  className="cursor-pointer select-none"
                   onClick={() => handleSort('email')}
                 >
                   <div className="flex items-center space-x-1">
@@ -335,7 +326,7 @@ export default function UsersDataTable({
               {isLoading ? (
                 Array.from({ length: limit }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell colSpan={13}>
+                    <TableCell colSpan={12}>
                       <div className="flex items-center space-x-4 animate-pulse">
                         <div className="w-4 h-4 bg-gray-200 rounded"></div>
                         <div className="h-4 bg-gray-200 rounded flex-1"></div>
@@ -345,7 +336,7 @@ export default function UsersDataTable({
                 ))
               ) : users.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={13} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={12} className="text-center py-8 text-muted-foreground">
                     No users found matching your criteria
                   </TableCell>
                 </TableRow>
@@ -374,18 +365,8 @@ export default function UsersDataTable({
                             className="w-8 h-8 rounded-full"
                           />
                         )}
-                        <div>
-                          <div className="font-medium">
-                            {user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : (user.firstName || 'Unknown')}
-                          </div>
-                          {!user.firstName && (
-                            <div className="text-xs text-muted-foreground">No name set</div>
-                          )}
-                        </div>
+                        <div className="font-mono text-sm">{user.email}</div>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="font-mono text-sm">{user.email}</div>
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className="text-xs">
