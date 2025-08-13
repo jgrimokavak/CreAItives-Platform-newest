@@ -263,7 +263,7 @@ export default function ExportDialog({
             </Button>
             <Button 
               onClick={handleExport}
-              disabled={isExporting || isOverLimit || !reason.trim()}
+              disabled={isExporting || isOverLimit}
             >
               {isExporting ? (
                 <>
