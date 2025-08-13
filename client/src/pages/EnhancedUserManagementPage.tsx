@@ -3,8 +3,6 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { 
   Users, 
   Activity, 
@@ -15,9 +13,7 @@ import {
   Eye, 
   Calendar,
   Download,
-  Settings,
-  Grid,
-  List
+  Settings
 } from 'lucide-react';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAuth } from '@/hooks/useAuth';
@@ -29,9 +25,6 @@ import UserDrawer from '@/components/admin/UserDrawer';
 import BulkActionsBar from '@/components/admin/BulkActionsBar';
 import ExportDialog from '@/components/admin/ExportDialog';
 import GlobalControlsPanel from '@/components/admin/GlobalControlsPanel';
-
-// Import legacy components for fallback
-import UserManagementPage from './UserManagementPage';
 
 interface EnhancedUser {
   id: string;
@@ -53,9 +46,6 @@ interface EnhancedUser {
 
 export default function EnhancedUserManagementPage() {
   const { user: currentUser } = useAuth();
-  
-  // Feature toggle - default to new interface for testing
-  const [useNewInterface, setUseNewInterface] = useState(true);
   
   // Global filters state
   const [globalFilters, setGlobalFilters] = useState<{
@@ -130,14 +120,9 @@ export default function EnhancedUserManagementPage() {
     ...globalFilters,
   }), [globalFilters]);
 
-  // Fallback to legacy interface if feature toggle is off
-  if (!useNewInterface) {
-    return <UserManagementPage />;
-  }
-
   return (
     <div className="container mx-auto p-6 space-y-6">
-      {/* Header with Feature Toggle */}
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
@@ -146,25 +131,10 @@ export default function EnhancedUserManagementPage() {
           </p>
         </div>
         
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
-            <Grid className="w-4 h-4" />
-            <Switch 
-              checked={useNewInterface}
-              onCheckedChange={setUseNewInterface}
-              id="interface-toggle"
-            />
-            <List className="w-4 h-4" />
-            <Label htmlFor="interface-toggle" className="text-sm font-medium">
-              Enhanced Interface
-            </Label>
-          </div>
-          
-          <Button variant="outline" onClick={handleExportClick}>
-            <Download className="w-4 h-4 mr-2" />
-            Export Users
-          </Button>
-        </div>
+        <Button variant="outline" onClick={handleExportClick}>
+          <Download className="w-4 h-4 mr-2" />
+          Export Users
+        </Button>
       </div>
 
       {/* Statistics Dashboard - Enhanced version */}
