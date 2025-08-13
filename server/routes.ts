@@ -403,10 +403,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/admin/analytics/daily-activity', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
-      const metrics = await storage.getDailyActivityMetrics();
+      const metrics = await storage.getDailyRouteActivityMetrics();
       res.json(metrics);
     } catch (error) {
-      console.error("Error fetching daily activity metrics:", error);
+      console.error("Error fetching daily route activity metrics:", error);
       res.status(500).json({ message: "Failed to fetch daily activity metrics" });
     }
   });

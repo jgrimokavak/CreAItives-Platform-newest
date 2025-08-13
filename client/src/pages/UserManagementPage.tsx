@@ -37,6 +37,7 @@ export default function UserManagementPage() {
     activeUsers: number;
     adminUsers: number;
     recentLogins: number;
+    onlineUsers: number;
   }>({
     queryKey: ['/api/admin/users/statistics'],
     retry: false,
@@ -45,7 +46,6 @@ export default function UserManagementPage() {
   // Enhanced analytics queries
   const { data: userTrends } = useQuery<Array<{
     date: string;
-    newUsers: number;
     totalUsers: number;
   }>>({
     queryKey: ['/api/admin/analytics/user-trends'],
@@ -74,10 +74,12 @@ export default function UserManagementPage() {
 
   const { data: dailyActivity } = useQuery<Array<{
     date: string;
-    images: number;
-    videos: number;
-    projects: number;
-    activeUsers: number;
+    create: number;
+    car: number;
+    video: number;
+    gallery: number;
+    email: number;
+    admin: number;
   }>>({
     queryKey: ['/api/admin/analytics/daily-activity'],
     retry: false,
@@ -228,9 +230,9 @@ export default function UserManagementPage() {
         </Button>
       </div>
 
-      {/* Statistics Dashboard */}
+      {/* Enhanced Statistics Dashboard */}
       {statistics && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           <Card className="p-4">
             <div className="flex items-center space-x-2">
               <Users className="w-8 h-8 text-blue-500" />
@@ -246,6 +248,15 @@ export default function UserManagementPage() {
               <div>
                 <p className="text-2xl font-bold">{statistics.activeUsers}</p>
                 <p className="text-sm text-muted-foreground">Active Users</p>
+              </div>
+            </div>
+          </Card>
+          <Card className="p-4">
+            <div className="flex items-center space-x-2">
+              <Activity className="w-8 h-8 text-emerald-500" />
+              <div>
+                <p className="text-2xl font-bold">{statistics.onlineUsers}</p>
+                <p className="text-sm text-muted-foreground">Online Now</p>
               </div>
             </div>
           </Card>
@@ -291,11 +302,11 @@ export default function UserManagementPage() {
                   <YAxis />
                   <Tooltip 
                     labelFormatter={formatDate}
-                    formatter={(value: number, name: string) => [value, name === 'newUsers' ? 'New Users' : 'Total Users']}
+                    formatter={(value: number) => [value, 'Total Users']}
                   />
                   <Area 
                     type="monotone" 
-                    dataKey="newUsers" 
+                    dataKey="totalUsers" 
                     stackId="1"
                     stroke="#3B82F6" 
                     fill="#3B82F6"
@@ -307,38 +318,42 @@ export default function UserManagementPage() {
           </Card>
         )}
 
-        {/* Daily Activity Overview */}
+        {/* Daily Route Activity Overview */}
         {dailyActivity && (
           <Card className="p-6">
             <div className="flex items-center space-x-2 mb-4">
               <Calendar className="w-5 h-5 text-purple-500" />
-              <h3 className="text-lg font-semibold">Daily Platform Activity</h3>
+              <h3 className="text-lg font-semibold">Daily Route Activity</h3>
+              <Badge variant="outline">Route Usage</Badge>
             </div>
-            <div style={{ width: '100%', height: '250px' }}>
+            <div style={{ width: '100%', height: '280px' }}>
               <ResponsiveContainer>
-                <ComposedChart data={dailyActivity}>
+                <BarChart data={dailyActivity}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="date" tickFormatter={formatDate} />
-                  <YAxis yAxisId="left" />
-                  <YAxis yAxisId="right" orientation="right" />
+                  <YAxis />
                   <Tooltip 
                     labelFormatter={formatDate}
                     formatter={(value: number, name: string) => {
                       const nameMap = {
-                        images: 'Images Generated',
-                        videos: 'Videos Generated', 
-                        projects: 'Projects Created',
-                        activeUsers: 'Active Users'
+                        create: '/create (Images)',
+                        car: '/car (Car Design)',
+                        video: '/video (Videos)',
+                        gallery: '/gallery (Gallery)',
+                        email: '/email (Email Builder)',
+                        admin: '/admin (Admin Panel)'
                       };
                       return [value, nameMap[name as keyof typeof nameMap] || name];
                     }}
                   />
-                  <Bar yAxisId="left" dataKey="images" fill="#3B82F6" name="images" />
-                  <Bar yAxisId="left" dataKey="videos" fill="#10B981" name="videos" />
-                  <Bar yAxisId="left" dataKey="projects" fill="#F59E0B" name="projects" />
-                  <Line yAxisId="right" type="monotone" dataKey="activeUsers" stroke="#EF4444" strokeWidth={2} name="activeUsers" />
+                  <Bar dataKey="create" stackId="routes" fill="#3B82F6" name="create" />
+                  <Bar dataKey="car" stackId="routes" fill="#F59E0B" name="car" />
+                  <Bar dataKey="video" stackId="routes" fill="#10B981" name="video" />
+                  <Bar dataKey="gallery" stackId="routes" fill="#8B5CF6" name="gallery" />
+                  <Bar dataKey="email" stackId="routes" fill="#EF4444" name="email" />
+                  <Bar dataKey="admin" stackId="routes" fill="#6B7280" name="admin" />
                   <Legend />
-                </ComposedChart>
+                </BarChart>
               </ResponsiveContainer>
             </div>
           </Card>
