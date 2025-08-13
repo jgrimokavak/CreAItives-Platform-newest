@@ -261,6 +261,141 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
+  // Enhanced analytics methods using existing data
+  async getUserTrends(): Promise<Array<{
+    date: string;
+    newUsers: number;
+    totalUsers: number;
+  }>> {
+    // Get user registration trends for last 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const excludeHidden = not(eq(users.email, 'joacogrimoldi@gmail.com'));
+    
+    const rawData = await db.select({
+      date: sql`date(${users.createdAt})`,
+      count: sql`count(*)`
+    })
+    .from(users)
+    .where(and(
+      excludeHidden,
+      sql`${users.createdAt} >= ${thirtyDaysAgo}`
+    ))
+    .groupBy(sql`date(${users.createdAt})`)
+    .orderBy(sql`date(${users.createdAt})`);
+
+    // Fill in missing dates with 0 counts
+    const trends = [];
+    let runningTotal = 0;
+    
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      
+      const dayData = rawData.find(d => d.date === dateStr);
+      const newUsers = dayData ? Number(dayData.count) : 0;
+      runningTotal += newUsers;
+      
+      trends.push({
+        date: dateStr,
+        newUsers,
+        totalUsers: runningTotal
+      });
+    }
+    
+    return trends;
+  }
+
+  async getFeatureUsageAnalytics(): Promise<Array<{
+    feature: string;
+    count: number;
+    percentage: number;
+  }>> {
+    const currentEnv = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
+    
+    // Get counts from different features using existing tables
+    const [imageCount] = await db.select({ count: sql`count(*)` })
+      .from(images)
+      .where(eq(images.environment, currentEnv));
+    
+    const [videoCount] = await db.select({ count: sql`count(*)` })
+      .from(videos)
+      .where(eq(videos.environment, currentEnv));
+    
+    const totalFeatureUsage = Number(imageCount.count) + Number(videoCount.count);
+    
+    const features = [
+      {
+        feature: 'AI Image Generation',
+        count: Number(imageCount.count),
+        percentage: totalFeatureUsage > 0 ? Math.round((Number(imageCount.count) / totalFeatureUsage) * 100) : 0
+      },
+      {
+        feature: 'AI Video Generation', 
+        count: Number(videoCount.count),
+        percentage: totalFeatureUsage > 0 ? Math.round((Number(videoCount.count) / totalFeatureUsage) * 100) : 0
+      }
+    ];
+    
+    return features.sort((a, b) => b.count - a.count);
+  }
+
+  async getRecentUserActivity(): Promise<Array<{
+    user: string;
+    action: string;
+    time: string;
+  }>> {
+    const currentEnv = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
+    const excludeHidden = not(eq(users.email, 'joacogrimoldi@gmail.com'));
+    
+    // Get recent image generations
+    const recentImages = await db.select({
+      userId: users.id,
+      userName: sql`COALESCE(${users.firstName} || ' ' || ${users.lastName}, ${users.email})`,
+      action: sql`'Generated Image'`,
+      time: images.createdAt,
+      details: images.model
+    })
+    .from(images)
+    .innerJoin(users, eq(users.id, sql`split_part(${images.id}, '-', 1)`))
+    .where(and(
+      eq(images.environment, currentEnv),
+      excludeHidden
+    ))
+    .orderBy(desc(images.createdAt))
+    .limit(10);
+    
+    // Get recent video generations  
+    const recentVideos = await db.select({
+      userId: videos.userId,
+      userName: sql`COALESCE(${users.firstName} || ' ' || ${users.lastName}, ${users.email})`,
+      action: sql`'Generated Video'`,
+      time: videos.createdAt,
+      details: videos.model
+    })
+    .from(videos)
+    .innerJoin(users, eq(users.id, videos.userId))
+    .where(and(
+      eq(videos.environment, currentEnv),
+      excludeHidden
+    ))
+    .orderBy(desc(videos.createdAt))
+    .limit(10);
+    
+    // Combine and sort by time
+    const allActivity = [...recentImages, ...recentVideos]
+      .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
+      .slice(0, 15);
+    
+    return allActivity.map(item => ({
+      user: String(item.userName || 'Unknown User'),
+      action: `${String(item.action)} (${String(item.details)})`,
+      time: item.time.toISOString()
+    }));
+  }
+
   async updateUserStatus(userId: string, isActive: boolean): Promise<User | undefined> {
     const [user] = await db
       .update(users)

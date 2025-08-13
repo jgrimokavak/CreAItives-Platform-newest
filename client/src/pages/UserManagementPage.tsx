@@ -6,7 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Trash2, Shield, User as UserIcon, ToggleLeft, ToggleRight, Search, Download, Users, Activity, Clock, UserCheck } from 'lucide-react';
+import { Trash2, Shield, User as UserIcon, ToggleLeft, ToggleRight, Search, Download, Users, Activity, Clock, UserCheck, TrendingUp, BarChart3, Eye } from 'lucide-react';
+import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { useAuth } from '@/hooks/useAuth';
 import { apiRequest } from '@/lib/queryClient';
 import type { User } from '@shared/schema';
@@ -31,8 +32,41 @@ export default function UserManagementPage() {
     retry: false,
   });
 
-  const { data: statistics } = useQuery({
+  const { data: statistics } = useQuery<{
+    totalUsers: number;
+    activeUsers: number;
+    adminUsers: number;
+    recentLogins: number;
+  }>({
     queryKey: ['/api/admin/users/statistics'],
+    retry: false,
+  });
+
+  // Enhanced analytics queries
+  const { data: userTrends } = useQuery<Array<{
+    date: string;
+    newUsers: number;
+    totalUsers: number;
+  }>>({
+    queryKey: ['/api/admin/analytics/user-trends'],
+    retry: false,
+  });
+
+  const { data: pageAnalytics } = useQuery<Array<{
+    feature: string;
+    count: number;
+    percentage: number;
+  }>>({
+    queryKey: ['/api/admin/analytics/page-usage'],
+    retry: false,
+  });
+
+  const { data: recentActivity } = useQuery<Array<{
+    user: string;
+    action: string;
+    time: string;
+  }>>({
+    queryKey: ['/api/admin/analytics/recent-activity'],
     retry: false,
   });
 
@@ -99,7 +133,7 @@ export default function UserManagementPage() {
     updateRoleMutation.mutate({ userId, role: newRole });
   };
 
-  const formatDate = (date: string | Date | null) => {
+  const formatUserDate = (date: string | Date | null) => {
     if (!date) return 'Never';
     const dateObj = typeof date === 'string' ? new Date(date) : date;
     return dateObj.toLocaleDateString();
@@ -122,6 +156,24 @@ export default function UserManagementPage() {
   const handleExport = () => {
     const exportUrl = `/api/admin/users/export?search=${encodeURIComponent(search)}&statusFilter=${statusFilter}&roleFilter=${roleFilter}&sortBy=${sortBy}&sortOrder=${sortOrder}`;
     window.open(exportUrl, '_blank');
+  };
+
+  // Chart colors
+  const chartColors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  const formatTime = (timeStr: string) => {
+    const date = new Date(timeStr);
+    return date.toLocaleString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
   };
 
   const getActivityLevel = (lastLogin: Date | null) => {
@@ -202,6 +254,111 @@ export default function UserManagementPage() {
             </div>
           </Card>
         </div>
+      )}
+
+      {/* Enhanced Analytics Dashboard */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* User Growth Trends */}
+        {userTrends && (
+          <Card className="p-6">
+            <div className="flex items-center space-x-2 mb-4">
+              <TrendingUp className="w-5 h-5 text-blue-500" />
+              <h3 className="text-lg font-semibold">User Growth Trends</h3>
+            </div>
+            <div style={{ width: '100%', height: '250px' }}>
+              <ResponsiveContainer>
+                <AreaChart data={userTrends}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="date" 
+                    tickFormatter={formatDate}
+                    interval="preserveStartEnd"
+                  />
+                  <YAxis />
+                  <Tooltip 
+                    labelFormatter={formatDate}
+                    formatter={(value: number, name: string) => [value, name === 'newUsers' ? 'New Users' : 'Total Users']}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="newUsers" 
+                    stackId="1"
+                    stroke="#3B82F6" 
+                    fill="#3B82F6"
+                    fillOpacity={0.6}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+        )}
+
+        {/* Feature Usage Analytics */}
+        {pageAnalytics && (
+          <Card className="p-6">
+            <div className="flex items-center space-x-2 mb-4">
+              <BarChart3 className="w-5 h-5 text-green-500" />
+              <h3 className="text-lg font-semibold">Feature Usage</h3>
+            </div>
+            <div style={{ width: '100%', height: '250px' }}>
+              <ResponsiveContainer>
+                <PieChart>
+                  <Pie
+                    data={pageAnalytics}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    dataKey="count"
+                    nameKey="feature"
+                  >
+                    {pageAnalytics.map((entry: any, index: number) => (
+                      <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value: number, name: string) => [`${value} uses`, name]} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="mt-4 space-y-2">
+              {pageAnalytics.map((item: any, index: number) => (
+                <div key={item.feature} className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div 
+                      className="w-3 h-3 rounded-full" 
+                      style={{ backgroundColor: chartColors[index % chartColors.length] }}
+                    />
+                    <span className="text-sm">{item.feature}</span>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {item.count} uses ({item.percentage}%)
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
+      </div>
+
+      {/* Recent Activity Timeline */}
+      {recentActivity && recentActivity.length > 0 && (
+        <Card className="p-6">
+          <div className="flex items-center space-x-2 mb-4">
+            <Activity className="w-5 h-5 text-purple-500" />
+            <h3 className="text-lg font-semibold">Recent User Activity</h3>
+          </div>
+          <div className="space-y-4 max-h-96 overflow-y-auto">
+            {recentActivity.map((activity: any, index: number) => (
+              <div key={index} className="flex items-start space-x-3 py-2 border-b border-gray-100 last:border-b-0">
+                <div className="w-2 h-2 rounded-full bg-blue-500 mt-2 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{activity.user}</p>
+                  <p className="text-sm text-muted-foreground">{activity.action}</p>
+                  <p className="text-xs text-muted-foreground">{formatTime(activity.time)}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
       )}
 
       {/* Search and Filters */}
@@ -303,8 +460,8 @@ export default function UserManagementPage() {
                     </Badge>
                   </div>
                   <div className="text-xs sm:text-sm text-muted-foreground mt-2 space-y-1">
-                    <div>Joined: {formatDate(user.createdAt)}</div>
-                    <div>Last login: {formatDate(user.lastLoginAt)}</div>
+                    <div>Joined: {formatUserDate(user.createdAt)}</div>
+                    <div>Last login: {formatUserDate(user.lastLoginAt)}</div>
                   </div>
                 </div>
               </div>

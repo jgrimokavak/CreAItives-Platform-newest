@@ -370,6 +370,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Enhanced analytics routes (admin only)
+  app.get('/api/admin/analytics/user-trends', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const trends = await storage.getUserTrends();
+      res.json(trends);
+    } catch (error) {
+      console.error("Error fetching user trends:", error);
+      res.status(500).json({ message: "Failed to fetch user trends" });
+    }
+  });
+
+  app.get('/api/admin/analytics/page-usage', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const usage = await storage.getFeatureUsageAnalytics();
+      res.json(usage);
+    } catch (error) {
+      console.error("Error fetching page usage:", error);
+      res.status(500).json({ message: "Failed to fetch page usage" });
+    }
+  });
+
+  app.get('/api/admin/analytics/recent-activity', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const activity = await storage.getRecentUserActivity();
+      res.json(activity);
+    } catch (error) {
+      console.error("Error fetching recent activity:", error);
+      res.status(500).json({ message: "Failed to fetch recent activity" });
+    }
+  });
+
   // Storage management routes (admin only)
   
   // Admin self-test endpoint for access control verification
