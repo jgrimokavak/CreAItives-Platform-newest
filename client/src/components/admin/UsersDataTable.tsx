@@ -122,10 +122,10 @@ export default function UsersDataTable({
     if (!usersData?.users) return;
     
     if (checked) {
-      const allIds = usersData.users.map(user => user.id);
-      onSelectionChange([...new Set([...selectedIds, ...allIds])]);
+      const allIds = usersData.users.map((user: EnhancedUser) => user.id);
+      onSelectionChange(Array.from(new Set([...selectedIds, ...allIds])));
     } else {
-      const currentPageIds = usersData.users.map(user => user.id);
+      const currentPageIds = usersData.users.map((user: EnhancedUser) => user.id);
       onSelectionChange(selectedIds.filter(id => !currentPageIds.includes(id)));
     }
   }, [usersData?.users, selectedIds, onSelectionChange]);
@@ -158,8 +158,8 @@ export default function UsersDataTable({
   const users = usersData?.users || [];
   const totalCount = usersData?.totalCount || 0;
   const totalPages = usersData?.totalPages || 1;
-  const currentPageHasSelection = users.some(user => selectedIds.includes(user.id));
-  const isAllCurrentPageSelected = users.length > 0 && users.every(user => selectedIds.includes(user.id));
+  const currentPageHasSelection = users.some((user: EnhancedUser) => selectedIds.includes(user.id));
+  const isAllCurrentPageSelected = users.length > 0 && users.every((user: EnhancedUser) => selectedIds.includes(user.id));
 
   return (
     <div className="space-y-4">
@@ -257,7 +257,6 @@ export default function UsersDataTable({
                 <TableHead className="w-12">
                   <Checkbox
                     checked={isAllCurrentPageSelected}
-                    indeterminate={currentPageHasSelection && !isAllCurrentPageSelected}
                     onCheckedChange={handleSelectAll}
                   />
                 </TableHead>
@@ -341,7 +340,7 @@ export default function UsersDataTable({
                   </TableCell>
                 </TableRow>
               ) : (
-                users.map((user) => (
+                users.map((user: EnhancedUser) => (
                   <TableRow 
                     key={user.id}
                     className="cursor-pointer hover:bg-muted/50"
