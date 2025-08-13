@@ -313,7 +313,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "isActive must be a boolean" });
       }
       
-      const user = await storage.updateUserStatus(userId, isActive);
+      const adminUserId = req.user.id;
+      const adminEmail = req.user.email;
+      const ipAddress = req.ip || req.connection.remoteAddress;
+      
+      const user = await storage.updateUserStatus(userId, isActive, adminUserId, adminEmail, ipAddress);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -605,7 +609,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       res.json(result);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error exporting users:", error);
       res.status(500).json({ 
         message: error.message || "Failed to export users" 

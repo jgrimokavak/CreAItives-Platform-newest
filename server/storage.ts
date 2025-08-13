@@ -363,18 +363,17 @@ export class DatabaseStorage implements IStorage {
     const currentEnv = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
     
     // Build conditions
-    const conditions = [excludeHidden];
+    const conditions: SQL[] = [excludeHidden];
     
     if (options.search) {
       const searchTerm = `%${options.search}%`;
-      conditions.push(
-        or(
-          ilike(users.email, searchTerm),
-          ilike(users.firstName, searchTerm),
-          ilike(users.lastName, searchTerm),
-          ilike(users.id, searchTerm)
-        )
+      const searchCondition = or(
+        ilike(users.email, searchTerm),
+        ilike(users.firstName, searchTerm),
+        ilike(users.lastName, searchTerm),
+        ilike(users.id, searchTerm)
       );
+      if (searchCondition) conditions.push(searchCondition);
     }
     
     if (options.statusFilter === 'active') {
@@ -405,10 +404,10 @@ export class DatabaseStorage implements IStorage {
       conditions.push(sql`${users.createdAt} <= ${options.dateTo}`);
     }
 
-    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+    const whereClause = conditions.length > 1 ? and(...conditions) : conditions[0];
     
     // Get enhanced user data with counts
-    let usersQuery = db
+    const usersQuery = db
       .select({
         id: users.id,
         email: users.email,
@@ -423,7 +422,7 @@ export class DatabaseStorage implements IStorage {
         domain: sql`split_part(${users.email}, '@', 2)`,
         imageCount: sql`(
           SELECT COUNT(*) FROM ${images}
-          WHERE ${images.userId} = ${users.id}
+          WHERE ${images.user_id} = ${users.id}
           AND ${images.environment} = ${currentEnv}
         )`,
         videoCount: sql`(
@@ -438,11 +437,8 @@ export class DatabaseStorage implements IStorage {
         )`,
         isActivated: sql`${users.lastLoginAt} IS NOT NULL`,
       })
-      .from(users);
-    
-    if (whereClause) {
-      usersQuery = usersQuery.where(whereClause);
-    }
+      .from(users)
+      .where(whereClause);
     
     // Apply sorting
     const sortBy = options.sortBy || 'lastLoginAt';
@@ -472,20 +468,17 @@ export class DatabaseStorage implements IStorage {
         orderByColumn = users.lastLoginAt;
     }
     
-    if (sortOrder === 'asc') {
-      usersQuery.orderBy(asc(orderByColumn));
-    } else {
-      usersQuery.orderBy(desc(orderByColumn));
-    }
-    
-    // Get paginated results
-    const usersData = await usersQuery.limit(limit).offset(offset);
+    // Get paginated results with sorting
+    const usersData = await usersQuery
+      .orderBy(sortOrder === 'asc' ? asc(orderByColumn) : desc(orderByColumn))
+      .limit(limit)
+      .offset(offset);
     
     // Get total count
-    let countQuery = db.select({ count: sql`count(*)` }).from(users);
-    if (whereClause) {
-      countQuery = countQuery.where(whereClause);
-    }
+    const countQuery = db
+      .select({ count: sql`count(*)` })
+      .from(users)
+      .where(whereClause);
     const [{ count }] = await countQuery;
     
     const totalCount = Number(count);
@@ -708,7 +701,7 @@ export class DatabaseStorage implements IStorage {
         domain: sql`split_part(${users.email}, '@', 2)`,
         imageCount: sql`(
           SELECT COUNT(*) FROM ${images}
-          WHERE ${images.userId} = ${users.id}
+          WHERE ${images.user_id} = ${users.id}
           AND ${images.environment} = ${currentEnv}
         )`,
         videoCount: sql`(
