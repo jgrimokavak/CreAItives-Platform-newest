@@ -117,6 +117,67 @@ export const adminAuditLogs = pgTable("admin_audit_logs", {
 export const insertAdminAuditLogSchema = createInsertSchema(adminAuditLogs);
 export type AdminAuditLog = typeof adminAuditLogs.$inferSelect;
 
+// Daily Analytics Snapshots for KPI aggregation (Phase 2)
+export const dailyAnalytics = pgTable("daily_analytics", {
+  id: text("id").primaryKey(),
+  date: text("date").notNull(), // YYYY-MM-DD
+  environment: text("environment").notNull(), // 'dev' | 'prod'
+  // Core KPIs
+  dau: integer("dau").default(0).notNull(), // Daily Active Users
+  newUsers: integer("new_users").default(0).notNull(),
+  activatedUsers: integer("activated_users").default(0).notNull(), // Users who generated content within 7 days
+  // Content generation metrics
+  imageGenerateAttempts: integer("image_generate_attempts").default(0).notNull(),
+  imageGenerateSuccesses: integer("image_generate_successes").default(0).notNull(),
+  videoGenerateAttempts: integer("video_generate_attempts").default(0).notNull(),
+  videoGenerateSuccesses: integer("video_generate_successes").default(0).notNull(),
+  projectsCreated: integer("projects_created").default(0).notNull(),
+  // Performance metrics (milliseconds)
+  avgImageGenerationLatency: integer("avg_image_generation_latency").default(0).notNull(),
+  avgVideoGenerationLatency: integer("avg_video_generation_latency").default(0).notNull(),
+  p95ImageLatency: integer("p95_image_latency").default(0).notNull(),
+  p95VideoLatency: integer("p95_video_latency").default(0).notNull(),
+  // Error tracking
+  totalErrors: integer("total_errors").default(0).notNull(),
+  topErrorCode: text("top_error_code"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_daily_analytics_date_env").on(table.date, table.environment),
+  index("idx_daily_analytics_date").on(table.date),
+  index("idx_daily_analytics_env").on(table.environment),
+]);
+
+// Enhanced Activity Events (Phase 2)
+export const activityEvents = pgTable("activity_events", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  sessionId: text("session_id"),
+  event: text("event").notNull(), // 'page_view', 'image_generate_requested', 'image_generate_succeeded', etc.
+  feature: text("feature"), // 'image_generation', 'video_generation', 'project_management', etc.
+  model: text("model"), // 'gpt-image-1', 'flux-pro', etc.
+  status: text("status"), // 'requested', 'succeeded', 'failed'
+  duration: integer("duration"), // milliseconds
+  errorCode: text("error_code"),
+  metadata: jsonb("metadata"), // Additional context (PII-safe)
+  environment: text("environment").notNull().default('dev'), // 'dev' | 'prod'
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_activity_events_user_id").on(table.userId),
+  index("idx_activity_events_event").on(table.event),
+  index("idx_activity_events_feature").on(table.feature),
+  index("idx_activity_events_status").on(table.status),
+  index("idx_activity_events_created_at").on(table.createdAt),
+  index("idx_activity_events_date_event").on(table.createdAt, table.event),
+  index("idx_activity_events_env").on(table.environment),
+]);
+
+export const insertDailyAnalyticsSchema = createInsertSchema(dailyAnalytics);
+export const insertActivityEventSchema = createInsertSchema(activityEvents);
+
+export type DailyAnalytics = typeof dailyAnalytics.$inferSelect;
+export type ActivityEvent = typeof activityEvents.$inferSelect;
+
 // Image generation schema
 export const generateSchema = z.object({
   modelKey: z.enum(["gpt-image-1", "imagen-3", "imagen-4", "flux-pro", "flux-kontext-max", "flux-krea-dev", "wan-2.2"]),

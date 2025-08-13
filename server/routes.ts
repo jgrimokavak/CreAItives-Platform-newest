@@ -589,6 +589,153 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Note: Bulk routes have been moved BEFORE :userId routes to prevent route matching issues
 
+  // === PHASE 2 ANALYTICS ENDPOINTS ===
+  
+  // Activity event logging endpoint
+  app.post('/api/analytics/events', isAuthenticated, async (req: any, res) => {
+    try {
+      const { logActivity } = await import('./analytics');
+      const { event, feature, model, status, duration, errorCode, metadata } = req.body;
+      
+      if (!event) {
+        return res.status(400).json({ message: 'Event type is required' });
+      }
+
+      await logActivity({
+        userId: req.user.id,
+        sessionId: req.sessionID,
+        event,
+        feature,
+        model,
+        status,
+        duration,
+        errorCode,
+        metadata: metadata || {}
+      });
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error logging activity event:', error);
+      res.status(500).json({ message: 'Failed to log event' });
+    }
+  });
+
+  // Session heartbeat endpoint
+  app.post('/api/analytics/heartbeat', isAuthenticated, async (req: any, res) => {
+    try {
+      const { updateSessionHeartbeat } = await import('./analytics');
+      
+      await updateSessionHeartbeat(req.user.id, req.sessionID);
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error updating session heartbeat:', error);
+      res.status(500).json({ message: 'Failed to update heartbeat' });
+    }
+  });
+
+  // Admin analytics KPIs endpoint
+  app.get('/api/admin/analytics/kpis', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { getKPIs } = await import('./analytics');
+      const {
+        dateFrom,
+        dateTo,
+        roleFilter,
+        statusFilter,
+        domainFilter,
+        activatedFilter
+      } = req.query;
+
+      // Default to last 7 days if no dates provided
+      const defaultDateTo = new Date();
+      const defaultDateFrom = new Date();
+      defaultDateFrom.setDate(defaultDateFrom.getDate() - 7);
+
+      const from = dateFrom ? new Date(dateFrom) : defaultDateFrom;
+      const to = dateTo ? new Date(dateTo) : defaultDateTo;
+
+      const kpis = await getKPIs(from, to, {
+        roleFilter,
+        statusFilter,
+        domainFilter,
+        activatedFilter
+      });
+
+      // Calculate previous period for deltas
+      const periodLength = to.getTime() - from.getTime();
+      const prevTo = new Date(from.getTime() - 1);
+      const prevFrom = new Date(prevTo.getTime() - periodLength);
+
+      const prevKpis = await getKPIs(prevFrom, prevTo, {
+        roleFilter,
+        statusFilter,
+        domainFilter,
+        activatedFilter
+      });
+
+      // Calculate deltas
+      const calculateDelta = (current: number, previous: number) => {
+        if (previous === 0) return current > 0 ? 100 : 0;
+        return Math.round(((current - previous) / previous) * 100 * 100) / 100;
+      };
+
+      const response = {
+        current: kpis,
+        previous: prevKpis,
+        deltas: {
+          dau: calculateDelta(kpis.dau, prevKpis.dau),
+          mau: calculateDelta(kpis.mau, prevKpis.mau),
+          newUsers: calculateDelta(kpis.newUsers, prevKpis.newUsers),
+          activationRate: calculateDelta(kpis.activationRate, prevKpis.activationRate),
+          stickiness: calculateDelta(kpis.stickiness, prevKpis.stickiness),
+          contentSuccessRate: calculateDelta(kpis.contentSuccessRate, prevKpis.contentSuccessRate)
+        }
+      };
+
+      res.json(response);
+    } catch (error) {
+      console.error('Error fetching analytics KPIs:', error);
+      res.status(500).json({ message: 'Failed to fetch KPIs' });
+    }
+  });
+
+  // Admin analytics trends endpoint
+  app.get('/api/admin/analytics/trends', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { getTrends } = await import('./analytics');
+      const {
+        dateFrom,
+        dateTo,
+        interval = 'day',
+        roleFilter,
+        statusFilter,
+        domainFilter,
+        activatedFilter
+      } = req.query;
+
+      // Default to last 30 days for trends
+      const defaultDateTo = new Date();
+      const defaultDateFrom = new Date();
+      defaultDateFrom.setDate(defaultDateFrom.getDate() - 30);
+
+      const from = dateFrom ? new Date(dateFrom) : defaultDateFrom;
+      const to = dateTo ? new Date(dateTo) : defaultDateTo;
+
+      const trends = await getTrends(from, to, interval, {
+        roleFilter,
+        statusFilter,
+        domainFilter,
+        activatedFilter
+      });
+
+      res.json(trends);
+    } catch (error) {
+      console.error('Error fetching analytics trends:', error);
+      res.status(500).json({ message: 'Failed to fetch trends' });
+    }
+  });
+
   // Export users
   app.post('/api/admin/users/export', isAuthenticated, isAdmin, async (req: any, res) => {
     try {

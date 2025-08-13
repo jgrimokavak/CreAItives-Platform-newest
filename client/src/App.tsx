@@ -12,6 +12,7 @@ import CarCreationPage from "./pages/CarCreationPage";
 import VideoPage from "./pages/VideoPage";
 import EmailBuilderPage from "./pages/EmailBuilderPage";
 import EnhancedUserManagementPage from "./pages/EnhancedUserManagementPage";
+import AdminOverviewPage from "./pages/AdminOverviewPage";
 import PageSettingsPage from "./pages/PageSettingsPage";
 import StorageManagementPage from "./pages/StorageManagementPage";
 import AdminRoute from "./components/AdminRoute";
@@ -96,6 +97,13 @@ function Router() {
           )} />
 
           {/* Admin routes - redirect non-admins to main page */}
+          <Route path="/admin/overview" component={() => (
+            <Sidebar>
+              <AdminRoute>
+                <AdminOverviewPage />
+              </AdminRoute>
+            </Sidebar>
+          )} />
           <Route path="/admin/users" component={() => (
             <Sidebar>
               <AdminRoute>

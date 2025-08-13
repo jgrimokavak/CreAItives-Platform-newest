@@ -1,0 +1,72 @@
+**Context:**  
+We’re extending the Admin → Users experience with actionable analytics. Phase 2 should introduce a lightweight events pipeline and session heartbeat to power an **Overview dashboard** (KPI ribbon + trends), respect **global date/segment controls**, and keep **PII redacted by default**. This phase **must not** change schemas or behavior relied on by the public app (e.g., `/gallery`, `/video`, content creation, auth). Build on Phase 1’s UI controls.
+
+**Non‑Negotiable Guardrails (Do NOT break these)**
+- **No destructive or behavior‑changing migrations.**  
+  - Do **not** alter or drop existing columns, defaults, constraints, or indexes on shared tables: `images`, `videos`, `projects`, `users`.  
+  - Do **not** add columns to those tables unless explicitly asked later.  
+  - **All Phase‑2 storage must be additive** in **new** tables (e.g., `user_activity_logs`, `user_sessions`, `daily_snapshots`) or **new** views/materializations. Indexes can be added only to the new tables.
+- **Zero behavior changes to public endpoints/pages.**  
+  - `/gallery`, `/video`, `/api/gallery`, `/api/video`, upload/generation flows: must behave identically before/after Phase 2.  
+  - No changes to environment filtering or auth/session behavior outside admin analytics.
+- **Admin only, additive APIs.**  
+  - New endpoints live under `/api/admin/*` and must not modify existing endpoints’ schemas or responses.
+- **PII redaction ON by default.**  
+  - Sensitive payloads are not returned unless the superadmin allowlist explicitly requests a temporary reveal (server‑gated).
+- **Superadmin allowlist unchanged.**  
+  - Do not broaden or remove it.
+
+**Objective:**  
+Deliver Phase 2 analytics: minimal event logging and session heartbeat, an Overview page with KPI ribbon and key trends, and safe‑by‑default redaction — all driven by the global date/segment chips already present in the admin shell — **without modifying shared tables or breaking non‑admin features**.
+
+## Tasks
+1) **Event & Session Signals (additive only)**
+   - Add **new** tables for analytics (e.g., `user_activity_logs`, `user_sessions`).  
+   - Accept client‑side **activity events** (`page_view`, `image_generate_{requested|succeeded|failed}`, `video_generate_{…}`, `project_create`, `login`, `logout`), storing: user id, event, feature/model, status, duration, error code, timestamp.  
+   - Maintain a **session heartbeat** updating last activity for the signed‑in user.  
+   - **Do not** rely on or change `images.user_id` / `videos.user_id`. Events are the source of truth for KPIs in Phase 2.
+
+2) **KPI & Trends Endpoints (global‑filter aware)**
+   - Provide **new** endpoints under `/api/admin/*` that accept `from`, `to`, and segments (role, status, domain, activated) and return:  
+     - DAU / WAU / MAU  
+     - **Activation Rate** (new signups with ≥1 generation in 7 days)  
+     - **Stickiness** (DAU/MAU)  
+     - **Content Success Rate** (success / total attempts)  
+     - **Avg Generation Latency** (p50, p95)  
+     - **Error Rate** with top error codes  
+   - Trends: Active users over time; Feature usage over time (Images, Videos, Projects, Email); Model usage distribution (top N).  
+   - Keep queries simple and indexed; **no changes** to existing public endpoints.
+
+3) **Overview Dashboard (safe defaults)**
+   - Add an **Overview** tab that renders KPI ribbon + trends driven by the existing global date/segment controls.  
+   - Include deltas vs previous period and plain‑language **tooltips** with definitions.  
+   - Keep PII redacted in UI by default; never show full prompts or sensitive payloads here.
+
+4) **Redaction & Privilege**
+   - Responses exclude sensitive fields by default; add a **temporary reveal** mode for allowlisted superadmins only (server‑checked).  
+   - Show “Redacted” badges unless reveal is active.
+
+## Regression‑Prevention Checklist (must pass)
+- **Schema safety:** No schema diffs on `images`, `videos`, `projects`, `users` (columns, types, defaults, constraints). New tables only.  
+- **Public routes:** `/gallery`, `/video`, their APIs, and uploads behave exactly the same before and after Phase 2.  
+- **Smoke tests (pre & post):**  
+  - `GET /api/gallery?limit=5` returns items; `GET /api/video?limit=5` returns items.  
+  - Creating/reading content works end‑to‑end.  
+- **Admin shell:** Phase‑1 Users table, Drawer, bulk actions continue to work unchanged.  
+- **Security:** Superadmin allowlist unchanged; non‑allowlisted admins cannot reveal PII.  
+- **Performance:** Analytics endpoints respond within reasonable time; payloads are bounded.
+
+## Testing (acceptance scenarios)
+- **Events flow:** Representative events are recorded and visible in analytics storage; KPIs for Last 7/30 days update accordingly.  
+- **KPIs & trends:** Values respond to date/segment changes; Activation uses the 7‑day rule; latency p50/p95 reflect durations.  
+- **Overview UI:** KPI ribbon + charts render with global controls; deltas vs previous period compute; clean loading/empty states.  
+- **Redaction:** Default redaction is enforced; superadmin reveal works and is temporary.  
+- **Non‑Regression:** Public galleries and video pages remain populated and performant.
+
+## Notes & Constraints
+- Prefer simple, indexed reads; pre‑aggregation can wait for Phase 3.  
+- Keep network payloads small and cap result sizes where reasonable.  
+- Localize code to admin analytics modules; avoid refactors in unrelated areas.
+
+**Deliverable:**  
+An Overview dashboard powered by additive analytics (new tables + new admin endpoints), default‑redacted and global‑filter aware — with verified **zero impact** to `/gallery`, `/video`, and other non‑admin features.

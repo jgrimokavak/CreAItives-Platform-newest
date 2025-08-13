@@ -4,7 +4,8 @@ import { cn } from '@/lib/utils';
 import { 
   Sparkles, 
   Images, 
-  Trash2, 
+  Trash2,
+  TrendingUp, 
   Menu,
   X,
   ImageUpscale,
@@ -135,6 +136,9 @@ const Sidebar = ({ children }: SidebarProps) => {
                 <Shield size={14} className="mr-2" />
                 Admin
               </div>
+              <SidebarLink to="/admin/overview" icon={<TrendingUp size={18} />}>
+                Overview
+              </SidebarLink>
               <SidebarLink to="/admin/users" icon={<Users size={18} />}>
                 User Management
               </SidebarLink>
