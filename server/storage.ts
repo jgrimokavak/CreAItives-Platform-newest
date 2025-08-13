@@ -363,7 +363,7 @@ export class DatabaseStorage implements IStorage {
     const currentEnv = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
     
     // Build conditions
-    const conditions: SQL[] = [excludeHidden];
+    const conditions: any[] = [excludeHidden];
     
     if (options.search) {
       const searchTerm = `%${options.search}%`;
@@ -720,7 +720,39 @@ export class DatabaseStorage implements IStorage {
 
     // Apply user ID filter if provided
     if (userIds && userIds.length > 0) {
-      query = query.where(inArray(users.id, userIds));
+      const conditions = [
+        not(eq(users.email, 'joacogrimoldi@gmail.com')),
+        inArray(users.id, userIds)
+      ];
+      query = db
+        .select({
+          id: users.id,
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          role: users.role,
+          isActive: users.isActive,
+          lastLoginAt: users.lastLoginAt,
+          createdAt: users.createdAt,
+          domain: sql`split_part(${users.email}, '@', 2)`,
+          imageCount: sql`(
+            SELECT COUNT(*) FROM ${images}
+            WHERE ${images.user_id} = ${users.id}
+            AND ${images.environment} = ${currentEnv}
+          )`,
+          videoCount: sql`(
+            SELECT COUNT(*) FROM ${videos}
+            WHERE ${videos.userId} = ${users.id}
+            AND ${videos.environment} = ${currentEnv}
+          )`,
+          projectCount: sql`(
+            SELECT COUNT(*) FROM ${projects}
+            WHERE ${projects.userId} = ${users.id}
+            AND ${projects.deletedAt} IS NULL
+          )`,
+        })
+        .from(users)
+        .where(and(...conditions));
     }
 
     // Apply additional filters if provided
