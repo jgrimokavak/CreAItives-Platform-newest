@@ -1,6 +1,7 @@
 import { BaseProvider, GenerateOptions, EditOptions, ProviderResult } from './base-provider';
 import fetch from 'node-fetch';
 import { log } from '../logger';
+import { persistImage } from '../fs-storage';
 
 export class FalProvider extends BaseProvider {
   private apiKey: string;
@@ -162,12 +163,24 @@ export class FalProvider extends BaseProvider {
         }
       });
       
-      // Convert fal.ai response to our format
-      const images = result.images.map((image: any) => ({
-        url: image.url,
-        fullUrl: image.url,
-        thumbUrl: image.url // fal.ai doesn't provide separate thumbnails
-      }));
+      // Download and save images to Object Storage
+      const images = await Promise.all(
+        result.images.map(async (image: any, index: number) => {
+          const savedImage = await this.downloadAndSaveImage(
+            image.url,
+            "system", 
+            prompt, 
+            modelKey, 
+            `img_${Date.now()}_${index}`
+          );
+          
+          return {
+            url: savedImage.fullUrl,
+            fullUrl: savedImage.fullUrl,
+            thumbUrl: savedImage.thumbUrl
+          };
+        })
+      );
       
       return { images };
       
@@ -187,5 +200,46 @@ export class FalProvider extends BaseProvider {
   
   async edit(request: EditOptions): Promise<ProviderResult> {
     throw new Error('fal.ai provider does not support image editing');
+  }
+
+  private async downloadAndSaveImage(
+    url: string, 
+    userId: string, 
+    prompt: string, 
+    modelKey: string, 
+    imageId: string
+  ): Promise<{ fullUrl: string; thumbUrl: string; id: string }> {
+    try {
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to download image: ${response.status} ${response.statusText}`);
+      }
+      
+      const arrayBuffer = await response.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const base64 = buffer.toString('base64');
+      
+      const meta = {
+        prompt: prompt,
+        params: { 
+          url, 
+          model: modelKey
+        },
+        userId,
+        sources: []
+      };
+      
+      const savedImagePaths = await persistImage(base64, meta, imageId);
+      
+      return {
+        id: savedImagePaths.id,
+        fullUrl: savedImagePaths.fullUrl,
+        thumbUrl: savedImagePaths.thumbUrl
+      };
+    } catch (error) {
+      console.error('Error downloading image:', error);
+      throw error;
+    }
   }
 }
