@@ -172,12 +172,21 @@ export default function UserDrawer({ user, isOpen, onClose }: UserDrawerProps) {
     });
   };
 
-  const handleToggleRole = () => {
+  const handleMakeAdmin = () => {
     if (!user) return;
     setActionLoading('role');
     updateUserRoleMutation.mutate({
       userId: user.id,
-      role: user.role === 'admin' ? 'user' : 'admin',
+      role: 'admin',
+    });
+  };
+
+  const handleRemoveAdmin = () => {
+    if (!user) return;
+    setActionLoading('role');
+    updateUserRoleMutation.mutate({
+      userId: user.id,
+      role: 'user',
     });
   };
 
@@ -367,7 +376,7 @@ export default function UserDrawer({ user, isOpen, onClose }: UserDrawerProps) {
                   <Button
                     variant={user.role === 'admin' ? "outline" : "default"}
                     size="sm"
-                    onClick={handleToggleRole}
+                    onClick={user.role === 'admin' ? handleRemoveAdmin : handleMakeAdmin}
                     disabled={actionLoading === 'role' || isSelfAction}
                     className="w-full justify-start"
                   >
