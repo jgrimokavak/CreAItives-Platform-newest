@@ -4,7 +4,10 @@
 This platform is a comprehensive AI-powered multimedia generation system, specifically designed for car design visualization. Its primary purpose is to empower marketing and creative teams to produce highly customizable content using advanced AI technologies. Key capabilities include AI-driven image and video generation, a specialized car design visualization system, an email builder, and robust batch processing. The vision is to provide a cutting-edge solution for automotive marketing content creation, enabling efficient and scalable production of high-quality visuals and communications.
 
 ## User Preferences
-Preferred communication style: Simple, everyday language.
+- **Communication style**: Simple, everyday language
+- **Date formatting**: dd/mm/yyyy format preferred across all displays
+- **Analytics focus**: Comprehensive coverage of all platform capabilities, not just basic metrics
+- **Development approach**: Gradual, safe improvements with biggest impact first
 
 ## System Architecture
 
@@ -58,6 +61,7 @@ Preferred communication style: Simple, everyday language.
 - **Batch Processing**: Queue-based background jobs with polling to handle long-running operations.
 - **Performance Optimization**: Implemented caching for car data and authentication, enhanced WebSocket auth, and refined logging to improve responsiveness and reduce resource consumption.
 - **Environment Isolation**: Complete separation across all storage layers (database, file system, static serving, cleanup processes) to prevent cross-environment conflicts and ensure stability.
+- **Comprehensive Analytics**: Advanced admin analytics system tracking all platform capabilities with real-time data from database queries, daily activity metrics, feature usage by category, and detailed user activity timelines with dd/mm/yyyy date formatting throughout.
 
 ## External Dependencies
 

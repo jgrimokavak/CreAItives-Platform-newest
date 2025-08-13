@@ -383,21 +383,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/admin/analytics/page-usage', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
-      const usage = await storage.getFeatureUsageAnalytics();
+      const usage = await storage.getComprehensiveFeatureUsageAnalytics();
       res.json(usage);
     } catch (error) {
-      console.error("Error fetching page usage:", error);
-      res.status(500).json({ message: "Failed to fetch page usage" });
+      console.error("Error fetching comprehensive feature usage:", error);
+      res.status(500).json({ message: "Failed to fetch feature usage" });
     }
   });
 
   app.get('/api/admin/analytics/recent-activity', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
-      const activity = await storage.getRecentUserActivity();
+      const activity = await storage.getComprehensiveUserActivity();
       res.json(activity);
     } catch (error) {
-      console.error("Error fetching recent activity:", error);
+      console.error("Error fetching comprehensive activity:", error);
       res.status(500).json({ message: "Failed to fetch recent activity" });
+    }
+  });
+
+  app.get('/api/admin/analytics/daily-activity', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const metrics = await storage.getDailyActivityMetrics();
+      res.json(metrics);
+    } catch (error) {
+      console.error("Error fetching daily activity metrics:", error);
+      res.status(500).json({ message: "Failed to fetch daily activity metrics" });
     }
   });
 

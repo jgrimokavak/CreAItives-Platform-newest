@@ -6,8 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Trash2, Shield, User as UserIcon, ToggleLeft, ToggleRight, Search, Download, Users, Activity, Clock, UserCheck, TrendingUp, BarChart3, Eye } from 'lucide-react';
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { Trash2, Shield, User as UserIcon, ToggleLeft, ToggleRight, Search, Download, Users, Activity, Clock, UserCheck, TrendingUp, BarChart3, Eye, Calendar } from 'lucide-react';
+import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, ComposedChart, Line, Legend } from 'recharts';
 import { useAuth } from '@/hooks/useAuth';
 import { apiRequest } from '@/lib/queryClient';
 import type { User } from '@shared/schema';
@@ -56,6 +56,7 @@ export default function UserManagementPage() {
     feature: string;
     count: number;
     percentage: number;
+    category: string;
   }>>({
     queryKey: ['/api/admin/analytics/page-usage'],
     retry: false,
@@ -65,8 +66,20 @@ export default function UserManagementPage() {
     user: string;
     action: string;
     time: string;
+    details: string;
   }>>({
     queryKey: ['/api/admin/analytics/recent-activity'],
+    retry: false,
+  });
+
+  const { data: dailyActivity } = useQuery<Array<{
+    date: string;
+    images: number;
+    videos: number;
+    projects: number;
+    activeUsers: number;
+  }>>({
+    queryKey: ['/api/admin/analytics/daily-activity'],
     retry: false,
   });
 
@@ -136,7 +149,7 @@ export default function UserManagementPage() {
   const formatUserDate = (date: string | Date | null) => {
     if (!date) return 'Never';
     const dateObj = typeof date === 'string' ? new Date(date) : date;
-    return dateObj.toLocaleDateString();
+    return dateObj.toLocaleDateString('en-GB'); // dd/mm/yyyy format
   };
 
   const getInitials = (user: User) => {
@@ -163,14 +176,15 @@ export default function UserManagementPage() {
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return date.toLocaleDateString('en-GB'); // dd/mm/yyyy format
   };
 
   const formatTime = (timeStr: string) => {
     const date = new Date(timeStr);
-    return date.toLocaleString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
+    return date.toLocaleString('en-GB', { 
+      day: '2-digit',
+      month: '2-digit', 
+      year: 'numeric',
       hour: '2-digit', 
       minute: '2-digit' 
     });
@@ -293,70 +307,217 @@ export default function UserManagementPage() {
           </Card>
         )}
 
-        {/* Feature Usage Analytics */}
+        {/* Daily Activity Overview */}
+        {dailyActivity && (
+          <Card className="p-6">
+            <div className="flex items-center space-x-2 mb-4">
+              <Calendar className="w-5 h-5 text-purple-500" />
+              <h3 className="text-lg font-semibold">Daily Platform Activity</h3>
+            </div>
+            <div style={{ width: '100%', height: '250px' }}>
+              <ResponsiveContainer>
+                <ComposedChart data={dailyActivity}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" tickFormatter={formatDate} />
+                  <YAxis yAxisId="left" />
+                  <YAxis yAxisId="right" orientation="right" />
+                  <Tooltip 
+                    labelFormatter={formatDate}
+                    formatter={(value: number, name: string) => {
+                      const nameMap = {
+                        images: 'Images Generated',
+                        videos: 'Videos Generated', 
+                        projects: 'Projects Created',
+                        activeUsers: 'Active Users'
+                      };
+                      return [value, nameMap[name as keyof typeof nameMap] || name];
+                    }}
+                  />
+                  <Bar yAxisId="left" dataKey="images" fill="#3B82F6" name="images" />
+                  <Bar yAxisId="left" dataKey="videos" fill="#10B981" name="videos" />
+                  <Bar yAxisId="left" dataKey="projects" fill="#F59E0B" name="projects" />
+                  <Line yAxisId="right" type="monotone" dataKey="activeUsers" stroke="#EF4444" strokeWidth={2} name="activeUsers" />
+                  <Legend />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Comprehensive Feature Usage */}
         {pageAnalytics && (
           <Card className="p-6">
             <div className="flex items-center space-x-2 mb-4">
               <BarChart3 className="w-5 h-5 text-green-500" />
-              <h3 className="text-lg font-semibold">Feature Usage</h3>
+              <h3 className="text-lg font-semibold">Platform Capabilities Usage</h3>
             </div>
-            <div style={{ width: '100%', height: '250px' }}>
+            <div style={{ width: '100%', height: '300px' }}>
               <ResponsiveContainer>
                 <PieChart>
                   <Pie
                     data={pageAnalytics}
                     cx="50%"
                     cy="50%"
-                    outerRadius={80}
+                    outerRadius={90}
                     dataKey="count"
                     nameKey="feature"
+                    label={({ feature, count, percentage }) => `${percentage}%`}
                   >
                     {pageAnalytics.map((entry: any, index: number) => (
                       <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value: number, name: string) => [`${value} uses`, name]} />
+                  <Tooltip 
+                    formatter={(value: number, name: string, props: any) => [
+                      `${value} uses (${props.payload.percentage}%)`, 
+                      `${props.payload.category}: ${name}`
+                    ]}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="mt-4 space-y-2">
-              {pageAnalytics.map((item: any, index: number) => (
-                <div key={item.feature} className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <div 
-                      className="w-3 h-3 rounded-full" 
-                      style={{ backgroundColor: chartColors[index % chartColors.length] }}
-                    />
-                    <span className="text-sm">{item.feature}</span>
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {item.count} uses ({item.percentage}%)
-                  </div>
+            <div className="mt-4 space-y-3">
+              {Object.entries(
+                pageAnalytics.reduce((acc: any, feature: any) => {
+                  const category = feature.category;
+                  if (!acc[category]) acc[category] = [];
+                  acc[category].push(feature);
+                  return acc;
+                }, {})
+              ).map(([category, features]: [string, any]) => (
+                <div key={category} className="space-y-2">
+                  <h5 className="font-medium text-sm text-muted-foreground">{category}</h5>
+                  {features.map((item: any, index: number) => (
+                    <div key={item.feature} className="flex items-center justify-between pl-4">
+                      <div className="flex items-center space-x-2">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: chartColors[pageAnalytics.indexOf(item) % chartColors.length] }}
+                        />
+                        <span className="text-sm">{item.feature}</span>
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {item.count} uses ({item.percentage}%)
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ))}
             </div>
           </Card>
         )}
+
+        {/* Platform Activity Summary */}
+        {pageAnalytics && statistics && (
+          <Card className="p-6">
+            <div className="flex items-center space-x-2 mb-4">
+              <Activity className="w-5 h-5 text-orange-500" />
+              <h3 className="text-lg font-semibold">Platform Activity Summary</h3>
+            </div>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center p-3 bg-blue-50 rounded-lg">
+                  <p className="text-2xl font-bold text-blue-600">
+                    {pageAnalytics.find(f => f.feature === 'AI Image Generation')?.count || 0}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Images Generated</p>
+                </div>
+                <div className="text-center p-3 bg-green-50 rounded-lg">
+                  <p className="text-2xl font-bold text-green-600">
+                    {pageAnalytics.find(f => f.feature === 'AI Video Generation')?.count || 0}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Videos Generated</p>
+                </div>
+                <div className="text-center p-3 bg-yellow-50 rounded-lg">
+                  <p className="text-2xl font-bold text-yellow-600">
+                    {pageAnalytics.find(f => f.feature === 'Car Design Visualization')?.count || 0}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Car Designs</p>
+                </div>
+                <div className="text-center p-3 bg-purple-50 rounded-lg">
+                  <p className="text-2xl font-bold text-purple-600">
+                    {pageAnalytics.find(f => f.feature === 'Video Projects')?.count || 0}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Projects Created</p>
+                </div>
+              </div>
+              
+              <div className="pt-4 border-t">
+                <h6 className="font-medium text-sm mb-2">Engagement Metrics</h6>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Content Generation Rate</span>
+                    <span className="font-medium">
+                      {Math.round((
+                        (pageAnalytics.find(f => f.feature === 'AI Image Generation')?.count || 0) +
+                        (pageAnalytics.find(f => f.feature === 'AI Video Generation')?.count || 0)
+                      ) / Math.max(statistics.activeUsers, 1))} per user
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Car Design Usage</span>
+                    <span className="font-medium">
+                      {pageAnalytics.find(f => f.feature === 'Car Design Visualization')?.percentage || 0}% of images
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+        )}
       </div>
 
-      {/* Recent Activity Timeline */}
+      {/* Comprehensive Recent Activity Timeline */}
       {recentActivity && recentActivity.length > 0 && (
         <Card className="p-6">
           <div className="flex items-center space-x-2 mb-4">
-            <Activity className="w-5 h-5 text-purple-500" />
-            <h3 className="text-lg font-semibold">Recent User Activity</h3>
+            <Clock className="w-5 h-5 text-indigo-500" />
+            <h3 className="text-lg font-semibold">Recent Platform Activity</h3>
+            <Badge variant="outline" className="ml-auto">
+              Last 7 days
+            </Badge>
           </div>
-          <div className="space-y-4 max-h-96 overflow-y-auto">
-            {recentActivity.map((activity: any, index: number) => (
-              <div key={index} className="flex items-start space-x-3 py-2 border-b border-gray-100 last:border-b-0">
-                <div className="w-2 h-2 rounded-full bg-blue-500 mt-2 flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{activity.user}</p>
-                  <p className="text-sm text-muted-foreground">{activity.action}</p>
-                  <p className="text-xs text-muted-foreground">{formatTime(activity.time)}</p>
+          <div className="space-y-3 max-h-96 overflow-y-auto">
+            {recentActivity.map((activity: any, index: number) => {
+              const activityColor = activity.action.includes('Image') ? 'blue' : 
+                                   activity.action.includes('Video') ? 'green' :
+                                   activity.action.includes('Project') ? 'yellow' :
+                                   activity.action.includes('Login') ? 'purple' : 'gray';
+              
+              return (
+                <div key={index} className="flex items-start space-x-3 py-3 px-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                  <div className={`w-3 h-3 rounded-full mt-2 flex-shrink-0 ${
+                    activityColor === 'blue' ? 'bg-blue-500' :
+                    activityColor === 'green' ? 'bg-green-500' :
+                    activityColor === 'yellow' ? 'bg-yellow-500' :
+                    activityColor === 'purple' ? 'bg-purple-500' : 'bg-gray-500'
+                  }`} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-2">
+                      <p className="text-sm font-medium truncate">{activity.user}</p>
+                      <Badge variant="secondary" className="text-xs">
+                        {activity.action}
+                      </Badge>
+                    </div>
+                    {activity.details && (
+                      <p className="text-xs text-muted-foreground mt-1 truncate">
+                        {activity.details}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {formatTime(activity.time)}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
+          </div>
+          <div className="mt-4 pt-4 border-t text-center">
+            <p className="text-xs text-muted-foreground">
+              Showing {recentActivity.length} recent activities across all platform features
+            </p>
           </div>
         </Card>
       )}

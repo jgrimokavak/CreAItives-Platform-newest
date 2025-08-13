@@ -308,14 +308,15 @@ export class DatabaseStorage implements IStorage {
     return trends;
   }
 
-  async getFeatureUsageAnalytics(): Promise<Array<{
+  async getComprehensiveFeatureUsageAnalytics(): Promise<Array<{
     feature: string;
     count: number;
     percentage: number;
+    category: string;
   }>> {
     const currentEnv = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
     
-    // Get counts from different features using existing tables
+    // Get comprehensive counts from all platform features
     const [imageCount] = await db.select({ count: sql`count(*)` })
       .from(images)
       .where(eq(images.environment, currentEnv));
@@ -323,77 +324,232 @@ export class DatabaseStorage implements IStorage {
     const [videoCount] = await db.select({ count: sql`count(*)` })
       .from(videos)
       .where(eq(videos.environment, currentEnv));
+
+    // Get car-specific images (those with car-related prompts or using car generation)
+    const [carImageCount] = await db.select({ count: sql`count(*)` })
+      .from(images)
+      .where(and(
+        eq(images.environment, currentEnv),
+        or(
+          sql`lower(${images.prompt}) LIKE '%car%'`,
+          sql`lower(${images.prompt}) LIKE '%vehicle%'`,
+          sql`lower(${images.prompt}) LIKE '%auto%'`,
+          sql`${images.model} = 'car-generation'`
+        )
+      ));
+
+    // Get upscaled images (those processed through upscaling)
+    const [upscaleCount] = await db.select({ count: sql`count(*)` })
+      .from(images)
+      .where(and(
+        eq(images.environment, currentEnv),
+        or(
+          sql`lower(${images.prompt}) LIKE '%upscale%'`,
+          sql`lower(${images.prompt}) LIKE '%enhance%'`,
+          sql`${images.model} = 'topaz-upscale'`
+        )
+      ));
+
+    // Get project count (collaborative video projects)
+    const [projectCount] = await db.select({ count: sql`count(*)` })
+      .from(projects)
+      .where(isNull(projects.deletedAt));
+
+    // Get user count for context
+    const excludeHidden = not(eq(users.email, 'joacogrimoldi@gmail.com'));
+    const [activeUserCount] = await db.select({ count: sql`count(*)` })
+      .from(users)
+      .where(and(eq(users.isActive, true), excludeHidden));
     
-    const totalFeatureUsage = Number(imageCount.count) + Number(videoCount.count);
+    const totalContentGeneration = Number(imageCount.count) + Number(videoCount.count);
     
     const features = [
       {
         feature: 'AI Image Generation',
         count: Number(imageCount.count),
-        percentage: totalFeatureUsage > 0 ? Math.round((Number(imageCount.count) / totalFeatureUsage) * 100) : 0
+        percentage: totalContentGeneration > 0 ? Math.round((Number(imageCount.count) / totalContentGeneration) * 100) : 0,
+        category: 'Content Generation'
       },
       {
         feature: 'AI Video Generation', 
         count: Number(videoCount.count),
-        percentage: totalFeatureUsage > 0 ? Math.round((Number(videoCount.count) / totalFeatureUsage) * 100) : 0
+        percentage: totalContentGeneration > 0 ? Math.round((Number(videoCount.count) / totalContentGeneration) * 100) : 0,
+        category: 'Content Generation'
+      },
+      {
+        feature: 'Car Design Visualization',
+        count: Number(carImageCount.count),
+        percentage: Number(imageCount.count) > 0 ? Math.round((Number(carImageCount.count) / Number(imageCount.count)) * 100) : 0,
+        category: 'Specialized Tools'
+      },
+      {
+        feature: 'Image Upscaling',
+        count: Number(upscaleCount.count),
+        percentage: Number(imageCount.count) > 0 ? Math.round((Number(upscaleCount.count) / Number(imageCount.count)) * 100) : 0,
+        category: 'Enhancement'
+      },
+      {
+        feature: 'Video Projects',
+        count: Number(projectCount.count),
+        percentage: Number(activeUserCount.count) > 0 ? Math.round((Number(projectCount.count) / Number(activeUserCount.count)) * 100) : 0,
+        category: 'Organization'
       }
     ];
     
     return features.sort((a, b) => b.count - a.count);
   }
 
-  async getRecentUserActivity(): Promise<Array<{
+  async getComprehensiveUserActivity(): Promise<Array<{
     user: string;
     action: string;
     time: string;
+    details: string;
   }>> {
     const currentEnv = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
     const excludeHidden = not(eq(users.email, 'joacogrimoldi@gmail.com'));
     
-    // Get recent image generations
+    // Get recent image generations with detailed model info
     const recentImages = await db.select({
-      userId: users.id,
       userName: sql`COALESCE(${users.firstName} || ' ' || ${users.lastName}, ${users.email})`,
-      action: sql`'Generated Image'`,
+      action: sql`'Image Generated'`,
       time: images.createdAt,
-      details: images.model
+      details: sql`${images.model} || ' - ' || SUBSTRING(${images.prompt}, 1, 50) || CASE WHEN LENGTH(${images.prompt}) > 50 THEN '...' ELSE '' END`
     })
     .from(images)
     .innerJoin(users, eq(users.id, sql`split_part(${images.id}, '-', 1)`))
     .where(and(
       eq(images.environment, currentEnv),
-      excludeHidden
+      excludeHidden,
+      sql`${images.createdAt} >= NOW() - INTERVAL '7 days'`
     ))
     .orderBy(desc(images.createdAt))
-    .limit(10);
+    .limit(8);
     
-    // Get recent video generations  
+    // Get recent video generations with project info
     const recentVideos = await db.select({
-      userId: videos.userId,
       userName: sql`COALESCE(${users.firstName} || ' ' || ${users.lastName}, ${users.email})`,
-      action: sql`'Generated Video'`,
+      action: sql`'Video Generated'`,
       time: videos.createdAt,
-      details: videos.model
+      details: sql`${videos.model} || ' - ' || SUBSTRING(${videos.prompt}, 1, 50) || CASE WHEN LENGTH(${videos.prompt}) > 50 THEN '...' ELSE '' END`
     })
     .from(videos)
     .innerJoin(users, eq(users.id, videos.userId))
     .where(and(
       eq(videos.environment, currentEnv),
-      excludeHidden
+      excludeHidden,
+      sql`${videos.createdAt} >= NOW() - INTERVAL '7 days'`
     ))
     .orderBy(desc(videos.createdAt))
-    .limit(10);
+    .limit(8);
+
+    // Get recent project creations
+    const recentProjects = await db.select({
+      userName: sql`COALESCE(${users.firstName} || ' ' || ${users.lastName}, ${users.email})`,
+      action: sql`'Project Created'`,
+      time: projects.createdAt,
+      details: sql`'Project: ' || ${projects.name} || CASE WHEN ${projects.description} IS NOT NULL THEN ' - ' || SUBSTRING(${projects.description}, 1, 40) ELSE '' END`
+    })
+    .from(projects)
+    .innerJoin(users, eq(users.id, projects.userId))
+    .where(and(
+      excludeHidden,
+      sql`${projects.createdAt} >= NOW() - INTERVAL '7 days'`,
+      isNull(projects.deletedAt)
+    ))
+    .orderBy(desc(projects.createdAt))
+    .limit(5);
+
+    // Get recent user logins
+    const recentLogins = await db.select({
+      userName: sql`COALESCE(${users.firstName} || ' ' || ${users.lastName}, ${users.email})`,
+      action: sql`'User Login'`,
+      time: users.lastLoginAt,
+      details: sql`'Last active session'`
+    })
+    .from(users)
+    .where(and(
+      excludeHidden,
+      isNotNull(users.lastLoginAt),
+      sql`${users.lastLoginAt} >= NOW() - INTERVAL '24 hours'`
+    ))
+    .orderBy(desc(users.lastLoginAt))
+    .limit(5);
     
     // Combine and sort by time
-    const allActivity = [...recentImages, ...recentVideos]
+    const allActivity = [...recentImages, ...recentVideos, ...recentProjects, ...recentLogins]
       .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
-      .slice(0, 15);
+      .slice(0, 20);
     
     return allActivity.map(item => ({
       user: String(item.userName || 'Unknown User'),
-      action: `${String(item.action)} (${String(item.details)})`,
-      time: item.time.toISOString()
+      action: String(item.action),
+      time: item.time.toISOString(),
+      details: String(item.details || '')
     }));
+  }
+
+  async getDailyActivityMetrics(): Promise<Array<{
+    date: string;
+    images: number;
+    videos: number;
+    projects: number;
+    activeUsers: number;
+  }>> {
+    const currentEnv = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
+    const excludeHidden = not(eq(users.email, 'joacogrimoldi@gmail.com'));
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    // Get daily activity metrics for the last 7 days
+    const dailyMetrics = [];
+    
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      
+      // Images created on this day
+      const [dailyImages] = await db.select({ count: sql`count(*)` })
+        .from(images)
+        .where(and(
+          eq(images.environment, currentEnv),
+          sql`DATE(${images.createdAt}) = ${dateStr}`
+        ));
+
+      // Videos created on this day
+      const [dailyVideos] = await db.select({ count: sql`count(*)` })
+        .from(videos)
+        .where(and(
+          eq(videos.environment, currentEnv),
+          sql`DATE(${videos.createdAt}) = ${dateStr}`
+        ));
+
+      // Projects created on this day
+      const [dailyProjects] = await db.select({ count: sql`count(*)` })
+        .from(projects)
+        .where(and(
+          isNull(projects.deletedAt),
+          sql`DATE(${projects.createdAt}) = ${dateStr}`
+        ));
+
+      // Active users on this day (users who logged in)
+      const [dailyActiveUsers] = await db.select({ count: sql`count(*)` })
+        .from(users)
+        .where(and(
+          excludeHidden,
+          sql`DATE(${users.lastLoginAt}) = ${dateStr}`
+        ));
+
+      dailyMetrics.push({
+        date: dateStr,
+        images: Number(dailyImages.count),
+        videos: Number(dailyVideos.count),
+        projects: Number(dailyProjects.count),
+        activeUsers: Number(dailyActiveUsers.count)
+      });
+    }
+    
+    return dailyMetrics;
   }
 
   async updateUserStatus(userId: string, isActive: boolean): Promise<User | undefined> {
