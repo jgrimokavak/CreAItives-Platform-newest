@@ -32,6 +32,67 @@ export const users = pgTable("users", {
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 
+// User Sessions tracking for real-time online status
+export const userSessions = pgTable("user_sessions", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  sessionToken: text("session_token").notNull(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  currentPage: text("current_page"),
+  isActive: boolean("is_active").default(true).notNull(),
+  lastActivity: timestamp("last_activity").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_user_sessions_user_id").on(table.userId),
+  index("idx_user_sessions_active").on(table.isActive),
+  index("idx_user_sessions_last_activity").on(table.lastActivity),
+]);
+
+// User Activity Logs for detailed tracking
+export const userActivityLogs = pgTable("user_activity_logs", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  sessionId: text("session_id"),
+  action: text("action").notNull(), // 'page_view', 'login', 'logout', 'image_generate', 'video_generate', etc.
+  page: text("page"), // '/home', '/create', '/gallery', etc.
+  details: jsonb("details"), // Additional context data
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  duration: integer("duration"), // Time spent on page/action in seconds
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_activity_logs_user_id").on(table.userId),
+  index("idx_activity_logs_action").on(table.action),
+  index("idx_activity_logs_page").on(table.page),
+  index("idx_activity_logs_created_at").on(table.createdAt),
+  index("idx_activity_logs_session_id").on(table.sessionId),
+]);
+
+// Page Analytics for tracking page popularity
+export const pageAnalytics = pgTable("page_analytics", {
+  id: text("id").primaryKey(),
+  page: text("page").notNull(), // '/home', '/create', '/gallery', etc.
+  date: text("date").notNull(), // 'YYYY-MM-DD' format for daily aggregation
+  uniqueVisitors: integer("unique_visitors").default(0).notNull(),
+  totalViews: integer("total_views").default(0).notNull(),
+  averageDuration: integer("average_duration").default(0).notNull(), // in seconds
+  bounceRate: integer("bounce_rate").default(0).notNull(), // percentage
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_page_analytics_page_date").on(table.page, table.date),
+  index("idx_page_analytics_date").on(table.date),
+]);
+
+export const insertUserSessionSchema = createInsertSchema(userSessions);
+export const insertUserActivityLogSchema = createInsertSchema(userActivityLogs);
+export const insertPageAnalyticsSchema = createInsertSchema(pageAnalytics);
+
+export type UserSession = typeof userSessions.$inferSelect;
+export type UserActivityLog = typeof userActivityLogs.$inferSelect;
+export type PageAnalytics = typeof pageAnalytics.$inferSelect;
+
 // Image generation schema
 export const generateSchema = z.object({
   modelKey: z.enum(["gpt-image-1", "imagen-3", "imagen-4", "flux-pro", "flux-kontext-max", "flux-krea-dev", "wan-2.2"]),
