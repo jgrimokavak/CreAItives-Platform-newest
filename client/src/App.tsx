@@ -100,7 +100,7 @@ function Router() {
           <Route path="/admin/users" component={() => (
             <Sidebar>
               <AdminRoute>
-                <UserManagementPage />
+                <EnhancedUserManagementPage />
               </AdminRoute>
             </Sidebar>
           )} />
