@@ -2,6 +2,7 @@ import { BaseProvider, GenerateOptions, EditOptions, ProviderResult } from './ba
 import { openai, toFile } from '../openai';
 import { models } from '../config/models';
 import { log } from '../logger';
+import { persistImage } from '../fs-storage';
 import fs from 'fs';
 import path from 'path';
 
@@ -17,6 +18,47 @@ export class OpenAIProvider extends BaseProvider {
   getDefaults(modelKey: string): Record<string, any> {
     const model = models.find(m => m.key === modelKey);
     return model?.defaults || {};
+  }
+
+  private async downloadAndSaveImage(
+    url: string, 
+    userId: string, 
+    prompt: string, 
+    modelKey: string, 
+    imageId: string
+  ): Promise<{ fullUrl: string; thumbUrl: string; id: string }> {
+    try {
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to download image: ${response.status} ${response.statusText}`);
+      }
+      
+      const arrayBuffer = await response.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const base64 = buffer.toString('base64');
+      
+      const meta = {
+        prompt: prompt,
+        params: { 
+          url, 
+          model: modelKey
+        },
+        userId,
+        sources: []
+      };
+      
+      const savedImagePaths = await persistImage(base64, meta, imageId);
+      
+      return {
+        id: savedImagePaths.id,
+        fullUrl: savedImagePaths.fullUrl,
+        thumbUrl: savedImagePaths.thumbUrl
+      };
+    } catch (error) {
+      console.error('Error downloading image:', error);
+      throw error;
+    }
   }
   
   async generate(options: GenerateOptions): Promise<ProviderResult> {
@@ -77,24 +119,54 @@ export class OpenAIProvider extends BaseProvider {
     if (!response?.data || response.data.length === 0) {
       throw new Error("No images were generated");
     }
-    
-    return {
-      images: response.data.map(image => {
-        let url = "";
+
+    // Process and save images based on response format
+    const images = await Promise.all(
+      response.data.map(async (image, index) => {
+        const imageId = `img_${Date.now()}_${index}`;
         
         if (image.url) {
-          url = image.url;
+          // GPT-Image-1 returns URLs - download and save
+          const savedImage = await this.downloadAndSaveImage(
+            image.url,
+            "system", // Default user ID
+            prompt,
+            modelKey,
+            imageId
+          );
+          
+          return {
+            url: savedImage.fullUrl,
+            fullUrl: savedImage.fullUrl,
+            thumbUrl: savedImage.thumbUrl
+          };
         } else if (image.b64_json) {
-          url = `data:image/png;base64,${image.b64_json}`;
+          // DALL-E models return base64 - save directly
+          const meta = {
+            prompt: prompt,
+            params: { 
+              model: modelKey,
+              size,
+              quality
+            },
+            userId: "system",
+            sources: []
+          };
+          
+          const savedImage = await persistImage(image.b64_json, meta, imageId);
+          
+          return {
+            url: savedImage.fullUrl,
+            fullUrl: savedImage.fullUrl,
+            thumbUrl: savedImage.thumbUrl
+          };
+        } else {
+          throw new Error("Image response contains neither URL nor base64 data");
         }
-        
-        return {
-          url,
-          fullUrl: url,
-          thumbUrl: url
-        };
       })
-    };
+    );
+    
+    return { images };
   }
   
   async edit(options: EditOptions): Promise<ProviderResult> {
@@ -175,16 +247,38 @@ export class OpenAIProvider extends BaseProvider {
         throw new Error("No images were generated from edit");
       }
       
-      return {
-        images: response.data.map(image => {
-          const url = `data:image/png;base64,${image.b64_json}`;
+      // Process and save edited images
+      const processedImages = await Promise.all(
+        response.data.map(async (image, index) => {
+          const imageId = `img_edit_${Date.now()}_${index}`;
+          
+          const meta = {
+            prompt: prompt,
+            params: { 
+              model: modelKey,
+              size,
+              quality,
+              edit: true
+            },
+            userId: "system",
+            sources: []
+          };
+          
+          if (!image.b64_json) {
+            throw new Error("Edit response contains no base64 data");
+          }
+          
+          const savedImage = await persistImage(image.b64_json, meta, imageId);
+          
           return {
-            url,
-            fullUrl: url,
-            thumbUrl: url
+            url: savedImage.fullUrl,
+            fullUrl: savedImage.fullUrl,
+            thumbUrl: savedImage.thumbUrl
           };
         })
-      };
+      );
+      
+      return { images: processedImages };
     } finally {
       // Cleanup temp files
       setTimeout(() => {
