@@ -298,6 +298,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Bulk user status update - MUST come before :userId routes
+  app.patch('/api/admin/users/bulk/status', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { userIds, isActive } = req.body;
+      const adminUserId = req.user.id;
+      const adminEmail = req.user.email;
+      const ipAddress = req.ip || req.connection.remoteAddress;
+
+      console.log(`Admin bulk status update request:`, { userIds, isActive });
+
+      if (!Array.isArray(userIds) || userIds.length === 0) {
+        return res.status(400).json({ message: "Invalid userIds array" });
+      }
+
+      if (typeof isActive !== 'boolean') {
+        console.log(`Invalid isActive value: ${isActive}, type: ${typeof isActive}`);
+        return res.status(400).json({ message: "isActive must be a boolean" });
+      }
+
+      // Prevent self-modification
+      if (userIds.includes(adminUserId)) {
+        return res.status(403).json({ message: "Cannot modify your own account in bulk operations" });
+      }
+
+      // Client-side cap enforcement
+      if (userIds.length > 100) {
+        return res.status(400).json({ message: "Bulk operations limited to 100 users at a time" });
+      }
+
+      const result = await storage.bulkUpdateUserStatus(userIds, isActive, adminUserId, adminEmail, ipAddress);
+      res.json(result);
+    } catch (error) {
+      console.error("Error bulk updating user status:", error);
+      res.status(500).json({ message: "Failed to bulk update user status" });
+    }
+  });
+
+  // Bulk user role update - MUST come before :userId routes
+  app.patch('/api/admin/users/bulk/role', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { userIds, role } = req.body;
+      const adminUserId = req.user.id;
+      const adminEmail = req.user.email;
+      const ipAddress = req.ip || req.connection.remoteAddress;
+
+      console.log(`Admin bulk role update request:`, { userIds, role });
+
+      if (!Array.isArray(userIds) || userIds.length === 0) {
+        return res.status(400).json({ message: "Invalid userIds array" });
+      }
+
+      if (!['user', 'admin'].includes(role)) {
+        console.log(`Invalid role value: ${role}`);
+        return res.status(400).json({ message: "Role must be 'user' or 'admin'" });
+      }
+
+      // Prevent self-modification
+      if (userIds.includes(adminUserId)) {
+        return res.status(403).json({ message: "Cannot modify your own account in bulk operations" });
+      }
+
+      // Client-side cap enforcement
+      if (userIds.length > 100) {
+        return res.status(400).json({ message: "Bulk operations limited to 100 users at a time" });
+      }
+
+      const result = await storage.bulkUpdateUserRole(userIds, role, adminUserId, adminEmail, ipAddress);
+      res.json(result);
+    } catch (error) {
+      console.error("Error bulk updating user role:", error);
+      res.status(500).json({ message: "Failed to bulk update user role" });
+    }
+  });
+
   app.patch('/api/admin/users/:userId/status', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const { userId } = req.params;
@@ -513,73 +587,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Bulk user status update
-  app.patch('/api/admin/users/bulk/status', isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      const { userIds, isActive } = req.body;
-      const adminUserId = req.user.id;
-      const adminEmail = req.user.email;
-      const ipAddress = req.ip || req.connection.remoteAddress;
-
-      if (!Array.isArray(userIds) || userIds.length === 0) {
-        return res.status(400).json({ message: "Invalid userIds array" });
-      }
-
-      if (typeof isActive !== 'boolean') {
-        return res.status(400).json({ message: "Invalid isActive value" });
-      }
-
-      // Prevent self-modification
-      if (userIds.includes(adminUserId)) {
-        return res.status(403).json({ message: "Cannot modify your own account in bulk operations" });
-      }
-
-      // Client-side cap enforcement
-      if (userIds.length > 100) {
-        return res.status(400).json({ message: "Bulk operations limited to 100 users at a time" });
-      }
-
-      const result = await storage.bulkUpdateUserStatus(userIds, isActive, adminUserId, adminEmail, ipAddress);
-      res.json(result);
-    } catch (error) {
-      console.error("Error bulk updating user status:", error);
-      res.status(500).json({ message: "Failed to bulk update user status" });
-    }
-  });
-
-  // Bulk user role update
-  app.patch('/api/admin/users/bulk/role', isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      const { userIds, role } = req.body;
-      const adminUserId = req.user.id;
-      const adminEmail = req.user.email;
-      const ipAddress = req.ip || req.connection.remoteAddress;
-
-      if (!Array.isArray(userIds) || userIds.length === 0) {
-        return res.status(400).json({ message: "Invalid userIds array" });
-      }
-
-      if (!['user', 'admin'].includes(role)) {
-        return res.status(400).json({ message: "Invalid role value" });
-      }
-
-      // Prevent self-modification
-      if (userIds.includes(adminUserId)) {
-        return res.status(403).json({ message: "Cannot modify your own account in bulk operations" });
-      }
-
-      // Client-side cap enforcement
-      if (userIds.length > 100) {
-        return res.status(400).json({ message: "Bulk operations limited to 100 users at a time" });
-      }
-
-      const result = await storage.bulkUpdateUserRole(userIds, role, adminUserId, adminEmail, ipAddress);
-      res.json(result);
-    } catch (error) {
-      console.error("Error bulk updating user role:", error);
-      res.status(500).json({ message: "Failed to bulk update user role" });
-    }
-  });
+  // Note: Bulk routes have been moved BEFORE :userId routes to prevent route matching issues
 
   // Export users
   app.post('/api/admin/users/export', isAuthenticated, isAdmin, async (req: any, res) => {
