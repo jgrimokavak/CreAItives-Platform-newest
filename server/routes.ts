@@ -581,19 +581,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Export users with audit logging
+  // Export users
   app.post('/api/admin/users/export', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
-      const { userIds, filters, reason, maxRows = 1000 } = req.body;
+      const { userIds, filters, maxRows = 1000 } = req.body;
       const adminUserId = req.user.id;
       const adminEmail = req.user.email;
       const ipAddress = req.ip || req.connection.remoteAddress;
-
-      if (!reason || typeof reason !== 'string' || reason.trim().length < 10) {
-        return res.status(400).json({ 
-          message: "Export reason is required and must be at least 10 characters" 
-        });
-      }
 
       // Enforce maximum export limit
       const maxExportRows = Math.min(maxRows, 1000);
@@ -601,7 +595,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await storage.exportUsers({
         userIds,
         filters,
-        reason: reason.trim(),
+        reason: "Admin export", // Default reason for audit logging
         adminUserId,
         adminEmail,
         ipAddress,

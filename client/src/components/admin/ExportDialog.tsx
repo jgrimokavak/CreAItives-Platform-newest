@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   Dialog,
@@ -44,13 +42,11 @@ export default function ExportDialog({
 }: ExportDialogProps) {
   const { toast } = useToast();
   const [exportType, setExportType] = useState<'selected' | 'filtered'>('selected');
-  const [reason, setReason] = useState('');
   const [isExporting, setIsExporting] = useState(false);
 
   const exportMutation = useMutation({
-    mutationFn: async (data: { type: 'selected' | 'filtered'; reason: string }) => {
+    mutationFn: async (data: { type: 'selected' | 'filtered' }) => {
       const payload = {
-        reason: data.reason,
         maxRows: MAX_EXPORT_ROWS,
         ...(data.type === 'selected' 
           ? { userIds: selectedIds }
@@ -80,10 +76,9 @@ export default function ExportDialog({
       
       toast({
         title: 'Export Completed',
-        description: `Successfully exported ${data.count} users. Export ID: ${data.auditId}`,
+        description: `Successfully exported ${data.count} users`,
       });
       
-      setReason('');
       onOpenChange(false);
     },
     onError: (error: any) => {
@@ -118,15 +113,6 @@ export default function ExportDialog({
   };
 
   const handleExport = () => {
-    if (!reason.trim()) {
-      toast({
-        title: 'Reason Required',
-        description: 'Please provide a reason for this export',
-        variant: 'destructive',
-      });
-      return;
-    }
-
     if (exportType === 'selected' && selectedIds.length === 0) {
       toast({
         title: 'No Users Selected',
@@ -137,7 +123,7 @@ export default function ExportDialog({
     }
 
     setIsExporting(true);
-    exportMutation.mutate({ type: exportType, reason });
+    exportMutation.mutate({ type: exportType });
   };
 
   const estimatedRows = exportType === 'selected' ? selectedIds.length : 'Unknown';
@@ -152,7 +138,7 @@ export default function ExportDialog({
             <span>Export Users</span>
           </DialogTitle>
           <DialogDescription>
-            Export user data with audit logging and safety controls
+            Export user data to CSV format for analysis or reporting
           </DialogDescription>
         </DialogHeader>
 
@@ -252,37 +238,20 @@ export default function ExportDialog({
             </Alert>
           )}
 
-          {/* Reason Input */}
-          <div className="space-y-2">
-            <Label htmlFor="reason" className="text-base font-medium">
-              Reason for Export <span className="text-red-500">*</span>
-            </Label>
-            <Textarea
-              id="reason"
-              placeholder="Please provide a brief reason for this export (required for audit purposes)"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              className="min-h-[80px]"
-            />
-            <div className="text-xs text-muted-foreground">
-              This reason will be logged for audit purposes. Be specific and professional.
-            </div>
-          </div>
-
-          {/* Audit Notice */}
+          {/* Export Notice */}
           <Alert>
             <CheckCircle className="w-4 h-4" />
             <AlertDescription>
-              <strong>Audit Logging:</strong> This export will be logged with your user ID, 
-              timestamp, export parameters, and the reason provided. Export logs are retained 
-              for compliance and security auditing.
+              <strong>Export Info:</strong> This export will be logged with your user ID and 
+              timestamp for security purposes. All data is exported in CSV format for easy use 
+              in spreadsheet applications.
             </AlertDescription>
           </Alert>
         </div>
 
         <DialogFooter className="flex items-center justify-between">
           <div className="text-xs text-muted-foreground">
-            All exports are subject to audit and rate limiting
+            Maximum {MAX_EXPORT_ROWS} rows per export
           </div>
           <div className="flex space-x-2">
             <Button 
