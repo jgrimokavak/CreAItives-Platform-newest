@@ -58,6 +58,9 @@ export default function UserDrawer({ user, isOpen, onClose }: UserDrawerProps) {
     mutationFn: ({ userId, isActive }: { userId: string; isActive: boolean }) =>
       apiRequest(`/api/admin/users/${userId}/status`, {
         method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ isActive }),
       }),
     onSuccess: () => {
@@ -83,6 +86,9 @@ export default function UserDrawer({ user, isOpen, onClose }: UserDrawerProps) {
     mutationFn: ({ userId, role }: { userId: string; role: 'user' | 'admin' }) =>
       apiRequest(`/api/admin/users/${userId}/role`, {
         method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ role }),
       }),
     onSuccess: () => {
@@ -108,6 +114,9 @@ export default function UserDrawer({ user, isOpen, onClose }: UserDrawerProps) {
     mutationFn: (userId: string) =>
       apiRequest(`/api/admin/users/${userId}/logout`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       }),
     onSuccess: () => {
       toast({

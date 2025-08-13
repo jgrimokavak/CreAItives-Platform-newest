@@ -41,6 +41,9 @@ export default function BulkActionsBar({ selectedIds, onClearSelection }: BulkAc
     mutationFn: ({ userIds, isActive }: { userIds: string[]; isActive: boolean }) =>
       apiRequest('/api/admin/users/bulk/status', {
         method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ userIds, isActive }),
       }),
     onSuccess: (data) => {
@@ -71,6 +74,9 @@ export default function BulkActionsBar({ selectedIds, onClearSelection }: BulkAc
     mutationFn: ({ userIds, role }: { userIds: string[]; role: 'user' | 'admin' }) =>
       apiRequest('/api/admin/users/bulk/role', {
         method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ userIds, role }),
       }),
     onSuccess: (data) => {
