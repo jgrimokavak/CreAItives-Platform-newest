@@ -93,6 +93,30 @@ export type UserSession = typeof userSessions.$inferSelect;
 export type UserActivityLog = typeof userActivityLogs.$inferSelect;
 export type PageAnalytics = typeof pageAnalytics.$inferSelect;
 
+// Admin Audit Logs for tracking admin actions
+export const adminAuditLogs = pgTable("admin_audit_logs", {
+  id: text("id").primaryKey(),
+  adminUserId: text("admin_user_id").notNull(),
+  adminEmail: text("admin_email").notNull(),
+  action: text("action").notNull(), // 'user_status_change', 'user_role_change', 'force_logout', 'bulk_action', 'export'
+  targetUserId: text("target_user_id"), // For single user actions
+  targetUserEmail: text("target_user_email"), // For reference
+  details: jsonb("details"), // Action-specific details
+  affectedCount: integer("affected_count").default(1), // For bulk actions
+  reason: text("reason"), // For exports and sensitive actions
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_admin_audit_admin_user").on(table.adminUserId),
+  index("idx_admin_audit_action").on(table.action),
+  index("idx_admin_audit_created_at").on(table.createdAt),
+  index("idx_admin_audit_target_user").on(table.targetUserId),
+]);
+
+export const insertAdminAuditLogSchema = createInsertSchema(adminAuditLogs);
+export type AdminAuditLog = typeof adminAuditLogs.$inferSelect;
+
 // Image generation schema
 export const generateSchema = z.object({
   modelKey: z.enum(["gpt-image-1", "imagen-3", "imagen-4", "flux-pro", "flux-kontext-max", "flux-krea-dev", "wan-2.2"]),
@@ -231,6 +255,7 @@ export const images = pgTable("images", {
   quality: text("quality"),           // Image quality setting
   environment: text("environment").default("dev").notNull(), // 'dev' | 'prod' - environment where image was created
   size: integer("size").default(0), // File size in bytes
+  user_id: text("user_id"), // User who created the image
 });
 
 export const insertImageSchema = createInsertSchema(images);

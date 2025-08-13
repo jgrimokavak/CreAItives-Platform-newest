@@ -12,6 +12,7 @@ import CarCreationPage from "./pages/CarCreationPage";
 import VideoPage from "./pages/VideoPage";
 import EmailBuilderPage from "./pages/EmailBuilderPage";
 import UserManagementPage from "./pages/UserManagementPage";
+import EnhancedUserManagementPage from "./pages/EnhancedUserManagementPage";
 import PageSettingsPage from "./pages/PageSettingsPage";
 import StorageManagementPage from "./pages/StorageManagementPage";
 import AdminRoute from "./components/AdminRoute";

@@ -354,7 +354,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Cannot remove admin access from the primary admin account" });
       }
       
-      const user = await storage.updateUserRole(userId, role);
+      const adminUserId = req.user.id;
+      const adminEmail = req.user.email;
+      const ipAddress = req.ip || req.connection.remoteAddress;
+
+      const user = await storage.updateUserRole(userId, role, adminUserId, adminEmail, ipAddress);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -408,6 +412,204 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching daily route activity metrics:", error);
       res.status(500).json({ message: "Failed to fetch daily activity metrics" });
+    }
+  });
+
+  // Enhanced paginated users endpoint
+  app.get('/api/admin/users/paginated', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const {
+        page = '1',
+        limit = '25',
+        search,
+        statusFilter,
+        roleFilter,
+        domainFilter,
+        activatedFilter,
+        sortBy = 'lastLoginAt',
+        sortOrder = 'desc',
+        dateFrom,
+        dateTo
+      } = req.query;
+
+      const options = {
+        page: parseInt(page),
+        limit: Math.min(parseInt(limit), 100), // Cap at 100 per page
+        search: search || undefined,
+        statusFilter: statusFilter === 'all' ? undefined : statusFilter,
+        roleFilter: roleFilter === 'all' ? undefined : roleFilter,
+        domainFilter: domainFilter || undefined,
+        activatedFilter: activatedFilter === 'all' ? undefined : activatedFilter,
+        sortBy: sortBy as any,
+        sortOrder: sortOrder as 'asc' | 'desc',
+        dateFrom: dateFrom ? new Date(dateFrom) : undefined,
+        dateTo: dateTo ? new Date(dateTo) : undefined,
+      };
+
+      const result = await storage.getUsersPaginated(options);
+      res.json(result);
+    } catch (error) {
+      console.error("Error fetching paginated users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  // User status update with audit logging
+  app.patch('/api/admin/users/:userId/status', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const { isActive } = req.body;
+      const adminUserId = req.user.id;
+      const adminEmail = req.user.email;
+      const ipAddress = req.ip || req.connection.remoteAddress;
+
+      if (typeof isActive !== 'boolean') {
+        return res.status(400).json({ message: "Invalid isActive value" });
+      }
+
+      // Prevent self-modification
+      if (adminUserId === userId) {
+        return res.status(403).json({ message: "Cannot modify your own account status" });
+      }
+
+      const user = await storage.updateUserStatus(userId, isActive, adminUserId, adminEmail, ipAddress);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json(user);
+    } catch (error) {
+      console.error("Error updating user status:", error);
+      res.status(500).json({ message: "Failed to update user status" });
+    }
+  });
+
+  // Force user logout
+  app.post('/api/admin/users/:userId/logout', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const adminUserId = req.user.id;
+      const adminEmail = req.user.email;
+      const ipAddress = req.ip || req.connection.remoteAddress;
+
+      // Prevent self-logout
+      if (adminUserId === userId) {
+        return res.status(403).json({ message: "Cannot force logout your own account" });
+      }
+
+      const success = await storage.forceUserLogout(userId, adminUserId, adminEmail, ipAddress);
+      if (!success) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({ message: "User logged out successfully" });
+    } catch (error) {
+      console.error("Error forcing user logout:", error);
+      res.status(500).json({ message: "Failed to logout user" });
+    }
+  });
+
+  // Bulk user status update
+  app.patch('/api/admin/users/bulk/status', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { userIds, isActive } = req.body;
+      const adminUserId = req.user.id;
+      const adminEmail = req.user.email;
+      const ipAddress = req.ip || req.connection.remoteAddress;
+
+      if (!Array.isArray(userIds) || userIds.length === 0) {
+        return res.status(400).json({ message: "Invalid userIds array" });
+      }
+
+      if (typeof isActive !== 'boolean') {
+        return res.status(400).json({ message: "Invalid isActive value" });
+      }
+
+      // Prevent self-modification
+      if (userIds.includes(adminUserId)) {
+        return res.status(403).json({ message: "Cannot modify your own account in bulk operations" });
+      }
+
+      // Client-side cap enforcement
+      if (userIds.length > 100) {
+        return res.status(400).json({ message: "Bulk operations limited to 100 users at a time" });
+      }
+
+      const result = await storage.bulkUpdateUserStatus(userIds, isActive, adminUserId, adminEmail, ipAddress);
+      res.json(result);
+    } catch (error) {
+      console.error("Error bulk updating user status:", error);
+      res.status(500).json({ message: "Failed to bulk update user status" });
+    }
+  });
+
+  // Bulk user role update
+  app.patch('/api/admin/users/bulk/role', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { userIds, role } = req.body;
+      const adminUserId = req.user.id;
+      const adminEmail = req.user.email;
+      const ipAddress = req.ip || req.connection.remoteAddress;
+
+      if (!Array.isArray(userIds) || userIds.length === 0) {
+        return res.status(400).json({ message: "Invalid userIds array" });
+      }
+
+      if (!['user', 'admin'].includes(role)) {
+        return res.status(400).json({ message: "Invalid role value" });
+      }
+
+      // Prevent self-modification
+      if (userIds.includes(adminUserId)) {
+        return res.status(403).json({ message: "Cannot modify your own account in bulk operations" });
+      }
+
+      // Client-side cap enforcement
+      if (userIds.length > 100) {
+        return res.status(400).json({ message: "Bulk operations limited to 100 users at a time" });
+      }
+
+      const result = await storage.bulkUpdateUserRole(userIds, role, adminUserId, adminEmail, ipAddress);
+      res.json(result);
+    } catch (error) {
+      console.error("Error bulk updating user role:", error);
+      res.status(500).json({ message: "Failed to bulk update user role" });
+    }
+  });
+
+  // Export users with audit logging
+  app.post('/api/admin/users/export', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { userIds, filters, reason, maxRows = 1000 } = req.body;
+      const adminUserId = req.user.id;
+      const adminEmail = req.user.email;
+      const ipAddress = req.ip || req.connection.remoteAddress;
+
+      if (!reason || typeof reason !== 'string' || reason.trim().length < 10) {
+        return res.status(400).json({ 
+          message: "Export reason is required and must be at least 10 characters" 
+        });
+      }
+
+      // Enforce maximum export limit
+      const maxExportRows = Math.min(maxRows, 1000);
+
+      const result = await storage.exportUsers({
+        userIds,
+        filters,
+        reason: reason.trim(),
+        adminUserId,
+        adminEmail,
+        ipAddress,
+        maxRows: maxExportRows,
+      });
+
+      res.json(result);
+    } catch (error) {
+      console.error("Error exporting users:", error);
+      res.status(500).json({ 
+        message: error.message || "Failed to export users" 
+      });
     }
   });
 

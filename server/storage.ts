@@ -1,4 +1,4 @@
-import { users, images, pageSettings, videos, projects, projectMembers, type User, type UpsertUser, type GeneratedImage, type PageSettings, type InsertPageSettings, type Video, type InsertVideo, type Project, type InsertProject, type ProjectMember, type InsertProjectMember } from "@shared/schema";
+import { users, images, pageSettings, videos, projects, projectMembers, adminAuditLogs, type User, type UpsertUser, type GeneratedImage, type PageSettings, type InsertPageSettings, type Video, type InsertVideo, type Project, type InsertProject, type ProjectMember, type InsertProjectMember, type AdminAuditLog } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, isNull, isNotNull, and, ilike, lt, sql, or, not, inArray, ne } from "drizzle-orm";
 import * as fs from "fs";
@@ -14,7 +14,7 @@ export interface IStorage {
   // (IMPORTANT) these user operations are mandatory for Replit Auth.
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
-  // User management operations
+  // Enhanced User management operations with pagination
   getAllUsers(options?: {
     search?: string;
     statusFilter?: 'all' | 'active' | 'inactive';
@@ -22,15 +22,75 @@ export interface IStorage {
     sortBy?: 'createdAt' | 'lastLoginAt' | 'email' | 'firstName';
     sortOrder?: 'asc' | 'desc';
   }): Promise<User[]>;
+  
+  // New paginated user listing with enhanced data
+  getUsersPaginated(options: {
+    page: number;
+    limit: number;
+    search?: string;
+    statusFilter?: 'all' | 'active' | 'inactive';
+    roleFilter?: 'all' | 'user' | 'admin';
+    domainFilter?: string;
+    activatedFilter?: 'all' | 'activated' | 'not_activated';
+    sortBy?: 'lastLoginAt' | 'createdAt' | 'email' | 'firstName' | 'imageCount' | 'videoCount' | 'projectCount';
+    sortOrder?: 'asc' | 'desc';
+    dateFrom?: Date;
+    dateTo?: Date;
+  }): Promise<{
+    users: Array<User & {
+      domain: string;
+      imageCount: number;
+      videoCount: number;
+      projectCount: number;
+      isActivated: boolean;
+    }>;
+    totalCount: number;
+    totalPages: number;
+    currentPage: number;
+  }>;
+  
   getUserStatistics(): Promise<{
     totalUsers: number;
     activeUsers: number;
     adminUsers: number;
-    recentLogins: number; // logins in last 7 days
+    recentLogins: number;
+    onlineUsers: number;
   }>;
-  updateUserStatus(userId: string, isActive: boolean): Promise<User | undefined>;
-  updateUserRole(userId: string, role: 'user' | 'admin'): Promise<User | undefined>;
+  
+  // User Actions with Audit Logging
+  updateUserStatus(userId: string, isActive: boolean, adminUserId: string, adminEmail: string, ipAddress?: string): Promise<User | undefined>;
+  updateUserRole(userId: string, role: 'user' | 'admin', adminUserId: string, adminEmail: string, ipAddress?: string): Promise<User | undefined>;
+  forceUserLogout(userId: string, adminUserId: string, adminEmail: string, ipAddress?: string): Promise<boolean>;
   updateUserLastLogin(userId: string): Promise<User | undefined>;
+  
+  // Bulk Operations
+  bulkUpdateUserStatus(userIds: string[], isActive: boolean, adminUserId: string, adminEmail: string, ipAddress?: string): Promise<{ success: number; failed: string[] }>;
+  bulkUpdateUserRole(userIds: string[], role: 'user' | 'admin', adminUserId: string, adminEmail: string, ipAddress?: string): Promise<{ success: number; failed: string[] }>;
+  
+  // Export Operations
+  exportUsers(options: {
+    userIds?: string[];
+    filters?: any;
+    reason: string;
+    adminUserId: string;
+    adminEmail: string;
+    ipAddress?: string;
+    maxRows: number;
+  }): Promise<{ data: any[]; count: number; auditId: string }>;
+  
+  // Audit Logging
+  createAdminAuditLog(log: {
+    adminUserId: string;
+    adminEmail: string;
+    action: string;
+    targetUserId?: string;
+    targetUserEmail?: string;
+    details?: any;
+    affectedCount?: number;
+    reason?: string;
+    ipAddress?: string;
+    userAgent?: string;
+  }): Promise<AdminAuditLog>;
   saveImage(image: GeneratedImage): Promise<GeneratedImage>;
   getAllImages(options?: { starred?: boolean; trash?: boolean; limit?: number; cursor?: string; searchQuery?: string }): Promise<{ 
     items: GeneratedImage[]; 
@@ -270,6 +330,479 @@ export class DatabaseStorage implements IStorage {
       recentLogins: Number(recentLogins.count),
       onlineUsers: Number(onlineUsers.count),
     };
+  }
+
+  // New paginated user listing with enhanced data
+  async getUsersPaginated(options: {
+    page: number;
+    limit: number;
+    search?: string;
+    statusFilter?: 'all' | 'active' | 'inactive';
+    roleFilter?: 'all' | 'user' | 'admin';
+    domainFilter?: string;
+    activatedFilter?: 'all' | 'activated' | 'not_activated';
+    sortBy?: 'lastLoginAt' | 'createdAt' | 'email' | 'firstName' | 'imageCount' | 'videoCount' | 'projectCount';
+    sortOrder?: 'asc' | 'desc';
+    dateFrom?: Date;
+    dateTo?: Date;
+  }): Promise<{
+    users: Array<User & {
+      domain: string;
+      imageCount: number;
+      videoCount: number;
+      projectCount: number;
+      isActivated: boolean;
+    }>;
+    totalCount: number;
+    totalPages: number;
+    currentPage: number;
+  }> {
+    const { page = 1, limit = 50 } = options;
+    const offset = (page - 1) * limit;
+    const excludeHidden = not(eq(users.email, 'joacogrimoldi@gmail.com'));
+    const currentEnv = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
+    
+    // Build conditions
+    const conditions = [excludeHidden];
+    
+    if (options.search) {
+      const searchTerm = `%${options.search}%`;
+      conditions.push(
+        or(
+          ilike(users.email, searchTerm),
+          ilike(users.firstName, searchTerm),
+          ilike(users.lastName, searchTerm),
+          ilike(users.id, searchTerm)
+        )
+      );
+    }
+    
+    if (options.statusFilter === 'active') {
+      conditions.push(eq(users.isActive, true));
+    } else if (options.statusFilter === 'inactive') {
+      conditions.push(eq(users.isActive, false));
+    }
+    
+    if (options.roleFilter && options.roleFilter !== 'all') {
+      conditions.push(eq(users.role, options.roleFilter));
+    }
+    
+    if (options.domainFilter) {
+      conditions.push(sql`split_part(${users.email}, '@', 2) = ${options.domainFilter}`);
+    }
+    
+    if (options.activatedFilter === 'activated') {
+      conditions.push(isNotNull(users.lastLoginAt));
+    } else if (options.activatedFilter === 'not_activated') {
+      conditions.push(isNull(users.lastLoginAt));
+    }
+    
+    if (options.dateFrom) {
+      conditions.push(sql`${users.createdAt} >= ${options.dateFrom}`);
+    }
+    
+    if (options.dateTo) {
+      conditions.push(sql`${users.createdAt} <= ${options.dateTo}`);
+    }
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+    
+    // Get enhanced user data with counts
+    let usersQuery = db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        profileImageUrl: users.profileImageUrl,
+        isActive: users.isActive,
+        role: users.role,
+        lastLoginAt: users.lastLoginAt,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+        domain: sql`split_part(${users.email}, '@', 2)`,
+        imageCount: sql`(
+          SELECT COUNT(*) FROM ${images}
+          WHERE ${images.userId} = ${users.id}
+          AND ${images.environment} = ${currentEnv}
+        )`,
+        videoCount: sql`(
+          SELECT COUNT(*) FROM ${videos}
+          WHERE ${videos.userId} = ${users.id}
+          AND ${videos.environment} = ${currentEnv}
+        )`,
+        projectCount: sql`(
+          SELECT COUNT(*) FROM ${projects}
+          WHERE ${projects.userId} = ${users.id}
+          AND ${projects.deletedAt} IS NULL
+        )`,
+        isActivated: sql`${users.lastLoginAt} IS NOT NULL`,
+      })
+      .from(users);
+    
+    if (whereClause) {
+      usersQuery = usersQuery.where(whereClause);
+    }
+    
+    // Apply sorting
+    const sortBy = options.sortBy || 'lastLoginAt';
+    const sortOrder = options.sortOrder || 'desc';
+    
+    let orderByColumn;
+    switch (sortBy) {
+      case 'email':
+        orderByColumn = users.email;
+        break;
+      case 'firstName':
+        orderByColumn = users.firstName;
+        break;
+      case 'createdAt':
+        orderByColumn = users.createdAt;
+        break;
+      case 'imageCount':
+        orderByColumn = sql`"imageCount"`;
+        break;
+      case 'videoCount':
+        orderByColumn = sql`"videoCount"`;
+        break;
+      case 'projectCount':
+        orderByColumn = sql`"projectCount"`;
+        break;
+      default:
+        orderByColumn = users.lastLoginAt;
+    }
+    
+    if (sortOrder === 'asc') {
+      usersQuery.orderBy(asc(orderByColumn));
+    } else {
+      usersQuery.orderBy(desc(orderByColumn));
+    }
+    
+    // Get paginated results
+    const usersData = await usersQuery.limit(limit).offset(offset);
+    
+    // Get total count
+    let countQuery = db.select({ count: sql`count(*)` }).from(users);
+    if (whereClause) {
+      countQuery = countQuery.where(whereClause);
+    }
+    const [{ count }] = await countQuery;
+    
+    const totalCount = Number(count);
+    const totalPages = Math.ceil(totalCount / limit);
+    
+    return {
+      users: usersData.map(user => ({
+        ...user,
+        domain: String(user.domain || ''),
+        imageCount: Number(user.imageCount || 0),
+        videoCount: Number(user.videoCount || 0),
+        projectCount: Number(user.projectCount || 0),
+        isActivated: Boolean(user.isActivated),
+      })),
+      totalCount,
+      totalPages,
+      currentPage: page,
+    };
+  }
+
+  // Enhanced user status update with audit logging - new implementation
+  async updateUserStatus(userId: string, isActive: boolean, adminUserId: string, adminEmail: string, ipAddress?: string): Promise<User | undefined> {
+    try {
+      const [user] = await db
+        .update(users)
+        .set({ 
+          isActive,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId))
+        .returning();
+
+      if (user) {
+        // Log the action
+        await this.createAdminAuditLog({
+          adminUserId,
+          adminEmail,
+          action: 'user_status_change',
+          targetUserId: userId,
+          targetUserEmail: user.email || undefined,
+          details: { previousStatus: !isActive, newStatus: isActive },
+          ipAddress,
+        });
+      }
+
+      return user;
+    } catch (error) {
+      console.error('Error updating user status:', error);
+      return undefined;
+    }
+  }
+
+  // Enhanced user role update with audit logging
+  async updateUserRole(userId: string, role: 'user' | 'admin', adminUserId: string, adminEmail: string, ipAddress?: string): Promise<User | undefined> {
+    try {
+      const [existingUser] = await db.select().from(users).where(eq(users.id, userId));
+      
+      const [user] = await db
+        .update(users)
+        .set({ 
+          role,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId))
+        .returning();
+
+      if (user && existingUser) {
+        // Log the action
+        await this.createAdminAuditLog({
+          adminUserId,
+          adminEmail,
+          action: 'user_role_change',
+          targetUserId: userId,
+          targetUserEmail: user.email || undefined,
+          details: { previousRole: existingUser.role, newRole: role },
+          ipAddress,
+        });
+      }
+
+      return user;
+    } catch (error) {
+      console.error('Error updating user role:', error);
+      return undefined;
+    }
+  }
+
+  // Force user logout with audit logging
+  async forceUserLogout(userId: string, adminUserId: string, adminEmail: string, ipAddress?: string): Promise<boolean> {
+    try {
+      const [user] = await db.select().from(users).where(eq(users.id, userId));
+      
+      if (user) {
+        // Update last login to force re-authentication
+        await db
+          .update(users)
+          .set({ 
+            lastLoginAt: new Date(0), // Set to epoch to force logout
+            updatedAt: new Date()
+          })
+          .where(eq(users.id, userId));
+
+        // Log the action
+        await this.createAdminAuditLog({
+          adminUserId,
+          adminEmail,
+          action: 'force_logout',
+          targetUserId: userId,
+          targetUserEmail: user.email || undefined,
+          details: { reason: 'Admin forced logout' },
+          ipAddress,
+        });
+
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error('Error forcing user logout:', error);
+      return false;
+    }
+  }
+
+  // Bulk user status update
+  async bulkUpdateUserStatus(userIds: string[], isActive: boolean, adminUserId: string, adminEmail: string, ipAddress?: string): Promise<{ success: number; failed: string[] }> {
+    const failed: string[] = [];
+    let success = 0;
+
+    for (const userId of userIds) {
+      try {
+        const result = await this.updateUserStatus(userId, isActive, adminUserId, adminEmail, ipAddress);
+        if (result) {
+          success++;
+        } else {
+          failed.push(userId);
+        }
+      } catch (error) {
+        failed.push(userId);
+      }
+    }
+
+    // Log bulk action
+    await this.createAdminAuditLog({
+      adminUserId,
+      adminEmail,
+      action: 'bulk_action',
+      details: { 
+        operation: 'status_change', 
+        newStatus: isActive, 
+        userIds,
+        successCount: success,
+        failedCount: failed.length
+      },
+      affectedCount: success,
+      ipAddress,
+    });
+
+    return { success, failed };
+  }
+
+  // Bulk user role update  
+  async bulkUpdateUserRole(userIds: string[], role: 'user' | 'admin', adminUserId: string, adminEmail: string, ipAddress?: string): Promise<{ success: number; failed: string[] }> {
+    const failed: string[] = [];
+    let success = 0;
+
+    for (const userId of userIds) {
+      try {
+        const result = await this.updateUserRole(userId, role, adminUserId, adminEmail, ipAddress);
+        if (result) {
+          success++;
+        } else {
+          failed.push(userId);
+        }
+      } catch (error) {
+        failed.push(userId);
+      }
+    }
+
+    // Log bulk action
+    await this.createAdminAuditLog({
+      adminUserId,
+      adminEmail,
+      action: 'bulk_action',
+      details: { 
+        operation: 'role_change', 
+        newRole: role, 
+        userIds,
+        successCount: success,
+        failedCount: failed.length
+      },
+      affectedCount: success,
+      ipAddress,
+    });
+
+    return { success, failed };
+  }
+
+  // Export users with audit logging and caps
+  async exportUsers(options: {
+    userIds?: string[];
+    filters?: any;
+    reason: string;
+    adminUserId: string;
+    adminEmail: string;
+    ipAddress?: string;
+    maxRows: number;
+  }): Promise<{ data: any[]; count: number; auditId: string }> {
+    const { userIds, filters = {}, reason, adminUserId, adminEmail, ipAddress, maxRows } = options;
+    const currentEnv = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
+    
+    let query = db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        role: users.role,
+        isActive: users.isActive,
+        lastLoginAt: users.lastLoginAt,
+        createdAt: users.createdAt,
+        domain: sql`split_part(${users.email}, '@', 2)`,
+        imageCount: sql`(
+          SELECT COUNT(*) FROM ${images}
+          WHERE ${images.userId} = ${users.id}
+          AND ${images.environment} = ${currentEnv}
+        )`,
+        videoCount: sql`(
+          SELECT COUNT(*) FROM ${videos}
+          WHERE ${videos.userId} = ${users.id}
+          AND ${videos.environment} = ${currentEnv}
+        )`,
+        projectCount: sql`(
+          SELECT COUNT(*) FROM ${projects}
+          WHERE ${projects.userId} = ${users.id}
+          AND ${projects.deletedAt} IS NULL
+        )`,
+      })
+      .from(users)
+      .where(not(eq(users.email, 'joacogrimoldi@gmail.com')));
+
+    // Apply user ID filter if provided
+    if (userIds && userIds.length > 0) {
+      query = query.where(inArray(users.id, userIds));
+    }
+
+    // Apply additional filters if provided
+    if (filters.search) {
+      const searchTerm = `%${filters.search}%`;
+      query = query.where(
+        or(
+          ilike(users.email, searchTerm),
+          ilike(users.firstName, searchTerm),
+          ilike(users.lastName, searchTerm)
+        )
+      );
+    }
+
+    // Enforce row limit
+    const data = await query.limit(maxRows + 1); // Get one extra to check if limit exceeded
+    
+    if (data.length > maxRows) {
+      throw new Error(`Export would exceed maximum allowed rows (${maxRows}). Please refine your filters.`);
+    }
+
+    // Create audit log
+    const auditLog = await this.createAdminAuditLog({
+      adminUserId,
+      adminEmail,
+      action: 'export',
+      details: { 
+        exportType: userIds ? 'selected_users' : 'filtered_users',
+        filters: userIds ? { userIds } : filters,
+        rowCount: data.length
+      },
+      affectedCount: data.length,
+      reason,
+      ipAddress,
+    });
+
+    return {
+      data: data.map(user => ({
+        ...user,
+        imageCount: Number(user.imageCount || 0),
+        videoCount: Number(user.videoCount || 0),
+        projectCount: Number(user.projectCount || 0),
+      })),
+      count: data.length,
+      auditId: auditLog.id,
+    };
+  }
+
+  // Create admin audit log
+  async createAdminAuditLog(log: {
+    adminUserId: string;
+    adminEmail: string;
+    action: string;
+    targetUserId?: string;
+    targetUserEmail?: string;
+    details?: any;
+    affectedCount?: number;
+    reason?: string;
+    ipAddress?: string;
+    userAgent?: string;
+  }): Promise<AdminAuditLog> {
+    const auditLog = {
+      id: `audit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      ...log,
+      createdAt: new Date(),
+    };
+
+    try {
+      const [result] = await db.insert(adminAuditLogs).values(auditLog).returning();
+      return result;
+    } catch (error) {
+      console.error('Error creating audit log:', error);
+      // Don't fail the main operation if audit logging fails
+      return auditLog as AdminAuditLog;
+    }
   }
 
   // Enhanced analytics methods using existing data
@@ -601,23 +1134,7 @@ export class DatabaseStorage implements IStorage {
     return dailyMetrics;
   }
 
-  async updateUserStatus(userId: string, isActive: boolean): Promise<User | undefined> {
-    const [user] = await db
-      .update(users)
-      .set({ isActive, updatedAt: new Date() })
-      .where(eq(users.id, userId))
-      .returning();
-    return user;
-  }
-
-  async updateUserRole(userId: string, role: 'user' | 'admin'): Promise<User | undefined> {
-    const [user] = await db
-      .update(users)
-      .set({ role, updatedAt: new Date() })
-      .where(eq(users.id, userId))
-      .returning();
-    return user;
-  }
+  // Legacy methods - use the enhanced versions with audit logging instead
 
   async updateUserLastLogin(userId: string): Promise<User | undefined> {
     const [user] = await db

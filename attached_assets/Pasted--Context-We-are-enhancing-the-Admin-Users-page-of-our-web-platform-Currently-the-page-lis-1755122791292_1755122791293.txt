@@ -1,0 +1,62 @@
+**Context:**  
+We are enhancing the Admin → Users page of our web platform. Currently, the page lists all users as cards with limited filtering, no pagination, and very basic statistics. There is no quick way to act on a single user without navigating, bulk operations are missing, and exports are unrestricted. The goal is to make this page scalable, fast to operate, and safer for handling user data. We also want to introduce better admin workflows (bulk actions, auditing), safer exports, and global controls that will later tie into analytics — all without breaking existing functionality or touching unrelated parts of the system.  
+
+The system uses a hard-coded **superadmin allowlist** for privileged access, which must remain exactly as it is. Admin role checks already exist in the backend and should be preserved. The current look and feel of the admin area should remain consistent.
+
+---
+
+**Objective:**  
+Deliver Phase 1 of the Admin → Users panel. Introduce a scalable, server-driven Users experience with pagination/sorting/filtering, a right-hand User Drawer for fast actions, bulk operations with audit logging, an export flow with caps and a required reason, and global date-range & segment controls — while preserving the existing superadmin allowlist and avoiding regressions elsewhere.
+
+## Tasks
+1) **Users Listing (server-driven)**
+   - Provide a paginated, sortable, filterable Users API and consume it in a DataTable.
+   - Columns: Name, Email, Domain, Role, Status, Last Active, Joined, Images, Videos, Projects, Activated, Actions.
+   - Filters: query (name/email/id), Role, Status, Domain, Activated, Joined range.
+   - Sorting: prioritize Last Active; support Joined, Email, and usage counts.
+   - Keep the current admin shell and styles intact; replace the card grid with the table behind a safe feature toggle until acceptance.
+
+2) **User Drawer (fast actions)**
+   - On row click (and via keyboard), open a right-hand drawer showing profile header, quick stats, last active, and recent highlights.
+   - Include admin actions: Activate/Deactivate, Make/Remove Admin, Force Logout.
+   - Reflect changes immediately and keep the table in sync.
+
+3) **Bulk Actions**
+   - Multi-select with bulk Activate/Deactivate and Make/Remove Admin.
+   - Enforce a clear client-side cap for bulk operations to prevent accidental large updates.
+   - Show confirmations for destructive actions.
+
+4) **Export Flow (safe by default)**
+   - Export either “Selected rows” or “Current filters”.
+   - Require a short “Reason for export” note and enforce a hard row cap.
+   - Return a bounded CSV; write an audit entry that includes count and reason.
+
+5) **Auditability**
+   - Record admin actions: role changes, status changes, force logouts, and exports.
+   - Make audit entries easy to query later (we’ll surface them in a later phase).
+
+6) **Global Controls**
+   - Add a date-range picker and segment chips (Role, Status, Domain, Activated) at the top of the Admin → Users page.
+   - Persist selections to URL parameters; ensure queries derive their state from these controls.
+   - It’s acceptable if Phase 1 APIs ignore date for now — the UI state should still be wired.
+
+## Testing (acceptance scenarios)
+- **Findability & Speed:** With ≥200 users, listing responds quickly; pagination is smooth; sorting by Last Active and Joined works; filters narrow results as expected.
+- **Drawer & Actions:** Opening the drawer, changing status/role, and forcing logout works; table reflects updates without a hard refresh.
+- **Bulk Ops:** Selecting dozens of users and applying a bulk action succeeds; selecting beyond the cap is blocked with a clear message.
+- **Export:** Exporting selected rows and filtered results succeeds when under the cap; exceeding the cap fails gracefully with guidance; a reason is always required.
+- **Persistence:** Date range and segment chips persist via URL; reloading restores the same view.
+- **Permissions:** Admin access continues to be gated as before; the **superadmin allowlist remains unchanged** and functional.
+- **Non-Regression:** No changes to auth/session flows or unrelated pages; other admin sections render and behave exactly as before.
+
+## Reminders & Constraints
+- Keep the **superadmin allowlist** exactly as it is; do not weaken or remove it.
+- Do not refactor or rename unrelated modules; limit changes to the admin users surface and narrowly scoped helpers.
+- No new PII exposure beyond what already exists on the page; prompts or sensitive payloads remain hidden in Phase 1.
+- Exports are capped and rate-limited; every admin action is auditable.
+- Server-side pagination only; avoid fetching full user lists in the client.
+- Validate and whitelist sorting/filters server-side; ignore unknown/unsafe params.
+- Maintain a feature toggle to fall back to the existing card view until acceptance is signed off.
+
+**Deliverable:**  
+A merged Phase 1 implementation that meets the acceptance scenarios, with the old card grid removable behind a feature flag once approved.
