@@ -423,7 +423,7 @@ export class DatabaseStorage implements IStorage {
         domain: sql`split_part(${users.email}, '@', 2)`,
         imageCount: sql`(
           SELECT COUNT(*) FROM ${images}
-          WHERE ${images.userId} = ${users.id}
+          WHERE ${images.user_id} = ${users.id}
           AND ${images.environment} = ${currentEnv}
         )`,
         videoCount: sql`(
@@ -708,7 +708,7 @@ export class DatabaseStorage implements IStorage {
         domain: sql`split_part(${users.email}, '@', 2)`,
         imageCount: sql`(
           SELECT COUNT(*) FROM ${images}
-          WHERE ${images.userId} = ${users.id}
+          WHERE ${images.user_id} = ${users.id}
           AND ${images.environment} = ${currentEnv}
         )`,
         videoCount: sql`(
@@ -984,7 +984,7 @@ export class DatabaseStorage implements IStorage {
       details: sql`${videos.model} || ' - ' || SUBSTRING(${videos.prompt}, 1, 50) || CASE WHEN LENGTH(${videos.prompt}) > 50 THEN '...' ELSE '' END`
     })
     .from(videos)
-    .innerJoin(users, eq(users.id, videos.userId))
+    .innerJoin(users, eq(users.id, videos.user_id))
     .where(and(
       eq(videos.environment, currentEnv),
       excludeHidden,
@@ -1563,7 +1563,7 @@ export class DatabaseStorage implements IStorage {
       const conditions: any[] = [
         eq(videos.environment, currentEnv),
         or(
-          eq(videos.userId, userId), // Videos created by user
+          eq(videos.user_id, userId), // Videos created by user
           and(
             isNotNull(videos.projectId),
             inArray(videos.projectId, accessibleProjectIds.length > 0 ? accessibleProjectIds : ['none'])
@@ -1594,7 +1594,7 @@ export class DatabaseStorage implements IStorage {
       // CRITICAL: Filter by environment to prevent cross-environment issues
       conditions.push(eq(videos.environment, currentEnv));
       
-      if (userId) conditions.push(eq(videos.userId, userId));
+      if (userId) conditions.push(eq(videos.user_id, userId));
       if (projectId) conditions.push(eq(videos.projectId, projectId));
       if (status) conditions.push(eq(videos.status, status));
       if (cursor) conditions.push(lt(videos.createdAt, new Date(cursor)));
@@ -1691,7 +1691,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(videos)
       .where(and(
-        eq(videos.userId, userId),
+        eq(videos.user_id, userId),
         eq(videos.environment, currentEnv),
         isNull(videos.projectId)
       ))
