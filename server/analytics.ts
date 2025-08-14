@@ -71,6 +71,12 @@ export async function getKPIs(dateFrom: Date, dateTo: Date, filters: {
   activatedFilter?: string;
 } = {}) {
   const environment = getCurrentEnv();
+  console.log(`[Analytics Debug] getKPIs called with:`, {
+    dateFrom: dateFrom.toISOString(),
+    dateTo: dateTo.toISOString(),
+    environment,
+    filters
+  });
   
   // Build user filter conditions
   const userConditions = [];
@@ -120,6 +126,14 @@ export async function getKPIs(dateFrom: Date, dateTo: Date, filters: {
     })
     .from(activityEvents)
     .where(eventWhereClause);
+  
+  console.log(`[Analytics Debug] DAU query result:`, dauResult);
+  console.log(`[Analytics Debug] Event conditions:`, {
+    environment,
+    dateFrom: dateFrom.toISOString(),
+    dateTo: dateTo.toISOString(),
+    filteredUserIds
+  });
   
   const dau = Number(dauResult[0]?.count || 0);
 

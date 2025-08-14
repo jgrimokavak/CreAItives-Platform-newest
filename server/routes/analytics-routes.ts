@@ -5,7 +5,8 @@ import { isAuthenticated } from '../replitAuth';
 const router = express.Router();
 
 // Get KPIs endpoint
-router.get('/kpis', isAuthenticated, async (req, res) => {
+router.get('/kpis', isAuthenticated, async (req: any, res) => {
+  console.log(`[Analytics Route] KPIs endpoint called by user: ${req.user?.claims?.sub}`);
   try {
     const { dateFrom, dateTo, roleFilter, statusFilter, domainFilter, activatedFilter } = req.query;
     
