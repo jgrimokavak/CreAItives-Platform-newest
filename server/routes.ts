@@ -647,10 +647,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         activatedFilter
       } = req.query;
 
-      // Default to last 7 days if no dates provided
+      // Default to last 60 days to capture all seeded data
       const defaultDateTo = new Date();
       const defaultDateFrom = new Date();
-      defaultDateFrom.setDate(defaultDateFrom.getDate() - 7);
+      defaultDateFrom.setDate(defaultDateFrom.getDate() - 60);
 
       const from = dateFrom ? new Date(dateFrom) : defaultDateFrom;
       const to = dateTo ? new Date(dateTo) : defaultDateTo;
@@ -714,10 +714,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         activatedFilter
       } = req.query;
 
-      // Default to last 30 days for trends
+      // Default to last 60 days for trends to capture all seeded data
       const defaultDateTo = new Date();
       const defaultDateFrom = new Date();
-      defaultDateFrom.setDate(defaultDateFrom.getDate() - 30);
+      defaultDateFrom.setDate(defaultDateFrom.getDate() - 60);
 
       const from = dateFrom ? new Date(dateFrom) : defaultDateFrom;
       const to = dateTo ? new Date(dateTo) : defaultDateTo;

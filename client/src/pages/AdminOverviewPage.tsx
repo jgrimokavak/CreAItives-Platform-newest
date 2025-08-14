@@ -263,51 +263,57 @@ export default function AdminOverviewPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <KPICard
-          title="Daily Active Users"
-          value={kpiData?.current?.dau || 0}
-          delta={kpiData?.deltas?.dau}
-          icon={<Users className="w-4 h-4 text-blue-600" />}
-          tooltip="Unique users who performed any action in the selected period"
+          title="Images Generated"
+          value={kpiData?.current?.imageSuccesses || 0}
+          delta={kpiData?.deltas?.imageSuccesses}
+          icon={<Target className="w-4 h-4 text-blue-600" />}
+          tooltip="Successfully generated images (including car generation and editing)"
         />
         
         <KPICard
-          title="Activation Rate"
-          value={kpiData?.current?.activationRate || 0}
-          delta={kpiData?.deltas?.activationRate}
-          icon={<Target className="w-4 h-4 text-green-600" />}
-          tooltip="Percentage of new users who generated content within 7 days of signup"
-          format="percentage"
+          title="Videos Created"
+          value={kpiData?.current?.videoSuccesses || 0}
+          delta={kpiData?.deltas?.videoSuccesses}
+          icon={<Calendar className="w-4 h-4 text-green-600" />}
+          tooltip="Successfully generated videos"
         />
         
         <KPICard
-          title="Content Success Rate"
+          title="Upscales Completed"
+          value={kpiData?.current?.upscaleSuccesses || 0}
+          delta={kpiData?.deltas?.upscaleSuccesses}
+          icon={<TrendingUp className="w-4 h-4 text-purple-600" />}
+          tooltip="Successfully upscaled images"
+        />
+        
+        <KPICard
+          title="Success Rate"
           value={kpiData?.current?.contentSuccessRate || 0}
           delta={kpiData?.deltas?.contentSuccessRate}
-          icon={<TrendingUp className="w-4 h-4 text-purple-600" />}
-          tooltip="Percentage of content generation attempts that succeeded"
+          icon={<Zap className="w-4 h-4 text-orange-600" />}
+          tooltip="Percentage of all content generation attempts that succeeded"
           format="percentage"
         />
         
         <KPICard
-          title="User Stickiness"
-          value={kpiData?.current?.stickiness || 0}
-          delta={kpiData?.deltas?.stickiness}
-          icon={<Zap className="w-4 h-4 text-orange-600" />}
-          tooltip="DAU/MAU ratio - measures how frequently users return"
-          format="percentage"
+          title="Active Users"
+          value={kpiData?.current?.dau || 0}
+          delta={kpiData?.deltas?.dau}
+          icon={<Users className="w-4 h-4 text-cyan-600" />}
+          tooltip="Users who generated content today"
         />
       </div>
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Video Production Trends */}
+        {/* Content Production Overview */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Activity className="w-5 h-5" />
-              Video Production Over Time
+              Content Production Overview
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -319,10 +325,24 @@ export default function AdminOverviewPage() {
                 <Tooltip />
                 <Line 
                   type="monotone" 
+                  dataKey="imageCreation" 
+                  stroke="#8884d8" 
+                  strokeWidth={2}
+                  name="Image Creation"
+                />
+                <Line 
+                  type="monotone" 
                   dataKey="videoGeneration" 
                   stroke="#82ca9d" 
                   strokeWidth={2}
-                  name="Videos Produced"
+                  name="Video Generation"
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="carGeneration" 
+                  stroke="#ffc658" 
+                  strokeWidth={2}
+                  name="Car Generation"
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -358,30 +378,34 @@ export default function AdminOverviewPage() {
 
       {/* Additional Metrics Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Performance Metrics */}
+        {/* Content Volume */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="w-5 h-5" />
-              Performance Metrics
+              Content Volume
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Avg Image Latency</span>
-              <Badge variant="outline">{kpiData?.current?.avgImageLatency || 0}ms</Badge>
+              <span className="text-sm text-muted-foreground">Image Attempts</span>
+              <Badge variant="outline">{kpiData?.current?.imageAttempts || 0}</Badge>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">P95 Image Latency</span>
-              <Badge variant="outline">{kpiData?.current?.p95ImageLatency || 0}ms</Badge>
+              <span className="text-sm text-muted-foreground">Images Generated</span>
+              <Badge variant="secondary">{kpiData?.current?.imageSuccesses || 0}</Badge>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Avg Video Latency</span>
-              <Badge variant="outline">{kpiData?.current?.avgVideoLatency || 0}ms</Badge>
+              <span className="text-sm text-muted-foreground">Video Attempts</span>
+              <Badge variant="outline">{kpiData?.current?.videoAttempts || 0}</Badge>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">P95 Video Latency</span>
-              <Badge variant="outline">{kpiData?.current?.p95VideoLatency || 0}ms</Badge>
+              <span className="text-sm text-muted-foreground">Videos Generated</span>
+              <Badge variant="secondary">{kpiData?.current?.videoSuccesses || 0}</Badge>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">Upscales Completed</span>
+              <Badge variant="secondary">{kpiData?.current?.upscaleSuccesses || 0}</Badge>
             </div>
           </CardContent>
         </Card>

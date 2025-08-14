@@ -91,7 +91,7 @@ export async function getKPIs(dateFrom: Date, dateTo: Date, filters: {
     lte(activityEvents.createdAt, dateTo)
   ];
 
-  if (filteredUserIds) {
+  if (filteredUserIds && filteredUserIds.length > 0) {
     eventConditions.push(inArray(activityEvents.userId, filteredUserIds));
   }
 
@@ -125,10 +125,8 @@ export async function getKPIs(dateFrom: Date, dateTo: Date, filters: {
     .from(users)
     .leftJoin(activityEvents, and(
       eq(users.id, activityEvents.userId),
-      or(
-        eq(activityEvents.event, 'image_generate_succeeded'),
-        eq(activityEvents.event, 'video_generate_succeeded')
-      ),
+      sql`${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation', 'video_generation', 'upscale')`,
+      eq(activityEvents.status, 'succeeded'),
       gte(activityEvents.createdAt, sql`${users.createdAt}`),
       lte(activityEvents.createdAt, sql`${users.createdAt} + INTERVAL '7 days'`)
     ))
@@ -142,30 +140,44 @@ export async function getKPIs(dateFrom: Date, dateTo: Date, filters: {
   const activatedUsers = Number(activationResult[0]?.count || 0);
   const activationRate = newUsers > 0 ? (activatedUsers / newUsers) * 100 : 0;
 
-  // Content generation metrics
+  // Content generation metrics - using feature-based tracking with debug
+  console.log('Analytics query debug - Date range:', { 
+    dateFrom: dateFrom.toISOString(), 
+    dateTo: dateTo.toISOString(), 
+    environment,
+    filteredUserIds: filteredUserIds?.length || 'none'
+  });
+
   const generationMetrics = await db
     .select({
-      imageAttempts: sql`COUNT(CASE WHEN ${activityEvents.event} = 'image_generate_requested' THEN 1 END)`,
-      imageSuccesses: sql`COUNT(CASE WHEN ${activityEvents.event} = 'image_generate_succeeded' THEN 1 END)`,
-      videoAttempts: sql`COUNT(CASE WHEN ${activityEvents.event} = 'video_generate_requested' THEN 1 END)`,
-      videoSuccesses: sql`COUNT(CASE WHEN ${activityEvents.event} = 'video_generate_succeeded' THEN 1 END)`,
-      totalErrors: sql`COUNT(CASE WHEN ${activityEvents.status} = 'failed' THEN 1 END)`,
-      avgImageLatency: sql`AVG(CASE WHEN ${activityEvents.event} = 'image_generate_succeeded' AND ${activityEvents.duration} IS NOT NULL THEN ${activityEvents.duration} END)`,
-      avgVideoLatency: sql`AVG(CASE WHEN ${activityEvents.event} = 'video_generate_succeeded' AND ${activityEvents.duration} IS NOT NULL THEN ${activityEvents.duration} END)`,
-      p95ImageLatency: sql`PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY CASE WHEN ${activityEvents.event} = 'image_generate_succeeded' AND ${activityEvents.duration} IS NOT NULL THEN ${activityEvents.duration} END)`,
-      p95VideoLatency: sql`PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY CASE WHEN ${activityEvents.event} = 'video_generate_succeeded' AND ${activityEvents.duration} IS NOT NULL THEN ${activityEvents.duration} END)`
+      imageAttempts: sql<number>`COUNT(CASE WHEN ${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation') THEN 1 END)`,
+      imageSuccesses: sql<number>`COUNT(CASE WHEN ${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation') AND ${activityEvents.status} = 'succeeded' THEN 1 END)`,
+      videoAttempts: sql<number>`COUNT(CASE WHEN ${activityEvents.feature} = 'video_generation' THEN 1 END)`,
+      videoSuccesses: sql<number>`COUNT(CASE WHEN ${activityEvents.feature} = 'video_generation' AND ${activityEvents.status} = 'succeeded' THEN 1 END)`,
+      upscaleAttempts: sql<number>`COUNT(CASE WHEN ${activityEvents.feature} = 'upscale' THEN 1 END)`,
+      upscaleSuccesses: sql<number>`COUNT(CASE WHEN ${activityEvents.feature} = 'upscale' AND ${activityEvents.status} = 'succeeded' THEN 1 END)`,
+      totalErrors: sql<number>`COUNT(CASE WHEN ${activityEvents.status} = 'failed' THEN 1 END)`,
+      avgImageLatency: sql<number>`AVG(CASE WHEN ${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation') AND ${activityEvents.status} = 'succeeded' AND ${activityEvents.duration} IS NOT NULL THEN ${activityEvents.duration} END)`,
+      avgVideoLatency: sql<number>`AVG(CASE WHEN ${activityEvents.feature} = 'video_generation' AND ${activityEvents.status} = 'succeeded' AND ${activityEvents.duration} IS NOT NULL THEN ${activityEvents.duration} END)`,
+      avgUpscaleLatency: sql<number>`AVG(CASE WHEN ${activityEvents.feature} = 'upscale' AND ${activityEvents.status} = 'succeeded' AND ${activityEvents.duration} IS NOT NULL THEN ${activityEvents.duration} END)`,
+      p95ImageLatency: sql<number>`PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY CASE WHEN ${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation') AND ${activityEvents.status} = 'succeeded' AND ${activityEvents.duration} IS NOT NULL THEN ${activityEvents.duration} END)`,
+      p95VideoLatency: sql<number>`PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY CASE WHEN ${activityEvents.feature} = 'video_generation' AND ${activityEvents.status} = 'succeeded' AND ${activityEvents.duration} IS NOT NULL THEN ${activityEvents.duration} END)`
     })
     .from(activityEvents)
     .where(eventWhereClause);
 
   const metrics = generationMetrics[0];
+  console.log('Generation metrics raw result:', metrics);
   const imageAttempts = Number(metrics?.imageAttempts || 0);
   const imageSuccesses = Number(metrics?.imageSuccesses || 0);
   const videoAttempts = Number(metrics?.videoAttempts || 0);
   const videoSuccesses = Number(metrics?.videoSuccesses || 0);
+  const upscaleAttempts = Number(metrics?.upscaleAttempts || 0);
+  const upscaleSuccesses = Number(metrics?.upscaleSuccesses || 0);
   
-  const contentSuccessRate = (imageAttempts + videoAttempts) > 0 ? 
-    ((imageSuccesses + videoSuccesses) / (imageAttempts + videoAttempts)) * 100 : 0;
+  const totalAttempts = imageAttempts + videoAttempts + upscaleAttempts;
+  const totalSuccesses = imageSuccesses + videoSuccesses + upscaleSuccesses;
+  const contentSuccessRate = totalAttempts > 0 ? (totalSuccesses / totalAttempts) * 100 : 0;
 
   // Get MAU for stickiness calculation (last 30 days from dateTo)
   const mauStartDate = new Date(dateTo);
@@ -216,8 +228,11 @@ export async function getKPIs(dateFrom: Date, dateTo: Date, filters: {
     totalErrors: Number(metrics?.totalErrors || 0),
     avgImageLatency: Math.round(Number(metrics?.avgImageLatency || 0)),
     avgVideoLatency: Math.round(Number(metrics?.avgVideoLatency || 0)),
+    avgUpscaleLatency: Math.round(Number(metrics?.avgUpscaleLatency || 0)),
     p95ImageLatency: Math.round(Number(metrics?.p95ImageLatency || 0)),
     p95VideoLatency: Math.round(Number(metrics?.p95VideoLatency || 0)),
+    upscaleAttempts,
+    upscaleSuccesses,
     topErrors: topErrorsResult.map(e => ({
       code: e.errorCode,
       count: Number(e.count)
