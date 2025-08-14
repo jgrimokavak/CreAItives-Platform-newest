@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/select';
 import { 
   CalendarDays,
+  Calendar,
   Users,
   TrendingUp,
   Activity,

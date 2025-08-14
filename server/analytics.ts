@@ -140,14 +140,7 @@ export async function getKPIs(dateFrom: Date, dateTo: Date, filters: {
   const activatedUsers = Number(activationResult[0]?.count || 0);
   const activationRate = newUsers > 0 ? (activatedUsers / newUsers) * 100 : 0;
 
-  // Content generation metrics - using feature-based tracking with debug
-  console.log('Analytics query debug - Date range:', { 
-    dateFrom: dateFrom.toISOString(), 
-    dateTo: dateTo.toISOString(), 
-    environment,
-    filteredUserIds: filteredUserIds?.length || 'none'
-  });
-
+  // Content generation metrics - using feature-based tracking
   const generationMetrics = await db
     .select({
       imageAttempts: sql<number>`COUNT(CASE WHEN ${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation') THEN 1 END)`,
@@ -167,7 +160,6 @@ export async function getKPIs(dateFrom: Date, dateTo: Date, filters: {
     .where(eventWhereClause);
 
   const metrics = generationMetrics[0];
-  console.log('Generation metrics raw result:', metrics);
   const imageAttempts = Number(metrics?.imageAttempts || 0);
   const imageSuccesses = Number(metrics?.imageSuccesses || 0);
   const videoAttempts = Number(metrics?.videoAttempts || 0);
