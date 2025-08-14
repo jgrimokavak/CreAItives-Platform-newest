@@ -2,6 +2,13 @@ import express from 'express';
 import { getKPIs, getTrends, getModelUsage, getFeatureUsage } from '../analytics';
 import { isAuthenticated } from '../replitAuth';
 
+// Helper to parse dates in Argentina timezone (UTC-3)
+const parseArgentinaDate = (dateStr: string, endOfDay: boolean = false): Date => {
+  // Parse as Argentina time (UTC-3)
+  const timeStr = endOfDay ? '23:59:59.999-03:00' : '00:00:00.000-03:00';
+  return new Date(`${dateStr}T${timeStr}`);
+};
+
 const router = express.Router();
 
 // Get KPIs endpoint
@@ -14,13 +21,12 @@ router.get('/kpis', isAuthenticated, async (req: any, res) => {
       return res.status(400).json({ message: 'dateFrom and dateTo are required' });
     }
     
-    // Parse dates ensuring full day coverage regardless of timezone
-    // Add time component to ensure proper parsing
-    const from = new Date(`${dateFrom}T00:00:00`);
-    const to = new Date(`${dateTo}T23:59:59.999`);
+    // Parse dates in Argentina timezone (UTC-3)
+    const from = parseArgentinaDate(dateFrom as string, false);
+    const to = parseArgentinaDate(dateTo as string, true);
     
     console.log(`[Analytics Route] KPIs Date parsing - Input: ${dateFrom} to ${dateTo}`);
-    console.log(`[Analytics Route] KPIs Date parsing - Parsed: ${from.toISOString()} to ${to.toISOString()}`);
+    console.log(`[Analytics Route] KPIs Date parsing - Parsed (Argentina time): ${from.toISOString()} to ${to.toISOString()}`);
     
     const filters = {
       roleFilter: roleFilter as string,
@@ -77,10 +83,12 @@ router.get('/trends', isAuthenticated, async (req, res) => {
       return res.status(400).json({ message: 'dateFrom and dateTo are required' });
     }
     
-    // Parse dates ensuring full day coverage regardless of timezone
-    // Add time component to ensure proper parsing
-    const from = new Date(`${dateFrom}T00:00:00`);
-    const to = new Date(`${dateTo}T23:59:59.999`);
+    // Parse dates in Argentina timezone (UTC-3)
+    const from = parseArgentinaDate(dateFrom as string, false);
+    const to = parseArgentinaDate(dateTo as string, true);
+    
+    console.log(`[Analytics Route] Trends Date parsing - Input: ${dateFrom} to ${dateTo}`);
+    console.log(`[Analytics Route] Trends Date parsing - Parsed (Argentina time): ${from.toISOString()} to ${to.toISOString()}`);
     
     const filters = {
       roleFilter: roleFilter as string,

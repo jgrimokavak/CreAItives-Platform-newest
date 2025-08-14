@@ -2,6 +2,19 @@ import { db } from './db';
 import { users, activityEvents, dailyAnalytics } from '@shared/schema';
 import { eq, and, gte, lte, sql, desc, asc, inArray, isNotNull, or } from 'drizzle-orm';
 
+// Helper function to convert to Argentina timezone (UTC-3)
+const toArgentinaTime = (date: Date): Date => {
+  const argentinaOffset = -3 * 60; // Argentina is UTC-3
+  const localOffset = date.getTimezoneOffset();
+  const offsetDiff = argentinaOffset - localOffset;
+  return new Date(date.getTime() + offsetDiff * 60 * 1000);
+};
+
+// Helper function to get current time in Argentina
+const getArgentinaNow = (): Date => {
+  return toArgentinaTime(new Date());
+};
+
 const getCurrentEnv = () => {
   const env = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
   // Remove debug logging after verification
@@ -38,7 +51,7 @@ export async function logActivity(event: {
       id: `evt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       ...event,
       environment,
-      createdAt: new Date(),
+      createdAt: getArgentinaNow(), // Use Argentina time for all events
     };
     
     await db.insert(activityEvents).values(eventLog);
