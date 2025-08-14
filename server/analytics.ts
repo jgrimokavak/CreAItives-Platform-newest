@@ -4,7 +4,7 @@ import { eq, and, gte, lte, sql, desc, asc, inArray, isNotNull, or } from 'drizz
 
 const getCurrentEnv = () => {
   const env = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
-  console.log(`Analytics environment detected: ${env} (REPLIT_DEPLOYMENT=${process.env.REPLIT_DEPLOYMENT})`);
+  // Remove debug logging after verification
   return env;
 };
 

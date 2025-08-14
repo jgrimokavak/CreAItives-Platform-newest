@@ -1,0 +1,157 @@
+COMPREHENSIVE ANALYTICS SYSTEM DIAGNOSTIC - ROOT CAUSE ANALYSIS REQUIRED
+
+I need you to perform an exhaustive diagnostic of our analytics system. The data integrity issues we've identified appear to be systemic, and I need you to trace every single data flow path to find ALL root causes.
+
+CRITICAL BACKGROUND:
+
+Success rate showing 30.61% instead of expected ~100%
+Invalid models like "veo-3-fast" appearing in analytics
+Video events dated July 15th (impossible - feature launched Aug 10th)
+Previous fixes only prevented NEW bad data but didn't clean existing contamination
+REQUIRED DIAGNOSTIC STEPS:
+
+1. COMPLETE DATABASE AUDIT
+Execute these queries and analyze EVERY result in detail:
+
+-- Analyze ALL activity events for anomalies
+SELECT 
+  environment,
+  feature,
+  model,
+  status,
+  DATE(created_at) as date,
+  COUNT(*) as count,
+  MIN(created_at) as earliest,
+  MAX(created_at) as latest
+FROM activity_events 
+GROUP BY environment, feature, model, status, DATE(created_at)
+ORDER BY date DESC, count DESC;
+-- Find ALL invalid models in database
+SELECT 
+  model,
+  feature, 
+  COUNT(*) as occurrences,
+  MIN(created_at) as first_occurrence,
+  MAX(created_at) as last_occurrence,
+  ARRAY_AGG(DISTINCT user_id) as affected_users
+FROM activity_events 
+WHERE model IS NOT NULL
+GROUP BY model, feature
+ORDER BY occurrences DESC;
+-- Analyze impossible date patterns
+SELECT 
+  feature,
+  DATE(created_at) as date,
+  COUNT(*) as events,
+  ARRAY_AGG(DISTINCT model) as models_used,
+  ARRAY_AGG(DISTINCT user_id) as users
+FROM activity_events 
+WHERE created_at < '2025-08-10 00:00:00' 
+  AND feature = 'video_generation'
+GROUP BY feature, DATE(created_at)
+ORDER BY date;
+-- Check for seeded/test data patterns
+SELECT 
+  user_id,
+  COUNT(*) as total_events,
+  COUNT(DISTINCT feature) as features_used,
+  COUNT(DISTINCT model) as models_used,
+  MIN(created_at) as first_event,
+  MAX(created_at) as last_event,
+  COUNT(CASE WHEN status = 'failed' THEN 1 END) as failures,
+  COUNT(CASE WHEN status = 'succeeded' THEN 1 END) as successes
+FROM activity_events
+GROUP BY user_id
+ORDER BY total_events DESC;
+-- Analyze environment data distribution
+SELECT 
+  environment,
+  COUNT(*) as total_events,
+  COUNT(DISTINCT user_id) as unique_users,
+  COUNT(CASE WHEN status = 'succeeded' THEN 1 END) as successes,
+  COUNT(CASE WHEN status = 'failed' THEN 1 END) as failures,
+  ROUND(COUNT(CASE WHEN status = 'succeeded' THEN 1 END) * 100.0 / COUNT(*), 2) as success_rate
+FROM activity_events
+GROUP BY environment;
+2. TRACE COMPLETE DATA FLOW
+
+Examine EVERY component in the analytics pipeline:
+
+A. Event Logging Flow Analysis:
+
+Inspect logActivity() function in server/analytics.ts line by line
+Check ALL places where logActivity() is called throughout the codebase
+Verify model validation logic against the VALID_MODELS array
+Trace environment detection in getCurrentEnv() function
+B. KPI Calculation Deep Dive:
+
+Analyze the getKPIs() function SQL queries step by step
+Check success rate calculation formula: (totalSuccesses / totalAttempts) * 100
+Verify filtering logic for status, dates, and environment
+Examine WHERE clauses in all analytics queries
+C. Trends Data Investigation:
+
+Inspect getTrends() function for model filtering gaps
+Check if retrospective validation is missing from model usage queries
+Verify date range filters are properly applied
+Examine grouping and aggregation logic
+3. CODE PATTERN ANALYSIS
+
+Search the ENTIRE codebase for these patterns:
+
+# Find ALL analytics event logging calls
+grep -r "logActivity" server/ client/ --include="*.ts" --include="*.tsx"
+# Find ALL references to models
+grep -r "veo-" . --include="*.ts" --include="*.tsx" --include="*.sql"
+grep -r "VALID_MODELS" . --include="*.ts"
+# Find ALL database queries involving activity_events
+grep -r "activity_events" server/ --include="*.ts"
+grep -r "activityEvents" server/ --include="*.ts"
+4. VALIDATE BUSINESS LOGIC
+
+Check these critical business rules:
+
+Video generation should only exist after August 10, 2025
+Upscale events should use model = 'upscale' or NULL
+All image models must be in: ['gpt-image-1', 'imagen-4', 'imagen-3', 'flux-pro', 'flux-kontext-max', 'flux-krea-dev', 'wan-2.2', 'hailuo-02']
+Success rate for production should be 90%+
+No events should exist before platform launch dates
+5. ENVIRONMENT INVESTIGATION
+
+Verify environment detection is working correctly:
+
+Check getCurrentEnv() function logic
+Verify REPLIT_DEPLOYMENT environment variable handling
+Ensure dev and prod data are properly isolated
+Check if mixed environment data exists in database
+6. HISTORICAL DATA CONTAMINATION
+
+Determine the source of bad data:
+
+Was there a seeder that created fake events?
+Did testing create invalid events that weren't cleaned?
+Are there any migration scripts that introduced bad data?
+Check git history for any database seeding or testing files
+7. FRONTEND-BACKEND SYNC
+
+Verify the analytics display logic:
+
+Check if frontend filters match backend query filters
+Verify chart data transformation logic
+Ensure model names are consistently handled
+Check date range calculations between frontend and backend
+DELIVERABLES REQUIRED:
+
+Root Cause Report: Identify EXACTLY where invalid data originated
+Complete Cleanup Plan: SQL statements to remove ALL contaminated data
+Prevention Strategy: Code changes to prevent future contamination
+Data Validation: Queries to verify clean state after fixes
+Business Logic Verification: Confirm all dates and models are realistic
+SUCCESS CRITERIA:
+
+Success rate should be 95%+ for real usage
+Only valid models appear in analytics
+No impossible historical dates
+All metrics reflect actual platform usage only
+Dev and prod environments show correct isolated data
+Examine EVERY file, EVERY query, EVERY validation rule. I need absolute confidence that the analytics reflect 100% accurate platform usage data.
