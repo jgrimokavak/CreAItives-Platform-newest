@@ -1,0 +1,20 @@
+client:536 WebSocket connection to 'wss://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/?token=BbUv37g49HJl' failed: 
+setupWebSocket @ client:536
+(anonymous) @ client:531
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=BbUv37g49HJl' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+setupWebSocket @ client:536
+fallback @ client:509
+(anonymous) @ client:555
+chunk-C43VWYGG.js?v=6eecd923:21507 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+VideoPage.tsx:1751 [DIAGNOSTIC] Loading VIDEO_MODELS configuration
+VideoPage.tsx:1771 [DIAGNOSTIC] VIDEO_MODELS loaded: {modelKeys: Array(1), models: {…}}
+websocket.ts:17 [DIAGNOSTIC] WebSocket URL construction: {protocol: 'wss:', hostname: 'eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev', port: '', fullUrl: 'wss://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/ws', windowLocation: {…}}
+main.tsx:13 SW registered:  ServiceWorkerRegistration {installing: null, waiting: null, active: ServiceWorker, navigationPreload: NavigationPreloadManager, scope: 'https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/', …}
+overview:1 <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">
+websocket.ts:40 WebSocket connected
+overview:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+overview:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+overview:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received

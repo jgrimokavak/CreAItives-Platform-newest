@@ -15,11 +15,15 @@ router.get('/kpis', isAuthenticated, async (req: any, res) => {
     }
     
     // Parse dates and ensure we capture the full day in UTC
+    // dateFrom and dateTo come as YYYY-MM-DD strings
     const from = new Date(dateFrom as string);
     from.setUTCHours(0, 0, 0, 0);
     
     const to = new Date(dateTo as string);
     to.setUTCHours(23, 59, 59, 999);
+    
+    console.log(`[Analytics Route] KPIs Date parsing - Input: ${dateFrom} to ${dateTo}`);
+    console.log(`[Analytics Route] KPIs Date parsing - Parsed: ${from.toISOString()} to ${to.toISOString()}`);
     
     const filters = {
       roleFilter: roleFilter as string,
