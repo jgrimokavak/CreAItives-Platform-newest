@@ -2,17 +2,9 @@ import express from 'express';
 import { getKPIs, getTrends, getModelUsage, getFeatureUsage } from '../analytics';
 import { isAuthenticated } from '../replitAuth';
 
-// Helper to parse dates to include full day range
-const parseArgentinaDate = (dateStr: string, endOfDay: boolean = false): Date => {
-  // For end of day, add 1 day to ensure we capture everything
-  if (endOfDay) {
-    const date = new Date(`${dateStr}T00:00:00`);
-    date.setDate(date.getDate() + 1); // Move to next day midnight
-    date.setSeconds(date.getSeconds() - 1); // Back up 1 second to 23:59:59
-    return date;
-  } else {
-    return new Date(`${dateStr}T00:00:00`);
-  }
+// Helper to parse dates - frontend now sends full ISO strings
+const parseDate = (dateStr: string): Date => {
+  return new Date(dateStr);
 };
 
 const router = express.Router();
@@ -27,12 +19,12 @@ router.get('/kpis', isAuthenticated, async (req: any, res) => {
       return res.status(400).json({ message: 'dateFrom and dateTo are required' });
     }
     
-    // Parse dates in Argentina timezone (UTC-3)
-    const from = parseArgentinaDate(dateFrom as string, false);
-    const to = parseArgentinaDate(dateTo as string, true);
+    // Parse dates from frontend (now includes proper time boundaries)
+    const from = parseDate(dateFrom as string);
+    const to = parseDate(dateTo as string);
     
     console.log(`[Analytics Route] KPIs Date parsing - Input: ${dateFrom} to ${dateTo}`);
-    console.log(`[Analytics Route] KPIs Date parsing - Parsed (Argentina time): ${from.toISOString()} to ${to.toISOString()}`);
+    console.log(`[Analytics Route] KPIs Date parsing - Parsed: ${from.toISOString()} to ${to.toISOString()}`);
     
     const filters = {
       roleFilter: roleFilter as string,
@@ -89,12 +81,12 @@ router.get('/trends', isAuthenticated, async (req, res) => {
       return res.status(400).json({ message: 'dateFrom and dateTo are required' });
     }
     
-    // Parse dates in Argentina timezone (UTC-3)
-    const from = parseArgentinaDate(dateFrom as string, false);
-    const to = parseArgentinaDate(dateTo as string, true);
+    // Parse dates from frontend (now includes proper time boundaries)
+    const from = parseDate(dateFrom as string);
+    const to = parseDate(dateTo as string);
     
     console.log(`[Analytics Route] Trends Date parsing - Input: ${dateFrom} to ${dateTo}`);
-    console.log(`[Analytics Route] Trends Date parsing - Parsed (Argentina time): ${from.toISOString()} to ${to.toISOString()}`);
+    console.log(`[Analytics Route] Trends Date parsing - Parsed: ${from.toISOString()} to ${to.toISOString()}`);
     
     const filters = {
       roleFilter: roleFilter as string,

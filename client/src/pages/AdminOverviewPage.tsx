@@ -91,16 +91,10 @@ export default function AdminOverviewPage() {
     activatedFilter: 'all'
   });
 
-  // Calculate date ranges based on selection (Argentina timezone)
+  // Calculate date ranges - fix end date to include full day
   const { dateFrom, dateTo } = useMemo(() => {
-    // Get dates in Argentina timezone (UTC-3)
-    const argentinaOffset = -3 * 60; // minutes
-    const now = new Date();
-    const localOffset = now.getTimezoneOffset();
-    const offsetDiff = argentinaOffset - localOffset;
-    
-    const to = new Date(now.getTime() + offsetDiff * 60 * 1000);
-    const from = new Date(to);
+    const to = new Date();
+    const from = new Date();
     
     switch (dateRange) {
       case '7d':
@@ -114,17 +108,18 @@ export default function AdminOverviewPage() {
         break;
     }
     
-    // Format as YYYY-MM-DD in Argentina timezone
-    const formatDate = (date: Date) => {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
+    // CRITICAL: Format with proper time boundaries
+    const formatStartDate = (date: Date) => {
+      return date.toISOString().split('T')[0] + 'T00:00:00.000Z';
+    };
+    
+    const formatEndDate = (date: Date) => {
+      return date.toISOString().split('T')[0] + 'T23:59:59.999Z';
     };
     
     return {
-      dateFrom: formatDate(from),
-      dateTo: formatDate(to)
+      dateFrom: formatStartDate(from),
+      dateTo: formatEndDate(to)
     };
   }, [dateRange]);
 
