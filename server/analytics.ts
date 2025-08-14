@@ -120,6 +120,14 @@ export async function getKPIs(dateFrom: Date, dateTo: Date, filters: {
   const eventWhereClause = and(...eventConditions);
 
   // Calculate DAU
+  console.log(`[Analytics Debug] About to run DAU query with conditions:`, {
+    environment,
+    dateFrom: dateFrom.toISOString(),
+    dateTo: dateTo.toISOString(),
+    dateFromTimestamp: dateFrom.getTime(),
+    dateToTimestamp: dateTo.getTime()
+  });
+  
   const dauResult = await db
     .select({ 
       count: sql`COUNT(DISTINCT ${activityEvents.userId})` 
@@ -128,12 +136,16 @@ export async function getKPIs(dateFrom: Date, dateTo: Date, filters: {
     .where(eventWhereClause);
   
   console.log(`[Analytics Debug] DAU query result:`, dauResult);
-  console.log(`[Analytics Debug] Event conditions:`, {
-    environment,
-    dateFrom: dateFrom.toISOString(),
-    dateTo: dateTo.toISOString(),
-    filteredUserIds
-  });
+  
+  // Also run a test query to verify data exists
+  const testResult = await db
+    .select({ 
+      count: sql`COUNT(*)` 
+    })
+    .from(activityEvents)
+    .where(eq(activityEvents.environment, environment));
+  
+  console.log(`[Analytics Debug] Total events in ${environment}:`, testResult[0]?.count);
   
   const dau = Number(dauResult[0]?.count || 0);
 

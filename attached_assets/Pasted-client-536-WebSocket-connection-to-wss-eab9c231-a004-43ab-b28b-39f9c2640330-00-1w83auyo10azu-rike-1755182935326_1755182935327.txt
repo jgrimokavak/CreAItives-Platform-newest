@@ -1,0 +1,35 @@
+client:536 WebSocket connection to 'wss://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/?token=drOz_SM_lUNQ' failed: 
+setupWebSocket @ client:536
+(anonymous) @ client:531
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=drOz_SM_lUNQ' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+setupWebSocket @ client:536
+fallback @ client:509
+(anonymous) @ client:555
+chunk-C43VWYGG.js?v=6eecd923:21507 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+VideoPage.tsx:1751 [DIAGNOSTIC] Loading VIDEO_MODELS configuration
+VideoPage.tsx:1771 [DIAGNOSTIC] VIDEO_MODELS loaded: {modelKeys: Array(1), models: {…}}modelKeys: ['hailuo-02']models: {hailuo-02: {…}}[[Prototype]]: Object
+websocket.ts:17 [DIAGNOSTIC] WebSocket URL construction: {protocol: 'wss:', hostname: 'eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev', port: '', fullUrl: 'wss://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/ws', windowLocation: {…}}fullUrl: "wss://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/ws"hostname: "eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev"port: ""protocol: "wss:"windowLocation: {protocol: 'https:', hostname: 'eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev', port: '', href: 'https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/admin/overview'}[[Prototype]]: Object
+main.tsx:13 SW registered:  ServiceWorkerRegistration {installing: null, waiting: null, active: ServiceWorker, navigationPreload: NavigationPreloadManager, scope: 'https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/', …}
+overview:1 <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">
+websocket.ts:40 WebSocket connected
+websocket.ts:17 [DIAGNOSTIC] WebSocket URL construction: {protocol: 'wss:', hostname: 'eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev', port: '', fullUrl: 'wss://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/ws', windowLocation: {…}}
+websocket.ts:40 WebSocket connected
+websocket.ts:101 [TRACE] WebSocket received event: imageCreated with data: {image: {…}}
+websocket.ts:104 [TRACE] Processing imageCreated event, dispatching gallery-updated
+websocket.ts:109 [TRACE] Dispatching gallery-updated event: {type: 'created', data: {…}}
+Home.tsx:50 [TRACE Home] Received gallery-updated event: {type: 'created', data: {…}}
+Home.tsx:53 [TRACE Home] New image data: {id: 'img_1755182883077_0', url: '/api/object-storage/image/dev/img_1755182883077_0.png', prompt: 'a car', size: 389026, model: 'imagen-4', …}
+Home.tsx:71 [TRACE Home] Adding transformed image to list: {id: 'img_1755182883077_0', url: '/api/object-storage/image/dev/thumb/img_1755182883077_0.webp', prompt: 'a car', size: 389026, model: 'imagen-4', …}
+Home.tsx:75 [TRACE Home] Updated images list: [{…}]
+websocket.ts:101 [TRACE] WebSocket received event: imageCreated with data: {image: {…}}
+websocket.ts:104 [TRACE] Processing imageCreated event, dispatching gallery-updated
+websocket.ts:109 [TRACE] Dispatching gallery-updated event: {type: 'created', data: {…}}
+Home.tsx:50 [TRACE Home] Received gallery-updated event: {type: 'created', data: {…}}
+Home.tsx:53 [TRACE Home] New image data: {id: 'img_1755182883077_0', url: '/api/object-storage/image/dev/img_1755182883077_0.png', prompt: 'a car', size: 389026, model: 'imagen-4', …}
+Home.tsx:71 [TRACE Home] Adding transformed image to list: {id: 'img_1755182883077_0', url: '/api/object-storage/image/dev/thumb/img_1755182883077_0.webp', prompt: 'a car', size: 389026, model: 'imagen-4', …}
+Home.tsx:75 [TRACE Home] Updated images list: [{…}]
+ImageModal.tsx:43 ImageModal: No image URL provided, not rendering modal
+ImageModal.tsx:43 ImageModal: No image URL provided, not rendering modal
