@@ -320,3 +320,62 @@ export async function getTrends(dateFrom: Date, dateTo: Date, interval: 'day' | 
     }))
   };
 }
+
+// Model usage analytics
+export async function getModelUsage(dateFrom: Date, dateTo: Date, filters: any = {}) {
+  const environment = getCurrentEnv();
+  
+  const modelUsage = await db
+    .select({
+      model: activityEvents.model,
+      count: sql<number>`COUNT(*)`,
+      successes: sql<number>`COUNT(CASE WHEN ${activityEvents.status} = 'succeeded' THEN 1 END)`,
+      failures: sql<number>`COUNT(CASE WHEN ${activityEvents.status} = 'failed' THEN 1 END)`
+    })
+    .from(activityEvents)
+    .where(and(
+      eq(activityEvents.environment, environment),
+      gte(activityEvents.createdAt, dateFrom),
+      lte(activityEvents.createdAt, dateTo),
+      isNotNull(activityEvents.model)
+    ))
+    .groupBy(activityEvents.model)
+    .orderBy(desc(sql`COUNT(*)`));
+    
+  return modelUsage.map(m => ({
+    model: m.model || 'Unknown',
+    total: Number(m.count),
+    successes: Number(m.successes),
+    failures: Number(m.failures),
+    successRate: Number(m.count) > 0 ? (Number(m.successes) / Number(m.count)) * 100 : 0
+  }));
+}
+
+// Feature usage analytics
+export async function getFeatureUsage(dateFrom: Date, dateTo: Date, filters: any = {}) {
+  const environment = getCurrentEnv();
+  
+  const featureUsage = await db
+    .select({
+      feature: activityEvents.feature,
+      count: sql<number>`COUNT(*)`,
+      successes: sql<number>`COUNT(CASE WHEN ${activityEvents.status} = 'succeeded' THEN 1 END)`,
+      avgDuration: sql<number>`AVG(CASE WHEN ${activityEvents.duration} IS NOT NULL THEN ${activityEvents.duration} END)`
+    })
+    .from(activityEvents)
+    .where(and(
+      eq(activityEvents.environment, environment),
+      gte(activityEvents.createdAt, dateFrom),
+      lte(activityEvents.createdAt, dateTo),
+      isNotNull(activityEvents.feature)
+    ))
+    .groupBy(activityEvents.feature)
+    .orderBy(desc(sql`COUNT(*)`));
+    
+  return featureUsage.map(f => ({
+    feature: f.feature || 'Unknown',
+    total: Number(f.count),
+    successes: Number(f.successes),
+    avgDuration: Math.round(Number(f.avgDuration || 0))
+  }));
+}

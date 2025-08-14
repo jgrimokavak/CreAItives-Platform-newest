@@ -26,6 +26,7 @@ import enhanceEditPromptRouter from "./routes/enhanceEditPrompt";
 import promptSuggestionsRouter from "./routes/promptSuggestions";
 import videoRoutes from "./routes/video-routes";
 import projectRoutes from "./routes/project-routes";
+import analyticsRoutes from "./routes/analytics-routes";
 
 
 import objectStorageRoutes from "./routes/object-storage-routes";
@@ -1606,6 +1607,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Add upscale routes
   app.use('/api', upscaleRoutes);
+  
+  // Add analytics routes
+  app.use('/api/admin/analytics', analyticsRoutes);
   
   // Add prompt enhancement routes
   app.use('/api', enhancePromptRouter);
