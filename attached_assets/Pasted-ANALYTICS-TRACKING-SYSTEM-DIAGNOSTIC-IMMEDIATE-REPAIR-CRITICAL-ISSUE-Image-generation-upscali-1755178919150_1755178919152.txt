@@ -1,0 +1,76 @@
+ANALYTICS TRACKING SYSTEM DIAGNOSTIC & IMMEDIATE REPAIR
+
+CRITICAL ISSUE: Image generation, upscaling, and video generation are functioning but ZERO analytics events are being tracked. The admin analytics dashboard shows 0 DAU/MAU despite successful content generation.
+
+REQUIRED DIAGNOSTIC STEPS:
+
+TRACE IMAGE GENERATION FLOW:
+
+Examine /api/generate endpoint in server/routes.ts
+Check if runGenerateJob() function calls logActivity() from server/analytics.ts
+Verify unified-image-handler.ts includes analytics tracking
+Test if events are actually being inserted into activity_events table
+TRACE IMAGE EDITING FLOW:
+
+Examine /api/edit-image endpoint and runEditJob() function
+Check if image editing calls logActivity() with proper event data
+Verify edit events are logged with feature: 'image_editing'
+TRACE UPSCALING FLOW:
+
+Examine server/routes/upscale-routes.ts endpoint /api/upscale
+Check if upscaling success/failure calls logActivity()
+Verify upscale events logged with feature: 'upscale' and model: 'upscale'
+TRACE VIDEO GENERATION FLOW:
+
+Examine server/routes/video-routes.ts endpoint /api/video/generate
+Check if video generation calls logActivity()
+Verify video events logged with feature: 'video_generation'
+DATABASE VERIFICATION:
+
+Run SELECT COUNT(*) FROM activity_events to confirm 0 events
+Test manual insertion into activity_events table
+Verify table schema matches analytics queries
+SPECIFIC AREAS TO INVESTIGATE:
+
+server/handlers/unified-image-handler.ts - Missing logActivity() calls
+server/routes/upscale-routes.ts - No analytics tracking on success
+server/routes/video-routes.ts - Missing video event logging
+server/routes.ts - Image generation jobs not calling analytics
+Database connection issues preventing event insertion
+REQUIRED FIXES:
+
+Add Missing Analytics Calls:
+
+Add logActivity() to all image generation success/failure paths
+Add logActivity() to upscaling success/failure in upscale-routes.ts
+Add logActivity() to video generation in video-routes.ts
+Add logActivity() to image editing success/failure
+Ensure Proper Event Data:
+
+Use correct feature names: 'image_creation', 'image_editing', 'upscale', 'video_generation'
+Include proper status: 'succeeded' or 'failed'
+Include model information and duration where available
+Include userId from authenticated session
+Test Complete Flow:
+
+Generate image → verify event in database
+Upscale image → verify event in database
+Create video → verify event in database
+Check analytics dashboard shows correct metrics
+SUCCESS CRITERIA:
+
+Every image generation creates activity_events record
+Every upscale creates activity_events record
+Every video generation creates activity_events record
+Analytics dashboard shows non-zero DAU/MAU
+Model usage trends show actual platform models
+DEBUGGING COMMANDS TO RUN:
+
+-- Check current event count
+SELECT COUNT(*) FROM activity_events;
+-- Check if table exists and structure
+DESCRIBE activity_events;
+-- Test manual insert
+INSERT INTO activity_events (id, user_id, event, feature, status, environment, created_at) 
+VALUES ('test123', 'test-user', 'test_event', 'test_feature', 'succeeded', 'dev', NOW());
+Please perform this comprehensive analysis, identify ALL missing analytics tracking points, implement the necessary logActivity() calls, and ensure every content generation action is properly recorded in the analytics system

@@ -10,7 +10,7 @@ const router = express.Router();
 const providerRegistry = new ProviderRegistry();
 
 // Generate video endpoint
-router.post('/generate', async (req, res) => {
+router.post('/generate', async (req: any, res) => {
   try {
     const user = req.user as any;
     const userId = user?.claims?.sub;
@@ -81,6 +81,7 @@ router.post('/generate', async (req, res) => {
     }
 
     // Start video generation job
+    const startTime = Date.now();
     try {
       const jobResult = await provider.generateVideo(model, inputs);
       
@@ -97,8 +98,8 @@ router.post('/generate', async (req, res) => {
         message: 'Video generation started successfully'
       });
 
-      // Start background polling for job completion
-      pollVideoJob(videoId, jobResult.jobId, provider);
+      // Start background polling for job completion (pass userId and startTime)
+      pollVideoJob(videoId, jobResult.jobId, provider, userId, startTime);
 
     } catch (providerError: any) {
       console.error('Provider error:', providerError);
@@ -106,6 +107,24 @@ router.post('/generate', async (req, res) => {
         status: 'failed', 
         error: providerError.message || 'Provider error occurred' 
       });
+      
+      // Log failed video generation to analytics
+      const { logActivity } = await import('../analytics');
+      const duration = Date.now() - startTime;
+      await logActivity({
+        userId,
+        event: 'video_generate_failure',
+        feature: 'video_generation',
+        model: model,
+        status: 'failed',
+        duration: Math.round(duration / 1000),
+        errorCode: providerError.code || 'PROVIDER_ERROR',
+        metadata: {
+          error: providerError.message?.substring(0, 200),
+          projectId: projectId || null
+        }
+      });
+      console.log(`Analytics tracked: Video generation failure for user ${userId}`);
       
       return res.status(500).json({ 
         error: 'Failed to start video generation',
@@ -478,7 +497,7 @@ router.get('/unassigned', async (req, res) => {
 });
 
 // Background job polling function
-async function pollVideoJob(videoId: string, jobId: string, provider: any) {
+async function pollVideoJob(videoId: string, jobId: string, provider: any, userId?: string, startTime?: number) {
   const maxAttempts = 30; // Maximum polling attempts (5 minutes with 10s intervals)
   let attempts = 0;
 
@@ -537,6 +556,28 @@ async function pollVideoJob(videoId: string, jobId: string, provider: any) {
         });
         
         console.log(`Video job ${jobId} completed successfully`);
+        
+        // Log successful video generation to analytics
+        if (userId && startTime) {
+          const { logActivity } = await import('../analytics');
+          const duration = Date.now() - startTime;
+          const video = await storage.getVideoById(videoId);
+          await logActivity({
+            userId,
+            event: 'video_generate_success',
+            feature: 'video_generation',
+            model: video?.model || 'unknown',
+            status: 'succeeded',
+            duration: Math.round(duration / 1000),
+            metadata: {
+              projectId: video?.projectId || null,
+              resolution: video?.resolution,
+              duration: video?.duration,
+              promptOptimizer: video?.promptOptimizer
+            }
+          });
+          console.log(`Analytics tracked: Video generation success for user ${userId}`);
+        }
         return;
       }
       
@@ -548,6 +589,27 @@ async function pollVideoJob(videoId: string, jobId: string, provider: any) {
         });
         
         console.log(`Video job ${jobId} failed:`, jobStatus.error);
+        
+        // Log failed video generation to analytics
+        if (userId && startTime) {
+          const { logActivity } = await import('../analytics');
+          const duration = Date.now() - startTime;
+          const video = await storage.getVideoById(videoId);
+          await logActivity({
+            userId,
+            event: 'video_generate_failure',
+            feature: 'video_generation',
+            model: video?.model || 'unknown',
+            status: 'failed',
+            duration: Math.round(duration / 1000),
+            errorCode: 'VIDEO_GENERATION_FAILED',
+            metadata: {
+              error: jobStatus.error?.substring(0, 200),
+              projectId: video?.projectId || null
+            }
+          });
+          console.log(`Analytics tracked: Video generation failure for user ${userId}`);
+        }
         return;
       }
       

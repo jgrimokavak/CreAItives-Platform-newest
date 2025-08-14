@@ -1201,11 +1201,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const job = jobs.get(jobId);
     if (!job) return;
     
+    const startTime = Date.now();
+    let userId: string | undefined;
+    
     try {
       job.status = "processing";
       
-      // Import the unified handler
+      // Import the unified handler and analytics
       const { handleImageGeneration } = await import('./handlers/unified-image-handler');
+      const { logActivity } = await import('./analytics');
+      
+      // Extract userId if available (from the job data)
+      userId = data.userId;
       
       if (process.env.NODE_ENV !== 'production') {
         console.log(`Job ${jobId}: Processing image generation with model: ${data.modelKey}`);
@@ -1221,15 +1228,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
       job.status = "done";
       job.result = generatedImages;
       
+      // Log successful generation to analytics
+      const duration = Date.now() - startTime;
+      if (userId) {
+        await logActivity({
+          userId,
+          event: 'image_generate_success',
+          feature: 'image_creation',
+          model: data.modelKey,
+          status: 'succeeded',
+          duration: Math.round(duration / 1000), // Convert to seconds
+          metadata: {
+            count: generatedImages.length,
+            prompt: data.prompt?.substring(0, 100), // First 100 chars of prompt
+            size: data.size || '1024x1024'
+          }
+        });
+        console.log(`Analytics tracked: Image generation success for user ${userId}`);
+      }
+      
     } catch (error: any) {
       console.error(`Job ${jobId} error:`, error);
       job.status = "error";
       job.error = error.message || "Failed to generate images";
+      
+      // Log failed generation to analytics
+      if (userId) {
+        const { logActivity } = await import('./analytics');
+        const duration = Date.now() - startTime;
+        await logActivity({
+          userId,
+          event: 'image_generate_failure',
+          feature: 'image_creation',
+          model: data.modelKey,
+          status: 'failed',
+          duration: Math.round(duration / 1000),
+          errorCode: error.code || 'GENERATION_ERROR',
+          metadata: {
+            error: error.message?.substring(0, 200)
+          }
+        });
+        console.log(`Analytics tracked: Image generation failure for user ${userId}`);
+      }
     }
   }
 
   // API endpoint to generate images (async with job queue) - Protected
-  app.post("/api/generate", isAuthenticated, async (req, res) => {
+  app.post("/api/generate", isAuthenticated, async (req: any, res) => {
     try {
       // PERFORMANCE OPTIMIZATION: Remove verbose logging in production
       if (process.env.NODE_ENV !== 'production') {
@@ -1275,6 +1320,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
+      // Add userId to the data for analytics tracking
+      const userId = req.user?.claims?.sub;
+      console.log(`[Analytics Debug] User ID for generation: ${userId}`);
+      const dataWithUser = {
+        ...validationResult.data,
+        userId
+      };
+      
       // Create a new job
       const jobId = crypto.randomUUID();
       jobs.set(jobId, { 
@@ -1286,7 +1339,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Created job ${jobId} for image generation`);
       
       // Start the job processing in the background
-      process.nextTick(() => runGenerateJob(jobId, validationResult.data));
+      process.nextTick(() => runGenerateJob(jobId, dataWithUser));
       
       // Return the job ID immediately
       res.status(202).json({ jobId });
@@ -1313,12 +1366,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Helper function to process the edit job
-  async function runEditJob(jobId: string, req: Request) {
+  async function runEditJob(jobId: string, req: any) {
     const job = jobs.get(jobId);
     if (!job) return; // Job was deleted or doesn't exist
     
     job.status = "processing";
     console.log(`Processing job ${jobId}: status=${job.status}`);
+    
+    const startTime = Date.now();
+    const userId = req.user?.claims?.sub;
     
     try {
       // Access form data fields
@@ -1360,8 +1416,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         mask = `data:image/${maskFile.mimetype.split('/')[1]};base64,${maskFile.buffer.toString('base64')}`;
       }
       
-      // Import the unified handler
+      // Import the unified handler and analytics
       const { handleImageEdit } = await import('./handlers/unified-image-handler');
+      const { logActivity } = await import('./analytics');
       
       console.log(`Job ${jobId}: Processing image edit with model: ${modelKey}`);
       
@@ -1386,20 +1443,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
       job.status = "done";
       job.result = generatedImages;
       
+      // Log successful edit to analytics
+      if (userId) {
+        const duration = Date.now() - startTime;
+        await logActivity({
+          userId,
+          event: 'image_edit_success',
+          feature: 'image_editing',
+          model: modelKey,
+          status: 'succeeded',
+          duration: Math.round(duration / 1000),
+          metadata: {
+            count: generatedImages.length,
+            prompt: prompt?.substring(0, 100),
+            hasMask: !!mask
+          }
+        });
+        console.log(`Analytics tracked: Image edit success for user ${userId}`);
+      }
+      
     } catch (error: any) {
       console.error(`Job ${jobId} error:`, error);
       job.status = "error";
       job.error = error.message || "Failed to edit images";
+      
+      // Log failed edit to analytics
+      if (userId) {
+        const { logActivity } = await import('./analytics');
+        const duration = Date.now() - startTime;
+        await logActivity({
+          userId,
+          event: 'image_edit_failure',
+          feature: 'image_editing',
+          model: req.body.modelKey || "gpt-image-1",
+          status: 'failed',
+          duration: Math.round(duration / 1000),
+          errorCode: error.code || 'EDIT_ERROR',
+          metadata: {
+            error: error.message?.substring(0, 200)
+          }
+        });
+        console.log(`Analytics tracked: Image edit failure for user ${userId}`);
+      }
     }
   }
 
   // API endpoint for async image editing (using job queue)
   app.post("/api/edit-image", 
+    isAuthenticated,
     upload.fields([
       { name: 'image', maxCount: 16 },
       { name: 'mask', maxCount: 1 }
     ]),
-    (req, res) => {
+    (req: any, res) => {
       try {
         // Basic validation
         const prompt = req.body.prompt;

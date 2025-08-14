@@ -42,11 +42,13 @@ const router = Router();
 const upscaleJobs: Record<string, {
   status: "pending" | "processing" | "done" | "error",
   result?: string,
-  error?: string
+  error?: string,
+  userId?: string,
+  startTime?: number
 }> = {};
 
 // Upscale API endpoint
-router.post('/upscale', upload.single('image'), async (req, res) => {
+router.post('/upscale', upload.single('image'), async (req: any, res) => {
   try {
     // Check if file was uploaded
     if (!req.file) {
@@ -55,7 +57,14 @@ router.post('/upscale', upload.single('image'), async (req, res) => {
 
     // Generate job ID for tracking
     const jobId = uuidv4();
-    upscaleJobs[jobId] = { status: 'pending' };
+    const userId = req.user?.claims?.sub;
+    const startTime = Date.now();
+    
+    upscaleJobs[jobId] = { 
+      status: 'pending',
+      userId,
+      startTime
+    };
 
     // Return jobId immediately for client to start polling
     res.json({ jobId });
@@ -211,10 +220,49 @@ router.post('/upscale', upload.single('image'), async (req, res) => {
       if (resultUrl) {
         upscaleJobs[jobId].result = resultUrl;
         console.log('Final result URL:', resultUrl);
+        
+        // Log successful upscale to analytics
+        if (upscaleJobs[jobId].userId && upscaleJobs[jobId].startTime) {
+          const { logActivity } = await import('../analytics');
+          const duration = Date.now() - upscaleJobs[jobId].startTime!;
+          await logActivity({
+            userId: upscaleJobs[jobId].userId!,
+            event: 'upscale_success',
+            feature: 'upscale',
+            model: 'upscale',
+            status: 'succeeded',
+            duration: Math.round(duration / 1000),
+            metadata: {
+              enhanceModel: req.body.enhance_model || 'Standard V2',
+              upscaleFactor: req.body.upscale_factor || '4x',
+              faceEnhancement: req.body.face_enhancement === 'true'
+            }
+          });
+          console.log(`Analytics tracked: Upscale success for user ${upscaleJobs[jobId].userId}`);
+        }
       } else {
         console.log('No valid URL found in output');
         upscaleJobs[jobId].status = 'error';
         upscaleJobs[jobId].error = 'Invalid response format from image upscaling service';
+        
+        // Log failed upscale to analytics
+        if (upscaleJobs[jobId].userId && upscaleJobs[jobId].startTime) {
+          const { logActivity } = await import('../analytics');
+          const duration = Date.now() - upscaleJobs[jobId].startTime!;
+          await logActivity({
+            userId: upscaleJobs[jobId].userId!,
+            event: 'upscale_failure',
+            feature: 'upscale',
+            model: 'upscale',
+            status: 'failed',
+            duration: Math.round(duration / 1000),
+            errorCode: 'INVALID_RESPONSE',
+            metadata: {
+              error: 'Invalid response format from image upscaling service'
+            }
+          });
+          console.log(`Analytics tracked: Upscale failure for user ${upscaleJobs[jobId].userId}`);
+        }
       }
     } catch (error: any) {
       console.error('Upscale error:', error);
@@ -238,6 +286,25 @@ router.post('/upscale', upload.single('image'), async (req, res) => {
       
       upscaleJobs[jobId].status = 'error';
       upscaleJobs[jobId].error = errorMessage;
+      
+      // Log failed upscale to analytics
+      if (upscaleJobs[jobId].userId && upscaleJobs[jobId].startTime) {
+        const { logActivity } = await import('../analytics');
+        const duration = Date.now() - upscaleJobs[jobId].startTime!;
+        await logActivity({
+          userId: upscaleJobs[jobId].userId!,
+          event: 'upscale_failure',
+          feature: 'upscale',
+          model: 'upscale',
+          status: 'failed',
+          duration: Math.round(duration / 1000),
+          errorCode: error.code || 'UPSCALE_ERROR',
+          metadata: {
+            error: error.message?.substring(0, 200)
+          }
+        });
+        console.log(`Analytics tracked: Upscale failure for user ${upscaleJobs[jobId].userId}`);
+      }
     }
   } catch (error: any) {
     console.error('Upscale request error:', error);
