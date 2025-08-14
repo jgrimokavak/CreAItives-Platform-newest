@@ -237,11 +237,11 @@ export async function getTrends(dateFrom: Date, dateTo: Date, interval: 'day' | 
 
   const activityTrends = await db
     .select({
-      date: sql`to_char(${dateGroup}, '${dateFormat}')`,
-      activeUsers: sql`COUNT(DISTINCT ${activityEvents.userId})`,
-      imageGenerations: sql`COUNT(CASE WHEN ${activityEvents.event} = 'image_generate_succeeded' THEN 1 END)`,
-      videoGenerations: sql`COUNT(CASE WHEN ${activityEvents.event} = 'video_generate_succeeded' THEN 1 END)`,
-      projectsCreated: sql`COUNT(CASE WHEN ${activityEvents.event} = 'project_create' THEN 1 END)`
+      date: sql<string>`to_char(${dateGroup}, ${dateFormat})`,
+      activeUsers: sql<number>`COUNT(DISTINCT ${activityEvents.userId})`,
+      imageGenerations: sql<number>`COUNT(CASE WHEN ${activityEvents.event} = 'image_generate_succeeded' THEN 1 END)`,
+      videoGenerations: sql<number>`COUNT(CASE WHEN ${activityEvents.event} = 'video_generate_succeeded' THEN 1 END)`,
+      projectsCreated: sql<number>`COUNT(CASE WHEN ${activityEvents.event} = 'project_create' THEN 1 END)`
     })
     .from(activityEvents)
     .where(and(
@@ -256,7 +256,7 @@ export async function getTrends(dateFrom: Date, dateTo: Date, interval: 'day' | 
   const modelUsage = await db
     .select({
       model: activityEvents.model,
-      count: sql`COUNT(*)`
+      count: sql<number>`COUNT(*)`
     })
     .from(activityEvents)
     .where(and(

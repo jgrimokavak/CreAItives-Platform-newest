@@ -403,7 +403,7 @@ export default function AdminOverviewPage() {
                   dataKey="count"
                   label={({ model }) => model}
                 >
-                  {(trendsData?.modelUsage || []).map((entry, index) => (
+                  {(trendsData?.modelUsage || []).map((entry: any, index: number) => (
                     <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
                   ))}
                 </Pie>
@@ -426,7 +426,7 @@ export default function AdminOverviewPage() {
               <span className="text-sm text-muted-foreground">Total Errors</span>
               <Badge variant="destructive">{kpiData?.current?.totalErrors || 0}</Badge>
             </div>
-            {(kpiData?.current?.topErrors || []).slice(0, 3).map((error, index) => (
+            {(kpiData?.current?.topErrors || []).slice(0, 3).map((error: any, index: number) => (
               <div key={index} className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground truncate">
                   {isPIIRevealed ? error.code : 'REDACTED'}
