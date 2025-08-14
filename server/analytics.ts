@@ -355,7 +355,7 @@ export async function getTrends(dateFrom: Date, dateTo: Date, interval: 'day' | 
     })),
     modelUsage: modelUsage.map(m => ({
       model: m.model || 'Unknown',
-      count: Number(m.count)
+      total: Number(m.count)
     }))
   };
 }

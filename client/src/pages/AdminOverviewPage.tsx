@@ -477,10 +477,12 @@ export default function AdminOverviewPage() {
                   label={({ model, total }) => {
                     // Shorten long model names for display and show count
                     let displayName = model;
-                    if (model === 'topazlabs/image-upscale') displayName = 'Topaz Upscale';
-                    else if (model === 'stable-diffusion-xl') displayName = 'SDXL';
+                    if (model === 'imagen-4') displayName = 'Imagen-4';
+                    else if (model === 'upscale') displayName = 'Upscale';
+                    else if (model === 'hailuo-02') displayName = 'Hailuo';
+                    else if (model === 'flux-kontext-max') displayName = 'Flux-Kontext';
                     else if (model?.length > 12) displayName = model.substring(0, 12) + '...';
-                    return `${displayName}: ${total}`;
+                    return `${total}`;
                   }}
                 >
                   {(trendsData?.modelUsage || []).map((entry: any, index: number) => (
@@ -488,9 +490,15 @@ export default function AdminOverviewPage() {
                   ))}
                 </Pie>
                 <Tooltip 
-                  formatter={(value: any, name: any) => {
-                    // Show full model name in tooltip
-                    return [value, name];
+                  formatter={(value: any, name: any, props: any) => {
+                    // Show usage count and model name
+                    const modelName = props?.payload?.model;
+                    const displayName = modelName === 'imagen-4' ? 'Imagen-4' :
+                                       modelName === 'upscale' ? 'Upscale' :
+                                       modelName === 'hailuo-02' ? 'Hailuo Video' :
+                                       modelName === 'flux-kontext-max' ? 'Flux Kontext' :
+                                       modelName;
+                    return [`${value} uses`, displayName];
                   }}
                 />
               </PieChart>
