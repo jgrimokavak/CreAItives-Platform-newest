@@ -1864,7 +1864,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Car generation endpoint
-  app.post("/api/car-generate", upload.single("dummy"), async (req, res) => {
+  app.post("/api/car-generate", isAuthenticated, upload.single("dummy"), async (req: any, res) => {
+    const startTime = Date.now();
     try {
       const { make, model, body_style, trim, year, color, wheel_color, has_adventure_cladding, aspect_ratio="1:1", background="white", car_angle } = req.body;
       
@@ -1966,13 +1967,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const image = await persistImage(b64, {
         prompt,
         params: { aspect_ratio, background, model: "car-generator" },
-        userId: "demo",
+        userId: req.user.id,
         sources: []
+      });
+
+      // Track successful car generation
+      const { logActivity } = await import('./analytics');
+      await logActivity({
+        userId: req.user.id,
+        sessionId: req.sessionID,
+        event: 'car_generate',
+        feature: 'car_generation',
+        model: 'imagen-4',
+        status: 'succeeded',
+        duration: Date.now() - startTime,
+        metadata: {
+          make: req.body.make,
+          model: req.body.model,
+          background: req.body.background,
+          aspect_ratio: req.body.aspect_ratio
+        }
       });
       
       res.json({ image });
     } catch (error: any) {
       console.error("Error generating car image:", error);
+      
+      // Track failed car generation
+      try {
+        const { logActivity } = await import('./analytics');
+        await logActivity({
+          userId: req.user.id,
+          sessionId: req.sessionID,
+          event: 'car_generate',
+          feature: 'car_generation',
+          model: 'imagen-4',
+          status: 'failed',
+          duration: Date.now() - startTime,
+          errorCode: error.response?.status?.toString() || 'unknown_error',
+          metadata: {
+            error: error.message,
+            make: req.body.make,
+            model: req.body.model
+          }
+        });
+      } catch (analyticsError) {
+        console.error('Failed to log car generation failure:', analyticsError);
+      }
+      
       res.status(500).json({ error: error.message || "Failed to generate car image" });
     }
   });
