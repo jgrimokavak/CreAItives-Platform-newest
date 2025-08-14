@@ -15,10 +15,10 @@ router.get('/kpis', isAuthenticated, async (req: any, res) => {
     }
     
     const from = new Date(dateFrom as string);
-    const to = new Date(dateTo as string);
+    from.setHours(0, 0, 0, 0); // Start of day
     
-    // Add end of day to dateTo for inclusive range
-    to.setHours(23, 59, 59, 999);
+    const to = new Date(dateTo as string);
+    to.setHours(23, 59, 59, 999); // End of day for inclusive range
     
     const filters = {
       roleFilter: roleFilter as string,
@@ -76,10 +76,10 @@ router.get('/trends', isAuthenticated, async (req, res) => {
     }
     
     const from = new Date(dateFrom as string);
-    const to = new Date(dateTo as string);
+    from.setHours(0, 0, 0, 0); // Start of day
     
-    // Add end of day to dateTo for inclusive range
-    to.setHours(23, 59, 59, 999);
+    const to = new Date(dateTo as string);
+    to.setHours(23, 59, 59, 999); // End of day for inclusive range
     
     const filters = {
       roleFilter: roleFilter as string,
