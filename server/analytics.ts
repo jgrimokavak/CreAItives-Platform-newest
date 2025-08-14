@@ -2,7 +2,11 @@ import { db } from './db';
 import { users, activityEvents, dailyAnalytics } from '@shared/schema';
 import { eq, and, gte, lte, sql, desc, asc, inArray, isNotNull, or } from 'drizzle-orm';
 
-const getCurrentEnv = () => process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
+const getCurrentEnv = () => {
+  const env = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
+  console.log(`Analytics environment detected: ${env} (REPLIT_DEPLOYMENT=${process.env.REPLIT_DEPLOYMENT})`);
+  return env;
+};
 
 // Valid models for validation
 const VALID_MODELS = [
