@@ -2,11 +2,17 @@ import express from 'express';
 import { getKPIs, getTrends, getModelUsage, getFeatureUsage } from '../analytics';
 import { isAuthenticated } from '../replitAuth';
 
-// Helper to parse dates in Argentina timezone (UTC-3)
+// Helper to parse dates to include full day range
 const parseArgentinaDate = (dateStr: string, endOfDay: boolean = false): Date => {
-  // Parse as Argentina time (UTC-3)
-  const timeStr = endOfDay ? '23:59:59.999-03:00' : '00:00:00.000-03:00';
-  return new Date(`${dateStr}T${timeStr}`);
+  // For end of day, add 1 day to ensure we capture everything
+  if (endOfDay) {
+    const date = new Date(`${dateStr}T00:00:00`);
+    date.setDate(date.getDate() + 1); // Move to next day midnight
+    date.setSeconds(date.getSeconds() - 1); // Back up 1 second to 23:59:59
+    return date;
+  } else {
+    return new Date(`${dateStr}T00:00:00`);
+  }
 };
 
 const router = express.Router();
