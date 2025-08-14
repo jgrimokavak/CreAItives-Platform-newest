@@ -14,13 +14,10 @@ router.get('/kpis', isAuthenticated, async (req: any, res) => {
       return res.status(400).json({ message: 'dateFrom and dateTo are required' });
     }
     
-    // Parse dates and ensure we capture the full day in UTC
-    // dateFrom and dateTo come as YYYY-MM-DD strings
-    const from = new Date(dateFrom as string);
-    from.setUTCHours(0, 0, 0, 0);
-    
-    const to = new Date(dateTo as string);
-    to.setUTCHours(23, 59, 59, 999);
+    // Parse dates ensuring full day coverage regardless of timezone
+    // Add time component to ensure proper parsing
+    const from = new Date(`${dateFrom}T00:00:00`);
+    const to = new Date(`${dateTo}T23:59:59.999`);
     
     console.log(`[Analytics Route] KPIs Date parsing - Input: ${dateFrom} to ${dateTo}`);
     console.log(`[Analytics Route] KPIs Date parsing - Parsed: ${from.toISOString()} to ${to.toISOString()}`);
@@ -80,12 +77,10 @@ router.get('/trends', isAuthenticated, async (req, res) => {
       return res.status(400).json({ message: 'dateFrom and dateTo are required' });
     }
     
-    // Parse dates and ensure we capture the full day in UTC
-    const from = new Date(dateFrom as string);
-    from.setUTCHours(0, 0, 0, 0);
-    
-    const to = new Date(dateTo as string);
-    to.setUTCHours(23, 59, 59, 999);
+    // Parse dates ensuring full day coverage regardless of timezone
+    // Add time component to ensure proper parsing
+    const from = new Date(`${dateFrom}T00:00:00`);
+    const to = new Date(`${dateTo}T23:59:59.999`);
     
     const filters = {
       roleFilter: roleFilter as string,
