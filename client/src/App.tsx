@@ -48,6 +48,7 @@ function Router() {
           <Route path="/trash" component={() => <Redirect to="/home" />} />
           <Route path="/car" component={() => <Redirect to="/home" />} />
           <Route path="/video" component={() => <Redirect to="/home" />} />
+          <Route path="/admin/overview" component={() => <Redirect to="/home" />} />
           <Route path="/admin/users" component={() => <Redirect to="/home" />} />
           <Route path="/admin/page-settings" component={() => <Redirect to="/home" />} />
           <Route path="/admin/storage" component={() => <Redirect to="/home" />} />
