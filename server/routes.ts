@@ -1964,17 +1964,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const imgBuf = imageResponse.data;
       const b64 = Buffer.from(imgBuf).toString("base64");
       
+      // Get user ID same way as other endpoints
+      const userId = req.user?.claims?.sub;
+      console.log(`[Analytics Debug] User ID for car generation: ${userId}`);
+
       const image = await persistImage(b64, {
         prompt,
         params: { aspect_ratio, background, model: "car-generator" },
-        userId: req.user.id,
+        userId: userId,
         sources: []
       });
 
       // Track successful car generation
       const { logActivity } = await import('./analytics');
       await logActivity({
-        userId: req.user.id,
+        userId: userId,
         sessionId: req.sessionID,
         event: 'car_generate',
         feature: 'car_generation',
@@ -1995,9 +1999,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Track failed car generation
       try {
+        const userId = req.user?.claims?.sub;
         const { logActivity } = await import('./analytics');
         await logActivity({
-          userId: req.user.id,
+          userId: userId,
           sessionId: req.sessionID,
           event: 'car_generate',
           feature: 'car_generation',
