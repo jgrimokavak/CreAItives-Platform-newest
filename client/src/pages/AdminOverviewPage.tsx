@@ -302,27 +302,27 @@ export default function AdminOverviewPage() {
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Activity Trends */}
+        {/* Video Production Trends */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Activity className="w-5 h-5" />
-              User Activity Trends
+              Video Production Over Time
             </CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={trendsData?.activityTrends || []}>
+              <LineChart data={trendsData?.featureUsageTrends || []}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" />
                 <YAxis />
                 <Tooltip />
                 <Line 
                   type="monotone" 
-                  dataKey="activeUsers" 
-                  stroke="#8884d8" 
+                  dataKey="videoGeneration" 
+                  stroke="#82ca9d" 
                   strokeWidth={2}
-                  name="Active Users"
+                  name="Videos Produced"
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -339,14 +339,17 @@ export default function AdminOverviewPage() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={trendsData?.activityTrends || []}>
+              <BarChart data={trendsData?.featureUsageTrends || []}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" />
                 <YAxis />
                 <Tooltip />
-                <Bar dataKey="imageGenerations" fill="#8884d8" name="Images" />
-                <Bar dataKey="videoGenerations" fill="#82ca9d" name="Videos" />
-                <Bar dataKey="projectsCreated" fill="#ffc658" name="Projects" />
+                <Bar dataKey="imageCreation" fill="#8884d8" name="Image Creation" />
+                <Bar dataKey="imageEditing" fill="#ffc658" name="Image Editing" />
+                <Bar dataKey="carGeneration" fill="#82ca9d" name="Car Generation" />
+                <Bar dataKey="batchCarGeneration" fill="#d084d0" name="Batch Car Generation" />
+                <Bar dataKey="upscale" fill="#ff9999" name="Upscale" />
+                <Bar dataKey="videoGeneration" fill="#66b3ff" name="Video Generation" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -401,13 +404,24 @@ export default function AdminOverviewPage() {
                   outerRadius={60}
                   fill="#8884d8"
                   dataKey="count"
-                  label={({ model }) => model}
+                  label={({ model }) => {
+                    // Shorten long model names for display
+                    if (model === 'topazlabs/image-upscale') return 'Topaz Upscale';
+                    if (model === 'stable-diffusion-xl') return 'SDXL';
+                    if (model?.length > 12) return model.substring(0, 12) + '...';
+                    return model;
+                  }}
                 >
                   {(trendsData?.modelUsage || []).map((entry: any, index: number) => (
                     <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip 
+                  formatter={(value: any, name: any) => {
+                    // Show full model name in tooltip
+                    return [value, name];
+                  }}
+                />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>

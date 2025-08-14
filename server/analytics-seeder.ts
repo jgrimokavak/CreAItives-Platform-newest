@@ -7,31 +7,63 @@ const events = [
   'image_generate_requested',
   'image_generate_succeeded',
   'image_generate_failed',
+  'image_edit_requested',
+  'image_edit_succeeded',
+  'image_edit_failed',
+  'car_generate_requested',
+  'car_generate_succeeded',
+  'car_generate_failed',
+  'batch_car_generate_requested',
+  'batch_car_generate_succeeded',
+  'batch_car_generate_failed',
+  'upscale_requested',
+  'upscale_succeeded',
+  'upscale_failed',
   'video_generate_requested',
   'video_generate_succeeded',
   'video_generate_failed',
-  'project_create',
   'login',
   'logout',
   'session_heartbeat'
 ];
 
 const features = [
-  'image_generation',
+  'image_creation',
+  'image_editing', 
+  'car_generation',
+  'batch_car_generation',
+  'upscale',
   'video_generation',
-  'project_management',
   'authentication',
   'navigation',
   'session_management'
 ];
 
-const models = [
-  'gpt-image-1',
-  'flux-pro',
-  'imagen-3',
-  'flux-kontext-max',
-  'replicate-video-1'
+// All actual models available in the platform
+const imageModels = [
+  'gpt-image-1',      // OpenAI
+  'dall-e-2',         // OpenAI
+  'dall-e-3',         // OpenAI
+  'imagen-4',         // Replicate/Google
+  'imagen-3',         // Replicate/Google
+  'flux-pro',         // Replicate
+  'flux-kontext-max', // Replicate (also supports editing)
+  'flux-krea-dev',    // Replicate
+  'wan-2.2',          // Replicate
+  'flux-dev',         // Fal.ai
+  'stable-diffusion-xl', // Fal.ai
+  'fast-sdxl'         // Fal.ai
 ];
+
+const videoModels = [
+  'hailuo-02',        // Replicate/Minimax
+  'veo-3',            // Vertex AI
+  'veo-3-fast',       // Vertex AI
+  'veo-2'             // Vertex AI
+];
+
+const upscaleModel = 'topazlabs/image-upscale'; // Replicate/Topaz Labs
+const carModel = 'imagen-4'; // Used for car generation
 
 const pages = [
   '/gallery',
@@ -81,8 +113,8 @@ async function seedAnalytics() {
       
       // Set appropriate fields based on event type
       if (eventType.includes('image_generate')) {
-        feature = 'image_generation';
-        model = models[Math.floor(Math.random() * 4)];
+        feature = 'image_creation';
+        model = imageModels[Math.floor(Math.random() * imageModels.length)];
         if (eventType.includes('succeeded')) {
           status = 'succeeded';
           duration = Math.floor(Math.random() * 10000) + 2000; // 2-12 seconds
@@ -93,12 +125,70 @@ async function seedAnalytics() {
         } else {
           status = 'requested';
         }
+      } else if (eventType.includes('image_edit')) {
+        feature = 'image_editing';
+        // Only models that support editing
+        model = ['gpt-image-1', 'flux-kontext-max'][Math.floor(Math.random() * 2)];
+        if (eventType.includes('succeeded')) {
+          status = 'succeeded';
+          duration = Math.floor(Math.random() * 15000) + 3000;
+        } else if (eventType.includes('failed')) {
+          status = 'failed';
+          duration = Math.floor(Math.random() * 5000) + 1000;
+          errorCode = ['MASK_ERROR', 'INVALID_IMAGE', 'MODEL_ERROR'][Math.floor(Math.random() * 3)];
+        } else {
+          status = 'requested';
+        }
+      } else if (eventType.includes('car_generate')) {
+        if (eventType.includes('batch')) {
+          feature = 'batch_car_generation';
+          model = carModel;
+          if (eventType.includes('succeeded')) {
+            status = 'succeeded';
+            duration = Math.floor(Math.random() * 60000) + 20000; // 20-80 seconds for batch
+            metadata.batchSize = Math.floor(Math.random() * 10) + 1;
+          } else if (eventType.includes('failed')) {
+            status = 'failed';
+            duration = Math.floor(Math.random() * 20000) + 5000;
+            errorCode = ['CSV_ERROR', 'BATCH_LIMIT', 'MODEL_ERROR'][Math.floor(Math.random() * 3)];
+          } else {
+            status = 'requested';
+          }
+        } else {
+          feature = 'car_generation';
+          model = carModel;
+          if (eventType.includes('succeeded')) {
+            status = 'succeeded';
+            duration = Math.floor(Math.random() * 12000) + 3000;
+          } else if (eventType.includes('failed')) {
+            status = 'failed';
+            duration = Math.floor(Math.random() * 5000) + 1000;
+            errorCode = ['INVALID_CAR_DATA', 'MODEL_ERROR'][Math.floor(Math.random() * 2)];
+          } else {
+            status = 'requested';
+          }
+        }
+      } else if (eventType.includes('upscale')) {
+        feature = 'upscale';
+        model = upscaleModel;
+        if (eventType.includes('succeeded')) {
+          status = 'succeeded';
+          duration = Math.floor(Math.random() * 20000) + 5000; // 5-25 seconds
+          metadata.upscaleFactor = ['2x', '4x'][Math.floor(Math.random() * 2)];
+        } else if (eventType.includes('failed')) {
+          status = 'failed';
+          duration = Math.floor(Math.random() * 10000) + 2000;
+          errorCode = ['IMAGE_TOO_LARGE', 'INVALID_FORMAT', 'MODEL_ERROR'][Math.floor(Math.random() * 3)];
+        } else {
+          status = 'requested';
+        }
       } else if (eventType.includes('video_generate')) {
         feature = 'video_generation';
-        model = 'replicate-video-1';
+        model = videoModels[Math.floor(Math.random() * videoModels.length)];
         if (eventType.includes('succeeded')) {
           status = 'succeeded';
           duration = Math.floor(Math.random() * 30000) + 10000; // 10-40 seconds
+          metadata.duration = [6, 10][Math.floor(Math.random() * 2)];
         } else if (eventType.includes('failed')) {
           status = 'failed';
           duration = Math.floor(Math.random() * 10000) + 5000;
@@ -109,9 +199,6 @@ async function seedAnalytics() {
       } else if (eventType === 'page_view') {
         feature = 'navigation';
         metadata.page = pages[Math.floor(Math.random() * pages.length)];
-      } else if (eventType === 'project_create') {
-        feature = 'project_management';
-        status = 'succeeded';
       } else if (eventType === 'login' || eventType === 'logout') {
         feature = 'authentication';
         status = 'succeeded';

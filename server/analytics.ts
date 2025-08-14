@@ -229,19 +229,21 @@ export async function getKPIs(dateFrom: Date, dateTo: Date, filters: {
 export async function getTrends(dateFrom: Date, dateTo: Date, interval: 'day' | 'week' = 'day', filters: any = {}) {
   const environment = getCurrentEnv();
   
-  // User activity trends
+  // Feature usage trends - track actual content generation features
   const dateFormat = interval === 'week' ? 'YYYY-WW' : 'YYYY-MM-DD';
   const dateGroup = interval === 'week' ? 
     sql`date_trunc('week', ${activityEvents.createdAt})` : 
     sql`date_trunc('day', ${activityEvents.createdAt})`;
 
-  const activityTrends = await db
+  const featureUsageTrends = await db
     .select({
       date: sql<string>`to_char(${dateGroup}, ${dateFormat})`,
-      activeUsers: sql<number>`COUNT(DISTINCT ${activityEvents.userId})`,
-      imageGenerations: sql<number>`COUNT(CASE WHEN ${activityEvents.event} = 'image_generate_succeeded' THEN 1 END)`,
-      videoGenerations: sql<number>`COUNT(CASE WHEN ${activityEvents.event} = 'video_generate_succeeded' THEN 1 END)`,
-      projectsCreated: sql<number>`COUNT(CASE WHEN ${activityEvents.event} = 'project_create' THEN 1 END)`
+      imageCreation: sql<number>`COUNT(CASE WHEN ${activityEvents.feature} = 'image_creation' AND ${activityEvents.status} = 'succeeded' THEN 1 END)`,
+      imageEditing: sql<number>`COUNT(CASE WHEN ${activityEvents.feature} = 'image_editing' AND ${activityEvents.status} = 'succeeded' THEN 1 END)`,
+      carGeneration: sql<number>`COUNT(CASE WHEN ${activityEvents.feature} = 'car_generation' AND ${activityEvents.status} = 'succeeded' THEN 1 END)`,
+      batchCarGeneration: sql<number>`COUNT(CASE WHEN ${activityEvents.feature} = 'batch_car_generation' AND ${activityEvents.status} = 'succeeded' THEN 1 END)`,
+      upscale: sql<number>`COUNT(CASE WHEN ${activityEvents.feature} = 'upscale' AND ${activityEvents.status} = 'succeeded' THEN 1 END)`,
+      videoGeneration: sql<number>`COUNT(CASE WHEN ${activityEvents.feature} = 'video_generation' AND ${activityEvents.status} = 'succeeded' THEN 1 END)`
     })
     .from(activityEvents)
     .where(and(
@@ -252,7 +254,7 @@ export async function getTrends(dateFrom: Date, dateTo: Date, interval: 'day' | 
     .groupBy(dateGroup)
     .orderBy(asc(dateGroup));
 
-  // Model usage distribution
+  // Model usage distribution - track all generation types
   const modelUsage = await db
     .select({
       model: activityEvents.model,
@@ -263,26 +265,25 @@ export async function getTrends(dateFrom: Date, dateTo: Date, interval: 'day' | 
       eq(activityEvents.environment, environment),
       gte(activityEvents.createdAt, dateFrom),
       lte(activityEvents.createdAt, dateTo),
-      or(
-        eq(activityEvents.event, 'image_generate_succeeded'),
-        eq(activityEvents.event, 'video_generate_succeeded')
-      ),
+      sql`${activityEvents.status} = 'succeeded'`,
       isNotNull(activityEvents.model)
     ))
     .groupBy(activityEvents.model)
     .orderBy(desc(sql`COUNT(*)`))
-    .limit(10);
+    .limit(15); // Show more models
 
   return {
-    activityTrends: activityTrends.map(t => ({
+    featureUsageTrends: featureUsageTrends.map(t => ({
       date: t.date,
-      activeUsers: Number(t.activeUsers),
-      imageGenerations: Number(t.imageGenerations),
-      videoGenerations: Number(t.videoGenerations), 
-      projectsCreated: Number(t.projectsCreated)
+      imageCreation: Number(t.imageCreation),
+      imageEditing: Number(t.imageEditing),
+      carGeneration: Number(t.carGeneration),
+      batchCarGeneration: Number(t.batchCarGeneration),
+      upscale: Number(t.upscale),
+      videoGeneration: Number(t.videoGeneration)
     })),
     modelUsage: modelUsage.map(m => ({
-      model: m.model,
+      model: m.model || 'Unknown',
       count: Number(m.count)
     }))
   };
