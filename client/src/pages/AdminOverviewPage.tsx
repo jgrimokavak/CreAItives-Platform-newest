@@ -396,26 +396,62 @@ export default function AdminOverviewPage() {
               Content Volume
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Image Attempts</span>
-              <Badge variant="outline">{kpiData?.current?.imageAttempts || 0}</Badge>
+          <CardContent className="space-y-4">
+            {/* Images */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium text-blue-700">Images</span>
+                <div className="flex gap-2">
+                  <Badge variant="outline" className="bg-blue-50">{kpiData?.current?.imageAttempts || 0} attempts</Badge>
+                  <Badge variant="default" className="bg-blue-600">{kpiData?.current?.imageSuccesses || 0} success</Badge>
+                </div>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-blue-600 h-2 rounded-full" 
+                  style={{ 
+                    width: `${kpiData?.current?.imageAttempts ? ((kpiData?.current?.imageSuccesses || 0) / kpiData?.current?.imageAttempts) * 100 : 0}%` 
+                  }}
+                />
+              </div>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Images Generated</span>
-              <Badge variant="secondary">{kpiData?.current?.imageSuccesses || 0}</Badge>
+
+            {/* Videos */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium text-green-700">Videos</span>
+                <div className="flex gap-2">
+                  <Badge variant="outline" className="bg-green-50">{kpiData?.current?.videoAttempts || 0} attempts</Badge>
+                  <Badge variant="default" className="bg-green-600">{kpiData?.current?.videoSuccesses || 0} success</Badge>
+                </div>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-green-600 h-2 rounded-full" 
+                  style={{ 
+                    width: `${kpiData?.current?.videoAttempts ? ((kpiData?.current?.videoSuccesses || 0) / kpiData?.current?.videoAttempts) * 100 : 0}%` 
+                  }}
+                />
+              </div>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Video Attempts</span>
-              <Badge variant="outline">{kpiData?.current?.videoAttempts || 0}</Badge>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Videos Generated</span>
-              <Badge variant="secondary">{kpiData?.current?.videoSuccesses || 0}</Badge>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Upscales Completed</span>
-              <Badge variant="secondary">{kpiData?.current?.upscaleSuccesses || 0}</Badge>
+
+            {/* Upscales */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium text-purple-700">Upscales</span>
+                <div className="flex gap-2">
+                  <Badge variant="outline" className="bg-purple-50">{kpiData?.current?.upscaleAttempts || 0} attempts</Badge>
+                  <Badge variant="default" className="bg-purple-600">{kpiData?.current?.upscaleSuccesses || 0} success</Badge>
+                </div>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-purple-600 h-2 rounded-full" 
+                  style={{ 
+                    width: `${kpiData?.current?.upscaleAttempts ? ((kpiData?.current?.upscaleSuccesses || 0) / kpiData?.current?.upscaleAttempts) * 100 : 0}%` 
+                  }}
+                />
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -437,13 +473,14 @@ export default function AdminOverviewPage() {
                   cy="50%"
                   outerRadius={60}
                   fill="#8884d8"
-                  dataKey="count"
-                  label={({ model }) => {
-                    // Shorten long model names for display
-                    if (model === 'topazlabs/image-upscale') return 'Topaz Upscale';
-                    if (model === 'stable-diffusion-xl') return 'SDXL';
-                    if (model?.length > 12) return model.substring(0, 12) + '...';
-                    return model;
+                  dataKey="total"
+                  label={({ model, total }) => {
+                    // Shorten long model names for display and show count
+                    let displayName = model;
+                    if (model === 'topazlabs/image-upscale') displayName = 'Topaz Upscale';
+                    else if (model === 'stable-diffusion-xl') displayName = 'SDXL';
+                    else if (model?.length > 12) displayName = model.substring(0, 12) + '...';
+                    return `${displayName}: ${total}`;
                   }}
                 >
                   {(trendsData?.modelUsage || []).map((entry: any, index: number) => (
@@ -466,22 +503,57 @@ export default function AdminOverviewPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <AlertTriangle className="w-5 h-5" />
-              Error Summary
+              Error Analysis
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Total Errors</span>
-              <Badge variant="destructive">{kpiData?.current?.totalErrors || 0}</Badge>
-            </div>
-            {(kpiData?.current?.topErrors || []).slice(0, 3).map((error: any, index: number) => (
-              <div key={index} className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground truncate">
-                  {isPIIRevealed ? error.code : 'REDACTED'}
-                </span>
-                <Badge variant="outline">{error.count}</Badge>
+          <CardContent className="space-y-4">
+            {/* Overall Error Rate */}
+            <div className="bg-red-50 p-3 rounded-lg">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-medium text-red-800">Total Failures</span>
+                <Badge variant="destructive">{kpiData?.current?.totalErrors || 0}</Badge>
               </div>
-            ))}
+              <div className="text-xs text-red-600">
+                {kpiData?.current?.totalErrors 
+                  ? `${((kpiData.current.totalErrors / (kpiData.current.totalErrors + kpiData.current.imageSuccesses + kpiData.current.videoSuccesses + kpiData.current.upscaleSuccesses)) * 100).toFixed(1)}% failure rate`
+                  : 'No failures detected'}
+              </div>
+            </div>
+
+            {/* Error Breakdown */}
+            {(kpiData?.current?.topErrors || []).length > 0 ? (
+              <div className="space-y-2">
+                <span className="text-sm font-medium">Common Issues:</span>
+                {(kpiData?.current?.topErrors || []).slice(0, 3).map((error: any, index: number) => (
+                  <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                    <div className="flex-1">
+                      <span className="text-xs font-mono text-gray-700">
+                        {error.code?.includes('Unsupported image type') 
+                          ? 'Unsupported Format' 
+                          : error.code?.includes('timeout')
+                          ? 'Request Timeout'
+                          : error.code?.includes('quota')
+                          ? 'API Quota Exceeded' 
+                          : error.code?.substring(0, 25) || 'Processing Error'}
+                      </span>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {error.code?.includes('webp') && 'WEBP format not supported for upscaling'}
+                        {error.code?.includes('timeout') && 'Request took too long to process'}
+                        {error.code?.includes('quota') && 'Daily API limit reached'}
+                      </div>
+                    </div>
+                    <Badge variant="outline" className="ml-2">{error.count}</Badge>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center p-4 text-gray-500 text-sm">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <span className="text-green-600 text-lg">✓</span>
+                </div>
+                No errors in selected period
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
