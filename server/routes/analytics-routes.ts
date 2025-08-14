@@ -14,11 +14,9 @@ router.get('/kpis', isAuthenticated, async (req: any, res) => {
       return res.status(400).json({ message: 'dateFrom and dateTo are required' });
     }
     
-    const from = new Date(dateFrom as string);
-    from.setHours(0, 0, 0, 0); // Start of day
-    
-    const to = new Date(dateTo as string);
-    to.setHours(23, 59, 59, 999); // End of day for inclusive range
+    // Parse dates ensuring local timezone handling
+    const from = new Date(dateFrom as string + 'T00:00:00');
+    const to = new Date(dateTo as string + 'T23:59:59.999');
     
     const filters = {
       roleFilter: roleFilter as string,
@@ -75,11 +73,9 @@ router.get('/trends', isAuthenticated, async (req, res) => {
       return res.status(400).json({ message: 'dateFrom and dateTo are required' });
     }
     
-    const from = new Date(dateFrom as string);
-    from.setHours(0, 0, 0, 0); // Start of day
-    
-    const to = new Date(dateTo as string);
-    to.setHours(23, 59, 59, 999); // End of day for inclusive range
+    // Parse dates ensuring local timezone handling
+    const from = new Date(dateFrom as string + 'T00:00:00');
+    const to = new Date(dateTo as string + 'T23:59:59.999');
     
     const filters = {
       roleFilter: roleFilter as string,
