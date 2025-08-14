@@ -4,7 +4,13 @@ import { eq, and, gte, lte, sql, desc, asc, inArray, isNotNull, or } from 'drizz
 
 const getCurrentEnv = () => process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
 
-// Event logging for analytics
+// Valid models for validation
+const VALID_MODELS = [
+  'gpt-image-1', 'imagen-4', 'imagen-3', 'flux-pro', 
+  'flux-kontext-max', 'flux-krea-dev', 'wan-2.2', 'hailuo-02', 'upscale'
+];
+
+// Event logging for analytics with model validation
 export async function logActivity(event: {
   userId: string;
   sessionId?: string;
@@ -17,6 +23,12 @@ export async function logActivity(event: {
   metadata?: any;
 }) {
   try {
+    // Validate model if provided
+    if (event.model && !VALID_MODELS.includes(event.model)) {
+      console.warn(`Invalid model "${event.model}" attempted to be logged. Skipping event.`);
+      return;
+    }
+
     const environment = getCurrentEnv();
     const eventLog = {
       id: `evt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -261,10 +273,13 @@ export async function getTrends(dateFrom: Date, dateTo: Date, interval: 'day' | 
     .groupBy(dateGroup)
     .orderBy(asc(dateGroup));
 
-  // Model usage distribution - track all generation types
+  // Model usage distribution - track all generation types including upscale
   const modelUsage = await db
     .select({
-      model: activityEvents.model,
+      model: sql<string>`CASE 
+        WHEN ${activityEvents.feature} = 'upscale' THEN 'upscale'
+        ELSE ${activityEvents.model}
+      END`,
       count: sql<number>`COUNT(*)`
     })
     .from(activityEvents)
@@ -273,9 +288,15 @@ export async function getTrends(dateFrom: Date, dateTo: Date, interval: 'day' | 
       gte(activityEvents.createdAt, dateFrom),
       lte(activityEvents.createdAt, dateTo),
       sql`${activityEvents.status} = 'succeeded'`,
-      isNotNull(activityEvents.model)
+      or(
+        isNotNull(activityEvents.model),
+        eq(activityEvents.feature, 'upscale')
+      )
     ))
-    .groupBy(activityEvents.model)
+    .groupBy(sql`CASE 
+      WHEN ${activityEvents.feature} = 'upscale' THEN 'upscale'
+      ELSE ${activityEvents.model}
+    END`)
     .orderBy(desc(sql`COUNT(*)`))
     .limit(15); // Show more models
 

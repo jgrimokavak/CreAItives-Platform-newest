@@ -1,0 +1,64 @@
+CRITICAL DATA INTEGRITY ISSUE - Analytics Dashboard and Admin Users Showing Inconsistent Data
+
+The analytics system is displaying fabricated data instead of real production metrics, and we need to verify if the /admin/users page is also affected. Additionally, the upscale model is missing from the models list.
+
+Specific Problems Identified:
+
+Admin Users Page Data Verification: The /admin/users page shows user statistics including imageCount, videoCount, and projectCount which are calculated from real database tables (images, videos, projects). However, since the analytics seeder has created fake activity events, we need to verify that user activity metrics and "last login" data aren't being inflated by seeded interactions.
+
+Missing Upscale Model: The "Top Models Used" analytics only shows generation models but excludes the upscale functionality, which is tracked as a feature (upscale) but should also appear in model usage statistics.
+
+Fake Analytics Data: As previously identified, the analytics seeder contains non-existent models and has populated fake historical data.
+
+Root Cause Analysis:
+
+The analytics seeder in server/analytics-seeder.ts has created fake activity events
+User statistics on /admin/users may be affected if they rely on lastLoginAt or activity events
+The upscale feature is tracked separately and not included in model usage analytics
+Real Model List (from server/config/models.ts):
+
+Image models: gpt-image-1, imagen-4, imagen-3, flux-pro, flux-kontext-max, flux-krea-dev, wan-2.2
+Video models: hailuo-02
+Upscale model: upscale (feature-based, not a generation model)
+Required Actions:
+
+Verify Admin Users Data Integrity:
+
+Check if lastLoginAt timestamps in the users table are real or affected by seeded sessions
+Verify that user activity metrics (recent logins, online users) aren't inflated by fake activity events
+Ensure image/video/project counts are based purely on real database records, not seeded events
+Clean the analytics database:
+
+Delete ALL records from activity_events table that contain fake models not in the real model list
+Delete ALL records from daily_analytics table (if any exist)
+Remove or disable server/analytics-seeder.ts permanently
+Include Upscale in Model Analytics:
+
+Update the model usage analytics in server/analytics.ts to include upscale operations
+Add upscale as a tracked "model" in the Top Models Used section
+Ensure upscale activities are properly categorized in the analytics
+Fix the analytics queries:
+
+Update server/analytics.ts to only accept the real models listed above plus upscale
+Add model validation to reject any analytics events with non-existent models
+Fix success rate calculations to properly reflect database-tracked successes vs attempts
+Database Cleanup:
+
+Delete fake activity events: DELETE FROM activity_events WHERE model NOT IN ('gpt-image-1', 'imagen-4', 'imagen-3', 'flux-pro', 'flux-kontext-max', 'flux-krea-dev', 'wan-2.2', 'hailuo-02', 'upscale')
+Clean any fake user sessions or login records if they exist
+Verify that user statistics on the admin page reflect only real user interactions
+Implement safeguards:
+
+Add database constraints to only allow valid model names
+Add environment checks to prevent seeder execution in production
+Implement data validation for all analytics endpoints
+Files to investigate and modify:
+
+server/analytics-seeder.ts - DELETE THIS FILE
+server/analytics.ts - Add upscale model tracking and fix validation
+server/storage.ts - Verify user statistics calculations are clean
+client/src/pages/EnhancedUserManagementPage.tsx - Verify displayed data is real
+Database - Clean all fake data and verify user table integrity
+If necessary, we should start tracking data from today forwards with a completely clean database to ensure all future analytics reflect only real platform usage with the correct model names including upscale operations.
+
+The admin dashboard is critical for user management and business decisions, so both the analytics and user data integrity issues need immediate resolution. Please prioritize cleaning existing fake data and ensuring all displayed information reflects only real platform usage.
