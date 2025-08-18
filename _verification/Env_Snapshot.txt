@@ -1,0 +1,28 @@
+# Environment Snapshot - Phase 2 Verification
+Date: 2025-08-18 21:03 UTC
+
+## System Information
+Node.js Version: v20.19.3
+Operating System: Linux e353e15764e7 6.2.16 #1-NixOS SMP PREEMPT_DYNAMIC x86_64 GNU/Linux
+
+## Package.json Scripts
+- "dev": "NODE_ENV=development tsx server/index.ts"
+- "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist"  
+- "start": "NODE_ENV=production node dist/index.js"
+- "check": "tsc"
+- "db:push": "drizzle-kit push"
+
+## Environment Configuration (.env.example)
+DATABASE_URL=
+
+# Phase 2 Static Deployment Configuration
+# Production configuration for split deployment
+VITE_PublicApiBaseUrl=https://api.<YOUR_DOMAIN>
+
+# CORS allowlist for Phase 2 (comma-separated origins)  
+# Enable strict CORS for static origin
+Allowed_Web_Origins=https://app.<YOUR_DOMAIN>
+
+## Key Ports
+- Development: 5000 (detected from logs)
+- Production: 5000 (from server configuration)
