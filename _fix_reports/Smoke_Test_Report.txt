@@ -1,0 +1,72 @@
+# Smoke Test Report - Pre-Deployment Verification
+Date: 2025-08-18 21:36 UTC
+
+## Local Development Tests (Baseline)
+
+### API Health Check
+URL: http://localhost:5000/healthz
+Status: 200 OK ✅
+Response: "ok"
+
+### API Models Endpoint
+URL: http://localhost:5000/api/models
+Status: 200 OK ✅
+Response: JSON array of AI models
+
+### Frontend in Dev Mode
+URL: http://localhost:5000/
+Status: 200 OK ✅
+Response: HTML with Vite dev scripts (development mode)
+
+## Production Build Verification
+
+### Static Assets Built
+Directory: dist/public/
+Files Present: ✅
+- index.html (3.26 KB)
+- assets/index-adpbAoaQ.js (1.4 MB)
+- assets/index-Dn4lFYOK.css (108 KB)
+- manifest.json, sw.js, icons/
+
+### API URL Embedded
+Target: https://creaitives-platform-2-0-api.replit.app
+Status: ✅ Built into JavaScript bundle
+Location: dist/public/assets/index-adpbAoaQ.js
+
+### Bootstrap Utility Active
+Feature: patchFetchWithPublicApiBaseUrl
+Status: ✅ Included in build
+Effect: Will redirect /api/* to API domain
+
+## Expected Production Behavior (After Deployment)
+
+### Frontend Tests (To Run After Deployment)
+1. https://creaitives-platform-2-0.replit.app/
+   - Expected: SPA loads with HTML/CSS/JS
+   - Network: API calls to ...-api.replit.app
+
+2. https://creaitives-platform-2-0.replit.app/video
+   - Expected: Deep link works (SPA rewrite)
+   - No 404 error
+
+### API Tests (To Run After Deployment)
+1. https://creaitives-platform-2-0-api.replit.app/healthz
+   - Expected: 200 OK "ok"
+
+2. https://creaitives-platform-2-0-api.replit.app/
+   - Expected: 404 JSON {"message": "API endpoint not found..."}
+
+3. https://creaitives-platform-2-0-api.replit.app/api/models
+   - Expected: 200 OK with CORS headers when origin is allowed
+
+## CORS Preflight Test (To Run After Deployment)
+curl -X OPTIONS https://creaitives-platform-2-0-api.replit.app/api/models \
+  -H "Origin: https://creaitives-platform-2-0.replit.app" \
+  -H "Access-Control-Request-Method: GET"
+
+Expected: Access-Control-Allow-Origin header present
+
+## Current Status
+⏳ Awaiting deployment configuration in Replit UI
+✅ All build artifacts ready
+✅ Environment configuration documented

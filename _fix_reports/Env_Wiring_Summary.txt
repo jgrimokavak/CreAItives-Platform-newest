@@ -1,0 +1,32 @@
+# Environment Variable Configuration Summary
+Date: 2025-08-18 21:33 UTC
+
+## Frontend Build Environment (Static Deployment)
+VITE_PublicApiBaseUrl=https://creaitives-platform-2-0-api.replit.app
+Status: ✅ Built and embedded in dist/public/assets/index-adpbAoaQ.js
+
+## Backend Runtime Environment (Autoscale Deployment)
+Allowed_Web_Origins=https://creaitives-platform-2-0.replit.app
+Status: ⏳ Needs to be set in Autoscale deployment settings
+
+## Additional Existing Variables (Keep unchanged)
+DATABASE_URL=<existing PostgreSQL connection string>
+SESSION_SECRET=<existing secret>
+REPLICATE_API_TOKEN=<existing token>
+OPENAI_API_KEY=<existing key>
+GOOGLE_SHEETS_CLIENT_EMAIL=<existing email>
+GOOGLE_SHEETS_PRIVATE_KEY=<existing key>
+CAR_SHEET_ID=<existing sheet ID>
+COLOR_SHEET_ID=<existing sheet ID>
+
+## Bootstrap Utility Activation
+The patchFetchWithPublicApiBaseUrl utility is now ACTIVE because:
+- VITE_PublicApiBaseUrl is set and non-empty
+- Will redirect all "/api/*" calls to "https://creaitives-platform-2-0-api.replit.app/api/*"
+- Embedded in the production build at dist/public/assets/index-adpbAoaQ.js
+
+## CORS Middleware Status
+The enforceCorsForStaticOrigin middleware will:
+- In development: Allow all origins (current behavior)
+- In production with Allowed_Web_Origins set: Only allow https://creaitives-platform-2-0.replit.app
+- Block unauthorized origins from making API requests
