@@ -1,0 +1,168 @@
+````
+# Phase1_SplitPlan_ApiBaseUrl_CORS_Prep.md
+"""
+Objective: Prepare the codebase to host the SPA on a Static Deployment (zero compute) without changing current behavior. Introduce a centralized Public API base URL, add a safe CORS allowlist middleware (disabled for now), and produce a concrete migration plan for Phase 2. No user-facing changes, no breakage.
+
+Plan (do this first, then proceed):
+1) Repository Scan & Plan_Draft
+   - Detect client entry (e.g., client/src/main.tsx or src/main.tsx), build output directory (dist/build), and current static serving in the server (express.static / catch-all to index.html).
+   - Identify all network call sites (fetch/axios) and whether they already use relative "/api" paths.
+   - Output a short "Migration_Plan_Phase1.md" with:
+     - Detected client entry, build directory, server static handlers.
+     - Strategy confirmation: keep server static handlers active in Phase 1; no routing changes yet.
+     - List of found network-call files (paths only).
+     - Risk notes (if any) + rollback steps (git revert commits).
+   - Save the plan at project root.
+
+Tasks:
+1) Introduce Public API Base URL (no behavior change unless env is set)
+   - Create a bootstrap util that transparently prefixes "/api" requests when VITE_PublicApiBaseUrl is defined.
+   - File: client/src/bootstrap/patchFetchWithPublicApiBaseUrl.ts
+   ```ts
+   // Purpose: If VITE_PublicApiBaseUrl is set, transparently route "/api/..." calls to that absolute origin.
+   // This avoids refactoring every call site and keeps Phase 1 risk near zero.
+   export function patchFetchWithPublicApiBaseUrl(): void {
+     const base = (import.meta as any)?.env?.VITE_PublicApiBaseUrl as string | undefined;
+     if (!base) return; // No-op: same-origin behavior remains
+     const originalFetch = globalThis.fetch.bind(globalThis);
+
+     globalThis.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
+       const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : String(input);
+       // Only rewrite app-internal API calls that start with "/api"
+       if (url.startsWith("/api/")) {
+         const rewritten = `${base}${url}`;
+         return originalFetch(rewritten, init);
+       }
+       return originalFetch(input as any, init);
+     };
+   }
+````
+
+* Wire it into the client entry before the app mounts.
+
+* Example (adjust path to actual entry):
+
+  * File: client/src/main.tsx (or src/main.tsx)
+
+  ```ts
+  import { patchFetchWithPublicApiBaseUrl } from "@/bootstrap/patchFetchWithPublicApiBaseUrl";
+  patchFetchWithPublicApiBaseUrl();
+  // ...rest of your existing bootstrap/mount code
+  ```
+
+* Add env examples:
+
+  * File: .env.example
+
+  ```
+  VITE_PublicApiBaseUrl=
+  ```
+
+  (Leave empty in Phase 1 to preserve current same-origin behavior.)
+
+2. Add (but do not enable) strict CORS allowlist middleware for Phase 2
+
+   * Create middleware:
+
+     * File: server/middleware/enforceCorsForStaticOrigin.ts
+
+     ```ts
+     import cors from "cors";
+
+     const parseAllowed = (raw?: string) =>
+       (raw ?? "")
+         .split(",")
+         .map(s => s.trim())
+         .filter(Boolean);
+
+     export function enforceCorsForStaticOrigin() {
+       const allowed = parseAllowed(process.env.Allowed_Web_Origins);
+       return cors({
+         origin(origin, cb) {
+           if (!origin) return cb(null, true); // health checks / server-to-server
+           return allowed.includes(origin) ? cb(null, true) : cb(null, false);
+         },
+         credentials: true,
+         methods: ["GET","POST","PUT","PATCH","DELETE","OPTIONS"],
+         allowedHeaders: ["Content-Type","Authorization"],
+       });
+     }
+     ```
+   * Prepare (do not mount yet):
+
+     * File: .env.example
+
+     ```
+     Allowed_Web_Origins=
+     ```
+   * Add a no-risk health endpoint if missing:
+
+     * File: server/index.ts (or server/app bootstrap)
+
+     ```ts
+     // Keep this minimal; safe in Phase 1
+     // app.get("/healthz", (_req, res) => res.status(200).send("ok"));
+     ```
+
+3. Preserve current server static hosting (no routing changes in Phase 1)
+
+   * Do not remove `express.static(...)` or SPA catch-all.
+   * Do not change body-size limits or image processing yet.
+
+4. Developer & Deployment Notes for Phase 2 (generated docs)
+
+   * Create "Static\_Deployment\_Readme.md" with:
+
+     * Build command for the SPA and detected output directory.
+     * Required SPA rewrite rule: "/\* -> /index.html".
+     * Instructions to set two domains later: app.<domain> (Static) and api.<domain> (Autoscale).
+     * Instructions to set envs in Phase 2:
+
+       * Static build: `VITE_PublicApiBaseUrl=https://api.<YOUR_DOMAIN>`
+       * API autoscale: `Allowed_Web_Origins=https://app.<YOUR_DOMAIN>`
+
+5. Commit & Output
+
+   * Use descriptive commits:
+
+     * `Introduce_PatchFetch_PublicApiBaseUrl_SafeDefault`
+     * `Add_CORS_Allowlist_Middleware_Disabled_Phase1`
+     * `Author_Phase1_Migration_Plan_and_Static_Readme`
+   * Output final summary as "Phase1\_Change\_Summary.md" listing:
+
+     * Files created/edited
+     * Any assumptions taken (paths, frameworks)
+     * Next-step checklist for Phase 2
+
+Testing:
+
+1. Build & run locally (or preview):
+
+   * App loads and behaves exactly as before.
+   * Network requests keep using same-origin (since VITE\_PublicApiBaseUrl is empty).
+2. Set a temporary test value (optional, do not commit):
+
+   * Build with `VITE_PublicApiBaseUrl=http://localhost:PORT` and confirm "/api/\*" calls are rewritten to that origin.
+   * Remove the test value after verification to keep Phase 1 behavior identical.
+3. Confirm health endpoint responds 200.
+4. Ensure no TypeScript errors and that tree-shaking keeps patch small.
+
+Reminders & Constraints:
+
+* Do not remove or modify server static routes in Phase 1.
+* No UI/UX changes. No endpoint contract changes.
+* Prefer precise, self-explanatory names (e.g., patchFetchWithPublicApiBaseUrl, enforceCorsForStaticOrigin).
+* If expected files/paths differ, adapt with minimal edits and document the deviation in the plan.
+* Produce the plan docs before code edits; then implement; then re-run tests.
+
+Deliverables:
+
+* Migration\_Plan\_Phase1.md
+* Static\_Deployment\_Readme.md
+* Phase1\_Change\_Summary.md
+* New files under client/src/bootstrap and server/middleware as specified.
+  """
+
+```
+::contentReference[oaicite:0]{index=0}
+```
