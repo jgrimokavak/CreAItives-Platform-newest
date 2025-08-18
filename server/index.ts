@@ -1,7 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { enforceCorsForStaticOrigin } from "./middleware/enforceCorsForStaticOrigin";
 
 // Set CAR_SHEET_CSV env variable if not already set
 if (!process.env.CAR_SHEET_CSV) {
@@ -10,13 +9,6 @@ if (!process.env.CAR_SHEET_CSV) {
 }
 
 const app = express();
-
-// Enable trust proxy for CORS in production behind reverse proxies
-app.set("trust proxy", 1);
-
-// Enable CORS allowlist for static origin (Phase 2)
-app.use(enforceCorsForStaticOrigin());
-
 // Increase request size limit to handle image uploads (50MB)
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
@@ -54,9 +46,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Health endpoint for Phase 1 - Keep minimal and safe
-app.get("/healthz", (_req, res) => res.status(200).send("ok"));
-
 (async () => {
   const server = await registerRoutes(app);
 
@@ -75,20 +64,13 @@ app.get("/healthz", (_req, res) => res.status(200).send("ok"));
     console.error('Request error:', err);
   });
 
-  // Phase 2: Remove server-side SPA hosting in production
-  // Only serve SPA in development; in production, static deployment handles frontend
+  // importantly only setup vite in development and after
+  // setting up all the other routes so the catch-all route
+  // doesn't interfere with the other routes
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
-    // Hotfix: Redirect root path to /home (main landing page)
-    app.get("/", (req, res) => {
-      return res.redirect(308, "/home");
-    });
-
-    // Phase 2: API-only mode - return 404 for non-API paths that didn't match redirect
-    app.use("*", (_req, res) => {
-      res.status(404).json({ message: "API endpoint not found. Frontend is served from static deployment." });
-    });
+    serveStatic(app);
   }
 
   // ALWAYS serve the app on port 5000
