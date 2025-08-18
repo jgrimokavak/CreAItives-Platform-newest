@@ -1,0 +1,27 @@
+# Detected Endpoints - Hotfix Implementation
+Date: 2025-08-18 21:38 UTC
+
+## Current Situation Analysis
+
+### API_URL (Current Public URL)
+https://creaitives-platform-2-0.replit.app
+- Status: Attached to Autoscale deployment
+- Problem: Shows API 404 message instead of SPA
+- Resolution: Add redirect for non-API paths
+
+### STATIC_URL (Target for SPA)
+https://creaitives-platform-2-0-static.replit.app
+- Status: Needs to be created from dist/public
+- Purpose: Serve the SPA with zero compute cost
+- Configuration: SPA rewrite /* → /index.html
+
+## Hotfix Plan
+1. Create Static deployment from built assets
+2. Wire environment variables for cross-origin setup  
+3. Add redirect code to API server
+4. Test end-to-end functionality
+
+## URL Flow After Fix
+User visits: https://creaitives-platform-2-0.replit.app/
+API redirects: 308 → https://creaitives-platform-2-0-static.replit.app/
+Static serves: SPA (index.html with embedded API calls back to original URL)

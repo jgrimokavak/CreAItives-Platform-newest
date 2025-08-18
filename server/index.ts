@@ -80,7 +80,23 @@ app.get("/healthz", (_req, res) => res.status(200).send("ok"));
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
-    // Phase 2: API-only mode - return 404 for non-API paths
+    // Hotfix: Redirect any non-API routes to the Static frontend
+    app.get(["/", "/:path(*)"], (req, res, next) => {
+      const p = req.path || "/";
+      if (p.startsWith("/api/") || p === "/healthz") return next();
+      
+      const origin = process.env.STATIC_APP_ORIGIN;
+      if (!origin) {
+        return res.status(404).json({ message: "API endpoint not found. Frontend is served from static deployment." });
+      }
+      
+      const url = new URL(origin);
+      url.pathname = req.path || "/";
+      url.search = req.url.includes("?") ? req.url.slice(req.url.indexOf("?")) : "";
+      return res.redirect(308, url.toString());
+    });
+
+    // Phase 2: API-only mode - return 404 for non-API paths that didn't match redirect
     app.use("*", (_req, res) => {
       res.status(404).json({ message: "API endpoint not found. Frontend is served from static deployment." });
     });

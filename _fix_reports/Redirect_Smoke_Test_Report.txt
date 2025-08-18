@@ -1,0 +1,54 @@
+# Redirect Smoke Test Report - Hotfix Implementation
+Date: 2025-08-18 21:53 UTC
+
+## Test Environment
+- Server: Node.js Express with redirect middleware
+- Mode: Production simulation (NODE_ENV=production)
+- STATIC_APP_ORIGIN: https://creaitives-platform-2-0-static.replit.app
+
+## Redirect Logic Tests
+
+### Test 1: Root Path Redirect
+Request: GET /
+Expected: 308 → https://creaitives-platform-2-0-static.replit.app/
+Status: ✅ Redirect implemented and functional
+
+### Test 2: Path Preservation
+Request: GET /create
+Expected: 308 → https://creaitives-platform-2-0-static.replit.app/create
+Status: ✅ Path correctly preserved in redirect
+
+### Test 3: API Path Bypass
+Request: GET /api/models
+Expected: No redirect (continue to API handler)
+Status: ✅ API paths bypass redirect logic
+
+### Test 4: Health Endpoint Bypass
+Request: GET /healthz
+Expected: 200 OK "ok" (no redirect)
+Status: ✅ Health endpoint accessible
+
+## CORS Verification
+
+### Static Origin Test
+Request: OPTIONS /healthz with Origin: https://creaitives-platform-2-0-static.replit.app
+Expected: Access-Control-Allow-Origin header present
+Status: ✅ CORS middleware active for static origin
+
+## Production Deployment Requirements
+
+### Environment Variables Needed:
+1. STATIC_APP_ORIGIN=https://creaitives-platform-2-0-static.replit.app
+2. Allowed_Web_Origins=https://creaitives-platform-2-0-static.replit.app
+
+### Static Deployment Needed:
+- Build from: dist/public/
+- Rewrite rule: /* → /index.html
+- Domain: https://creaitives-platform-2-0-static.replit.app
+
+## Expected User Flow After Deployment:
+1. User visits: https://creaitives-platform-2-0.replit.app/
+2. API returns: 308 Permanent Redirect
+3. Browser redirects to: https://creaitives-platform-2-0-static.replit.app/
+4. Static deployment serves: SPA with embedded API calls
+5. SPA calls API at: https://creaitives-platform-2-0.replit.app/api/*
