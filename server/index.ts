@@ -46,6 +46,9 @@ app.use((req, res, next) => {
   next();
 });
 
+// Health endpoint for Phase 1 - Keep minimal and safe
+app.get("/healthz", (_req, res) => res.status(200).send("ok"));
+
 (async () => {
   const server = await registerRoutes(app);
 
