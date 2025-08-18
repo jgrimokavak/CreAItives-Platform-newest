@@ -1,0 +1,28 @@
+# Detected URLs - Final Configuration
+Date: 2025-08-18 22:09 UTC
+
+## API_URL (Current Main Domain)
+https://creaitives-platform-2-0.replit.app
+- Status: Attached to Autoscale deployment
+- Contains: Redirect middleware ready for STATIC_APP_ORIGIN
+- Needs: Environment variables set and redeployment
+
+## STATIC_URL (Target for Static Deployment)
+https://creaitives-platform-2-0-static.replit.app
+- Status: Needs to be created from dist/public
+- Purpose: Serve SPA with zero compute cost
+- Configuration: SPA rewrite /* → /index.html required
+
+## Build Assets Ready
+Location: dist/public/
+Size: 1.7MB (production optimized)
+Built with: VITE_PublicApiBaseUrl=https://creaitives-platform-2-0.replit.app
+Status: Ready for static deployment
+
+## Environment Variables to Set
+### Autoscale Deployment:
+STATIC_APP_ORIGIN=https://creaitives-platform-2-0-static.replit.app
+Allowed_Web_Origins=https://creaitives-platform-2-0-static.replit.app
+
+### Static Deployment Build:
+VITE_PublicApiBaseUrl=https://creaitives-platform-2-0.replit.app

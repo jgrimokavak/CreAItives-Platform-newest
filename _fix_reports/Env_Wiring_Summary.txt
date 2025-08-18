@@ -1,29 +1,46 @@
-# Environment Variable Configuration - Hotfix Implementation
-Date: 2025-08-18 21:40 UTC
+# Environment Variable Configuration - Final Setup
+Date: 2025-08-18 22:10 UTC
 
-## Frontend Build Environment (Applied)
-VITE_PublicApiBaseUrl=https://creaitives-platform-2-0.replit.app
-Status: ✅ Built into dist/public/assets/index-*.js
-Effect: SPA will call API at the main domain
+## Environment Variables to Set
 
-## Backend Runtime Environment (To be set)
+### Autoscale Deployment (API Server)
+Set these in the Replit Deployments UI for your Autoscale deployment:
+
 STATIC_APP_ORIGIN=https://creaitives-platform-2-0-static.replit.app
-Status: ⏳ Needs to be set in Autoscale deployment environment variables
-Effect: Enables redirect from API to Static deployment
+- Purpose: Enables redirect middleware to send users to static site
+- Effect: GET / → 308 redirect to static deployment
 
 Allowed_Web_Origins=https://creaitives-platform-2-0-static.replit.app
-Status: ⏳ Needs to be set in Autoscale deployment environment variables  
-Effect: CORS allowlist for static deployment origin
+- Purpose: CORS allowlist for cross-origin API calls
+- Effect: Only static deployment can make API requests
 
-## Redirect Logic Implementation
-Code added to server/index.ts:
-- Checks if path starts with /api/ or equals /healthz → continue to API
-- Otherwise: redirect 308 to STATIC_APP_ORIGIN + path + query
-- If STATIC_APP_ORIGIN not set → fallback to 404 JSON
+### Static Deployment (Frontend Build)
+Build command to use when creating static deployment:
 
-## URL Flow After Implementation
-1. User visits: https://creaitives-platform-2-0.replit.app/
-2. API server redirects: 308 → https://creaitives-platform-2-0-static.replit.app/
-3. Static deployment serves: SPA (with embedded API calls back to step 1)
-4. SPA makes API calls: → https://creaitives-platform-2-0.replit.app/api/*
-5. API server handles: API requests normally
+VITE_PublicApiBaseUrl=https://creaitives-platform-2-0.replit.app npm run build
+
+- Purpose: Embeds API URL into frontend bundle
+- Effect: SPA calls API at main domain
+
+## Existing Environment Variables (Keep Unchanged)
+DATABASE_URL=<existing PostgreSQL connection>
+SESSION_SECRET=<existing secret>
+REPLICATE_API_TOKEN=<existing token>
+OPENAI_API_KEY=<existing key>
+GOOGLE_SHEETS_CLIENT_EMAIL=<existing email>
+GOOGLE_SHEETS_PRIVATE_KEY=<existing key>
+CAR_SHEET_ID=<existing sheet ID>
+COLOR_SHEET_ID=<existing sheet ID>
+
+## Deployment Steps Required
+1. Set STATIC_APP_ORIGIN and Allowed_Web_Origins on Autoscale
+2. Redeploy Autoscale deployment
+3. Create Static deployment with build command above
+4. Deploy static site from dist/public with rewrite rule
+5. Test redirect and CORS functionality
+
+## Expected Behavior After Setup
+- User visits main URL → gets redirected to static URL
+- Static site loads SPA → makes API calls back to main URL
+- CORS allows requests from static origin only
+- Health endpoint remains accessible on API domain
