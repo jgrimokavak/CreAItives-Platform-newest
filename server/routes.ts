@@ -2093,50 +2093,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const imageMimeType = req.file.mimetype;
       const imageDataUri = `data:${imageMimeType};base64,${imageBase64}`;
       
-      // Get the Replicate provider
-      const { ReplicateProvider } = await import('./providers/replicate-provider');
-      const replicateProvider = new ReplicateProvider();
+      // Make direct Replicate API call (same pattern as regular car generation)
+      const requestData = {
+        version: "black-forest-labs/flux-kontext-max",
+        input: {
+          prompt,
+          image: imageDataUri,
+          // Use flux-kontext-max defaults
+          aspect_ratio: 'match_input_image',
+          output_format: 'png',
+          safety_tolerance: 2,
+          prompt_upsampling: false
+        }
+      };
       
-      // Use the provider's edit method with flux-kontext-max defaults
-      const result = await replicateProvider.edit({
-        prompt,
-        modelKey: 'flux-kontext-max',
-        images: [imageDataUri],
-        mask: undefined, // No mask needed for background replacement
-        // Use the defaults from the model configuration
-        aspect_ratio: 'match_input_image',
-        output_format: 'png',
-        safety_tolerance: 2,
-        prompt_upsampling: false
-      });
+      console.log("DIRECT REPLICATE REQUEST for photo-to-studio:", JSON.stringify({
+        version: requestData.version,
+        input: { ...requestData.input, image: 'data:image/...base64...' } // Hide full base64 for logging
+      }, null, 2));
       
-      if (!result.images || result.images.length === 0) {
-        return res.status(500).json({ error: "No images were generated" });
+      // Direct Replicate API call
+      const response = await axios.post("https://api.replicate.com/v1/predictions", 
+        requestData, 
+        {
+          headers: { 
+            Authorization: `Bearer ${process.env.REPLICATE_API_TOKEN}`, 
+            "Content-Type": "application/json" 
+          }
+        });
+      
+      const pred = response.data;
+      
+      // Use the existing waitForPrediction function from replicate.ts
+      const { waitForPrediction } = await import('./replicate');
+      const final = await waitForPrediction(pred.id);
+      
+      // final.output is a URL; fetch → buffer → base64 (same as car generation)
+      if (!final.output) {
+        return res.status(500).json({ error: "No output URL returned from Replicate" });
       }
       
-      // Get the first (and typically only) generated image
-      const generatedImage = result.images[0];
+      const outputUrl = final.output as string;
+      const imageResponse = await axios.get(outputUrl, { responseType: "arraybuffer" });
+      const imgBuf = imageResponse.data;
+      const b64 = Buffer.from(imgBuf).toString("base64");
       
       // Get user ID for analytics tracking
       const userId = req.user?.claims?.sub;
       console.log(`[Analytics Debug] User ID for photo-to-studio generation: ${userId}`);
 
-      // Since the replicate provider already saves the image during the edit process,
-      // we need to get the saved image from the database. The provider returns URLs
-      // but we need the complete GeneratedImage record from the database.
-      // Let's find the most recent image for this user
-      const savedImagesResult = await storage.getAllImages();
-      const userImages = savedImagesResult.items
-        .filter((img: any) => img.createdBy === userId)
-        .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      
-      const image = userImages.length > 0 ? userImages[0] : null;
-      
-      if (!image) {
-        // Fallback: create a minimal image record if not found
-        // This shouldn't happen in normal operation but provides safety
-        throw new Error('Generated image was not properly saved');
-      }
+      // Save the image using the same pattern as car generation
+      const image = await persistImage(b64, {
+        prompt,
+        params: { mode, brand, model: "flux-kontext-max" },
+        userId: userId,
+        sources: [imageDataUri]
+      });
 
       // Track successful photo-to-studio generation
       const { logActivity } = await import('./analytics');
