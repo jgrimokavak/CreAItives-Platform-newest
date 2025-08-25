@@ -638,7 +638,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin analytics KPIs endpoint
   app.get('/api/admin/analytics/kpis', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
-      const { getKPIs } = await import('./analytics');
+      const { getKPIsWithComparison } = await import('./analytics');
       const {
         dateFrom,
         dateTo,
@@ -656,43 +656,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const from = dateFrom ? new Date(dateFrom) : defaultDateFrom;
       const to = dateTo ? new Date(dateTo) : defaultDateTo;
 
-      const kpis = await getKPIs(from, to, {
-        roleFilter,
-        statusFilter,
-        domainFilter,
-        activatedFilter
-      });
-
       // Calculate previous period for deltas
       const periodLength = to.getTime() - from.getTime();
       const prevTo = new Date(from.getTime() - 1);
       const prevFrom = new Date(prevTo.getTime() - periodLength);
 
-      const prevKpis = await getKPIs(prevFrom, prevTo, {
+      console.log(`[🚀 FIXED ROUTE] Using OPTIMIZED batched KPIs call instead of 2 separate calls`);
+      // OPTIMIZED: Single call for both periods
+      const response = await getKPIsWithComparison(from, to, prevFrom, prevTo, {
         roleFilter,
         statusFilter,
         domainFilter,
         activatedFilter
       });
-
-      // Calculate deltas
-      const calculateDelta = (current: number, previous: number) => {
-        if (previous === 0) return current > 0 ? 100 : 0;
-        return Math.round(((current - previous) / previous) * 100 * 100) / 100;
-      };
-
-      const response = {
-        current: kpis,
-        previous: prevKpis,
-        deltas: {
-          dau: calculateDelta(kpis.dau, prevKpis.dau),
-          mau: calculateDelta(kpis.mau, prevKpis.mau),
-          newUsers: calculateDelta(kpis.newUsers, prevKpis.newUsers),
-          activationRate: calculateDelta(kpis.activationRate, prevKpis.activationRate),
-          stickiness: calculateDelta(kpis.stickiness, prevKpis.stickiness),
-          contentSuccessRate: calculateDelta(kpis.contentSuccessRate, prevKpis.contentSuccessRate)
-        }
-      };
 
       res.json(response);
     } catch (error) {
