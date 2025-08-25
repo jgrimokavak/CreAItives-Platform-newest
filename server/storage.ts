@@ -406,8 +406,8 @@ export class DatabaseStorage implements IStorage {
 
     const whereClause = conditions.length > 1 ? and(...conditions) : conditions[0];
     
-    // Get enhanced user data with counts
-    const usersQuery = db
+    // OPTIMIZED: Get enhanced user data with counts using efficient JOINs instead of N+1 subqueries
+    const baseQuery = db
       .select({
         id: users.id,
         email: users.email,
@@ -420,25 +420,48 @@ export class DatabaseStorage implements IStorage {
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
         domain: sql`split_part(${users.email}, '@', 2)`,
-        imageCount: sql`(
-          SELECT COUNT(*) FROM ${images}
-          WHERE ${images.user_id} = ${users.id}
-          AND ${images.environment} = ${currentEnv}
-        )`,
-        videoCount: sql`(
-          SELECT COUNT(*) FROM ${videos}
-          WHERE ${videos.userId} = ${users.id}
-          AND ${videos.environment} = ${currentEnv}
-        )`,
-        projectCount: sql`(
-          SELECT COUNT(*) FROM ${projects}
-          WHERE ${projects.userId} = ${users.id}
-          AND ${projects.deletedAt} IS NULL
-        )`,
+        imageCount: sql`COALESCE(COUNT(DISTINCT ${images.id}), 0)`,
+        videoCount: sql`COALESCE(COUNT(DISTINCT ${videos.id}), 0)`,
+        projectCount: sql`COALESCE(COUNT(DISTINCT ${projects.id}), 0)`,
         isActivated: sql`${users.lastLoginAt} IS NOT NULL`,
       })
       .from(users)
-      .where(whereClause);
+      .leftJoin(images, 
+        and(
+          eq(images.user_id, users.id),
+          eq(images.environment, currentEnv)
+        )
+      )
+      .leftJoin(videos,
+        and(
+          eq(videos.userId, users.id),
+          eq(videos.environment, currentEnv)
+        )
+      )
+      .leftJoin(projects,
+        and(
+          eq(projects.userId, users.id),
+          isNull(projects.deletedAt)
+        )
+      );
+    
+    // Apply WHERE clause and GROUP BY
+    const usersQuery = whereClause 
+      ? baseQuery.where(whereClause)
+      : baseQuery;
+    
+    const queryWithGroupBy = usersQuery.groupBy(
+      users.id,
+      users.email,
+      users.firstName,
+      users.lastName,
+      users.profileImageUrl,
+      users.isActive,
+      users.role,
+      users.lastLoginAt,
+      users.createdAt,
+      users.updatedAt
+    );
     
     // Apply sorting
     const sortBy = options.sortBy || 'lastLoginAt';
@@ -469,7 +492,7 @@ export class DatabaseStorage implements IStorage {
     }
     
     // Get paginated results with sorting
-    const usersData = await usersQuery
+    const usersData = await queryWithGroupBy
       .orderBy(sortOrder === 'asc' ? asc(orderByColumn) : desc(orderByColumn))
       .limit(limit)
       .offset(offset);
@@ -688,7 +711,28 @@ export class DatabaseStorage implements IStorage {
     const { userIds, filters = {}, reason, adminUserId, adminEmail, ipAddress, maxRows } = options;
     const currentEnv = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
     
-    let query = db
+    // Build all conditions upfront to avoid query chaining issues
+    const conditions: any[] = [not(eq(users.email, 'joacogrimoldi@gmail.com'))];
+    
+    // Apply user ID filter if provided
+    if (userIds && userIds.length > 0) {
+      conditions.push(inArray(users.id, userIds));
+    }
+    
+    // Apply search filter if provided
+    if (filters.search) {
+      const searchTerm = `%${filters.search}%`;
+      conditions.push(
+        or(
+          ilike(users.email, searchTerm),
+          ilike(users.firstName, searchTerm),
+          ilike(users.lastName, searchTerm)
+        )
+      );
+    }
+    
+    // Build single query with all conditions
+    const query = db
       .select({
         id: users.id,
         email: users.email,
@@ -716,56 +760,7 @@ export class DatabaseStorage implements IStorage {
         )`,
       })
       .from(users)
-      .where(not(eq(users.email, 'joacogrimoldi@gmail.com')));
-
-    // Apply user ID filter if provided
-    if (userIds && userIds.length > 0) {
-      const conditions = [
-        not(eq(users.email, 'joacogrimoldi@gmail.com')),
-        inArray(users.id, userIds)
-      ];
-      query = db
-        .select({
-          id: users.id,
-          email: users.email,
-          firstName: users.firstName,
-          lastName: users.lastName,
-          role: users.role,
-          isActive: users.isActive,
-          lastLoginAt: users.lastLoginAt,
-          createdAt: users.createdAt,
-          domain: sql`split_part(${users.email}, '@', 2)`,
-          imageCount: sql`(
-            SELECT COUNT(*) FROM ${images}
-            WHERE ${images.user_id} = ${users.id}
-            AND ${images.environment} = ${currentEnv}
-          )`,
-          videoCount: sql`(
-            SELECT COUNT(*) FROM ${videos}
-            WHERE ${videos.userId} = ${users.id}
-            AND ${videos.environment} = ${currentEnv}
-          )`,
-          projectCount: sql`(
-            SELECT COUNT(*) FROM ${projects}
-            WHERE ${projects.userId} = ${users.id}
-            AND ${projects.deletedAt} IS NULL
-          )`,
-        })
-        .from(users)
-        .where(and(...conditions));
-    }
-
-    // Apply additional filters if provided
-    if (filters.search) {
-      const searchTerm = `%${filters.search}%`;
-      query = query.where(
-        or(
-          ilike(users.email, searchTerm),
-          ilike(users.firstName, searchTerm),
-          ilike(users.lastName, searchTerm)
-        )
-      );
-    }
+      .where(and(...conditions));
 
     // Enforce row limit
     const data = await query.limit(maxRows + 1); // Get one extra to check if limit exceeded
