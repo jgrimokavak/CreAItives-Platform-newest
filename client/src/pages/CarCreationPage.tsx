@@ -841,25 +841,25 @@ const CarCreationPage: React.FC = () => {
           onValueChange={(value) => setCarCreationMode(value as "single" | "batch" | "photo-to-studio")}
           className="mb-6"
         >
-          <TabsList className="grid w-full grid-cols-3 gap-1 h-auto min-h-[44px] p-1 bg-gray-700/90 dark:bg-gray-800/90 rounded-lg shadow-inner">
+          <TabsList className="grid w-full grid-cols-3 gap-1 h-auto min-h-[44px] p-1 bg-gray-400/60 dark:bg-gray-500/60 rounded-lg">
             <TabsTrigger 
               value="single" 
-              className="rounded-md font-medium text-xs sm:text-sm py-2 px-2 sm:px-4 transition-all duration-200 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground data-[state=inactive]:text-gray-300 data-[state=inactive]:hover:text-gray-100 hover:bg-gray-600/50"
+              className="rounded-md font-medium text-xs sm:text-sm py-2 px-2 sm:px-4 transition-all duration-200 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground data-[state=inactive]:text-gray-700 dark:data-[state=inactive]:text-gray-200 hover:bg-gray-300/50 dark:hover:bg-gray-400/50"
             >
               <span className="whitespace-nowrap">Custom Build</span>
             </TabsTrigger>
             <TabsTrigger 
               value="photo-to-studio" 
-              className="rounded-md font-medium text-xs sm:text-sm py-2 px-2 sm:px-4 transition-all duration-200 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground data-[state=inactive]:text-gray-300 data-[state=inactive]:hover:text-gray-100 hover:bg-gray-600/50 relative flex items-center justify-center gap-1"
+              className="rounded-md font-medium text-xs sm:text-sm py-2 px-1.5 sm:px-3 transition-all duration-200 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground data-[state=inactive]:text-gray-700 dark:data-[state=inactive]:text-gray-200 hover:bg-gray-300/50 dark:hover:bg-gray-400/50 flex items-center justify-center gap-0.5 sm:gap-1"
             >
-              <span className="whitespace-nowrap">Photo Studio</span>
-              <span className="inline-flex items-center justify-center px-1 sm:px-1.5 py-0.5 text-[7px] sm:text-[8px] md:text-[9px] font-bold leading-none text-white bg-gradient-to-r from-blue-500 to-purple-500 rounded-full">
+              <span className="whitespace-nowrap text-[10px] sm:text-xs md:text-sm">Photo Studio</span>
+              <span className="inline-flex items-center justify-center px-1 py-0.5 text-[6px] sm:text-[7px] md:text-[8px] font-bold leading-none text-white bg-gradient-to-r from-blue-500 to-purple-500 rounded-full min-w-[18px] sm:min-w-[20px]">
                 NEW
               </span>
             </TabsTrigger>
             <TabsTrigger 
               value="batch" 
-              className="rounded-md font-medium text-xs sm:text-sm py-2 px-2 sm:px-4 transition-all duration-200 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground data-[state=inactive]:text-gray-300 data-[state=inactive]:hover:text-gray-100 hover:bg-gray-600/50"
+              className="rounded-md font-medium text-xs sm:text-sm py-2 px-2 sm:px-4 transition-all duration-200 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground data-[state=inactive]:text-gray-700 dark:data-[state=inactive]:text-gray-200 hover:bg-gray-300/50 dark:hover:bg-gray-400/50"
             >
               <span className="whitespace-nowrap">Bulk Generate</span>
             </TabsTrigger>
