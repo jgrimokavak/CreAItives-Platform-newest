@@ -1,0 +1,55 @@
+Goal
+Fix the performance problems that still affect /admin/users and the newly diagnosed issues on /admin/overview. Use your own diagnostic reports as the source of truth. Implement fixes in small, validated steps without breaking other parts of the site.
+
+Scope
+- Pages: /admin/overview and /admin/users
+- Back end analytics and pagination endpoints that power these pages
+
+High‑Level Rules
+1) Work step‑by‑step. After each step, run quick measurements and only continue if the step meets the success criteria.
+2) Keep changes isolated and reversible. Don’t modify unrelated pages or shared code unless necessary.
+3) If any acceptance check fails, revert that step and propose an alternative.
+4) Maintain existing response schemas; if you must extend them, do so in a backward‑compatible way.
+
+Priority Order (what to solve first)
+A) /admin/overview (per your report)
+  1. Batch and parallelize safely: Replace the “8 sequential queries” pattern in KPIs with batched/aggregated queries or safe parallelism. Avoid serial awaits when results are independent.
+  2. Eliminate duplicate KPI work: /kpis must not compute the full KPIs twice for current/previous periods in a way that doubles DB load. Reuse shared subqueries, use a single multi‑period aggregate, or add a tiny TTL cache.
+  3. API sequencing: Load KPIs first; defer Trends until KPIs finish or until the charts section becomes visible. Prevent both heavy requests from starting simultaneously on every filter change.
+  4. Chart load management: Lazy‑render charts, cap the time window (e.g., last 30–60 days), and downsample on the server for longer ranges. Ensure chart props don’t re‑create heavy objects every render.
+  5. Filter debouncing and stable keys: Debounce filter changes (300–500ms), and ensure query keys use stable primitives (no raw objects). Avoid refetch cascades.
+  6. Move heavy inline math out of render: Precompute percentages/rates in the response or memoize them.
+
+B) /admin/users (residual issues from your earlier report)
+  1. Ensure the N+1 fix is complete and indexed. Verify with EXPLAIN/metrics. If counts still slow sorting, allow list view without counts or compute counts on demand.
+  2. Remove initial “API storm”: Load only the paginated users on first paint; defer other analytics until interaction.
+  3. Kill URL ↔ filters feedback loops: Guard URL updates so they only happen when the URL actually changes; ensure callbacks are stable; debounce filter changes.
+  4. Stabilize React Query usage: Replace object queryKeys with primitive tuples; set sensible staleTime and keepPreviousData.
+  5. Large tables: Virtualize rows and keep selection updates O(1).
+
+DB & Querying Guidance (result‑oriented, not prescriptive)
+- Consolidate multi‑step aggregates into a single query per endpoint where feasible (e.g., date_trunc + COUNT(*) FILTER(..) or equivalent). If you keep multiple queries, run them in parallel where correctness allows.
+- Avoid massive IN(...) lists; prefer subquery joins or EXISTS clauses.
+- Add/verify indexes that match your most common WHEREs and JOINs (users, images, videos, projects, activity/events, created_at, environment, and frequent filters). Document any new index.
+- If you cache KPI results, keep TTL short (30–60s) and respect environment/filters.
+
+Success Criteria (acceptance checks you must show after each step)
+Frontend
+- /admin/overview: initial view becomes interactive without freezing; KPIs load first, charts load after; no simultaneous heavy requests on every filter change.
+- /admin/users: initial load ≤ 2 network calls before interaction (users list + optional lightweight stats), no input lag while typing in filters.
+- No tab crashes; DevTools “Main” long task during initial render < 200ms on dev sample data.
+
+Backend
+- /admin/overview KPIs: single batched plan or parallelized groups; total DB time materially reduced (show timings).
+- /admin/overview Trends: downsampled to ≤ ~60 points per chart for default range.
+- /admin/users paginated: EXPLAIN shows index usage; typical response time on dev dataset ≤ 200–300ms.
+- Eliminate duplicate KPI computation in /kpis (prove by logs or instrumentation).
+
+Safety & Rollback
+- Implement fixes behind a small feature flag or controlled toggle if needed.
+- Provide a short summary after each step: what changed, before/after timings, and whether acceptance criteria passed.
+- Stop if any step causes regression on other pages; propose alternatives.
+
+Deliverables
+- The fixes themselves.
+- A concise “before vs after” note for each major change, including request counts, response times, and any EXPLAIN/plan screenshots or logs.

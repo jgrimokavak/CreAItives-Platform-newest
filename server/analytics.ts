@@ -112,14 +112,17 @@ export async function getKPIs(dateFrom: Date, dateTo: Date, filters: {
 
   const userWhereClause = userConditions.length > 0 ? and(...userConditions) : undefined;
 
-  // Get filtered user IDs if filters are applied
+  // OPTIMIZED: Batch queries into parallel execution groups
+  const startTime = Date.now();
+  
+  // Step 1: Get filtered user IDs if filters are applied (must run first)
   let filteredUserIds: string[] | undefined;
   if (userWhereClause) {
     const filteredUsers = await db.select({ id: users.id }).from(users).where(userWhereClause);
     filteredUserIds = filteredUsers.map(u => u.id);
   }
 
-  // Build event filter conditions
+  // Build event filter conditions once
   const eventConditions = [
     eq(activityEvents.environment, environment),
     gte(activityEvents.createdAt, dateFrom),
@@ -132,72 +135,36 @@ export async function getKPIs(dateFrom: Date, dateTo: Date, filters: {
 
   const eventWhereClause = and(...eventConditions);
 
-  // Calculate DAU
-  console.log(`[Analytics Debug] About to run DAU query with conditions:`, {
-    environment,
-    dateFrom: dateFrom.toISOString(),
-    dateTo: dateTo.toISOString(),
-    dateFromTimestamp: dateFrom.getTime(),
-    dateToTimestamp: dateTo.getTime()
-  });
+  // MAU date range for stickiness calculation
+  const mauStartDate = new Date(dateTo);
+  mauStartDate.setDate(mauStartDate.getDate() - 30);
   
-  const dauResult = await db
-    .select({ 
-      count: sql`COUNT(DISTINCT ${activityEvents.userId})` 
-    })
-    .from(activityEvents)
-    .where(eventWhereClause);
+  const mauEventConditions = [
+    eq(activityEvents.environment, environment),
+    gte(activityEvents.createdAt, mauStartDate),
+    lte(activityEvents.createdAt, dateTo)
+  ];
   
-  console.log(`[Analytics Debug] DAU query result:`, dauResult);
-  
-  // Also run a test query to verify data exists
-  const testResult = await db
-    .select({ 
-      count: sql`COUNT(*)` 
-    })
-    .from(activityEvents)
-    .where(eq(activityEvents.environment, environment));
-  
-  console.log(`[Analytics Debug] Total events in ${environment}:`, testResult[0]?.count);
-  
-  const dau = Number(dauResult[0]?.count || 0);
+  if (filteredUserIds && filteredUserIds.length > 0) {
+    mauEventConditions.push(inArray(activityEvents.userId, filteredUserIds));
+  }
 
-  // Calculate new users in period
-  const newUsersResult = await db
-    .select({ count: sql`count(*)` })
-    .from(users)
-    .where(and(
-      userWhereClause || sql`1=1`,
-      gte(users.createdAt, dateFrom),
-      lte(users.createdAt, dateTo)
-    ));
-  
-  const newUsers = Number(newUsersResult[0]?.count || 0);
-
-  // Calculate activation rate (users with >= 1 generation in 7 days of signup)
-  const activationResult = await db
-    .select({ count: sql`count(*)` })
-    .from(users)
-    .leftJoin(activityEvents, and(
-      eq(users.id, activityEvents.userId),
-      sql`${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation', 'video_generation', 'upscale')`,
-      eq(activityEvents.status, 'succeeded'),
-      gte(activityEvents.createdAt, sql`${users.createdAt}`),
-      lte(activityEvents.createdAt, sql`${users.createdAt} + INTERVAL '7 days'`)
-    ))
-    .where(and(
-      userWhereClause || sql`1=1`,
-      gte(users.createdAt, dateFrom),
-      lte(users.createdAt, dateTo),
-      isNotNull(activityEvents.id)
-    ));
-
-  const activatedUsers = Number(activationResult[0]?.count || 0);
-  const activationRate = newUsers > 0 ? (activatedUsers / newUsers) * 100 : 0;
-
-  // Content generation metrics - using feature-based tracking
-  const generationMetrics = await db
-    .select({
+  // Step 2: Run independent queries in parallel
+  const [
+    // Combined activity events metrics (DAU, content metrics, errors) 
+    combinedActivityMetrics,
+    // New users from users table
+    newUsersResult,
+    // Activation rate calculation (complex JOIN, runs separately)
+    activationResult,
+    // MAU calculation
+    mauResult
+  ] = await Promise.all([
+    // Combined query for all activity_events based metrics
+    db.select({
+      // DAU calculation
+      dau: sql<number>`COUNT(DISTINCT ${activityEvents.userId})`,
+      // Content generation metrics
       imageAttempts: sql<number>`COUNT(CASE WHEN ${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation') THEN 1 END)`,
       imageSuccesses: sql<number>`COUNT(CASE WHEN ${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation') AND ${activityEvents.status} = 'succeeded' THEN 1 END)`,
       videoAttempts: sql<number>`COUNT(CASE WHEN ${activityEvents.feature} = 'video_generation' THEN 1 END)`,
@@ -205,6 +172,7 @@ export async function getKPIs(dateFrom: Date, dateTo: Date, filters: {
       upscaleAttempts: sql<number>`COUNT(CASE WHEN ${activityEvents.feature} = 'upscale' THEN 1 END)`,
       upscaleSuccesses: sql<number>`COUNT(CASE WHEN ${activityEvents.feature} = 'upscale' AND ${activityEvents.status} = 'succeeded' THEN 1 END)`,
       totalErrors: sql<number>`COUNT(CASE WHEN ${activityEvents.status} = 'failed' THEN 1 END)`,
+      // Performance metrics
       avgImageLatency: sql<number>`AVG(CASE WHEN ${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation') AND ${activityEvents.status} = 'succeeded' AND ${activityEvents.duration} IS NOT NULL THEN ${activityEvents.duration} END)`,
       avgVideoLatency: sql<number>`AVG(CASE WHEN ${activityEvents.feature} = 'video_generation' AND ${activityEvents.status} = 'succeeded' AND ${activityEvents.duration} IS NOT NULL THEN ${activityEvents.duration} END)`,
       avgUpscaleLatency: sql<number>`AVG(CASE WHEN ${activityEvents.feature} = 'upscale' AND ${activityEvents.status} = 'succeeded' AND ${activityEvents.duration} IS NOT NULL THEN ${activityEvents.duration} END)`,
@@ -212,40 +180,41 @@ export async function getKPIs(dateFrom: Date, dateTo: Date, filters: {
       p95VideoLatency: sql<number>`PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY CASE WHEN ${activityEvents.feature} = 'video_generation' AND ${activityEvents.status} = 'succeeded' AND ${activityEvents.duration} IS NOT NULL THEN ${activityEvents.duration} END)`
     })
     .from(activityEvents)
-    .where(eventWhereClause);
+    .where(eventWhereClause),
+    
+    // New users count
+    db.select({ count: sql`count(*)` })
+      .from(users)
+      .where(and(
+        userWhereClause || sql`1=1`,
+        gte(users.createdAt, dateFrom),
+        lte(users.createdAt, dateTo)
+      )),
+    
+    // Activation rate (complex query, kept separate)
+    db.select({ count: sql`count(*)` })
+      .from(users)
+      .leftJoin(activityEvents, and(
+        eq(users.id, activityEvents.userId),
+        sql`${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation', 'video_generation', 'upscale')`,
+        eq(activityEvents.status, 'succeeded'),
+        gte(activityEvents.createdAt, sql`${users.createdAt}`),
+        lte(activityEvents.createdAt, sql`${users.createdAt} + INTERVAL '7 days'`)
+      ))
+      .where(and(
+        userWhereClause || sql`1=1`,
+        gte(users.createdAt, dateFrom),
+        lte(users.createdAt, dateTo),
+        isNotNull(activityEvents.id)
+      )),
+      
+    // MAU calculation
+    db.select({ count: sql`COUNT(DISTINCT ${activityEvents.userId})` })
+      .from(activityEvents)
+      .where(and(...mauEventConditions))
+  ]);
 
-  const metrics = generationMetrics[0];
-  const imageAttempts = Number(metrics?.imageAttempts || 0);
-  const imageSuccesses = Number(metrics?.imageSuccesses || 0);
-  const videoAttempts = Number(metrics?.videoAttempts || 0);
-  const videoSuccesses = Number(metrics?.videoSuccesses || 0);
-  const upscaleAttempts = Number(metrics?.upscaleAttempts || 0);
-  const upscaleSuccesses = Number(metrics?.upscaleSuccesses || 0);
-  
-  const totalAttempts = imageAttempts + videoAttempts + upscaleAttempts;
-  const totalSuccesses = imageSuccesses + videoSuccesses + upscaleSuccesses;
-  const contentSuccessRate = totalAttempts > 0 ? (totalSuccesses / totalAttempts) * 100 : 0;
-
-  // Get MAU for stickiness calculation (last 30 days from dateTo)
-  const mauStartDate = new Date(dateTo);
-  mauStartDate.setDate(mauStartDate.getDate() - 30);
-  
-  const mauResult = await db
-    .select({ 
-      count: sql`COUNT(DISTINCT ${activityEvents.userId})` 
-    })
-    .from(activityEvents)
-    .where(and(
-      eq(activityEvents.environment, environment),
-      gte(activityEvents.createdAt, mauStartDate),
-      lte(activityEvents.createdAt, dateTo),
-      ...(filteredUserIds ? [inArray(activityEvents.userId, filteredUserIds)] : [])
-    ));
-  
-  const mau = Number(mauResult[0]?.count || 0);
-  const stickiness = mau > 0 ? (dau / mau) * 100 : 0;
-
-  // Top error codes
+  // Step 3: Get top errors in a separate query (needs grouping)
   const topErrorsResult = await db
     .select({
       errorCode: activityEvents.errorCode,
@@ -259,6 +228,29 @@ export async function getKPIs(dateFrom: Date, dateTo: Date, filters: {
     .groupBy(activityEvents.errorCode)
     .orderBy(desc(sql`COUNT(*)`))
     .limit(5);
+
+  // Extract results and calculate derived metrics
+  const metrics = combinedActivityMetrics[0];
+  const dau = Number(metrics?.dau || 0);
+  const newUsers = Number(newUsersResult[0]?.count || 0);
+  const activatedUsers = Number(activationResult[0]?.count || 0);
+  const mau = Number(mauResult[0]?.count || 0);
+  
+  const imageAttempts = Number(metrics?.imageAttempts || 0);
+  const imageSuccesses = Number(metrics?.imageSuccesses || 0);
+  const videoAttempts = Number(metrics?.videoAttempts || 0);
+  const videoSuccesses = Number(metrics?.videoSuccesses || 0);
+  const upscaleAttempts = Number(metrics?.upscaleAttempts || 0);
+  const upscaleSuccesses = Number(metrics?.upscaleSuccesses || 0);
+  
+  const totalAttempts = imageAttempts + videoAttempts + upscaleAttempts;
+  const totalSuccesses = imageSuccesses + videoSuccesses + upscaleSuccesses;
+  const contentSuccessRate = totalAttempts > 0 ? (totalSuccesses / totalAttempts) * 100 : 0;
+  const activationRate = newUsers > 0 ? (activatedUsers / newUsers) * 100 : 0;
+  const stickiness = mau > 0 ? (dau / mau) * 100 : 0;
+  
+  const queryTime = Date.now() - startTime;
+  console.log(`[Analytics Perf] KPIs calculated in ${queryTime}ms (was 8 sequential queries, now 4 parallel + 1 grouped)`);
 
   return {
     dau,
