@@ -84,11 +84,11 @@ export async function getKPIs(dateFrom: Date, dateTo: Date, filters: {
   activatedFilter?: string;
 } = {}) {
   const environment = getCurrentEnv();
-  console.log(`[Analytics Debug] getKPIs called with:`, {
-    dateFrom: dateFrom.toISOString(),
-    dateTo: dateTo.toISOString(),
+  const requestId = `kpi_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+  console.log(`[🔥 KPI START ${requestId}] Date: ${dateFrom.toISOString()} to ${dateTo.toISOString()}`, {
     environment,
-    filters
+    filters,
+    memoryUsage: process.memoryUsage().heapUsed / 1024 / 1024 + 'MB'
   });
   
   // Build user filter conditions
@@ -250,7 +250,12 @@ export async function getKPIs(dateFrom: Date, dateTo: Date, filters: {
   const stickiness = mau > 0 ? (dau / mau) * 100 : 0;
   
   const queryTime = Date.now() - startTime;
-  console.log(`[Analytics Perf] KPIs calculated in ${queryTime}ms (was 8 sequential queries, now 4 parallel + 1 grouped)`);
+  const memoryAfter = process.memoryUsage().heapUsed / 1024 / 1024;
+  console.log(`[✅ KPI DONE ${requestId}] Completed in ${queryTime}ms | Memory: ${memoryAfter.toFixed(1)}MB | Queries: 4 parallel + 1 grouped | DAU: ${dau}, New Users: ${newUsers}`);
+  
+  // Log if this is a duplicate period calculation
+  const periodType = dateFrom.getTime() < (Date.now() - (30 * 24 * 60 * 60 * 1000)) ? 'PREVIOUS' : 'CURRENT';
+  console.log(`[📊 KPI ${requestId}] Period: ${periodType} | Success Rate: ${contentSuccessRate.toFixed(1)}% | Errors: ${Number(metrics?.totalErrors || 0)}`);
 
   return {
     dau,

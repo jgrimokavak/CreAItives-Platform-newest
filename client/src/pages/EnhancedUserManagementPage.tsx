@@ -45,6 +45,7 @@ interface EnhancedUser {
 }
 
 export default function EnhancedUserManagementPage() {
+  console.log(`[👥 USERS PAGE] Component rendered`);
   const { user: currentUser } = useAuth();
   
   // Global filters state

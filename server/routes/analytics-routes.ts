@@ -11,7 +11,9 @@ const router = express.Router();
 
 // Get KPIs endpoint
 router.get('/kpis', isAuthenticated, async (req: any, res) => {
-  console.log(`[Analytics Route] KPIs endpoint called by user: ${req.user?.claims?.sub}`);
+  const routeId = `route_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+  const startTime = Date.now();
+  console.log(`[🚀 ROUTE START ${routeId}] /api/admin/analytics/kpis called by user: ${req.user?.claims?.sub}`);
   try {
     const { dateFrom, dateTo, roleFilter, statusFilter, domainFilter, activatedFilter } = req.query;
     
@@ -33,6 +35,7 @@ router.get('/kpis', isAuthenticated, async (req: any, res) => {
       activatedFilter: activatedFilter as string
     };
     
+    console.log(`[📈 ROUTE ${routeId}] Getting CURRENT period KPIs...`);
     const kpis = await getKPIs(from, to, filters);
     
     // Calculate comparison period for deltas
@@ -43,6 +46,7 @@ router.get('/kpis', isAuthenticated, async (req: any, res) => {
     prevTo.setDate(prevTo.getDate() - 1);
     prevTo.setHours(23, 59, 59, 999);
     
+    console.log(`[📉 ROUTE ${routeId}] Getting PREVIOUS period KPIs (DUPLICATE WORK)...`);
     const prevKpis = await getKPIs(prevFrom, prevTo, filters);
     
     // Calculate deltas
@@ -50,6 +54,9 @@ router.get('/kpis', isAuthenticated, async (req: any, res) => {
       if (previous === 0) return current > 0 ? 100 : 0;
       return Math.round(((current - previous) / previous) * 100);
     };
+    
+    const routeTime = Date.now() - startTime;
+    console.log(`[✅ ROUTE DONE ${routeId}] KPIs endpoint completed in ${routeTime}ms | Sent DAU: ${kpis.dau}, Success Rate: ${kpis.contentSuccessRate}%`);
     
     res.json({
       current: kpis,
