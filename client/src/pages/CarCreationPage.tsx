@@ -841,25 +841,25 @@ const CarCreationPage: React.FC = () => {
           onValueChange={(value) => setCarCreationMode(value as "single" | "batch" | "photo-to-studio")}
           className="mb-6"
         >
-          <TabsList className="grid w-full grid-cols-3 h-16 p-2 bg-gradient-to-r from-muted/40 via-muted/60 to-muted/40 rounded-2xl shadow-lg border border-border/50">
+          <TabsList className="grid w-full grid-cols-3 gap-1 h-11 p-1 bg-muted/30 rounded-lg">
             <TabsTrigger 
               value="single" 
-              className="rounded-xl font-semibold text-base py-3 px-6 mx-1 transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:scale-105 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-background/80"
+              className="rounded-md font-medium text-sm transition-all duration-200 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground hover:text-foreground"
             >
               Custom Build
             </TabsTrigger>
             <TabsTrigger 
               value="photo-to-studio" 
-              className="rounded-xl font-semibold text-base py-3 px-6 mx-1 transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:scale-105 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-background/80 relative"
+              className="rounded-md font-medium text-sm transition-all duration-200 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground hover:text-foreground relative"
             >
               <span>Photo Studio</span>
-              <span className="ml-2 inline-flex items-center justify-center px-2 py-1 text-[9px] font-bold leading-none text-white bg-gradient-to-r from-blue-500 to-purple-500 rounded-full shadow-sm">
+              <span className="ml-1.5 inline-flex items-center justify-center px-1.5 py-0.5 text-[9px] font-semibold leading-none text-white bg-gradient-to-r from-blue-500 to-purple-500 rounded-full">
                 NEW
               </span>
             </TabsTrigger>
             <TabsTrigger 
               value="batch" 
-              className="rounded-xl font-semibold text-base py-3 px-6 mx-1 transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:scale-105 data-[state=active]:border data-[state=active]:border-primary/20 hover:bg-background/80"
+              className="rounded-md font-medium text-sm transition-all duration-200 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground hover:text-foreground"
             >
               Bulk Generate
             </TabsTrigger>
