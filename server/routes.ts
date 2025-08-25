@@ -2121,29 +2121,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user?.claims?.sub || "system";
       console.log(`[Analytics Debug] User ID for photo-to-studio generation: ${userId}`);
 
-      // Download the generated image from Replicate and convert to base64
-      const imageResponse = await fetch(generatedImage.url);
-      const imageBuffer = await imageResponse.arrayBuffer();
-      const base64Data = Buffer.from(imageBuffer).toString('base64');
-
-      // Prepare metadata for persistImage
-      const meta = {
-        prompt,
-        params: { 
-          model: "flux-kontext-max",
-          mode,
-          brand: brand || undefined,
-          aspect_ratio: "1:1", // Default aspect ratio for photo-to-studio
-          output_format: "png",
-          safety_tolerance: 2,
-          prompt_upsampling: false
-        },
-        userId,
-        sources: ["photo-to-studio"]
+      // The ReplicateProvider.edit() already downloaded, saved, and persisted the image
+      // Extract image ID from the URL path for response consistency
+      const imageId = generatedImage.url.split('/').pop()?.split('.')[0] || `edit_${Date.now()}`;
+      
+      const image = {
+        id: imageId,
+        fullUrl: generatedImage.fullUrl,
+        thumbUrl: generatedImage.thumbUrl,
+        url: generatedImage.fullUrl // Client expects this field
       };
-
-      // Use the standard persistImage flow to save to Object Storage and database
-      const image = await persistImage(base64Data, meta);
 
       // Track successful photo-to-studio generation
       const { logActivity } = await import('./analytics');
