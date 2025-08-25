@@ -841,10 +841,28 @@ const CarCreationPage: React.FC = () => {
           onValueChange={(value) => setCarCreationMode(value as "single" | "batch" | "photo-to-studio")}
           className="mb-6"
         >
-          <TabsList className="grid w-full md:w-auto grid-cols-3">
-            <TabsTrigger value="single">Single</TabsTrigger>
-            <TabsTrigger value="batch">Batch</TabsTrigger>
-            <TabsTrigger value="photo-to-studio">Photo-to-Studio</TabsTrigger>
+          <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-3 h-12 p-1 bg-muted/50 rounded-xl">
+            <TabsTrigger 
+              value="single" 
+              className="rounded-lg font-medium transition-all data-[state=active]:bg-background data-[state=active]:shadow-sm"
+            >
+              Custom Build
+            </TabsTrigger>
+            <TabsTrigger 
+              value="photo-to-studio" 
+              className="rounded-lg font-medium transition-all data-[state=active]:bg-background data-[state=active]:shadow-sm relative"
+            >
+              <span>Photo Studio</span>
+              <span className="ml-1.5 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white bg-gradient-to-r from-blue-500 to-purple-500 rounded-full">
+                NEW
+              </span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="batch" 
+              className="rounded-lg font-medium transition-all data-[state=active]:bg-background data-[state=active]:shadow-sm"
+            >
+              Bulk Generate
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="single">
