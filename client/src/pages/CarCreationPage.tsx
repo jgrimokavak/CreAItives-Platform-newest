@@ -1941,7 +1941,7 @@ const CarCreationPage: React.FC = () => {
                       <Label htmlFor="additional-instructions">Additional Instructions (Optional)</Label>
                       <Textarea
                         id="additional-instructions"
-                        placeholder="Any specific requirements or adjustments..."
+                        placeholder="e.g. Remove the license plate, Clean mud from tires, Hide dashboard clutter"
                         rows={3}
                         {...photoToStudioForm.register('additionalInstructions')}
                       />
@@ -1998,7 +1998,7 @@ const CarCreationPage: React.FC = () => {
               {/* Preview Section */}
               <div className="space-y-6">
                 {photoToStudioImage ? (
-                  <div className="flex flex-col h-full bg-card border rounded-lg shadow-sm overflow-hidden">
+                  <div className="flex flex-col bg-card border rounded-lg shadow-sm overflow-hidden">
                     {/* Header */}
                     <div className="p-4 border-b bg-muted/30">
                       <div className="flex items-center gap-2">
