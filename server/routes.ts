@@ -2125,10 +2125,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // we need to get the saved image from the database. The provider returns URLs
       // but we need the complete GeneratedImage record from the database.
       // Let's find the most recent image for this user
-      const savedImages = await storage.getAllImages();
-      const userImages = savedImages
-        .filter(img => img.createdBy === userId)
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      const savedImagesResult = await storage.getAllImages();
+      const userImages = savedImagesResult.items
+        .filter((img: any) => img.createdBy === userId)
+        .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       
       const image = userImages.length > 0 ? userImages[0] : null;
       

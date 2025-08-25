@@ -610,11 +610,8 @@ const CarCreationPage: React.FC = () => {
     setBatchJobId(null);
   };
 
-  // File upload handler for Photo-to-Studio
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
+  // File validation helper
+  const validateFile = (file: File) => {
     // Validate file type
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
       toast({
@@ -622,7 +619,7 @@ const CarCreationPage: React.FC = () => {
         description: "Please upload a JPG, PNG, or WebP image",
         variant: "destructive"
       });
-      return;
+      return false;
     }
 
     // Validate file size (25MB)
@@ -632,8 +629,15 @@ const CarCreationPage: React.FC = () => {
         description: "Please upload an image smaller than 25MB",
         variant: "destructive"
       });
-      return;
+      return false;
     }
+
+    return true;
+  };
+
+  // Process selected file
+  const processFile = (file: File) => {
+    if (!validateFile(file)) return;
 
     setSelectedFile(file);
     
@@ -643,6 +647,47 @@ const CarCreationPage: React.FC = () => {
       setPreviewUrl(e.target?.result as string);
     };
     reader.readAsDataURL(file);
+  };
+
+  // File upload handler for Photo-to-Studio
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    processFile(file);
+  };
+
+  // Drag and drop handlers
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      processFile(files[0]);
+    }
+  };
+
+  // Clear uploaded file
+  const clearSelectedFile = () => {
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    // Reset the file input
+    const fileInput = document.getElementById('car-photo') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
   };
 
   // Photo-to-Studio generation mutation
@@ -1746,26 +1791,65 @@ const CarCreationPage: React.FC = () => {
                   {/* File upload section */}
                   <div className="bg-background/60 p-4 rounded-lg border border-border/40 shadow-sm">
                     <div className="space-y-3">
-                      <Label htmlFor="car-photo">Car Photo</Label>
-                      <div className="grid w-full max-w-sm items-center gap-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="car-photo">Car Photo</Label>
+                        {selectedFile && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={clearSelectedFile}
+                            className="h-7 text-xs"
+                          >
+                            Clear
+                          </Button>
+                        )}
+                      </div>
+                      
+                      {/* Drag & Drop Area */}
+                      <div
+                        className={`relative border-2 border-dashed rounded-lg p-6 transition-colors ${
+                          isDragOver 
+                            ? 'border-primary bg-primary/5' 
+                            : 'border-border hover:border-primary/50'
+                        }`}
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onDrop={handleDrop}
+                      >
+                        <div className="text-center">
+                          <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
+                          <div className="space-y-1">
+                            <p className="text-sm font-medium">
+                              Drag & drop your car photo here
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              or click to browse
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              JPG, PNG, or WebP • Max 25MB
+                            </p>
+                          </div>
+                        </div>
                         <Input
                           id="car-photo"
                           type="file"
                           accept="image/jpeg,image/png,image/webp"
                           onChange={handleFileUpload}
-                          className="cursor-pointer"
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                         />
-                        <p className="text-xs text-muted-foreground">
-                          JPG, PNG, or WebP • Max 25MB
-                        </p>
                       </div>
+                      
                       {previewUrl && (
-                        <div className="mt-3">
+                        <div className="mt-3 relative">
                           <img 
                             src={previewUrl} 
                             alt="Preview" 
                             className="max-w-full h-32 object-cover rounded-md border"
                           />
+                          <div className="mt-2 text-xs text-muted-foreground">
+                            File: {selectedFile?.name} ({((selectedFile?.size || 0) / 1024 / 1024).toFixed(1)} MB)
+                          </div>
                         </div>
                       )}
                     </div>
@@ -1780,7 +1864,14 @@ const CarCreationPage: React.FC = () => {
                         onValueChange={(value) => photoToStudioForm.setValue('mode', value as 'background-only' | 'studio-enhance')}
                         className="space-y-3"
                       >
-                        <div className="flex items-start space-x-3 p-3 rounded-md border border-border/60 hover:bg-accent/30 transition-colors">
+                        <div 
+                          className={`flex items-start space-x-3 p-3 rounded-md border transition-colors cursor-pointer ${
+                            watchMode === 'background-only' 
+                              ? 'border-primary bg-primary/5' 
+                              : 'border-border/60 hover:bg-accent/30'
+                          }`}
+                          onClick={() => photoToStudioForm.setValue('mode', 'background-only')}
+                        >
                           <RadioGroupItem value="background-only" id="background-only" className="mt-1" />
                           <div className="space-y-1 flex-1">
                             <Label htmlFor="background-only" className="font-medium text-sm cursor-pointer">
@@ -1791,7 +1882,14 @@ const CarCreationPage: React.FC = () => {
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-start space-x-3 p-3 rounded-md border border-border/60 hover:bg-accent/30 transition-colors">
+                        <div 
+                          className={`flex items-start space-x-3 p-3 rounded-md border transition-colors cursor-pointer ${
+                            watchMode === 'studio-enhance' 
+                              ? 'border-primary bg-primary/5' 
+                              : 'border-border/60 hover:bg-accent/30'
+                          }`}
+                          onClick={() => photoToStudioForm.setValue('mode', 'studio-enhance')}
+                        >
                           <RadioGroupItem value="studio-enhance" id="studio-enhance" className="mt-1" />
                           <div className="space-y-1 flex-1">
                             <Label htmlFor="studio-enhance" className="font-medium text-sm cursor-pointer">
