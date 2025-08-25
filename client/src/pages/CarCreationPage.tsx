@@ -1848,7 +1848,15 @@ const CarCreationPage: React.FC = () => {
                             className="max-w-full h-32 object-cover rounded-md border"
                           />
                           <div className="mt-2 text-xs text-muted-foreground">
-                            File: {selectedFile?.name} ({((selectedFile?.size || 0) / 1024 / 1024).toFixed(1)} MB)
+                            <div className="flex items-center gap-2">
+                              <span className="shrink-0">File:</span>
+                              <span className="truncate" title={selectedFile?.name}>
+                                {selectedFile?.name}
+                              </span>
+                              <span className="shrink-0">
+                                ({((selectedFile?.size || 0) / 1024 / 1024).toFixed(1)} MB)
+                              </span>
+                            </div>
                           </div>
                         </div>
                       )}
@@ -2001,10 +2009,29 @@ const CarCreationPage: React.FC = () => {
                     
                     {/* Image display */}
                     <div className="flex-1 p-4">
-                      <img 
-                        src={photoToStudioImage.fullUrl || photoToStudioImage.url} 
-                        alt="Generated studio image"
-                        className="w-full h-auto rounded-lg border border-border/50 shadow-sm"
+                      <CarImageCard
+                        image={photoToStudioImage}
+                        make={photoToStudioForm.watch('brand') || undefined}
+                        onEdit={(img) => {
+                          // Use the same edit handler approach as the gallery page
+                          const sourceUrl = img.fullUrl || img.url;
+                          
+                          // Set editor context for edit mode
+                          setMode('edit');
+                          setSourceImages([sourceUrl]);
+                          
+                          // Navigate to the create page with edit mode
+                          setLocation('/create?mode=edit');
+                        }}
+                        onUpscale={(img) => {
+                          // Navigate to upscale page with the image URL
+                          const imageUrl = img.fullUrl || img.url;
+                          setLocation(`/upscale?sourceUrl=${encodeURIComponent(imageUrl)}`);
+                        }}
+                        onDownload={handleDownload}
+                        onClick={() => {
+                          setSelectedImage(photoToStudioImage.fullUrl || photoToStudioImage.url);
+                        }}
                       />
                     </div>
                     
@@ -2018,45 +2045,6 @@ const CarCreationPage: React.FC = () => {
                             Your studio image has been automatically saved to your gallery
                           </p>
                         </div>
-                      </div>
-                      
-                      <div className="flex justify-between gap-2 pt-1">
-                        {/* Actions */}
-                        <div className="flex gap-1.5">
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="h-8 text-xs flex gap-1.5 bg-card"
-                            onClick={() => handleDownload(photoToStudioImage)}
-                          >
-                            <Download className="h-3.5 w-3.5" />
-                            Download
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="h-8 text-xs flex gap-1.5 bg-card"
-                            onClick={() => {
-                              const sourceUrl = photoToStudioImage.fullUrl || photoToStudioImage.url;
-                              setMode('edit');
-                              setSourceImages([sourceUrl]);
-                              setLocation('/create?mode=edit');
-                            }}
-                          >
-                            <Pencil className="h-3.5 w-3.5" />
-                            Edit
-                          </Button>
-                        </div>
-                        
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          className="h-8 text-xs flex gap-1.5 bg-card"
-                          onClick={() => setSelectedImage(photoToStudioImage.fullUrl || photoToStudioImage.url)}
-                        >
-                          <Maximize2 className="h-3.5 w-3.5" />
-                          Fullscreen
-                        </Button>
                       </div>
                       
                       {/* Disclaimer Downloads */}
