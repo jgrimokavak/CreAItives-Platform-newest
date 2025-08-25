@@ -1,0 +1,68 @@
+# Context
+You are working on the CreAItives Platform, a Retool + Node/React based internal tool for generating marketing assets. 
+- The platform has a `/car` page that currently allows two modes of car image generation:
+  1) **Single generation** – user selects make, model, trim, color, and angle, then generates an image using Replicate AI.
+  2) **Batch generation** – user uploads a CSV with multiple cars and gets back a ZIP of generated images.
+- Both modes show live progress, integrate with the Gallery, and support downloading images with or without an "AI Disclaimer" watermark. 
+- The platform also has a `/create` page for editing images, which already integrates with Replicate’s **Flux-Kontext-Max** model for image editing. That provider is configured with defaults (aspect_ratio match_input_image, output_format png, safety_tolerance 2, prompt_upsampling false). You should reuse this provider and its defaults for the new feature.
+
+# Objective
+We want to add a **third tab** to the `/car` page called **“Photo-to-Studio”**. 
+This feature lets a user upload a real photo of a car (e.g. taken at a mechanic shop) and generate a studio-ready image. The car itself must remain exactly as captured (scratches, dents, missing parts, stickers, etc.), while the background becomes a clean studio. The tab should behave consistently with the existing Single and Batch modes (progress UI, gallery integration, download options).
+
+# Feature requirements
+1. **New Tab**
+   - Add a third tab to the `/car` page alongside Single and Batch: **Photo-to-Studio**.
+   - Show a short section description at the top explaining what it does.
+
+2. **Form fields**
+   - **Image upload**: JPG/PNG/WebP, ≤25 MB, single file only.
+   - **Mode selector**: two options with descriptions:
+     - **Background Only** – “Swap the background for a clean studio backdrop. The car remains exactly as in the photo.”
+     - **Studio Enhance** – “Studio backdrop plus subtle light/angle tuning while preserving every original vehicle detail.”
+   - **Brand**: required only when “Studio Enhance” is selected (for correct logo rendering).
+   - **Additional instructions (optional)**: free text; if provided, append it verbatim at the end of the template prompt. Do not prefix with “Additional instructions:” or change the template wording.
+
+3. **Prompt templates (use exact text, unmodified)**
+   - **Background Only**
+     ```
+     Replace only the background with a clean, seamless light-gray curved studio wall and matte dark reflective floor. Do not alter the car in any way.
+     ```
+   - **Studio Enhance**
+     ```
+     This is a {{make}} vehicle. Replace only the background with a clean, professional car studio: seamless curved light-gray wall with a soft lateral gradient, and a dark matte reflective floor. Use cool-toned white lighting from above only. The car must be evenly and brightly illuminated from the top, without any frontal or side lighting. Make the body panels and glass appear clean and naturally shiny and glossy under the studio lights. Do not alter any part of the vehicle. Preserve every original visual detail with zero modification: paint tone and color, grille, headlights, stickers, trim, the antenna, and damage, dents and scratches. Only rotate the vehicle to a 45° front-three-quarter angle if the current yaw deviates more than 20°.
+     ```
+
+   - For Studio Enhance, substitute the user’s Brand into `{{make}}`.  
+   - If Additional instructions exist, append them **directly** at the end of the chosen template.
+
+4. **Backend**
+   - Create a new API route `/api/car/photo-to-studio` that:
+     - Accepts multipart/form-data (image + fields).
+     - Validates input (mode required; brand required if Studio Enhance).
+     - Selects the correct template, substitutes Brand if needed, appends any additional instructions.
+     - Calls the existing Replicate provider with Flux-Kontext-Max and the defaults mentioned above.
+     - Runs as an async job and exposes status updates the same way as the current car generator (polling or WebSocket).
+     - Returns the generated image URL, stored in the same place as other car generator outputs so Gallery + download helpers work.
+
+5. **Results**
+   - Show progress UI consistent with Single generation.
+   - On success, display the result with actions:
+     - **Save to Gallery**
+     - **Download**
+     - **Download with AI Disclaimer**
+   - Reuse the exact helper/components already used in the car generator for the AI Disclaimer download flow.
+
+# Constraints
+- Do not modify or break existing Single or Batch modes.
+- Keep this feature isolated and easily removable (new component, new route).
+- Preserve the exact wording of the template prompts above (other than substituting {{make}} and appending optional instructions).
+- The base template rules (don’t alter the car, preserve details) always take precedence, even if user instructions conflict.
+
+# Acceptance Criteria
+- A new “Photo-to-Studio” tab appears alongside Single and Batch in the /car page.
+- Upload → mode select → (brand if needed) → additional instructions → Generate Studio Image flow works end-to-end.
+- Both Background Only and Studio Enhance modes generate correct results using Flux-Kontext-Max.
+- Additional instructions are appended verbatim at the end of the template.
+- Result image supports Save to Gallery, Download, and Download with AI Disclaimer (same as Single/Batch).
+- No regressions to existing functionality.

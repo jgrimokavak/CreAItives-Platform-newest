@@ -2024,6 +2024,168 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Photo-to-Studio generation endpoint
+  app.post("/api/car/photo-to-studio", isAuthenticated, upload.single("image"), async (req: any, res) => {
+    const startTime = Date.now();
+    try {
+      const { mode, brand, additionalInstructions } = req.body;
+      
+      // Validate required fields
+      if (!mode) {
+        return res.status(400).json({ error: "Mode is required" });
+      }
+      
+      if (mode === 'studio-enhance' && (!brand || brand.trim().length === 0)) {
+        return res.status(400).json({ error: "Brand is required when Studio Enhance mode is selected" });
+      }
+      
+      if (!req.file?.buffer) {
+        return res.status(400).json({ error: "Image file is required" });
+      }
+      
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      if (!allowedTypes.includes(req.file.mimetype)) {
+        return res.status(400).json({ error: "Invalid file type. Please upload a JPG, PNG, or WebP image" });
+      }
+      
+      // Validate file size (25MB)
+      if (req.file.size > 25 * 1024 * 1024) {
+        return res.status(400).json({ error: "File too large. Please upload an image smaller than 25MB" });
+      }
+      
+      // Define prompt templates (use exact text as specified)
+      const PROMPT_TEMPLATES = {
+        'background-only': `Replace only the background with a clean, seamless light-gray curved studio wall and matte dark reflective floor. Do not alter the car in any way.`,
+        'studio-enhance': `This is a {{make}} vehicle. Replace only the background with a clean, professional car studio: seamless curved light-gray wall with a soft lateral gradient, and a dark matte reflective floor. Use cool-toned white lighting from above only. The car must be evenly and brightly illuminated from the top, without any frontal or side lighting. Make the body panels and glass appear clean and naturally shiny and glossy under the studio lights. Do not alter any part of the vehicle. Preserve all original details, damage, stickers, modifications, and imperfections exactly as they appear. Keep the exact wheel design and condition. Maintain the original car's proportions, stance, and angle. The lighting should only enhance the existing vehicle's appearance without changing its actual state or adding any elements not originally present.`
+      };
+      
+      // Get the appropriate template
+      let prompt = PROMPT_TEMPLATES[mode as keyof typeof PROMPT_TEMPLATES];
+      
+      // Substitute brand if Studio Enhance mode
+      if (mode === 'studio-enhance' && brand) {
+        prompt = prompt.replace('{{make}}', brand.trim());
+      }
+      
+      // Append additional instructions if provided
+      if (additionalInstructions && additionalInstructions.trim()) {
+        prompt += ' ' + additionalInstructions.trim();
+      }
+      
+      console.log(`Photo-to-Studio generation request with mode: ${mode}, prompt: ${prompt}`);
+      
+      // Check if REPLICATE_API_TOKEN is set
+      if (!process.env.REPLICATE_API_TOKEN) {
+        return res.status(500).json({ error: "REPLICATE_API_TOKEN environment variable is not set" });
+      }
+      
+      // Get the flux-kontext-max model from the configured models
+      const fluxModel = models.find(m => m.key === 'flux-kontext-max');
+      if (!fluxModel) {
+        return res.status(500).json({ error: "Flux-Kontext-Max model not properly initialized" });
+      }
+      
+      console.log(`Using Replicate model: flux-kontext-max`);
+      
+      // Convert the uploaded image to base64
+      const imageBase64 = req.file.buffer.toString('base64');
+      const imageMimeType = req.file.mimetype;
+      const imageDataUri = `data:${imageMimeType};base64,${imageBase64}`;
+      
+      // Get the Replicate provider
+      const { ReplicateProvider } = await import('./providers/replicate-provider');
+      const replicateProvider = new ReplicateProvider();
+      
+      // Use the provider's edit method with flux-kontext-max defaults
+      const result = await replicateProvider.edit({
+        prompt,
+        modelKey: 'flux-kontext-max',
+        images: [imageDataUri],
+        mask: undefined, // No mask needed for background replacement
+        // Use the defaults from the model configuration
+        aspect_ratio: 'match_input_image',
+        output_format: 'png',
+        safety_tolerance: 2,
+        prompt_upsampling: false
+      });
+      
+      if (!result.images || result.images.length === 0) {
+        return res.status(500).json({ error: "No images were generated" });
+      }
+      
+      // Get the first (and typically only) generated image
+      const generatedImage = result.images[0];
+      
+      // Get user ID for analytics tracking
+      const userId = req.user?.claims?.sub;
+      console.log(`[Analytics Debug] User ID for photo-to-studio generation: ${userId}`);
+
+      // Since the replicate provider already saves the image during the edit process,
+      // we need to get the saved image from the database. The provider returns URLs
+      // but we need the complete GeneratedImage record from the database.
+      // Let's find the most recent image for this user
+      const savedImages = await storage.getAllImages();
+      const userImages = savedImages
+        .filter(img => img.createdBy === userId)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
+      const image = userImages.length > 0 ? userImages[0] : null;
+      
+      if (!image) {
+        // Fallback: create a minimal image record if not found
+        // This shouldn't happen in normal operation but provides safety
+        throw new Error('Generated image was not properly saved');
+      }
+
+      // Track successful photo-to-studio generation
+      const { logActivity } = await import('./analytics');
+      await logActivity({
+        userId: userId,
+        sessionId: req.sessionID,
+        event: 'photo_to_studio_generate',
+        feature: 'photo_to_studio',
+        model: 'flux-kontext-max',
+        status: 'succeeded',
+        duration: Date.now() - startTime,
+        metadata: {
+          mode: mode,
+          brand: brand || null,
+          hasAdditionalInstructions: !!additionalInstructions
+        }
+      });
+      
+      res.json({ image });
+    } catch (error: any) {
+      console.error("Error generating photo-to-studio image:", error);
+      
+      // Track failed photo-to-studio generation
+      try {
+        const userId = req.user?.claims?.sub;
+        const { logActivity } = await import('./analytics');
+        await logActivity({
+          userId: userId,
+          sessionId: req.sessionID,
+          event: 'photo_to_studio_generate',
+          feature: 'photo_to_studio',
+          model: 'flux-kontext-max',
+          status: 'failed',
+          duration: Date.now() - startTime,
+          errorCode: error.response?.status?.toString() || 'unknown_error',
+          metadata: {
+            error: error.message,
+            mode: req.body.mode,
+            brand: req.body.brand
+          }
+        });
+      } catch (analyticsError) {
+        console.error('Failed to log photo-to-studio generation failure:', analyticsError);
+      }
+      
+      res.status(500).json({ error: error.message || "Failed to generate studio image" });
+    }
+  });
+
   // Page settings routes (admin only)
   app.get('/api/admin/page-settings', isAuthenticated, isAdmin, async (req: any, res) => {
     try {

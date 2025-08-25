@@ -12,9 +12,11 @@ import CSVUpload from '@/components/CSVUpload';
 import BatchProgress from '@/components/BatchProgress';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { CarFront, RefreshCw, CheckCircle, AlertCircle, Download, Pencil, Maximize2, ImageIcon, ExternalLink } from 'lucide-react';
+import { CarFront, RefreshCw, CheckCircle, AlertCircle, Download, Pencil, Maximize2, ImageIcon, ExternalLink, Upload } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 // Import the local GeneratedImage type used by ImageCard
 import type { GeneratedImage } from '@/types/image';
 import { Card, CardContent } from '@/components/ui/card';
@@ -59,6 +61,24 @@ const carGenerationSchema = z.object({
 
 type CarGenerationFormValues = z.infer<typeof carGenerationSchema>;
 
+// Photo-to-Studio form schema
+const photoToStudioSchema = z.object({
+  mode: z.enum(['background-only', 'studio-enhance']),
+  brand: z.string().optional(),
+  additionalInstructions: z.string().optional(),
+}).refine((data) => {
+  // Brand is required when mode is 'studio-enhance'
+  if (data.mode === 'studio-enhance') {
+    return data.brand && data.brand.trim().length > 0;
+  }
+  return true;
+}, {
+  message: "Brand is required when Studio Enhance mode is selected",
+  path: ["brand"],
+});
+
+type PhotoToStudioFormValues = z.infer<typeof photoToStudioSchema>;
+
 // SVG mapping for car angle previews
 const carAngleSvgMap: Record<string, string> = {
   'default': defaultSvg,
@@ -99,8 +119,8 @@ const CarCreationPage: React.FC = () => {
   const [image, setImage] = useState<GeneratedImage | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   
-  // Batch mode state
-  const [carCreationMode, setCarCreationMode] = useState<"single" | "batch">("single");
+  // Creation mode state - updated to include photo-to-studio
+  const [carCreationMode, setCarCreationMode] = useState<"single" | "batch" | "photo-to-studio">("single");
   const [batchJobId, setBatchJobId] = useState<string | null>(null);
   const [isUploadingBatch, setIsUploadingBatch] = useState<boolean>(false);
   
@@ -110,6 +130,12 @@ const CarCreationPage: React.FC = () => {
   // Custom color state
   const [showCustomColor, setShowCustomColor] = useState<boolean>(false);
   const [customColor, setCustomColor] = useState<string>("");
+  
+  // Photo-to-Studio state
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [photoToStudioProgress, setPhotoToStudioProgress] = useState<number | null>(null);
+  const [photoToStudioImage, setPhotoToStudioImage] = useState<GeneratedImage | null>(null);
   
   // Generate years from 1990 to current year
   const currentYear = new Date().getFullYear();
@@ -132,12 +158,24 @@ const CarCreationPage: React.FC = () => {
     }
   });
 
+  const photoToStudioForm = useForm<PhotoToStudioFormValues>({
+    resolver: zodResolver(photoToStudioSchema),
+    defaultValues: {
+      mode: 'background-only',
+      brand: '',
+      additionalInstructions: ''
+    }
+  });
+
   const { watch, setValue } = form;
   const watchMake = watch('make');
   const watchModel = watch('model');
   const watchBodyStyle = watch('body_style');
   const watchWheelColor = watch('wheel_color');
   const watchAdventureCladding = watch('has_adventure_cladding');
+  
+  const { watch: watchPhotoToStudio } = photoToStudioForm;
+  const watchMode = watchPhotoToStudio('mode');
   
   // Listen for WebSocket gallery updates to refresh the image if it was just generated
   useEffect(() => {
@@ -572,10 +610,147 @@ const CarCreationPage: React.FC = () => {
     setBatchJobId(null);
   };
 
+  // File upload handler for Photo-to-Studio
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload a JPG, PNG, or WebP image",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validate file size (25MB)
+    if (file.size > 25 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please upload an image smaller than 25MB",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setSelectedFile(file);
+    
+    // Create preview URL
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setPreviewUrl(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Photo-to-Studio generation mutation
+  const photoToStudioMutation = useMutation({
+    mutationFn: async (values: PhotoToStudioFormValues) => {
+      if (!selectedFile) {
+        throw new Error('No image file selected');
+      }
+
+      setPhotoToStudioProgress(10);
+      
+      // Create form data
+      const formData = new FormData();
+      formData.append('image', selectedFile);
+      formData.append('mode', values.mode);
+      if (values.brand) {
+        formData.append('brand', values.brand);
+      }
+      if (values.additionalInstructions) {
+        formData.append('additionalInstructions', values.additionalInstructions);
+      }
+      
+      setPhotoToStudioProgress(20);
+      
+      // Simulate progress while waiting for the API
+      const interval = setInterval(() => {
+        setPhotoToStudioProgress(prev => {
+          if (prev === null) return 20;
+          return Math.min(prev + 5, 90);
+        });
+      }, 2000);
+      
+      try {
+        const response = await fetch('/api/car/photo-to-studio', {
+          method: 'POST',
+          body: formData
+        });
+        
+        clearInterval(interval);
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to generate studio image');
+        }
+        
+        setPhotoToStudioProgress(95);
+        const data = await response.json();
+        setPhotoToStudioProgress(100);
+        
+        // Clear progress after a delay
+        setTimeout(() => setPhotoToStudioProgress(null), 1000);
+        
+        // Transform the API response into the correct GeneratedImage type
+        const apiImage = data.image;
+        const transformedImage: GeneratedImage = {
+          id: apiImage.id,
+          url: apiImage.url,
+          prompt: apiImage.prompt,
+          size: apiImage.size,
+          model: apiImage.model,
+          createdAt: apiImage.createdAt,
+          sourceThumb: apiImage.sourceThumb || undefined,
+          sourceImage: apiImage.sourceImage || undefined,
+          width: apiImage.width,
+          height: apiImage.height,
+          thumbUrl: apiImage.thumbUrl,
+          fullUrl: apiImage.fullUrl,
+          starred: apiImage.starred,
+          deletedAt: apiImage.deletedAt
+        };
+        
+        return transformedImage;
+      } catch (error) {
+        clearInterval(interval);
+        throw error;
+      }
+    },
+    onSuccess: (data) => {
+      setPhotoToStudioImage(data);
+      // Invalidate gallery cache to make sure the new image shows up
+      queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
+      
+      toast({
+        title: "Studio image generated",
+        description: "Your studio-ready image has been generated successfully"
+      });
+    },
+    onError: (error: Error) => {
+      console.error('Error generating studio image:', error);
+      setPhotoToStudioProgress(null);
+      toast({
+        title: "Generation failed",
+        description: error.message || "Failed to generate studio image. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
   // Form submission handler
   const handleGenerate = () => {
     const values = form.getValues();
     generateMutation.mutate(values);
+  };
+
+  // Photo-to-Studio form submission handler
+  const handlePhotoToStudioGenerate = () => {
+    const values = photoToStudioForm.getValues();
+    photoToStudioMutation.mutate(values);
   };
 
   return (
@@ -618,12 +793,13 @@ const CarCreationPage: React.FC = () => {
         
         <Tabs 
           value={carCreationMode} 
-          onValueChange={(value) => setCarCreationMode(value as "single" | "batch")}
+          onValueChange={(value) => setCarCreationMode(value as "single" | "batch" | "photo-to-studio")}
           className="mb-6"
         >
-          <TabsList className="grid w-full md:w-80 grid-cols-2">
+          <TabsList className="grid w-full md:w-auto grid-cols-3">
             <TabsTrigger value="single">Single</TabsTrigger>
             <TabsTrigger value="batch">Batch</TabsTrigger>
+            <TabsTrigger value="photo-to-studio">Photo-to-Studio</TabsTrigger>
           </TabsList>
           
           <TabsContent value="single">
@@ -1540,6 +1716,302 @@ const CarCreationPage: React.FC = () => {
                   </div>
                 </div>
               )}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="photo-to-studio">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+              {/* Form Section */}
+              <div className="space-y-6 bg-card p-6 rounded-lg shadow-sm border">
+                {/* Header with icon */}
+                <div className="flex items-center space-x-3 border-b pb-4 mb-4">
+                  <div className="bg-primary/10 p-2 rounded-full">
+                    <Upload className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium">Photo-to-Studio</h3>
+                    <p className="text-sm text-muted-foreground">Transform real car photos into studio-ready images</p>
+                  </div>
+                </div>
+                
+                {/* Section description */}
+                <div className="bg-blue-50 border border-blue-100 rounded-md p-4 mb-6">
+                  <p className="text-sm text-blue-700 leading-relaxed">
+                    Upload a photo of any car and transform it into a professional studio image. The car remains exactly as captured while the background becomes a clean studio setting.
+                  </p>
+                </div>
+                
+                {/* Form fields */}
+                <div className="space-y-5">
+                  {/* File upload section */}
+                  <div className="bg-background/60 p-4 rounded-lg border border-border/40 shadow-sm">
+                    <div className="space-y-3">
+                      <Label htmlFor="car-photo">Car Photo</Label>
+                      <div className="grid w-full max-w-sm items-center gap-2">
+                        <Input
+                          id="car-photo"
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          onChange={handleFileUpload}
+                          className="cursor-pointer"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          JPG, PNG, or WebP • Max 25MB
+                        </p>
+                      </div>
+                      {previewUrl && (
+                        <div className="mt-3">
+                          <img 
+                            src={previewUrl} 
+                            alt="Preview" 
+                            className="max-w-full h-32 object-cover rounded-md border"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Mode selector section */}
+                  <div className="bg-background/60 p-4 rounded-lg border border-border/40 shadow-sm">
+                    <div className="space-y-3">
+                      <Label>Enhancement Mode</Label>
+                      <RadioGroup 
+                        value={watchMode} 
+                        onValueChange={(value) => photoToStudioForm.setValue('mode', value as 'background-only' | 'studio-enhance')}
+                        className="space-y-3"
+                      >
+                        <div className="flex items-start space-x-3 p-3 rounded-md border border-border/60 hover:bg-accent/30 transition-colors">
+                          <RadioGroupItem value="background-only" id="background-only" className="mt-1" />
+                          <div className="space-y-1 flex-1">
+                            <Label htmlFor="background-only" className="font-medium text-sm cursor-pointer">
+                              Background Only
+                            </Label>
+                            <p className="text-xs text-muted-foreground">
+                              Swap the background for a clean studio backdrop. The car remains exactly as in the photo.
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-start space-x-3 p-3 rounded-md border border-border/60 hover:bg-accent/30 transition-colors">
+                          <RadioGroupItem value="studio-enhance" id="studio-enhance" className="mt-1" />
+                          <div className="space-y-1 flex-1">
+                            <Label htmlFor="studio-enhance" className="font-medium text-sm cursor-pointer">
+                              Studio Enhance
+                            </Label>
+                            <p className="text-xs text-muted-foreground">
+                              Studio backdrop plus subtle light/angle tuning while preserving every original vehicle detail.
+                            </p>
+                          </div>
+                        </div>
+                      </RadioGroup>
+                    </div>
+                  </div>
+                  
+                  {/* Brand field - shown only when Studio Enhance is selected */}
+                  {watchMode === 'studio-enhance' && (
+                    <div className="bg-background/60 p-4 rounded-lg border border-border/40 shadow-sm">
+                      <div className="space-y-2">
+                        <Label htmlFor="brand">Brand *</Label>
+                        <Input
+                          id="brand"
+                          placeholder="e.g., Toyota, Ford, BMW"
+                          {...photoToStudioForm.register('brand')}
+                          className={photoToStudioForm.formState.errors.brand ? 'border-red-500' : ''}
+                        />
+                        {photoToStudioForm.formState.errors.brand && (
+                          <p className="text-xs text-red-500">
+                            {photoToStudioForm.formState.errors.brand.message}
+                          </p>
+                        )}
+                        <p className="text-xs text-muted-foreground">
+                          Required for correct logo rendering in Studio Enhance mode
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Additional instructions field */}
+                  <div className="bg-background/60 p-4 rounded-lg border border-border/40 shadow-sm">
+                    <div className="space-y-2">
+                      <Label htmlFor="additional-instructions">Additional Instructions (Optional)</Label>
+                      <Textarea
+                        id="additional-instructions"
+                        placeholder="Any specific requirements or adjustments..."
+                        rows={3}
+                        {...photoToStudioForm.register('additionalInstructions')}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Additional instructions will be added to the generation prompt
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Generate button */}
+                <div className="pt-4">
+                  <Button 
+                    onClick={() => {
+                      if (!selectedFile) {
+                        toast({
+                          title: "No image selected",
+                          description: "Please upload a car photo first",
+                          variant: "destructive"
+                        });
+                        return;
+                      }
+                      photoToStudioForm.handleSubmit(handlePhotoToStudioGenerate)();
+                    }}
+                    disabled={photoToStudioMutation.isPending || !selectedFile}
+                    className="w-full h-12 text-base font-medium"
+                  >
+                    {photoToStudioMutation.isPending ? (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                        Generating Studio Image...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="mr-2 h-4 w-4" />
+                        Generate Studio Image
+                      </>
+                    )}
+                  </Button>
+                </div>
+                
+                {/* Progress bar */}
+                {photoToStudioProgress !== null && (
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Generating studio image...</span>
+                      <span>{photoToStudioProgress}%</span>
+                    </div>
+                    <Progress value={photoToStudioProgress} className="w-full" />
+                  </div>
+                )}
+              </div>
+              
+              {/* Preview Section */}
+              <div className="space-y-6">
+                {photoToStudioImage ? (
+                  <div className="flex flex-col h-full bg-card border rounded-lg shadow-sm overflow-hidden">
+                    {/* Header */}
+                    <div className="p-4 border-b bg-muted/30">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="h-5 w-5 text-green-500" />
+                        <h2 className="font-semibold">Studio Image Generated</h2>
+                      </div>
+                    </div>
+                    
+                    {/* Image display */}
+                    <div className="flex-1 p-4">
+                      <img 
+                        src={photoToStudioImage.fullUrl || photoToStudioImage.url} 
+                        alt="Generated studio image"
+                        className="w-full h-auto rounded-lg border border-border/50 shadow-sm"
+                      />
+                    </div>
+                    
+                    {/* Details */}
+                    <div className="p-4 bg-muted/30 border-t space-y-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <div>
+                          <p className="font-medium text-sm">Saved to Gallery</p>
+                          <p className="text-xs text-muted-foreground">
+                            Your studio image has been automatically saved to your gallery
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between gap-2 pt-1">
+                        {/* Actions */}
+                        <div className="flex gap-1.5">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="h-8 text-xs flex gap-1.5 bg-card"
+                            onClick={() => handleDownload(photoToStudioImage)}
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                            Download
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="h-8 text-xs flex gap-1.5 bg-card"
+                            onClick={() => {
+                              const sourceUrl = photoToStudioImage.fullUrl || photoToStudioImage.url;
+                              setMode('edit');
+                              setSourceImages([sourceUrl]);
+                              setLocation('/create?mode=edit');
+                            }}
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                            Edit
+                          </Button>
+                        </div>
+                        
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="h-8 text-xs flex gap-1.5 bg-card"
+                          onClick={() => setSelectedImage(photoToStudioImage.fullUrl || photoToStudioImage.url)}
+                        >
+                          <Maximize2 className="h-3.5 w-3.5" />
+                          Fullscreen
+                        </Button>
+                      </div>
+                      
+                      {/* Disclaimer Downloads */}
+                      <div className="pt-2 border-t">
+                        <CarImageCard
+                          image={photoToStudioImage}
+                          make={photoToStudioForm.watch('brand') || 'Unknown'}
+                          model=""
+                          bodyStyle=""
+                          color=""
+                          disclaimerOnly={true}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col h-full bg-card border rounded-lg shadow-sm overflow-hidden">
+                    {/* Empty state header */}
+                    <div className="p-4 border-b bg-muted/30">
+                      <div className="flex items-center gap-2">
+                        <Upload className="h-5 w-5 text-muted-foreground" />
+                        <h2 className="font-semibold text-muted-foreground">Studio Preview</h2>
+                      </div>
+                    </div>
+                    
+                    {/* Empty state content */}
+                    <div className="flex-1 flex items-center justify-center py-16 px-6">
+                      <div className="text-center max-w-xs">
+                        <div className="relative mx-auto mb-4 w-20 h-20">
+                          <div className="absolute inset-0 bg-primary/5 rounded-full animate-ping opacity-50"></div>
+                          <div className="relative bg-primary/10 rounded-full p-5">
+                            <Upload className="h-10 w-10 text-primary/60" />
+                          </div>
+                        </div>
+                        <h3 className="text-lg font-medium mb-2">Ready to transform your photo</h3>
+                        <p className="text-muted-foreground text-sm mb-6">
+                          Upload a car photo, select your enhancement mode, and generate a professional studio image
+                        </p>
+                        <div className="text-xs text-muted-foreground flex items-center justify-center gap-4">
+                          <div className="flex items-center gap-1.5">
+                            <CheckCircle className="h-3.5 w-3.5 text-primary/60" />
+                            <span>Preserves details</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <CheckCircle className="h-3.5 w-3.5 text-primary/60" />
+                            <span>Studio quality</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </TabsContent>
         </Tabs>
