@@ -2118,25 +2118,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const generatedImage = result.images[0];
       
       // Get user ID for analytics tracking
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.claims?.sub || "system";
       console.log(`[Analytics Debug] User ID for photo-to-studio generation: ${userId}`);
 
-      // Since the replicate provider already saves the image during the edit process,
-      // we need to get the saved image from the database. The provider returns URLs
-      // but we need the complete GeneratedImage record from the database.
-      // Let's find the most recent image for this user
-      const savedImagesResult = await storage.getAllImages();
-      const userImages = savedImagesResult.items
-        .filter((img: any) => img.createdBy === userId)
-        .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      
-      const image = userImages.length > 0 ? userImages[0] : null;
-      
-      if (!image) {
-        // Fallback: create a minimal image record if not found
-        // This shouldn't happen in normal operation but provides safety
-        throw new Error('Generated image was not properly saved');
-      }
+      // Download the generated image from Replicate and convert to base64
+      const imageResponse = await fetch(generatedImage.url);
+      const imageBuffer = await imageResponse.arrayBuffer();
+      const base64Data = Buffer.from(imageBuffer).toString('base64');
+
+      // Prepare metadata for persistImage
+      const meta = {
+        prompt,
+        params: { 
+          model: "flux-kontext-max",
+          mode,
+          brand: brand || undefined,
+          aspect_ratio: "1:1", // Default aspect ratio for photo-to-studio
+          output_format: "png",
+          safety_tolerance: 2,
+          prompt_upsampling: false
+        },
+        userId,
+        sources: ["photo-to-studio"]
+      };
+
+      // Use the standard persistImage flow to save to Object Storage and database
+      const image = await persistImage(base64Data, meta);
 
       // Track successful photo-to-studio generation
       const { logActivity } = await import('./analytics');
@@ -2155,7 +2162,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
       
-      res.json({ image });
+      // Return the generated image data using persistImage result
+      res.json({
+        success: true,
+        image: {
+          id: image.id,
+          url: image.fullUrl, // Use fullUrl from persistImage
+          fullUrl: image.fullUrl,
+          thumbUrl: image.thumbUrl,
+          prompt: prompt,
+          model: "flux-kontext-max"
+        }
+      });
     } catch (error: any) {
       console.error("Error generating photo-to-studio image:", error);
       

@@ -1,0 +1,37 @@
+# Context
+You are working on the CreAItives Platform, an internal Node/React tool. The /car page has Single and Batch generators that already persist generated images to Replit Object Storage and into our database, and then notify the frontend via WebSocket. We recently added a third tab, “Photo‑to‑Studio”, which generates an edited image through Replicate (Flux‑Kontext‑Max). Generation works, but the result is not being saved correctly to our CDN-backed storage and gallery.
+
+# What “correctly saved” means in this codebase
+- We use Replit Object Storage through the helper in `server/objectStorage.ts` (class `ObjectStorageService`, method `uploadImage`).
+- We persist images using `persistImage(...)` in `server/fs-storage.ts`. This function:
+  - decodes base64
+  - creates a WebP thumbnail with sharp
+  - uploads both full image and thumb to Object Storage using environment-aware keys (`dev/` or `prod/`)
+  - inserts a row into the `images` table with complete metadata
+  - emits a WebSocket `imageCreated` event so the gallery UI updates
+- Existing Replicate flows already do this correctly in `server/routes/replicate-routes.ts` by calling `persistImage(...)` after generation.
+
+# Objective
+Update the new Photo‑to‑Studio endpoint so that, after the Replicate job succeeds, it follows the same persistence path as the rest of the app and the image appears in the gallery with the “Download with AI Disclaimer” options working.
+
+# Requirements
+1) In the Photo‑to‑Studio server handler (the endpoint you added for this tab), after a successful Replicate output:
+   - Download the resulting image URL to a Buffer and convert to base64.
+   - Call `persistImage(base64, meta)` from `server/fs-storage.ts` instead of any custom/manual saving.
+   - `meta` should include:
+     - `prompt`: the exact template prompt used (with `{{make}}` substituted for Studio Enhance), plus any appended user “Additional instructions” text
+     - `params`: include: model `"flux-kontext-max"`, mode `"background_only" | "studio_enhance"`, brand if provided, and the defaults (`aspect_ratio`, `output_format`, `safety_tolerance`, `prompt_upsampling`) for traceability
+     - `userId`: current user id (or `"system"` as fallback)
+     - `sources`: `["photo-to-studio"]`
+2) Return the `{ id, fullUrl, thumbUrl }` from `persistImage` in the endpoint response; do not craft URLs manually.
+3) Do not duplicate DB insertion logic. `persistImage` already inserts into the `images` table and sends the `imageCreated` WebSocket event needed for the gallery to refresh.
+4) Ensure the environment-aware paths are preserved (dev vs prod): `persistImage` and `objectStorage.uploadImage` already handle this, so just use them.
+5) Keep Single and Batch flows untouched.
+
+# Acceptance Criteria
+- Generating in “Photo‑to‑Studio” results in:
+  - An entry in Object Storage at `dev/<id>.png` (and `dev/thumb/<id>.webp`) or `prod/...` in production.
+  - A new row in the `images` table with the correct metadata (prompt, model, aspectRatio, etc).
+  - A WebSocket `imageCreated` event and the image visible in the Gallery immediately.
+  - The Download and “Download with AI Disclaimer” actions working exactly as they do for the other generators (reusing the existing front-end helpers).
+- No regressions to Single/Batch or /create.
