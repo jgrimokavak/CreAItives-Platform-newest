@@ -2356,7 +2356,6 @@ export class DatabaseStorage implements IStorage {
       return {};
     }
 
-    console.log('[DEBUG] Getting member counts for projects:', allProjectIds);
 
     // Get member counts for all accessible projects
     const memberCounts = await db
@@ -2368,7 +2367,6 @@ export class DatabaseStorage implements IStorage {
       .where(inArray(projectMembers.projectId, allProjectIds))
       .groupBy(projectMembers.projectId);
 
-    console.log('[DEBUG] Raw member counts from DB:', memberCounts);
 
     // Convert to Record format
     const result: Record<string, number> = {};
@@ -2376,7 +2374,6 @@ export class DatabaseStorage implements IStorage {
       result[projectId] = memberCount;
     });
 
-    console.log('[DEBUG] Final member counts result:', result);
     return result;
   }
 

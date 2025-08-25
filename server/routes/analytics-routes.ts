@@ -13,7 +13,6 @@ const router = express.Router();
 router.get('/kpis', isAuthenticated, async (req: any, res) => {
   const routeId = `route_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
   const startTime = Date.now();
-  console.log(`[🚀 ROUTE START ${routeId}] /api/admin/analytics/kpis called by user: ${req.user?.claims?.sub}`);
   try {
     const { dateFrom, dateTo, roleFilter, statusFilter, domainFilter, activatedFilter } = req.query;
     
@@ -43,12 +42,10 @@ router.get('/kpis', isAuthenticated, async (req: any, res) => {
     prevTo.setDate(prevTo.getDate() - 1);
     prevTo.setHours(23, 59, 59, 999);
     
-    console.log(`[🔥 ROUTE OPTIMIZED ${routeId}] Getting BOTH periods in SINGLE batched call instead of 2 separate calls...`);
     // OPTIMIZED: Single call for both periods instead of two separate calls
     const result = await getKPIsWithComparison(from, to, prevFrom, prevTo, filters);
     
     const routeTime = Date.now() - startTime;
-    console.log(`[✅ ROUTE DONE ${routeId}] KPIs endpoint completed in ${routeTime}ms | OPTIMIZED: Single query vs 2 separate | DAU: ${result.current.dau}, Success Rate: ${result.current.contentSuccessRate}%`);
     
     res.json(result);
   } catch (error) {

@@ -661,7 +661,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const prevTo = new Date(from.getTime() - 1);
       const prevFrom = new Date(prevTo.getTime() - periodLength);
 
-      console.log(`[🚀 FIXED ROUTE] Using OPTIMIZED batched KPIs call instead of 2 separate calls`);
       // OPTIMIZED: Single call for both periods
       const response = await getKPIsWithComparison(from, to, prevFrom, prevTo, {
         roleFilter,
