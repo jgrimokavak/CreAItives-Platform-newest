@@ -91,7 +91,6 @@ export default function AdminOverviewPage() {
     activatedFilter: 'all'
   });
 
-  console.log(`[🎨 OVERVIEW RENDER] Component rendered with dateRange: ${dateRange}, filters:`, globalFilters);
 
   // Calculate date ranges - fix end date to include full day
   const { dateFrom, dateTo } = useMemo(() => {
@@ -130,7 +129,6 @@ export default function AdminOverviewPage() {
     queryKey: ['/api/admin/analytics/kpis', dateFrom, dateTo, globalFilters],
     queryFn: async () => {
       const startTime = Date.now();
-      console.log(`[🔥 API START] KPIs request starting... dateRange: ${dateRange}, concurrent with trends:`, !kpiData);
       
       const params = new URLSearchParams({
         dateFrom,
@@ -141,12 +139,8 @@ export default function AdminOverviewPage() {
         credentials: 'include'
       });
       
-      const responseTime = Date.now() - startTime;
-      console.log(`[✅ API DONE] KPIs completed in ${responseTime}ms | Success: ${response.ok}`);
-      
       if (!response.ok) throw new Error('Failed to fetch KPIs');
       const data = await response.json();
-      console.log(`[📊 KPI DATA] DAU: ${data.current?.dau}, Success Rate: ${data.current?.contentSuccessRate}%`);
       return data;
     },
   });
@@ -156,7 +150,6 @@ export default function AdminOverviewPage() {
     queryKey: ['/api/admin/analytics/trends', dateFrom, dateTo, globalFilters],
     queryFn: async () => {
       const startTime = Date.now();
-      console.log(`[📈 API START] Trends request starting... concurrent with KPIs:`, kpiLoading);
       
       const params = new URLSearchParams({
         dateFrom,
@@ -168,12 +161,8 @@ export default function AdminOverviewPage() {
         credentials: 'include'
       });
       
-      const responseTime = Date.now() - startTime;
-      console.log(`[✅ API DONE] Trends completed in ${responseTime}ms | Success: ${response.ok}`);
-      
       if (!response.ok) throw new Error('Failed to fetch trends');
       const data = await response.json();
-      console.log(`[📈 TRENDS DATA] Feature trends: ${data.featureUsageTrends?.length} points, Model usage: ${data.modelUsage?.length} models`);
       return data;
     },
   });
@@ -181,7 +170,6 @@ export default function AdminOverviewPage() {
   const colors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1'];
 
   if (kpiLoading || trendsLoading) {
-    console.log(`[⏳ LOADING STATE] KPIs loading: ${kpiLoading}, Trends loading: ${trendsLoading}`);
     return (
       <div className="p-6">
         <div className="animate-pulse space-y-4">
@@ -197,7 +185,6 @@ export default function AdminOverviewPage() {
     );
   }
 
-  console.log(`[🎯 OVERVIEW READY] Both APIs loaded, rendering ${kpiData ? 'KPI cards' : 'NO KPIs'} and ${trendsData ? 'charts' : 'NO charts'}`);
 
   return (
     <div className="p-6 space-y-6">
@@ -241,7 +228,6 @@ export default function AdminOverviewPage() {
           <Select 
             value={globalFilters.roleFilter} 
             onValueChange={(value) => {
-              console.log(`[🔄 FILTER CHANGE] Role filter changed from ${globalFilters.roleFilter} to ${value} - will trigger API refetch`);
               setGlobalFilters(prev => ({ ...prev, roleFilter: value }));
             }}
           >

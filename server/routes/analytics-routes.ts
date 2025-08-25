@@ -1,5 +1,5 @@
 import express from 'express';
-import { getKPIs, getTrends, getModelUsage, getFeatureUsage } from '../analytics';
+import { getKPIs, getKPIsWithComparison, getTrends, getModelUsage, getFeatureUsage } from '../analytics';
 import { isAuthenticated } from '../replitAuth';
 
 // Helper to parse dates - frontend now sends full ISO strings
@@ -35,9 +35,6 @@ router.get('/kpis', isAuthenticated, async (req: any, res) => {
       activatedFilter: activatedFilter as string
     };
     
-    console.log(`[📈 ROUTE ${routeId}] Getting CURRENT period KPIs...`);
-    const kpis = await getKPIs(from, to, filters);
-    
     // Calculate comparison period for deltas
     const daysDiff = Math.ceil((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24));
     const prevFrom = new Date(from);
@@ -46,33 +43,14 @@ router.get('/kpis', isAuthenticated, async (req: any, res) => {
     prevTo.setDate(prevTo.getDate() - 1);
     prevTo.setHours(23, 59, 59, 999);
     
-    console.log(`[📉 ROUTE ${routeId}] Getting PREVIOUS period KPIs (DUPLICATE WORK)...`);
-    const prevKpis = await getKPIs(prevFrom, prevTo, filters);
-    
-    // Calculate deltas
-    const calculateDelta = (current: number, previous: number) => {
-      if (previous === 0) return current > 0 ? 100 : 0;
-      return Math.round(((current - previous) / previous) * 100);
-    };
+    console.log(`[🔥 ROUTE OPTIMIZED ${routeId}] Getting BOTH periods in SINGLE batched call instead of 2 separate calls...`);
+    // OPTIMIZED: Single call for both periods instead of two separate calls
+    const result = await getKPIsWithComparison(from, to, prevFrom, prevTo, filters);
     
     const routeTime = Date.now() - startTime;
-    console.log(`[✅ ROUTE DONE ${routeId}] KPIs endpoint completed in ${routeTime}ms | Sent DAU: ${kpis.dau}, Success Rate: ${kpis.contentSuccessRate}%`);
+    console.log(`[✅ ROUTE DONE ${routeId}] KPIs endpoint completed in ${routeTime}ms | OPTIMIZED: Single query vs 2 separate | DAU: ${result.current.dau}, Success Rate: ${result.current.contentSuccessRate}%`);
     
-    res.json({
-      current: kpis,
-      previous: prevKpis,
-      deltas: {
-        dau: calculateDelta(kpis.dau, prevKpis.dau),
-        mau: calculateDelta(kpis.mau, prevKpis.mau),
-        newUsers: calculateDelta(kpis.newUsers, prevKpis.newUsers),
-        activationRate: kpis.activationRate - prevKpis.activationRate,
-        stickiness: kpis.stickiness - prevKpis.stickiness,
-        imageSuccesses: calculateDelta(kpis.imageSuccesses, prevKpis.imageSuccesses),
-        videoSuccesses: calculateDelta(kpis.videoSuccesses, prevKpis.videoSuccesses),
-        upscaleSuccesses: calculateDelta(kpis.upscaleSuccesses, prevKpis.upscaleSuccesses),
-        contentSuccessRate: kpis.contentSuccessRate - prevKpis.contentSuccessRate
-      }
-    });
+    res.json(result);
   } catch (error) {
     console.error('Error fetching KPIs:', error);
     res.status(500).json({ message: 'Failed to fetch KPIs' });

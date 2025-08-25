@@ -284,6 +284,247 @@ export async function getKPIs(dateFrom: Date, dateTo: Date, filters: {
   };
 }
 
+// OPTIMIZED: Get KPIs for both current and previous periods in a single call
+export async function getKPIsWithComparison(
+  currentFrom: Date, 
+  currentTo: Date, 
+  previousFrom: Date, 
+  previousTo: Date, 
+  filters: {
+    roleFilter?: string;
+    statusFilter?: string;  
+    domainFilter?: string;
+    activatedFilter?: string;
+  } = {}
+) {
+  const environment = getCurrentEnv();
+  const requestId = `kpi_batch_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+  console.log(`[🔥 KPI BATCH START ${requestId}] Current: ${currentFrom.toISOString()} to ${currentTo.toISOString()}, Previous: ${previousFrom.toISOString()} to ${previousTo.toISOString()}`, {
+    environment,
+    filters,
+    memoryUsage: process.memoryUsage().heapUsed / 1024 / 1024 + 'MB'
+  });
+  
+  // Build user filter conditions (same as original)
+  const userConditions = [];
+  if (filters.roleFilter && filters.roleFilter !== 'all') {
+    userConditions.push(eq(users.role, filters.roleFilter));
+  }
+  if (filters.statusFilter === 'active') {
+    userConditions.push(eq(users.isActive, true));
+  } else if (filters.statusFilter === 'inactive') {
+    userConditions.push(eq(users.isActive, false));
+  }
+  if (filters.domainFilter) {
+    userConditions.push(sql`split_part(${users.email}, '@', 2) = ${filters.domainFilter}`);
+  }
+  if (filters.activatedFilter === 'activated') {
+    userConditions.push(isNotNull(users.lastLoginAt));
+  } else if (filters.activatedFilter === 'not_activated') {
+    userConditions.push(sql`${users.lastLoginAt} IS NULL`);
+  }
+
+  const userWhereClause = userConditions.length > 0 ? and(...userConditions) : undefined;
+
+  const startTime = Date.now();
+  
+  // Get filtered user IDs if filters are applied
+  let filteredUserIds: string[] | undefined;
+  if (userWhereClause) {
+    const filteredUsers = await db.select({ id: users.id }).from(users).where(userWhereClause);
+    filteredUserIds = filteredUsers.map(u => u.id);
+  }
+
+  // Combined query for both periods using conditional aggregation
+  const eventConditions = [eq(activityEvents.environment, environment)];
+  if (filteredUserIds && filteredUserIds.length > 0) {
+    eventConditions.push(inArray(activityEvents.userId, filteredUserIds));
+  }
+
+  // Single mega-query for both periods using conditional aggregation
+  const [combinedMetrics] = await Promise.all([
+    db.select({
+      // Current period metrics
+      currentDau: sql<number>`COUNT(DISTINCT CASE WHEN ${activityEvents.createdAt} >= ${currentFrom} AND ${activityEvents.createdAt} <= ${currentTo} THEN ${activityEvents.userId} END)`,
+      currentImageAttempts: sql<number>`COUNT(CASE WHEN ${activityEvents.createdAt} >= ${currentFrom} AND ${activityEvents.createdAt} <= ${currentTo} AND ${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation') THEN 1 END)`,
+      currentImageSuccesses: sql<number>`COUNT(CASE WHEN ${activityEvents.createdAt} >= ${currentFrom} AND ${activityEvents.createdAt} <= ${currentTo} AND ${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation') AND ${activityEvents.status} = 'succeeded' THEN 1 END)`,
+      currentVideoAttempts: sql<number>`COUNT(CASE WHEN ${activityEvents.createdAt} >= ${currentFrom} AND ${activityEvents.createdAt} <= ${currentTo} AND ${activityEvents.feature} = 'video_generation' THEN 1 END)`,
+      currentVideoSuccesses: sql<number>`COUNT(CASE WHEN ${activityEvents.createdAt} >= ${currentFrom} AND ${activityEvents.createdAt} <= ${currentTo} AND ${activityEvents.feature} = 'video_generation' AND ${activityEvents.status} = 'succeeded' THEN 1 END)`,
+      currentUpscaleAttempts: sql<number>`COUNT(CASE WHEN ${activityEvents.createdAt} >= ${currentFrom} AND ${activityEvents.createdAt} <= ${currentTo} AND ${activityEvents.feature} = 'upscale' THEN 1 END)`,
+      currentUpscaleSuccesses: sql<number>`COUNT(CASE WHEN ${activityEvents.createdAt} >= ${currentFrom} AND ${activityEvents.createdAt} <= ${currentTo} AND ${activityEvents.feature} = 'upscale' AND ${activityEvents.status} = 'succeeded' THEN 1 END)`,
+      currentTotalErrors: sql<number>`COUNT(CASE WHEN ${activityEvents.createdAt} >= ${currentFrom} AND ${activityEvents.createdAt} <= ${currentTo} AND ${activityEvents.status} = 'failed' THEN 1 END)`,
+      
+      // Previous period metrics
+      previousDau: sql<number>`COUNT(DISTINCT CASE WHEN ${activityEvents.createdAt} >= ${previousFrom} AND ${activityEvents.createdAt} <= ${previousTo} THEN ${activityEvents.userId} END)`,
+      previousImageAttempts: sql<number>`COUNT(CASE WHEN ${activityEvents.createdAt} >= ${previousFrom} AND ${activityEvents.createdAt} <= ${previousTo} AND ${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation') THEN 1 END)`,
+      previousImageSuccesses: sql<number>`COUNT(CASE WHEN ${activityEvents.createdAt} >= ${previousFrom} AND ${activityEvents.createdAt} <= ${previousTo} AND ${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation') AND ${activityEvents.status} = 'succeeded' THEN 1 END)`,
+      previousVideoAttempts: sql<number>`COUNT(CASE WHEN ${activityEvents.createdAt} >= ${previousFrom} AND ${activityEvents.createdAt} <= ${previousTo} AND ${activityEvents.feature} = 'video_generation' THEN 1 END)`,
+      previousVideoSuccesses: sql<number>`COUNT(CASE WHEN ${activityEvents.createdAt} >= ${previousFrom} AND ${activityEvents.createdAt} <= ${previousTo} AND ${activityEvents.feature} = 'video_generation' AND ${activityEvents.status} = 'succeeded' THEN 1 END)`,
+      previousUpscaleAttempts: sql<number>`COUNT(CASE WHEN ${activityEvents.createdAt} >= ${previousFrom} AND ${activityEvents.createdAt} <= ${previousTo} AND ${activityEvents.feature} = 'upscale' THEN 1 END)`,
+      previousUpscaleSuccesses: sql<number>`COUNT(CASE WHEN ${activityEvents.createdAt} >= ${previousFrom} AND ${activityEvents.createdAt} <= ${previousTo} AND ${activityEvents.feature} = 'upscale' AND ${activityEvents.status} = 'succeeded' THEN 1 END)`,
+      previousTotalErrors: sql<number>`COUNT(CASE WHEN ${activityEvents.createdAt} >= ${previousFrom} AND ${activityEvents.createdAt} <= ${previousTo} AND ${activityEvents.status} = 'failed' THEN 1 END)`
+    })
+    .from(activityEvents)
+    .where(and(...eventConditions))
+  ]);
+
+  // Separate queries for user-specific metrics (new users, MAU, activation)
+  const [currentNewUsers, previousNewUsers, currentMau, previousMau, currentActivated, previousActivated] = await Promise.all([
+    // Current new users
+    db.select({ count: sql`count(*)` }).from(users).where(and(
+      userWhereClause || sql`1=1`,
+      gte(users.createdAt, currentFrom),
+      lte(users.createdAt, currentTo)
+    )),
+    // Previous new users  
+    db.select({ count: sql`count(*)` }).from(users).where(and(
+      userWhereClause || sql`1=1`,
+      gte(users.createdAt, previousFrom),
+      lte(users.createdAt, previousTo)
+    )),
+    // Current MAU
+    db.select({ count: sql`COUNT(DISTINCT ${activityEvents.userId})` }).from(activityEvents).where(and(
+      eq(activityEvents.environment, environment),
+      gte(activityEvents.createdAt, new Date(currentTo.getTime() - 30 * 24 * 60 * 60 * 1000)),
+      lte(activityEvents.createdAt, currentTo),
+      ...(filteredUserIds ? [inArray(activityEvents.userId, filteredUserIds)] : [])
+    )),
+    // Previous MAU
+    db.select({ count: sql`COUNT(DISTINCT ${activityEvents.userId})` }).from(activityEvents).where(and(
+      eq(activityEvents.environment, environment),
+      gte(activityEvents.createdAt, new Date(previousTo.getTime() - 30 * 24 * 60 * 60 * 1000)),
+      lte(activityEvents.createdAt, previousTo),
+      ...(filteredUserIds ? [inArray(activityEvents.userId, filteredUserIds)] : [])
+    )),
+    // Current activation
+    db.select({ count: sql`count(*)` }).from(users).leftJoin(activityEvents, and(
+      eq(users.id, activityEvents.userId),
+      sql`${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation', 'video_generation', 'upscale')`,
+      eq(activityEvents.status, 'succeeded'),
+      gte(activityEvents.createdAt, sql`${users.createdAt}`),
+      lte(activityEvents.createdAt, sql`${users.createdAt} + INTERVAL '7 days'`)
+    )).where(and(
+      userWhereClause || sql`1=1`,
+      gte(users.createdAt, currentFrom),
+      lte(users.createdAt, currentTo),
+      isNotNull(activityEvents.id)
+    )),
+    // Previous activation
+    db.select({ count: sql`count(*)` }).from(users).leftJoin(activityEvents, and(
+      eq(users.id, activityEvents.userId),
+      sql`${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation', 'video_generation', 'upscale')`,
+      eq(activityEvents.status, 'succeeded'),
+      gte(activityEvents.createdAt, sql`${users.createdAt}`),
+      lte(activityEvents.createdAt, sql`${users.createdAt} + INTERVAL '7 days'`)
+    )).where(and(
+      userWhereClause || sql`1=1`,
+      gte(users.createdAt, previousFrom),
+      lte(users.createdAt, previousTo),
+      isNotNull(activityEvents.id)
+    ))
+  ]);
+
+  // Extract and calculate metrics
+  const metrics = combinedMetrics[0];
+  
+  const current = {
+    dau: Number(metrics?.currentDau || 0),
+    mau: Number(currentMau[0]?.count || 0),
+    newUsers: Number(currentNewUsers[0]?.count || 0),
+    activatedUsers: Number(currentActivated[0]?.count || 0),
+    imageAttempts: Number(metrics?.currentImageAttempts || 0),
+    imageSuccesses: Number(metrics?.currentImageSuccesses || 0),
+    videoAttempts: Number(metrics?.currentVideoAttempts || 0),
+    videoSuccesses: Number(metrics?.currentVideoSuccesses || 0),
+    upscaleAttempts: Number(metrics?.currentUpscaleAttempts || 0),
+    upscaleSuccesses: Number(metrics?.currentUpscaleSuccesses || 0),
+    totalErrors: Number(metrics?.currentTotalErrors || 0)
+  };
+
+  const previous = {
+    dau: Number(metrics?.previousDau || 0),
+    mau: Number(previousMau[0]?.count || 0),
+    newUsers: Number(previousNewUsers[0]?.count || 0),
+    activatedUsers: Number(previousActivated[0]?.count || 0),
+    imageAttempts: Number(metrics?.previousImageAttempts || 0),
+    imageSuccesses: Number(metrics?.previousImageSuccesses || 0),
+    videoAttempts: Number(metrics?.previousVideoAttempts || 0),
+    videoSuccesses: Number(metrics?.previousVideoSuccesses || 0),
+    upscaleAttempts: Number(metrics?.previousUpscaleAttempts || 0),
+    upscaleSuccesses: Number(metrics?.previousUpscaleSuccesses || 0),
+    totalErrors: Number(metrics?.previousTotalErrors || 0)
+  };
+
+  // Calculate derived metrics for both periods
+  const currentTotalAttempts = current.imageAttempts + current.videoAttempts + current.upscaleAttempts;
+  const currentTotalSuccesses = current.imageSuccesses + current.videoSuccesses + current.upscaleSuccesses;
+  const currentSuccessRate = currentTotalAttempts > 0 ? (currentTotalSuccesses / currentTotalAttempts) * 100 : 0;
+  const currentActivationRate = current.newUsers > 0 ? (current.activatedUsers / current.newUsers) * 100 : 0;
+  const currentStickiness = current.mau > 0 ? (current.dau / current.mau) * 100 : 0;
+
+  const previousTotalAttempts = previous.imageAttempts + previous.videoAttempts + previous.upscaleAttempts;
+  const previousTotalSuccesses = previous.imageSuccesses + previous.videoSuccesses + previous.upscaleSuccesses;
+  const previousSuccessRate = previousTotalAttempts > 0 ? (previousTotalSuccesses / previousTotalAttempts) * 100 : 0;
+  const previousActivationRate = previous.newUsers > 0 ? (previous.activatedUsers / previous.newUsers) * 100 : 0;
+  const previousStickiness = previous.mau > 0 ? (previous.dau / previous.mau) * 100 : 0;
+
+  const queryTime = Date.now() - startTime;
+  const memoryAfter = process.memoryUsage().heapUsed / 1024 / 1024;
+  console.log(`[✅ KPI BATCH DONE ${requestId}] Completed in ${queryTime}ms | Memory: ${memoryAfter.toFixed(1)}MB | SINGLE batched query vs 2 separate | Current DAU: ${current.dau}, Previous DAU: ${previous.dau}`);
+
+  // Calculate deltas
+  const calculateDelta = (current: number, previous: number) => {
+    if (previous === 0) return current > 0 ? 100 : 0;
+    return Math.round(((current - previous) / previous) * 100);
+  };
+
+  return {
+    current: {
+      dau: current.dau,
+      mau: current.mau,
+      newUsers: current.newUsers,
+      activatedUsers: current.activatedUsers,
+      activationRate: Math.round(currentActivationRate * 100) / 100,
+      stickiness: Math.round(currentStickiness * 100) / 100,
+      contentSuccessRate: Math.round(currentSuccessRate * 100) / 100,
+      imageAttempts: current.imageAttempts,
+      imageSuccesses: current.imageSuccesses,
+      videoAttempts: current.videoAttempts,
+      videoSuccesses: current.videoSuccesses,
+      upscaleAttempts: current.upscaleAttempts,
+      upscaleSuccesses: current.upscaleSuccesses,
+      totalErrors: current.totalErrors
+    },
+    previous: {
+      dau: previous.dau,
+      mau: previous.mau,
+      newUsers: previous.newUsers,
+      activatedUsers: previous.activatedUsers,
+      activationRate: Math.round(previousActivationRate * 100) / 100,
+      stickiness: Math.round(previousStickiness * 100) / 100,
+      contentSuccessRate: Math.round(previousSuccessRate * 100) / 100,
+      imageAttempts: previous.imageAttempts,
+      imageSuccesses: previous.imageSuccesses,
+      videoAttempts: previous.videoAttempts,
+      videoSuccesses: previous.videoSuccesses,
+      upscaleAttempts: previous.upscaleAttempts,
+      upscaleSuccesses: previous.upscaleSuccesses,
+      totalErrors: previous.totalErrors
+    },
+    deltas: {
+      dau: calculateDelta(current.dau, previous.dau),
+      mau: calculateDelta(current.mau, previous.mau),
+      newUsers: calculateDelta(current.newUsers, previous.newUsers),
+      activationRate: currentActivationRate - previousActivationRate,
+      stickiness: currentStickiness - previousStickiness,
+      imageSuccesses: calculateDelta(current.imageSuccesses, previous.imageSuccesses),
+      videoSuccesses: calculateDelta(current.videoSuccesses, previous.videoSuccesses),
+      upscaleSuccesses: calculateDelta(current.upscaleSuccesses, previous.upscaleSuccesses),
+      contentSuccessRate: currentSuccessRate - previousSuccessRate
+    }
+  };
+}
+
 // Trend data for charts
 export async function getTrends(dateFrom: Date, dateTo: Date, interval: 'day' | 'week' = 'day', filters: any = {}) {
   const environment = getCurrentEnv();

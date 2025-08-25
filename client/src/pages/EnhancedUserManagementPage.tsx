@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -45,7 +45,6 @@ interface EnhancedUser {
 }
 
 export default function EnhancedUserManagementPage() {
-  console.log(`[👥 USERS PAGE] Component rendered`);
   const { user: currentUser } = useAuth();
   
   // Global filters state
@@ -98,23 +97,23 @@ export default function EnhancedUserManagementPage() {
     retry: false,
   });
 
-  // Handlers
-  const handleUserSelect = (user: EnhancedUser) => {
+  // Handlers - memoized to prevent infinite re-renders
+  const handleUserSelect = useCallback((user: EnhancedUser) => {
     setSelectedUser(user);
     setIsUserDrawerOpen(true);
-  };
+  }, []);
 
-  const handleSelectionChange = (selectedIds: string[]) => {
+  const handleSelectionChange = useCallback((selectedIds: string[]) => {
     setSelectedUserIds(selectedIds);
-  };
+  }, []);
 
-  const handleFiltersChange = (filters: typeof globalFilters) => {
+  const handleFiltersChange = useCallback((filters: typeof globalFilters) => {
     setGlobalFilters(filters);
-  };
+  }, []);
 
-  const handleExportClick = () => {
+  const handleExportClick = useCallback(() => {
     setIsExportDialogOpen(true);
-  };
+  }, []);
 
   // Current filters for export
   const currentFilters = useMemo(() => ({

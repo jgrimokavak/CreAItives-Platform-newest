@@ -89,7 +89,7 @@ export default function GlobalControlsPanel({
       dateTo: dateRange?.to,
       ...activeFilters,
     });
-  }, [dateRange, activeFilters, onFiltersChange]);
+  }, [dateRange, activeFilters]); // Removed onFiltersChange to prevent infinite loop
 
   // Load filters from URL on component mount
   useEffect(() => {
