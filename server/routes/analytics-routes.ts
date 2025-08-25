@@ -45,7 +45,9 @@ router.get('/kpis', isAuthenticated, async (req: any, res) => {
     
     console.log(`[🔥 ROUTE OPTIMIZED ${routeId}] Getting BOTH periods in SINGLE batched call instead of 2 separate calls...`);
     // OPTIMIZED: Single call for both periods instead of two separate calls
+    console.log(`[DEBUG] About to call getKPIsWithComparison with dates:`, { from: from.toISOString(), to: to.toISOString(), prevFrom: prevFrom.toISOString(), prevTo: prevTo.toISOString() });
     const result = await getKPIsWithComparison(from, to, prevFrom, prevTo, filters);
+    console.log(`[DEBUG] getKPIsWithComparison completed successfully`);
     
     const routeTime = Date.now() - startTime;
     console.log(`[✅ ROUTE DONE ${routeId}] KPIs endpoint completed in ${routeTime}ms | OPTIMIZED: Single query vs 2 separate | DAU: ${result.current.dau}, Success Rate: ${result.current.contentSuccessRate}%`);
