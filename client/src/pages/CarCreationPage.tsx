@@ -841,27 +841,27 @@ const CarCreationPage: React.FC = () => {
           onValueChange={(value) => setCarCreationMode(value as "single" | "batch" | "photo-to-studio")}
           className="mb-6"
         >
-          <TabsList className="grid w-full grid-cols-3 gap-1 h-11 p-1 bg-muted/30 rounded-lg">
+          <TabsList className="grid w-full grid-cols-3 gap-1 h-auto min-h-[44px] p-1 bg-gray-700/90 dark:bg-gray-800/90 rounded-lg shadow-inner">
             <TabsTrigger 
               value="single" 
-              className="rounded-md font-medium text-sm transition-all duration-200 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground hover:text-foreground"
+              className="rounded-md font-medium text-xs sm:text-sm py-2 px-2 sm:px-4 transition-all duration-200 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground data-[state=inactive]:text-gray-300 data-[state=inactive]:hover:text-gray-100 hover:bg-gray-600/50"
             >
-              Custom Build
+              <span className="whitespace-nowrap">Custom Build</span>
             </TabsTrigger>
             <TabsTrigger 
               value="photo-to-studio" 
-              className="rounded-md font-medium text-sm transition-all duration-200 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground hover:text-foreground relative"
+              className="rounded-md font-medium text-xs sm:text-sm py-2 px-2 sm:px-4 transition-all duration-200 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground data-[state=inactive]:text-gray-300 data-[state=inactive]:hover:text-gray-100 hover:bg-gray-600/50 relative flex items-center justify-center gap-1"
             >
-              <span>Photo Studio</span>
-              <span className="ml-1.5 inline-flex items-center justify-center px-1.5 py-0.5 text-[9px] font-semibold leading-none text-white bg-gradient-to-r from-blue-500 to-purple-500 rounded-full">
+              <span className="whitespace-nowrap">Photo Studio</span>
+              <span className="inline-flex items-center justify-center px-1 sm:px-1.5 py-0.5 text-[7px] sm:text-[8px] md:text-[9px] font-bold leading-none text-white bg-gradient-to-r from-blue-500 to-purple-500 rounded-full">
                 NEW
               </span>
             </TabsTrigger>
             <TabsTrigger 
               value="batch" 
-              className="rounded-md font-medium text-sm transition-all duration-200 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground hover:text-foreground"
+              className="rounded-md font-medium text-xs sm:text-sm py-2 px-2 sm:px-4 transition-all duration-200 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground data-[state=inactive]:text-gray-300 data-[state=inactive]:hover:text-gray-100 hover:bg-gray-600/50"
             >
-              Bulk Generate
+              <span className="whitespace-nowrap">Bulk Generate</span>
             </TabsTrigger>
           </TabsList>
           
