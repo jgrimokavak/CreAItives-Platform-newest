@@ -2056,7 +2056,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Define prompt templates (use exact text as specified)
       const PROMPT_TEMPLATES = {
-        'background-only': `Replace only the background with a clean, seamless light-gray curved studio wall and matte dark reflective floor. Do not change the car. Ensure the car's logo is the correct one.`,
+        'background-only': `Replace only the background with a clean, seamless light-gray curved studio wall and matte dark reflective floor. Do not change the car. `,
         'studio-enhance': `This is a {{make}} vehicle. Replace only the background with a clean, professional car studio: seamless curved light-gray wall with a soft lateral gradient, and a dark matte reflective floor. Use cool-toned white lighting from above only. The car must be evenly and brightly illuminated from the top, without any frontal or side lighting. Make the body panels and glass appear clean and naturally shiny and glossy under the studio lights. Do not alter any part of the vehicle. Preserve every original visual detail with zero modification: paint tone and color, grille, headlights, stickers, trim, the antenna, and damage, dents and scratches. Only rotate the vehicle to a 45° front-three-quarter angle if the current yaw deviates more than 20°.`
       };
       
