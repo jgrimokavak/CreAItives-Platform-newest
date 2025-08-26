@@ -98,18 +98,39 @@ export async function loadCarData(forceRefresh: boolean = false): Promise<Row[]>
   }
 }
 
-// Fetch car data from Google Sheets
+// Fetch car data from Google Sheets with aggressive cache-busting
 async function fetchCarDataFromGoogleSheets(): Promise<string> {
   if (!process.env.CAR_SHEET_CSV) {
     throw new Error("CAR_SHEET_CSV environment variable not set");
   }
 
+  // Multiple cache-busting techniques for Google Sheets
+  const timestamp = Date.now();
+  const randomId = Math.random().toString(36).substring(7);
+  
+  console.log(`🔄 Fetching fresh car data from Google Sheets (timestamp: ${timestamp})`);
+  
   const response = await axios.get(process.env.CAR_SHEET_CSV, { 
     responseType: "text",
-    params: { _t: Date.now() }
+    params: { 
+      _t: timestamp,
+      _r: randomId,
+      v: timestamp // Additional cache buster
+    },
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    },
+    timeout: 30000 // 30 second timeout
   });
   
-  return response.data as string;
+  const csvText = response.data as string;
+  const previewLength = Math.min(200, csvText.length);
+  const preview = csvText.substring(0, previewLength).replace(/\n/g, '\\n');
+  console.log(`📄 Fetched CSV preview (${csvText.length} chars): ${preview}...`);
+  
+  return csvText;
 }
 
 // Load car data from object storage
@@ -124,7 +145,11 @@ async function storeCarDataInObjectStorage(csvText: string): Promise<void> {
   const storagePath = getCarDataStoragePath();
   const dataBuffer = Buffer.from(csvText, 'utf-8');
   await objectStorage.uploadData(dataBuffer, storagePath);
-  console.log(`Car data stored in object storage: ${storagePath}`);
+  
+  // Show first few lines to verify the data being stored
+  const lines = csvText.split('\n').slice(0, 3);
+  console.log(`💾 Car data stored in object storage: ${storagePath}`);
+  console.log(`📋 First few lines stored:\n${lines.join('\n')}`);
 }
 
 export async function listMakes(): Promise<string[]> {
@@ -249,16 +274,37 @@ export async function loadColorData(forceRefresh: boolean = false): Promise<Colo
   }
 }
 
-// Fetch color data from Google Sheets
+// Fetch color data from Google Sheets with aggressive cache-busting
 async function fetchColorDataFromGoogleSheets(): Promise<string> {
   const colorSheetUrl = `https://docs.google.com/spreadsheets/d/${COLOR_SHEET_ID}/export?format=csv&gid=${COLOR_SHEET_GID}`;
   
+  // Multiple cache-busting techniques for Google Sheets
+  const timestamp = Date.now();
+  const randomId = Math.random().toString(36).substring(7);
+  
+  console.log(`🎨 Fetching fresh color data from Google Sheets (timestamp: ${timestamp})`);
+  
   const response = await axios.get(colorSheetUrl, { 
     responseType: "text",
-    params: { _t: Date.now() }
+    params: { 
+      _t: timestamp,
+      _r: randomId,
+      v: timestamp // Additional cache buster
+    },
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    },
+    timeout: 30000 // 30 second timeout
   });
   
-  return response.data as string;
+  const csvText = response.data as string;
+  const previewLength = Math.min(100, csvText.length);
+  const preview = csvText.substring(0, previewLength).replace(/\n/g, '\\n');
+  console.log(`🎨 Fetched color CSV preview (${csvText.length} chars): ${preview}...`);
+  
+  return csvText;
 }
 
 // Load color data from object storage
@@ -273,7 +319,11 @@ async function storeColorDataInObjectStorage(csvText: string): Promise<void> {
   const storagePath = getColorDataStoragePath();
   const dataBuffer = Buffer.from(csvText, 'utf-8');
   await objectStorage.uploadData(dataBuffer, storagePath);
-  console.log(`Color data stored in object storage: ${storagePath}`);
+  
+  // Show first few lines to verify the data being stored
+  const lines = csvText.split('\n').slice(0, 3);
+  console.log(`🎨 Color data stored in object storage: ${storagePath}`);
+  console.log(`📋 First few lines stored:\n${lines.join('\n')}`);
 }
 
 export async function listColors(): Promise<string[]> {
