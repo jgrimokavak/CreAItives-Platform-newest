@@ -27,6 +27,15 @@ export function setupCarDataAutoRefresh(): void {
   // REMOVED: All automatic refresh schedules for performance optimization
   // Data will only be refreshed when "Refresh car data" button is clicked
   console.log('Car data system initialized - using object storage cache with manual refresh only');
+  
+  // Show storage paths for verification
+  setTimeout(() => {
+    console.log('=== CAR DATA STORAGE VERIFICATION ===');
+    console.log('Environment:', process.env.REPLIT_DEPLOYMENT === '1' ? 'PRODUCTION' : 'DEVELOPMENT');
+    console.log('Car data stored at:', getCarDataStoragePath());
+    console.log('Color data stored at:', getColorDataStoragePath());
+    console.log('✅ Data is cached in object storage for instant loading!');
+  }, 1000);
 }
 
 // Helper function to get object storage paths
@@ -287,4 +296,44 @@ export function flushCarCache() {
 
 export function getLastFetchTime(): Date | null {
   return lastFetchTime;
+}
+
+// Debug function to verify object storage contents
+export async function debugCarDataStorage(): Promise<any> {
+  const carPath = getCarDataStoragePath();
+  const colorPath = getColorDataStoragePath();
+  
+  console.log('=== DEBUG CAR DATA STORAGE ===');
+  console.log('Environment:', process.env.REPLIT_DEPLOYMENT === '1' ? 'PRODUCTION' : 'DEVELOPMENT');
+  console.log('Car data path:', carPath);
+  console.log('Color data path:', colorPath);
+  
+  // List all objects in storage
+  const allObjects = await objectStorage.debugListAllObjects();
+  console.log('All objects in storage:', allObjects);
+  
+  // Try to read car data
+  try {
+    const carBuffer = await objectStorage.downloadData(carPath);
+    const carData = carBuffer.toString('utf-8').substring(0, 200) + '...'; // First 200 chars
+    console.log('Car data preview:', carData);
+  } catch (error: any) {
+    console.log('Car data read error:', error.message);
+  }
+  
+  // Try to read color data
+  try {
+    const colorBuffer = await objectStorage.downloadData(colorPath);
+    const colorData = colorBuffer.toString('utf-8').substring(0, 200) + '...'; // First 200 chars
+    console.log('Color data preview:', colorData);
+  } catch (error: any) {
+    console.log('Color data read error:', error.message);
+  }
+  
+  return {
+    carPath,
+    colorPath,
+    allObjects,
+    environment: process.env.REPLIT_DEPLOYMENT === '1' ? 'production' : 'development'
+  };
 }

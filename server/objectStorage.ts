@@ -228,6 +228,28 @@ export class ObjectStorageService {
   }
 
   /**
+   * Debug method to list all objects in object storage
+   */
+  async debugListAllObjects(): Promise<Array<{ path: string; size: number; lastModified?: Date }>> {
+    try {
+      const result = await this.client.list();
+      console.log('Debug list result:', { ok: result.ok, valueLength: result.value?.length || 0 });
+      
+      if (result.ok && Array.isArray(result.value)) {
+        return result.value.map((obj: any) => ({
+          path: obj.path || obj.name || obj.key || 'unknown',
+          size: obj.size || 0,
+          lastModified: obj.lastModified ? new Date(obj.lastModified) : undefined,
+        }));
+      }
+      return [];
+    } catch (error) {
+      console.error('Error listing all objects:', error);
+      return [];
+    }
+  }
+
+  /**
    * List all images in current environment with pagination support
    */
   async listImages(cursor?: string, limit: number = 50): Promise<{

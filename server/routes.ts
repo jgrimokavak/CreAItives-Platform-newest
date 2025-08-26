@@ -32,7 +32,7 @@ import analyticsRoutes from "./routes/analytics-routes";
 import objectStorageRoutes from "./routes/object-storage-routes";
 import galleryObjectStorageRoutes from "./gallery-object-storage";
 import { compileMjml, testMjmlCompilation } from "./routes/email-routes";
-import { listMakes, listModels, listBodyStyles, listTrims, listColors, flushCarCache, loadCarData, loadColorData, getLastFetchTime, setupCarDataAutoRefresh } from "./carData";
+import { listMakes, listModels, listBodyStyles, listTrims, listColors, flushCarCache, loadCarData, loadColorData, getLastFetchTime, setupCarDataAutoRefresh, debugCarDataStorage } from "./carData";
 import axios from "axios";
 import Papa from "papaparse";
 import cron from "node-cron";
@@ -1617,6 +1617,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/cars/models", async (req, res) => res.json(await listModels(req.query.make as string)));
   app.get("/api/cars/bodyStyles", async (req, res) => res.json(await listBodyStyles(req.query.make as string, req.query.model as string)));
   app.get("/api/cars/trims", async (req, res) => res.json(await listTrims(req.query.make as string, req.query.model as string, req.query.bodyStyle as string)));
+  
+  // Debug endpoint to verify car data storage
+  app.get("/api/cars/debug-storage", async (_req, res) => {
+    try {
+      const debug = await debugCarDataStorage();
+      res.json(debug);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
   app.get("/api/cars/colors", async (_req, res) => {
     // Disable caching for this endpoint to ensure fresh color data
     res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
