@@ -18,48 +18,57 @@ type ColorRow = { "Color List": string };
 const COLOR_SHEET_ID = "1ftpeFWjClvZINpJMxae1qrNRS1a7XPKAC0FUGizfgzs";
 const COLOR_SHEET_GID = "1643991184";
 
-// Setup initial car data load and optional daily refresh
+// Setup initial car data load - no auto-refresh for performance optimization
 export function setupCarDataAutoRefresh(): void {
-  // Immediately fetch the data once on startup
-  loadCarData(true).catch(err => console.error("Initial car data load failed:", err));
-  loadColorData(true).catch(err => console.error("Initial color data load failed:", err));
+  // Load data from object storage on startup (or fallback to Google Sheets if not found)
+  loadCarData(false).catch(err => console.error("Initial car data load failed:", err));
+  loadColorData(false).catch(err => console.error("Initial color data load failed:", err));
   
-  // REMOVED: 5-minute auto-refresh for performance optimization
-  // Manual refresh button will still work via direct function calls
-  
-  // Optional: Schedule refresh once per day at 2 AM to keep data fresh
-  cron.schedule('0 2 * * *', async () => {
-    console.log('Daily refresh of car data from Google Sheets...');
-    try {
-      await loadCarData(true);
-      await loadColorData(true);
-      console.log('Car data refreshed successfully at', new Date().toISOString());
-    } catch (error) {
-      console.error('Error during daily car data refresh:', error);
-    }
-  });
+  // REMOVED: All automatic refresh schedules for performance optimization
+  // Data will only be refreshed when "Refresh car data" button is clicked
+  console.log('Car data system initialized - using object storage cache with manual refresh only');
 }
 
+// Helper function to get object storage paths
+function getCarDataStoragePath(): string {
+  const envPrefix = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
+  return `${envPrefix}/car-data/car-database.csv`;
+}
+
+function getColorDataStoragePath(): string {
+  const envPrefix = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
+  return `${envPrefix}/car-data/color-database.csv`;
+}
+
+// Load car data from object storage first, fallback to Google Sheets only if not found
 export async function loadCarData(forceRefresh: boolean = false): Promise<Row[]> {
-  // Only use cache if not forcing refresh
+  // Check in-memory cache first
   const cached = cache.get<Row[]>("carRows");
   if (cached && !forceRefresh) return cached;
 
   try {
-    if (!process.env.CAR_SHEET_CSV) {
-      console.warn("CAR_SHEET_CSV environment variable not set");
-      return [];
+    let csvText: string = "";
+    let dataSource = "";
+
+    if (forceRefresh) {
+      // Force refresh: Fetch from Google Sheets and update object storage
+      csvText = await fetchCarDataFromGoogleSheets();
+      await storeCarDataInObjectStorage(csvText);
+      dataSource = "Google Sheets (forced refresh)";
+    } else {
+      // Try to load from object storage first
+      try {
+        csvText = await loadCarDataFromObjectStorage();
+        dataSource = "object storage (cached)";
+      } catch (storageError) {
+        // Fallback to Google Sheets if object storage fails
+        console.log("Car data not found in object storage, fetching from Google Sheets...");
+        csvText = await fetchCarDataFromGoogleSheets();
+        await storeCarDataInObjectStorage(csvText);
+        dataSource = "Google Sheets (object storage fallback)";
+      }
     }
 
-    console.log(`Fetching car data from ${forceRefresh ? 'source (forced refresh)' : 'source (cache expired)'}`);
-    const response = await axios.get(process.env.CAR_SHEET_CSV, { 
-      responseType:"text",
-      // Add cache busting parameter to avoid browser/CDN caching
-      params: { _t: Date.now() }
-    });
-    
-    const csvText = response.data as string;
-    
     const parseResult = Papa.parse<Row>(csvText, { 
       header: true, 
       skipEmptyLines: true 
@@ -72,12 +81,41 @@ export async function loadCarData(forceRefresh: boolean = false): Promise<Row[]>
     const rows = parseResult.data || [];
     cache.set("carRows", rows);
     lastFetchTime = new Date();
-    console.log(`Car data refreshed: ${rows.length} entries loaded at ${lastFetchTime.toISOString()}`);
+    console.log(`Car data loaded from ${dataSource}: ${rows.length} entries at ${lastFetchTime.toISOString()}`);
     return rows;
   } catch (error) {
     console.error("Error loading car data:", error);
     return cached || []; // Fall back to cached data if available on error
   }
+}
+
+// Fetch car data from Google Sheets
+async function fetchCarDataFromGoogleSheets(): Promise<string> {
+  if (!process.env.CAR_SHEET_CSV) {
+    throw new Error("CAR_SHEET_CSV environment variable not set");
+  }
+
+  const response = await axios.get(process.env.CAR_SHEET_CSV, { 
+    responseType: "text",
+    params: { _t: Date.now() }
+  });
+  
+  return response.data as string;
+}
+
+// Load car data from object storage
+async function loadCarDataFromObjectStorage(): Promise<string> {
+  const storagePath = getCarDataStoragePath();
+  const dataBuffer = await objectStorage.downloadData(storagePath);
+  return dataBuffer.toString('utf-8');
+}
+
+// Store car data in object storage
+async function storeCarDataInObjectStorage(csvText: string): Promise<void> {
+  const storagePath = getCarDataStoragePath();
+  const dataBuffer = Buffer.from(csvText, 'utf-8');
+  await objectStorage.uploadData(dataBuffer, storagePath);
+  console.log(`Car data stored in object storage: ${storagePath}`);
 }
 
 export async function listMakes(): Promise<string[]> {
@@ -155,22 +193,33 @@ export async function listTrims(make:string, model:string, body_style:string): P
   return result;
 }
 
-// Color data loading
+// Color data loading with object storage caching
 export async function loadColorData(forceRefresh: boolean = false): Promise<ColorRow[]> {
   const cached = cache.get<ColorRow[]>("colorRows");
   if (cached && !forceRefresh) return cached;
 
   try {
-    // Build CSV export URL for Google Sheets with specific gid
-    const colorSheetUrl = `https://docs.google.com/spreadsheets/d/${COLOR_SHEET_ID}/export?format=csv&gid=${COLOR_SHEET_GID}`;
-    
-    console.log(`Fetching color data from ${forceRefresh ? 'source (forced refresh)' : 'source (cache expired)'}`);
-    const response = await axios.get(colorSheetUrl, { 
-      responseType: "text",
-      params: { _t: Date.now() }
-    });
-    
-    const csvText = response.data as string;
+    let csvText: string = "";
+    let dataSource = "";
+
+    if (forceRefresh) {
+      // Force refresh: Fetch from Google Sheets and update object storage
+      csvText = await fetchColorDataFromGoogleSheets();
+      await storeColorDataInObjectStorage(csvText);
+      dataSource = "Google Sheets (forced refresh)";
+    } else {
+      // Try to load from object storage first
+      try {
+        csvText = await loadColorDataFromObjectStorage();
+        dataSource = "object storage (cached)";
+      } catch (storageError) {
+        // Fallback to Google Sheets if object storage fails
+        console.log("Color data not found in object storage, fetching from Google Sheets...");
+        csvText = await fetchColorDataFromGoogleSheets();
+        await storeColorDataInObjectStorage(csvText);
+        dataSource = "Google Sheets (object storage fallback)";
+      }
+    }
     
     const parseResult = Papa.parse<ColorRow>(csvText, { 
       header: true, 
@@ -183,12 +232,39 @@ export async function loadColorData(forceRefresh: boolean = false): Promise<Colo
     
     const rows = parseResult.data || [];
     cache.set("colorRows", rows);
-    console.log(`Color data refreshed: ${rows.length} colors loaded`);
+    console.log(`Color data loaded from ${dataSource}: ${rows.length} colors`);
     return rows;
   } catch (error) {
     console.error("Error loading color data:", error);
     return cached || [];
   }
+}
+
+// Fetch color data from Google Sheets
+async function fetchColorDataFromGoogleSheets(): Promise<string> {
+  const colorSheetUrl = `https://docs.google.com/spreadsheets/d/${COLOR_SHEET_ID}/export?format=csv&gid=${COLOR_SHEET_GID}`;
+  
+  const response = await axios.get(colorSheetUrl, { 
+    responseType: "text",
+    params: { _t: Date.now() }
+  });
+  
+  return response.data as string;
+}
+
+// Load color data from object storage
+async function loadColorDataFromObjectStorage(): Promise<string> {
+  const storagePath = getColorDataStoragePath();
+  const dataBuffer = await objectStorage.downloadData(storagePath);
+  return dataBuffer.toString('utf-8');
+}
+
+// Store color data in object storage
+async function storeColorDataInObjectStorage(csvText: string): Promise<void> {
+  const storagePath = getColorDataStoragePath();
+  const dataBuffer = Buffer.from(csvText, 'utf-8');
+  await objectStorage.uploadData(dataBuffer, storagePath);
+  console.log(`Color data stored in object storage: ${storagePath}`);
 }
 
 export async function listColors(): Promise<string[]> {

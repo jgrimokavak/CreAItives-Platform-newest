@@ -188,6 +188,46 @@ export class ObjectStorageService {
   }
 
   /**
+   * Generic method to upload any data buffer to object storage
+   */
+  async uploadData(dataBuffer: Buffer, path: string): Promise<void> {
+    try {
+      console.log(`[TRACE] Uploading data to Object Storage key: ${path}`);
+      const uploadResult = await this.client.uploadFromBytes(path, dataBuffer);
+      if (!uploadResult.ok) {
+        throw new Error('Failed to upload data');
+      }
+      console.log(`[TRACE] Data uploaded successfully to: ${path}`);
+    } catch (error) {
+      console.error('Error uploading data to Object Storage:', error);
+      throw new Error(`Failed to upload data: ${error}`);
+    }
+  }
+
+  /**
+   * Generic method to download any data from object storage
+   */
+  async downloadData(path: string): Promise<Buffer> {
+    try {
+      const result = await this.client.downloadAsBytes(path);
+      
+      if (result && typeof result === 'object' && 'ok' in result) {
+        if (result.ok) {
+          return result.value[0] as Buffer;
+        } else {
+          throw new Error('Download failed');
+        }
+      } else {
+        // Direct buffer response
+        return result as Buffer;
+      }
+    } catch (error) {
+      console.error(`Error downloading data from path ${path}:`, error);
+      throw new Error(`Failed to download data: ${error}`);
+    }
+  }
+
+  /**
    * List all images in current environment with pagination support
    */
   async listImages(cursor?: string, limit: number = 50): Promise<{
