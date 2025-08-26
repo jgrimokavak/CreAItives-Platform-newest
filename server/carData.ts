@@ -2,10 +2,14 @@ import NodeCache from "node-cache";
 import axios from "axios";
 import Papa from "papaparse";
 import cron from "node-cron";
+import { ObjectStorageService } from "./objectStorage";
 
 // Reduce cache time to 2 minutes and add last fetch timestamp
 const cache = new NodeCache({ stdTTL: 120 });   // 2 min
 let lastFetchTime: Date | null = null;
+
+// Object storage service for persistent caching
+const objectStorage = new ObjectStorageService();
 
 type Row = { make:string; model:string; body_style:string; trim:string };
 type ColorRow = { "Color List": string };
