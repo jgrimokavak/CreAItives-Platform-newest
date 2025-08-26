@@ -2073,10 +2073,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Using Replicate model: flux-kontext-max`);
       
+      // DIAGNOSTIC: Log original uploaded file details
+      console.log('[PHOTO-TO-STUDIO DIAGNOSTIC] Original upload:', {
+        mimetype: req.file.mimetype,
+        bufferLength: req.file.buffer.length,
+        originalname: req.file.originalname
+      });
+      
+      // Get image dimensions using sharp
+      const sharp = await import('sharp');
+      const metadata = await sharp.default(req.file.buffer).metadata();
+      console.log('[PHOTO-TO-STUDIO DIAGNOSTIC] Original image metadata:', {
+        width: metadata.width,
+        height: metadata.height,
+        format: metadata.format,
+        size: metadata.size
+      });
+
       // Convert the uploaded image to base64
       const imageBase64 = req.file.buffer.toString('base64');
       const imageMimeType = req.file.mimetype;
       const imageDataUri = `data:${imageMimeType};base64,${imageBase64}`;
+      
+      // DIAGNOSTIC: Log what we're sending to Replicate
+      console.log('[PHOTO-TO-STUDIO DIAGNOSTIC] Sending to Replicate:', {
+        dataUriLength: imageDataUri.length,
+        base64Length: imageBase64.length,
+        mimeType: imageMimeType
+      });
       
       // Get the Replicate provider
       const { ReplicateProvider } = await import('./providers/replicate-provider');

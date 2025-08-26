@@ -1,0 +1,36 @@
+# Goal
+Investigate whether uploaded car photos in the new “Photo-to-Studio” feature are being downscaled, compressed, or losing resolution before they reach the Replicate API. I suspect this because I get sharper results when uploading the same photo directly to Replicate.com compared to going through our feature.
+
+# What to analyze
+1. **Frontend handling**
+   - Check the React file upload component (Photo-to-Studio tab in CarCreationPage).
+   - Verify whether the file input or preview step uses `<canvas>`, `URL.createObjectURL`, or any client-side image manipulation that could downscale or re-encode before sending.
+   - Confirm what exactly goes into the FormData payload (raw File object vs processed blob).
+
+2. **Backend upload handling**
+   - Inspect the Express route `/api/car/photo-to-studio`.
+   - How are files parsed? (multer / busboy / custom middleware)
+   - Confirm whether the uploaded buffer is passed unchanged to Replicate or if any resizing/compression happens.
+   - Check MIME type handling and whether sharp or another image library touches the buffer before sending.
+
+3. **Replicate API call**
+   - In the provider (`ReplicateProvider.edit`), confirm what input is being passed to the Flux-Kontext-Max model.
+   - Ensure that `input_image` (or equivalent param) is receiving the **full original buffer** and not a thumbnail or derived version.
+   - Compare the byte size and dimensions of the uploaded image on arrival vs what is posted to Replicate.
+
+4. **Persistence step**
+   - After generation, we know `persistImage` saves outputs to Object Storage, but double-check whether the input images themselves are being downscaled at this step for preview. Make sure this does not affect the actual model input.
+
+# Add temporary diagnostics
+- Log the original uploaded file’s `mimetype`, `buffer.length`, and dimensions (via sharp.metadata).
+- Log the same values right before sending to Replicate.
+- If they differ (smaller buffer or smaller dimensions), identify where the change occurs.
+
+# Deliverable
+A clear yes/no answer:
+- **Yes**: The upload pipeline resizes/compresses before reaching Replicate, with exact line(s) and explanation.
+- **No**: The uploaded image is passed intact to Replicate; differences in output quality come from the model itself, not preprocessing.
+- Include the exact byte size + dimensions at each step to prove the conclusion.
+
+# Success criteria
+I want to know with certainty whether the Photo-to-Studio tool alters image resolution or quality before the Replicate call. Do not just describe the flow — verify it with code inspection and diagnostic logging.

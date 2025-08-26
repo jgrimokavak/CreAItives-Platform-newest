@@ -699,6 +699,14 @@ const CarCreationPage: React.FC = () => {
 
       setPhotoToStudioProgress(10);
       
+      // DIAGNOSTIC: Log original file details on frontend
+      console.log('[FRONTEND DIAGNOSTIC] Selected file:', {
+        name: selectedFile.name,
+        size: selectedFile.size,
+        type: selectedFile.type,
+        lastModified: selectedFile.lastModified
+      });
+
       // Create form data
       const formData = new FormData();
       formData.append('image', selectedFile);

@@ -245,6 +245,14 @@ export class ReplicateProvider extends BaseProvider {
       throw new Error(`Model ${modelKey} missing version or slug`);
     }
     
+    // DIAGNOSTIC: Log what we're passing to Replicate API
+    console.log('[REPLICATE DIAGNOSTIC] Input image data:', {
+      inputImageLength: images[0]?.length || 0,
+      inputImageType: typeof images[0],
+      inputImagePrefix: images[0]?.substring(0, 50) + '...',
+      hasInputImage: !!images[0]
+    });
+
     // For flux-kontext-max, we need to pass the input_image parameter
     const body: Record<string, any> = {
       ...this.getDefaults(modelKey),
@@ -306,6 +314,12 @@ export class ReplicateProvider extends BaseProvider {
     if (imageUrls.length === 0) {
       throw new Error('No images were generated from edit');
     }
+    
+    // DIAGNOSTIC: Log what Replicate returned
+    console.log('[REPLICATE DIAGNOSTIC] Generated output URLs:', {
+      outputUrls: imageUrls,
+      outputCount: imageUrls.length
+    });
     
     // Download and save images
     const processedImages = await Promise.all(
