@@ -2255,7 +2255,7 @@ const CarCreationPage: React.FC = () => {
                           <CarImageCard
                             key={image.id}
                             image={image}
-                            make={photoToStudioForm.watch('brand') || undefined}
+                            make={photoToStudioForm.watch('brand') ? photoToStudioForm.watch('brand') : undefined}
                             onEdit={(img) => {
                               // Use the same edit handler approach as the gallery page
                               const sourceUrl = img.fullUrl || img.url;

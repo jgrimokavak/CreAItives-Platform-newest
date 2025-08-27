@@ -259,7 +259,7 @@ export function JobsTray({ isOpen, onClose, onJobCompleted, onJobsUpdate }: Jobs
   };
 
   return (
-    <div className={`fixed right-0 top-0 h-full w-96 bg-white border-l border-gray-200 shadow-xl transform transition-transform duration-300 z-40 ${
+    <div className={`fixed right-0 top-0 h-full w-96 sm:w-80 md:w-96 lg:w-[28rem] bg-white border-l border-gray-200 shadow-xl transform transition-transform duration-300 z-40 ${
       isOpen ? 'translate-x-0' : 'translate-x-full'
     }`}>
       <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
@@ -289,34 +289,34 @@ export function JobsTray({ isOpen, onClose, onJobCompleted, onJobsUpdate }: Jobs
         </div>
       </div>
 
-      <div className="p-6 space-y-4 overflow-y-auto h-[calc(100vh-120px)]">
+      <div className="p-4 sm:p-6 space-y-3 sm:space-y-4 overflow-y-auto h-[calc(100vh-120px)]">
         {jobs.length === 0 ? (
-          <div className="text-center text-gray-500 py-12">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Clock className="h-8 w-8 text-gray-400" />
+          <div className="text-center text-gray-500 py-8 sm:py-12">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+              <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
             </div>
-            <h4 className="font-medium text-gray-900 mb-2">No active jobs</h4>
-            <p className="text-sm text-gray-500">Your generated images will appear here</p>
+            <h4 className="font-medium text-gray-900 mb-2 text-sm sm:text-base">No active jobs</h4>
+            <p className="text-xs sm:text-sm text-gray-500">Your generated images will appear here</p>
           </div>
         ) : (
           jobs.map((job) => (
             <div 
               key={job.jobId} 
-              className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm hover:shadow-md transition-shadow space-y-3"
+              className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 border border-gray-100 shadow-sm hover:shadow-md transition-shadow space-y-2 sm:space-y-3"
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 sm:gap-3">
                   {getStatusIcon(job.status)}
                   <div>
-                    <span className="font-semibold text-sm text-gray-900">
+                    <span className="font-semibold text-xs sm:text-sm text-gray-900">
                       {getStatusText(job.status)}
                     </span>
-                    <div className="text-xs text-gray-500 mt-0.5">
+                    <div className="text-xs text-gray-500 mt-0.5 hidden sm:block">
                       {getModeDisplayName(job.mode)}
                     </div>
                   </div>
                 </div>
-                <div className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded-full">
+                <div className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded-full whitespace-nowrap">
                   {getModelDisplayName(job.modelKey)}
                 </div>
               </div>
