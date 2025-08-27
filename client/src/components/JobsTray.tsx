@@ -46,7 +46,13 @@ export function JobsTray({ isOpen, onClose, onJobCompleted }: JobsTrayProps) {
             progress: 0
           };
           
-          setJobs(prev => [newJob, ...prev]);
+          // Prevent duplicates by checking if job already exists
+          setJobs(prev => {
+            if (prev.some(j => j.jobId === newJob.jobId)) {
+              return prev;
+            }
+            return [newJob, ...prev];
+          });
         } 
         else if (type === 'jobUpdated') {
           const updatedJob = data;
@@ -64,7 +70,7 @@ export function JobsTray({ isOpen, onClose, onJobCompleted }: JobsTrayProps) {
               : job
           ));
           
-          // Handle completed jobs
+          // Handle completed or failed jobs
           if (updatedJob.status === 'completed' && updatedJob.resultImageUrl) {
             // Get the current job to build the completed job object
             setJobs(currentJobs => {
@@ -100,6 +106,13 @@ export function JobsTray({ isOpen, onClose, onJobCompleted }: JobsTrayProps) {
             setTimeout(() => {
               setJobs(prevJobs => prevJobs.filter((job: JobStatus) => job.jobId !== updatedJob.jobId));
             }, 3000);
+          }
+          
+          // Handle failed jobs - remove them after 5 seconds
+          if (updatedJob.status === 'failed') {
+            setTimeout(() => {
+              setJobs(prevJobs => prevJobs.filter((job: JobStatus) => job.jobId !== updatedJob.jobId));
+            }, 5000);
           }
         }
     };

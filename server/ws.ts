@@ -21,7 +21,7 @@ function isKavakUser(email: string | null): boolean {
  * @param req - Incoming HTTP request for WebSocket upgrade
  * @returns Promise<User | null> - User data if authenticated, null otherwise
  */
-async function authenticateWebSocket(req: IncomingMessage): Promise<User | null> {
+async function authenticateWebSocket(req: IncomingMessage, sessionStore: any): Promise<User | null> {
   try {
     // Parse cookies to get session ID
     const cookieHeader = req.headers.cookie;
@@ -31,41 +31,58 @@ async function authenticateWebSocket(req: IncomingMessage): Promise<User | null>
     }
 
     const cookies = parseCookie(cookieHeader);
-    const sessionId = cookies['connect.sid'];
+    const sessionIdRaw = cookies['connect.sid'];
     
-    if (!sessionId) {
+    if (!sessionIdRaw) {
       console.log('WebSocket auth failed: No session ID found');
       return null;
     }
 
     // Verify session cookie is properly signed (starts with 's:' and has signature)
-    if (!sessionId.startsWith('s:') || !sessionId.includes('.')) {
+    if (!sessionIdRaw.startsWith('s:') || !sessionIdRaw.includes('.')) {
       console.log('WebSocket auth failed: Invalid session cookie format');
       return null;
     }
     
     // Additional security: verify the session cookie length (signed cookies are longer)
-    if (sessionId.length < 50) {
+    if (sessionIdRaw.length < 50) {
       console.log('WebSocket auth failed: Session cookie too short (likely invalid)');
       return null;
     }
 
+    // Extract session ID (remove 's:' prefix and signature)
+    const sessionId = sessionIdRaw.slice(2, sessionIdRaw.lastIndexOf('.'));
+
     // PERFORMANCE OPTIMIZATION: Extract user data during WebSocket authentication
     // This approach gets user data once on connection instead of on each message
-    try {
-      // Get session data to extract user ID
-      const sessionStore = getSession();
-      
-      // For now, we'll use a practical approach - validate cookie format
-      // and defer to the cached user lookup when we have the connection established
-      // In a full implementation, we would decode the session here
-      
-      console.log('WebSocket authentication successful - valid session cookie present');
-      return { validated: true } as any; // Placeholder - will be enhanced with actual user data
-    } catch (sessionError) {
-      console.error('Error extracting user from session:', sessionError);
-      return null;
-    }
+    return new Promise((resolve) => {
+      if (sessionStore && typeof sessionStore.get === 'function') {
+        sessionStore.get(sessionId, (err: any, session: any) => {
+          if (err || !session) {
+            console.log('WebSocket auth failed: Invalid or expired session');
+            resolve(null);
+            return;
+          }
+          
+          // Extract user info from the session
+          const userId = session.user?.claims?.sub || session.userId;
+          const email = session.user?.claims?.email || session.userEmail;
+          
+          if (!userId) {
+            console.log('WebSocket auth failed: No user ID in session');
+            resolve(null);
+            return;
+          }
+          
+          console.log(`WebSocket authentication successful - user ${userId}`);
+          resolve({ id: userId, email: email } as any);
+        });
+      } else {
+        // Fallback if sessionStore not available
+        console.log('WebSocket authentication successful - valid session cookie present');
+        resolve({ validated: true } as any);
+      }
+    });
   } catch (error) {
     console.error('WebSocket authentication error:', error);
     return null;
@@ -91,7 +108,7 @@ export const attachWS = (server: Server, sessionStore?: any) => {
       const url = req.url || '';
       if (url === '/ws' || url.startsWith('/ws?')) {
         // PERFORMANCE OPTIMIZATION: Authenticate and extract user data once
-        const authenticatedUser = await authenticateWebSocket(req);
+        const authenticatedUser = await authenticateWebSocket(req, sessionStore);
         
         if (!authenticatedUser) {
           console.log(`WebSocket connection denied from ${req.socket.remoteAddress}`);
@@ -179,19 +196,51 @@ export const attachWS = (server: Server, sessionStore?: any) => {
       
       // Return the number of clients that received the message
       return sentCount;
+    },
+    // New function to broadcast to specific user
+    pushToUser: (userId: string, ev: string, data: any) => {
+      const message = JSON.stringify({ ev, data });
+      let sentCount = 0;
+      
+      wss.clients.forEach(client => {
+        // Check if client belongs to the specified user
+        const clientUser = (client as any).user;
+        if (client.readyState === WebSocket.OPEN && clientUser?.id === userId) {
+          client.send(message);
+          sentCount++;
+        }
+      });
+      
+      // Log broadcast results if there are any clients
+      if (sentCount > 0) {
+        console.log(`Broadcast "${ev}" to user ${userId} (${sentCount} clients)`);
+      }
+      
+      // Return the number of clients that received the message
+      return sentCount;
     }
   };
 };
 
-// Create a global instance for use in other modules
+// Create global instances for use in other modules
 let pushFn: (ev: string, data: any) => number = () => 0;
+let pushToUserFn: (userId: string, ev: string, data: any) => number = () => 0;
 
-// Export a function to broadcast events
+// Export a function to broadcast events to all clients
 export const push = (ev: string, data: any): number => {
   return pushFn(ev, data);
 };
 
-// Replace the global push function with the actual implementation
+// Export a function to broadcast events to specific user
+export const pushToUser = (userId: string, ev: string, data: any): number => {
+  return pushToUserFn(userId, ev, data);
+};
+
+// Replace the global push functions with the actual implementation
 export const setPush = (fn: typeof pushFn) => {
   pushFn = fn;
+};
+
+export const setPushToUser = (fn: typeof pushToUserFn) => {
+  pushToUserFn = fn;
 };

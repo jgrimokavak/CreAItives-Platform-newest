@@ -1,7 +1,7 @@
 import { db } from './db';
 import { photoStudioJobs } from '@shared/schema';
 import { eq, and, inArray, desc, count } from 'drizzle-orm';
-import { push } from './ws';
+import { push, pushToUser } from './ws';
 
 export type JobStatus = 'pending' | 'processing' | 'completed' | 'failed';
 
@@ -46,8 +46,8 @@ export async function createJob(data: CreateJobData): Promise<string> {
 
   console.log(`Created job ${jobId} for user ${data.userId}`);
   
-  // Broadcast job creation to all connected clients
-  push('jobCreated', {
+  // Broadcast job creation only to the specific user's clients (prevents duplicates)
+  pushToUser(data.userId, 'jobCreated', {
     jobId,
     userId: data.userId,
     status: 'pending',
@@ -119,8 +119,8 @@ export async function updateJobStatus(
   if (job.length > 0) {
     const jobData = job[0];
     
-    // Broadcast status update to all connected clients
-    push('jobUpdated', {
+    // Broadcast status update to user's clients only (prevents duplicates)
+    pushToUser(jobData.userId, 'jobUpdated', {
       jobId,
       userId: jobData.userId,
       status,

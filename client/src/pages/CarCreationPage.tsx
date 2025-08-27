@@ -127,6 +127,7 @@ const CarCreationPage: React.FC = () => {
   
   // Jobs Tray state
   const [isJobsTrayOpen, setIsJobsTrayOpen] = useState<boolean>(false);
+  const [isGeneratingStudio, setIsGeneratingStudio] = useState<boolean>(false);
   const [isUploadingBatch, setIsUploadingBatch] = useState<boolean>(false);
   
   // Modal state
@@ -888,6 +889,9 @@ const CarCreationPage: React.FC = () => {
       return;
     }
 
+    // Set loading state for visual feedback
+    setIsGeneratingStudio(true);
+
     try {
       // Create form data
       const formData = new FormData();
@@ -925,6 +929,11 @@ const CarCreationPage: React.FC = () => {
       
       // Open the jobs tray to show progress
       setIsJobsTrayOpen(true);
+      
+      // Clear form after successful submission
+      photoToStudioForm.reset();
+      setSelectedFiles([]);
+      setPreviewUrls([]);
 
     } catch (error: any) {
       console.error('Error creating job:', error);
@@ -933,6 +942,9 @@ const CarCreationPage: React.FC = () => {
         description: error.message || "Failed to create generation job",
         variant: "destructive"
       });
+    } finally {
+      // Always reset loading state
+      setIsGeneratingStudio(false);
     }
   };
 
@@ -2194,10 +2206,10 @@ const CarCreationPage: React.FC = () => {
                       }
                       photoToStudioForm.handleSubmit(handlePhotoToStudioGenerate)();
                     }}
-                    disabled={photoToStudioMutation.isPending || selectedFiles.length === 0}
+                    disabled={isGeneratingStudio || photoToStudioMutation.isPending || selectedFiles.length === 0}
                     className="w-full h-12 text-base font-medium"
                   >
-                    {photoToStudioMutation.isPending ? (
+                    {isGeneratingStudio || photoToStudioMutation.isPending ? (
                       <>
                         <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
                         Generating Studio Image...

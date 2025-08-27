@@ -15,7 +15,7 @@ import multer from "multer";
 import crypto from "crypto";
 import { GeneratedImage, User } from "@shared/schema";
 import galleryRoutes from "./gallery-routes";
-import { attachWS, setPush } from "./ws";
+import { attachWS, setPush, setPushToUser } from "./ws";
 import { setupCleanupJob } from "./cleanup";
 import { persistImage } from "./fs-storage";
 import { models } from "./config/models";
@@ -2178,8 +2178,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   httpServer.keepAliveTimeout = 300_000; // 5 minutes
   
   // Attach WebSocket server
-  const { push: wsPublish } = attachWS(httpServer);
-  setPush(wsPublish); // Set the global push function
+  const wsServer = attachWS(httpServer);
+  setPush(wsServer.push); // Set the global push function
+  setPushToUser(wsServer.pushToUser); // Set the user-specific push function
   
   // Initialize cleanup job for trashed images
   setupCleanupJob();
