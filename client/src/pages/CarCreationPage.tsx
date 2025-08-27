@@ -66,6 +66,7 @@ const photoToStudioSchema = z.object({
   mode: z.enum(['background-only', 'studio-enhance']),
   brand: z.string().optional(),
   additionalInstructions: z.string().optional(),
+  modelKey: z.enum(["google/nano-banana", "flux-kontext-max"]).default("google/nano-banana"),
 }).refine((data) => {
   // Brand is required when mode is 'studio-enhance'
   if (data.mode === 'studio-enhance') {
@@ -132,8 +133,8 @@ const CarCreationPage: React.FC = () => {
   const [customColor, setCustomColor] = useState<string>("");
   
   // Photo-to-Studio state
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [photoToStudioProgress, setPhotoToStudioProgress] = useState<number | null>(null);
   const [photoToStudioImage, setPhotoToStudioImage] = useState<GeneratedImage | null>(null);
   
@@ -163,7 +164,8 @@ const CarCreationPage: React.FC = () => {
     defaultValues: {
       mode: 'background-only',
       brand: '',
-      additionalInstructions: ''
+      additionalInstructions: '',
+      modelKey: 'google/nano-banana'
     }
   });
 
@@ -635,25 +637,47 @@ const CarCreationPage: React.FC = () => {
     return true;
   };
 
-  // Process selected file
-  const processFile = (file: File) => {
-    if (!validateFile(file)) return;
-
-    setSelectedFile(file);
+  // Process selected files - updated for multiple file support
+  const processFiles = (files: FileList | File[]) => {
+    const fileArray = Array.from(files);
     
-    // Create preview URL
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setPreviewUrl(e.target?.result as string);
-    };
-    reader.readAsDataURL(file);
+    // Validate max number of files (10)
+    if (selectedFiles.length + fileArray.length > 10) {
+      toast({
+        title: "Too many files",
+        description: "You can upload a maximum of 10 images",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const validFiles: File[] = [];
+    const validPreviewUrls: string[] = [];
+    
+    for (const file of fileArray) {
+      if (!validateFile(file)) continue;
+      
+      validFiles.push(file);
+      
+      // Create preview URL using FileReader
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const url = e.target?.result as string;
+        setPreviewUrls(prev => [...prev, url]);
+      };
+      reader.readAsDataURL(file);
+    }
+    
+    if (validFiles.length > 0) {
+      setSelectedFiles(prev => [...prev, ...validFiles]);
+    }
   };
 
   // File upload handler for Photo-to-Studio
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    processFile(file);
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+    processFiles(files);
   };
 
   // Drag and drop handlers
@@ -675,34 +699,46 @@ const CarCreationPage: React.FC = () => {
     
     const files = e.dataTransfer.files;
     if (files.length > 0) {
-      processFile(files[0]);
+      processFiles(files);
     }
   };
 
-  // Clear uploaded file
-  const clearSelectedFile = () => {
-    setSelectedFile(null);
-    setPreviewUrl(null);
+  // Clear uploaded files
+  const clearSelectedFiles = () => {
+    setSelectedFiles([]);
+    setPreviewUrls([]);
     // Reset the file input
     const fileInput = document.getElementById('car-photo') as HTMLInputElement;
     if (fileInput) {
       fileInput.value = '';
     }
   };
+  
+  // Remove a specific file
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    setPreviewUrls(prev => prev.filter((_, i) => i !== index));
+  };
 
   // Photo-to-Studio generation mutation
   const photoToStudioMutation = useMutation({
     mutationFn: async (values: PhotoToStudioFormValues) => {
-      if (!selectedFile) {
-        throw new Error('No image file selected');
+      if (!selectedFiles || selectedFiles.length === 0) {
+        throw new Error('No image files selected');
       }
 
       setPhotoToStudioProgress(10);
       
       // Create form data
       const formData = new FormData();
-      formData.append('image', selectedFile);
+      
+      // Append all selected images
+      selectedFiles.forEach((file, index) => {
+        formData.append('images', file);
+      });
+      
       formData.append('mode', values.mode);
+      formData.append('modelKey', values.modelKey);
       if (values.brand) {
         formData.append('brand', values.brand);
       }
@@ -1841,16 +1877,16 @@ const CarCreationPage: React.FC = () => {
                   <div className="bg-background/60 p-4 rounded-lg border border-border/40 shadow-sm">
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <Label htmlFor="car-photo">Car Photo</Label>
-                        {selectedFile && (
+                        <Label htmlFor="car-photo">Car Photos (max 10)</Label>
+                        {selectedFiles.length > 0 && (
                           <Button
                             type="button"
                             variant="outline"
                             size="sm"
-                            onClick={clearSelectedFile}
+                            onClick={clearSelectedFiles}
                             className="h-7 text-xs"
                           >
-                            Clear
+                            Clear All ({selectedFiles.length})
                           </Button>
                         )}
                       </div>
@@ -1870,13 +1906,13 @@ const CarCreationPage: React.FC = () => {
                           <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
                           <div className="space-y-1">
                             <p className="text-sm font-medium">
-                              Drag & drop your car photo here
+                              Drag & drop your car photos here
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              or click to browse
+                              or click to browse (max 10 images)
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              JPG, PNG, or WebP • Max 25MB
+                              JPG, PNG, or WebP • Max 25MB each
                             </p>
                           </div>
                         </div>
@@ -1884,28 +1920,39 @@ const CarCreationPage: React.FC = () => {
                           id="car-photo"
                           type="file"
                           accept="image/jpeg,image/png,image/webp"
+                          multiple
                           onChange={handleFileUpload}
                           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                         />
                       </div>
                       
-                      {previewUrl && (
-                        <div className="mt-3 relative">
-                          <img 
-                            src={previewUrl} 
-                            alt="Preview" 
-                            className="max-w-full h-32 object-cover rounded-md border"
-                          />
-                          <div className="mt-2 text-xs text-muted-foreground">
-                            <div className="flex items-center gap-2">
-                              <span className="shrink-0">File:</span>
-                              <span className="truncate" title={selectedFile?.name}>
-                                {selectedFile?.name}
-                              </span>
-                              <span className="shrink-0">
-                                ({((selectedFile?.size || 0) / 1024 / 1024).toFixed(1)} MB)
-                              </span>
-                            </div>
+                      {selectedFiles.length > 0 && (
+                        <div className="mt-3 space-y-3">
+                          <div className="text-xs text-muted-foreground">
+                            {selectedFiles.length} image{selectedFiles.length !== 1 ? 's' : ''} selected
+                          </div>
+                          <div className="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto">
+                            {selectedFiles.map((file, index) => (
+                              <div key={index} className="relative group">
+                                <img 
+                                  src={previewUrls[index]} 
+                                  alt={`Preview ${index + 1}`} 
+                                  className="w-full h-24 object-cover rounded-md border"
+                                />
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => removeFile(index)}
+                                  className="absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  ×
+                                </Button>
+                                <div className="mt-1 text-xs text-muted-foreground truncate" title={file.name}>
+                                  {file.name} ({(file.size / 1024 / 1024).toFixed(1)} MB)
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       )}
@@ -1961,6 +2008,65 @@ const CarCreationPage: React.FC = () => {
                     </div>
                   </div>
                   
+                  {/* Model selection section */}
+                  <div className="bg-background/60 p-4 rounded-lg border border-border/40 shadow-sm">
+                    <div className="space-y-3">
+                      <Label>AI Model</Label>
+                      <RadioGroup 
+                        value={photoToStudioForm.watch('modelKey')} 
+                        onValueChange={(value) => photoToStudioForm.setValue('modelKey', value as 'google/nano-banana' | 'flux-kontext-max')}
+                        className="space-y-3"
+                      >
+                        <div 
+                          className={`flex items-start space-x-3 p-3 rounded-md border transition-colors cursor-pointer ${
+                            photoToStudioForm.watch('modelKey') === 'google/nano-banana' 
+                              ? 'border-primary bg-primary/5' 
+                              : 'border-border/60 hover:bg-accent/30'
+                          }`}
+                          onClick={() => photoToStudioForm.setValue('modelKey', 'google/nano-banana')}
+                        >
+                          <RadioGroupItem value="google/nano-banana" id="nano-banana" className="mt-1" />
+                          <div className="space-y-1 flex-1">
+                            <div className="flex items-center gap-2">
+                              <Label htmlFor="nano-banana" className="font-medium text-sm cursor-pointer">
+                                Nano Banana (Recommended)
+                              </Label>
+                              <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">New</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              Google's latest multi-image model. Supports up to 10 images with enhanced understanding and better studio results.
+                            </p>
+                          </div>
+                        </div>
+                        <div 
+                          className={`flex items-start space-x-3 p-3 rounded-md border transition-colors cursor-pointer ${
+                            photoToStudioForm.watch('modelKey') === 'flux-kontext-max' 
+                              ? 'border-primary bg-primary/5' 
+                              : 'border-border/60 hover:bg-accent/30'
+                          }`}
+                          onClick={() => photoToStudioForm.setValue('modelKey', 'flux-kontext-max')}
+                        >
+                          <RadioGroupItem value="flux-kontext-max" id="flux-kontext-max" className="mt-1" />
+                          <div className="space-y-1 flex-1">
+                            <Label htmlFor="flux-kontext-max" className="font-medium text-sm cursor-pointer">
+                              Flux Kontext Max
+                            </Label>
+                            <p className="text-xs text-muted-foreground">
+                              Previous generation model. Single image only but proven results for studio transformations.
+                            </p>
+                          </div>
+                        </div>
+                      </RadioGroup>
+                      {photoToStudioForm.watch('modelKey') === 'flux-kontext-max' && selectedFiles.length > 1 && (
+                        <div className="bg-amber-50 border border-amber-200 rounded-md p-3">
+                          <p className="text-xs text-amber-700">
+                            Note: Flux Kontext Max only supports single images. Only the first image will be processed.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
                   {/* Brand field - shown only when Studio Enhance is selected */}
                   {watchMode === 'studio-enhance' && (
                     <div className="bg-background/60 p-4 rounded-lg border border-border/40 shadow-sm">
@@ -2005,17 +2111,17 @@ const CarCreationPage: React.FC = () => {
                 <div className="pt-4">
                   <Button 
                     onClick={() => {
-                      if (!selectedFile) {
+                      if (!selectedFiles || selectedFiles.length === 0) {
                         toast({
-                          title: "No image selected",
-                          description: "Please upload a car photo first",
+                          title: "No images selected",
+                          description: "Please upload at least one car photo first",
                           variant: "destructive"
                         });
                         return;
                       }
                       photoToStudioForm.handleSubmit(handlePhotoToStudioGenerate)();
                     }}
-                    disabled={photoToStudioMutation.isPending || !selectedFile}
+                    disabled={photoToStudioMutation.isPending || selectedFiles.length === 0}
                     className="w-full h-12 text-base font-medium"
                   >
                     {photoToStudioMutation.isPending ? (

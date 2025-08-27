@@ -2010,10 +2010,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Photo-to-Studio generation endpoint
-  app.post("/api/car/photo-to-studio", isAuthenticated, upload.single("image"), async (req: any, res) => {
+  app.post("/api/car/photo-to-studio", isAuthenticated, upload.array("images", 10), async (req: any, res) => {
     const startTime = Date.now();
     try {
-      const { mode, brand, additionalInstructions } = req.body;
+      const { mode, brand, additionalInstructions, modelKey } = req.body;
       
       // Validate required fields
       if (!mode) {
@@ -2024,19 +2024,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Brand is required when Studio Enhance mode is selected" });
       }
       
-      if (!req.file?.buffer) {
-        return res.status(400).json({ error: "Image file is required" });
+      // Validate model selection
+      const validModels = ['google/nano-banana', 'flux-kontext-max'];
+      const selectedModel = modelKey || 'google/nano-banana'; // Default to nano-banana
+      if (!validModels.includes(selectedModel)) {
+        return res.status(400).json({ error: `Invalid model. Must be one of: ${validModels.join(', ')}` });
+      }
+
+      if (!req.files || req.files.length === 0) {
+        return res.status(400).json({ error: "At least one image file is required" });
       }
       
-      // Validate file type
+      // Validate max file count (10 for nano-banana, 1 for flux-kontext-max)
+      if (selectedModel === 'flux-kontext-max' && req.files.length > 1) {
+        return res.status(400).json({ error: "Flux Kontext Max only supports a single image" });
+      }
+      
+      if (req.files.length > 10) {
+        return res.status(400).json({ error: "Maximum 10 images allowed" });
+      }
+      
+      // Validate each file
       const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-      if (!allowedTypes.includes(req.file.mimetype)) {
-        return res.status(400).json({ error: "Invalid file type. Please upload a JPG, PNG, or WebP image" });
-      }
-      
-      // Validate file size (25MB)
-      if (req.file.size > 25 * 1024 * 1024) {
-        return res.status(400).json({ error: "File too large. Please upload an image smaller than 25MB" });
+      for (const file of req.files) {
+        if (!allowedTypes.includes(file.mimetype)) {
+          return res.status(400).json({ error: "Invalid file type. Please upload JPG, PNG, or WebP images only" });
+        }
+        
+        if (file.size > 25 * 1024 * 1024) {
+          return res.status(400).json({ error: "File too large. Please upload images smaller than 25MB each" });
+        }
       }
       
       // Define prompt templates (use exact text as specified)
@@ -2065,35 +2082,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ error: "REPLICATE_API_TOKEN environment variable is not set" });
       }
       
-      // Get the flux-kontext-max model from the configured models
-      const fluxModel = models.find(m => m.key === 'flux-kontext-max');
-      if (!fluxModel) {
-        return res.status(500).json({ error: "Flux-Kontext-Max model not properly initialized" });
+      // Get the selected model from the configured models
+      const selectedModelConfig = models.find(m => m.key === selectedModel);
+      if (!selectedModelConfig) {
+        return res.status(500).json({ error: `${selectedModel} model not properly initialized` });
       }
       
-      console.log(`Using Replicate model: flux-kontext-max`);
+      console.log(`Using Replicate model: ${selectedModel}`);
       
-      // Convert the uploaded image to base64
-      const imageBase64 = req.file.buffer.toString('base64');
-      const imageMimeType = req.file.mimetype;
-      const imageDataUri = `data:${imageMimeType};base64,${imageBase64}`;
+      // Convert uploaded images to base64
+      const imageDataUris = req.files.map(file => {
+        const imageBase64 = file.buffer.toString('base64');
+        const imageMimeType = file.mimetype;
+        return `data:${imageMimeType};base64,${imageBase64}`;
+      });
       
       // Get the Replicate provider
       const { ReplicateProvider } = await import('./providers/replicate-provider');
       const replicateProvider = new ReplicateProvider();
       
-      // Use the provider's edit method with flux-kontext-max defaults
-      const result = await replicateProvider.edit({
+      // Use the provider's edit method with selected model
+      const editParams: any = {
         prompt,
-        modelKey: 'flux-kontext-max',
-        images: [imageDataUri],
+        modelKey: selectedModel,
+        images: imageDataUris,
         mask: undefined, // No mask needed for background replacement
-        // Use the defaults from the model configuration
-        aspect_ratio: 'match_input_image',
-        output_format: 'png',
-        safety_tolerance: 2,
-        prompt_upsampling: false
-      });
+      };
+      
+      // Add model-specific parameters
+      if (selectedModel === 'flux-kontext-max') {
+        editParams.aspect_ratio = 'match_input_image';
+        editParams.output_format = 'png';
+        editParams.safety_tolerance = 2;
+        editParams.prompt_upsampling = false;
+      } else if (selectedModel === 'google/nano-banana') {
+        // nano-banana parameters will be handled in the provider
+        editParams.output_format = 'png';
+      }
+      
+      const result = await replicateProvider.edit(editParams);
       
       if (!result.images || result.images.length === 0) {
         return res.status(500).json({ error: "No images were generated" });
@@ -2124,7 +2151,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sessionId: req.sessionID,
         event: 'photo_to_studio_generate',
         feature: 'photo_to_studio',
-        model: 'flux-kontext-max',
+        model: selectedModel,
         status: 'succeeded',
         duration: Date.now() - startTime,
         metadata: {
@@ -2158,7 +2185,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           sessionId: req.sessionID,
           event: 'photo_to_studio_generate',
           feature: 'photo_to_studio',
-          model: 'flux-kontext-max',
+          model: selectedModel,
           status: 'failed',
           duration: Date.now() - startTime,
           errorCode: error.response?.status?.toString() || 'unknown_error',

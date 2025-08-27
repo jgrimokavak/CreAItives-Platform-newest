@@ -162,7 +162,53 @@ export const minimaxHailuoSchema = {
   required: ["prompt"]
 };
 
+// Nano Banana (Gemini 2.5 Flash Image) schema
+export const nanoBananaSchema = {
+  type: "object",
+  title: "Input",
+  required: ["prompt"],
+  properties: {
+    prompt: {
+      type: "string",
+      title: "Prompt", 
+      "x-order": 0,
+      description: "A text description of the image you want to generate"
+    },
+    image_input: {
+      type: "array",
+      items: {
+        type: "string",
+        anyOf: [],
+        format: "uri"
+      },
+      title: "Image Input",
+      "x-order": 1,
+      nullable: true,
+      description: "Input images to transform or use as reference (supports multiple images)"
+    },
+    output_format: {
+      enum: ["jpg", "png"],
+      type: "string",
+      title: "output_format",
+      description: "Format of the output image",
+      default: "jpg",
+      "x-order": 2
+    }
+  }
+};
+
 export const models: ModelConfig[] = [
+  {
+    key: "google/nano-banana",
+    provider: "replicate",
+    slug: "google/nano-banana",
+    schema: nanoBananaSchema,
+    defaults: {
+      output_format: "png"
+    },
+    visible: ["prompt", "image_input"],
+    description: "Nano Banana (Gemini 2.5 Flash Image) – faster, better edits, supports multiple reference images."
+  },
   {
     key: "gpt-image-1",
     provider: "openai",

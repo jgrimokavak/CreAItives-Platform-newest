@@ -146,6 +146,18 @@ export class ReplicateProvider extends BaseProvider {
       }
     }
     
+    // Handle google/nano-banana specific parameters
+    if (modelKey === 'google/nano-banana') {
+      // Force PNG output format as specified
+      body.output_format = "png";
+      
+      // If we have images array, convert to image_input
+      if (body.images && Array.isArray(body.images)) {
+        body.image_input = body.images;
+        delete body.images;
+      }
+    }
+    
     // Field mapping for flux-krea-dev
     if (modelKey === 'flux-krea-dev') {
       console.log('🔍 flux-krea-dev input before mapping:', JSON.stringify(body, null, 2));
@@ -230,8 +242,8 @@ export class ReplicateProvider extends BaseProvider {
   async edit(options: EditOptions): Promise<ProviderResult> {
     const { prompt, modelKey, images, mask, ...params } = options;
     
-    // Only flux-kontext-max supports editing from Replicate models
-    if (modelKey !== 'flux-kontext-max') {
+    // Only flux-kontext-max and google/nano-banana support editing from Replicate models
+    if (modelKey !== 'flux-kontext-max' && modelKey !== 'google/nano-banana') {
       throw new Error(`Model ${modelKey} does not support image editing`);
     }
     
@@ -245,23 +257,31 @@ export class ReplicateProvider extends BaseProvider {
       throw new Error(`Model ${modelKey} missing version or slug`);
     }
     
-    // For flux-kontext-max, we need to pass the input_image parameter
+    // Prepare the body based on the model
     const body: Record<string, any> = {
       ...this.getDefaults(modelKey),
       ...params,
-      prompt,
-      input_image: images[0], // flux-kontext-max only supports single image
-      mask: mask
+      prompt
     };
 
-    // Type conversion for flux-kontext-max specific parameters
+    // Handle model-specific parameters
     if (modelKey === 'flux-kontext-max') {
+      // For flux-kontext-max, we need to pass the input_image parameter
+      body.input_image = images[0]; // flux-kontext-max only supports single image
+      body.mask = mask;
+      
+      // Type conversion for flux-kontext-max specific parameters
       if (body.prompt_upsampling !== undefined) {
         body.prompt_upsampling = body.prompt_upsampling === 'true' || body.prompt_upsampling === true;
       }
       if (body.safety_tolerance !== undefined) {
         body.safety_tolerance = parseInt(body.safety_tolerance.toString());
       }
+    } else if (modelKey === 'google/nano-banana') {
+      // For nano-banana, use image_input array (supports multiple images)
+      body.image_input = images; // nano-banana supports multiple images (0-10)
+      body.output_format = "png"; // Force PNG as specified
+      // Note: nano-banana doesn't use mask parameter
     }
     
     log({

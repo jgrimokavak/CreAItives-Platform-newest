@@ -186,12 +186,32 @@ export const generateSchema = z.object({
 
 export type ModelKey = z.infer<typeof generateSchema>["modelKey"];
 
+// Photo-to-Studio schema
+export const photoToStudioSchema = z.object({
+  mode: z.enum(['background-only', 'studio-enhance']),
+  brand: z.string().optional(),
+  additionalInstructions: z.string().optional(),
+  modelKey: z.enum(["google/nano-banana", "flux-kontext-max"]).default("google/nano-banana"),
+  images: z.array(z.string()).min(1).max(10) // Array of image URLs, 1-10 images
+}).refine((data) => {
+  // Brand is required when mode is 'studio-enhance'
+  if (data.mode === 'studio-enhance') {
+    return data.brand && data.brand.trim().length > 0;
+  }
+  return true;
+}, {
+  message: "Brand is required when Studio Enhance mode is selected",
+  path: ["brand"],
+});
+
+export type PhotoToStudioFormValues = z.infer<typeof photoToStudioSchema>;
+
 // Keep the old schema for compatibility with existing code, but we'll transition to the new one
 export const generateImageSchema = z.object({
   // Common fields for all models
   prompt: z.string().min(1).max(32000),
   // Updated to match the new model keys
-  modelKey: z.enum(["gpt-image-1", "imagen-3", "imagen-4", "flux-pro", "flux-kontext-max", "flux-krea-dev", "wan-2.2"]),
+  modelKey: z.enum(["gpt-image-1", "imagen-3", "imagen-4", "flux-pro", "flux-kontext-max", "flux-krea-dev", "wan-2.2", "google/nano-banana"]),
   // OpenAI-specific parameters (only validated when OpenAI model is selected)
   size: z.enum(["auto", "1024x1024", "1536x1024", "1024x1536", "1792x1024", "1024x1792"]).optional(),
   quality: z.enum(["auto", "standard", "hd", "high", "medium", "low"]).optional(),
