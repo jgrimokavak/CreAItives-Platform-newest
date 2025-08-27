@@ -166,18 +166,18 @@ export async function getKPIs(dateFrom: Date, dateTo: Date, filters: {
       // DAU calculation
       dau: sql<number>`COUNT(DISTINCT ${activityEvents.userId})`,
       // Content generation metrics
-      imageAttempts: sql<number>`COUNT(CASE WHEN ${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation') THEN 1 END)`,
-      imageSuccesses: sql<number>`COUNT(CASE WHEN ${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation') AND ${activityEvents.status} = 'succeeded' THEN 1 END)`,
+      imageAttempts: sql<number>`COUNT(CASE WHEN ${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation', 'photo_to_studio') THEN 1 END)`,
+      imageSuccesses: sql<number>`COUNT(CASE WHEN ${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation', 'photo_to_studio') AND ${activityEvents.status} = 'succeeded' THEN 1 END)`,
       videoAttempts: sql<number>`COUNT(CASE WHEN ${activityEvents.feature} = 'video_generation' THEN 1 END)`,
       videoSuccesses: sql<number>`COUNT(CASE WHEN ${activityEvents.feature} = 'video_generation' AND ${activityEvents.status} = 'succeeded' THEN 1 END)`,
       upscaleAttempts: sql<number>`COUNT(CASE WHEN ${activityEvents.feature} = 'upscale' THEN 1 END)`,
       upscaleSuccesses: sql<number>`COUNT(CASE WHEN ${activityEvents.feature} = 'upscale' AND ${activityEvents.status} = 'succeeded' THEN 1 END)`,
       totalErrors: sql<number>`COUNT(CASE WHEN ${activityEvents.status} = 'failed' THEN 1 END)`,
       // Performance metrics
-      avgImageLatency: sql<number>`AVG(CASE WHEN ${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation') AND ${activityEvents.status} = 'succeeded' AND ${activityEvents.duration} IS NOT NULL THEN ${activityEvents.duration} END)`,
+      avgImageLatency: sql<number>`AVG(CASE WHEN ${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation', 'photo_to_studio') AND ${activityEvents.status} = 'succeeded' AND ${activityEvents.duration} IS NOT NULL THEN ${activityEvents.duration} END)`,
       avgVideoLatency: sql<number>`AVG(CASE WHEN ${activityEvents.feature} = 'video_generation' AND ${activityEvents.status} = 'succeeded' AND ${activityEvents.duration} IS NOT NULL THEN ${activityEvents.duration} END)`,
       avgUpscaleLatency: sql<number>`AVG(CASE WHEN ${activityEvents.feature} = 'upscale' AND ${activityEvents.status} = 'succeeded' AND ${activityEvents.duration} IS NOT NULL THEN ${activityEvents.duration} END)`,
-      p95ImageLatency: sql<number>`PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY CASE WHEN ${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation') AND ${activityEvents.status} = 'succeeded' AND ${activityEvents.duration} IS NOT NULL THEN ${activityEvents.duration} END)`,
+      p95ImageLatency: sql<number>`PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY CASE WHEN ${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation', 'photo_to_studio') AND ${activityEvents.status} = 'succeeded' AND ${activityEvents.duration} IS NOT NULL THEN ${activityEvents.duration} END)`,
       p95VideoLatency: sql<number>`PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY CASE WHEN ${activityEvents.feature} = 'video_generation' AND ${activityEvents.status} = 'succeeded' AND ${activityEvents.duration} IS NOT NULL THEN ${activityEvents.duration} END)`
     })
     .from(activityEvents)
@@ -197,7 +197,7 @@ export async function getKPIs(dateFrom: Date, dateTo: Date, filters: {
       .from(users)
       .leftJoin(activityEvents, and(
         eq(users.id, activityEvents.userId),
-        sql`${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation', 'video_generation', 'upscale')`,
+        sql`${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation', 'photo_to_studio', 'video_generation', 'upscale')`,
         eq(activityEvents.status, 'succeeded'),
         gte(activityEvents.createdAt, sql`${users.createdAt}`),
         lte(activityEvents.createdAt, sql`${users.createdAt} + INTERVAL '7 days'`)
@@ -347,8 +347,8 @@ export async function getKPIsWithComparison(
     db.select({
       // Current period metrics
       currentDau: sql<number>`COUNT(DISTINCT CASE WHEN ${activityEvents.createdAt} >= ${currentFrom} AND ${activityEvents.createdAt} <= ${currentTo} THEN ${activityEvents.userId} END)`,
-      currentImageAttempts: sql<number>`COUNT(CASE WHEN ${activityEvents.createdAt} >= ${currentFrom} AND ${activityEvents.createdAt} <= ${currentTo} AND ${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation') THEN 1 END)`,
-      currentImageSuccesses: sql<number>`COUNT(CASE WHEN ${activityEvents.createdAt} >= ${currentFrom} AND ${activityEvents.createdAt} <= ${currentTo} AND ${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation') AND ${activityEvents.status} = 'succeeded' THEN 1 END)`,
+      currentImageAttempts: sql<number>`COUNT(CASE WHEN ${activityEvents.createdAt} >= ${currentFrom} AND ${activityEvents.createdAt} <= ${currentTo} AND ${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation', 'photo_to_studio') THEN 1 END)`,
+      currentImageSuccesses: sql<number>`COUNT(CASE WHEN ${activityEvents.createdAt} >= ${currentFrom} AND ${activityEvents.createdAt} <= ${currentTo} AND ${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation', 'photo_to_studio') AND ${activityEvents.status} = 'succeeded' THEN 1 END)`,
       currentVideoAttempts: sql<number>`COUNT(CASE WHEN ${activityEvents.createdAt} >= ${currentFrom} AND ${activityEvents.createdAt} <= ${currentTo} AND ${activityEvents.feature} = 'video_generation' THEN 1 END)`,
       currentVideoSuccesses: sql<number>`COUNT(CASE WHEN ${activityEvents.createdAt} >= ${currentFrom} AND ${activityEvents.createdAt} <= ${currentTo} AND ${activityEvents.feature} = 'video_generation' AND ${activityEvents.status} = 'succeeded' THEN 1 END)`,
       currentUpscaleAttempts: sql<number>`COUNT(CASE WHEN ${activityEvents.createdAt} >= ${currentFrom} AND ${activityEvents.createdAt} <= ${currentTo} AND ${activityEvents.feature} = 'upscale' THEN 1 END)`,
@@ -357,8 +357,8 @@ export async function getKPIsWithComparison(
       
       // Previous period metrics
       previousDau: sql<number>`COUNT(DISTINCT CASE WHEN ${activityEvents.createdAt} >= ${previousFrom} AND ${activityEvents.createdAt} <= ${previousTo} THEN ${activityEvents.userId} END)`,
-      previousImageAttempts: sql<number>`COUNT(CASE WHEN ${activityEvents.createdAt} >= ${previousFrom} AND ${activityEvents.createdAt} <= ${previousTo} AND ${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation') THEN 1 END)`,
-      previousImageSuccesses: sql<number>`COUNT(CASE WHEN ${activityEvents.createdAt} >= ${previousFrom} AND ${activityEvents.createdAt} <= ${previousTo} AND ${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation') AND ${activityEvents.status} = 'succeeded' THEN 1 END)`,
+      previousImageAttempts: sql<number>`COUNT(CASE WHEN ${activityEvents.createdAt} >= ${previousFrom} AND ${activityEvents.createdAt} <= ${previousTo} AND ${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation', 'photo_to_studio') THEN 1 END)`,
+      previousImageSuccesses: sql<number>`COUNT(CASE WHEN ${activityEvents.createdAt} >= ${previousFrom} AND ${activityEvents.createdAt} <= ${previousTo} AND ${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation', 'photo_to_studio') AND ${activityEvents.status} = 'succeeded' THEN 1 END)`,
       previousVideoAttempts: sql<number>`COUNT(CASE WHEN ${activityEvents.createdAt} >= ${previousFrom} AND ${activityEvents.createdAt} <= ${previousTo} AND ${activityEvents.feature} = 'video_generation' THEN 1 END)`,
       previousVideoSuccesses: sql<number>`COUNT(CASE WHEN ${activityEvents.createdAt} >= ${previousFrom} AND ${activityEvents.createdAt} <= ${previousTo} AND ${activityEvents.feature} = 'video_generation' AND ${activityEvents.status} = 'succeeded' THEN 1 END)`,
       previousUpscaleAttempts: sql<number>`COUNT(CASE WHEN ${activityEvents.createdAt} >= ${previousFrom} AND ${activityEvents.createdAt} <= ${previousTo} AND ${activityEvents.feature} = 'upscale' THEN 1 END)`,
@@ -400,7 +400,7 @@ export async function getKPIsWithComparison(
     // Current activation
     db.select({ count: sql`count(*)` }).from(users).leftJoin(activityEvents, and(
       eq(users.id, activityEvents.userId),
-      sql`${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation', 'video_generation', 'upscale')`,
+      sql`${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation', 'photo_to_studio', 'video_generation', 'upscale')`,
       eq(activityEvents.status, 'succeeded'),
       gte(activityEvents.createdAt, sql`${users.createdAt}`),
       lte(activityEvents.createdAt, sql`${users.createdAt} + INTERVAL '7 days'`)
@@ -413,7 +413,7 @@ export async function getKPIsWithComparison(
     // Previous activation
     db.select({ count: sql`count(*)` }).from(users).leftJoin(activityEvents, and(
       eq(users.id, activityEvents.userId),
-      sql`${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation', 'video_generation', 'upscale')`,
+      sql`${activityEvents.feature} IN ('image_creation', 'image_editing', 'car_generation', 'batch_car_generation', 'photo_to_studio', 'video_generation', 'upscale')`,
       eq(activityEvents.status, 'succeeded'),
       gte(activityEvents.createdAt, sql`${users.createdAt}`),
       lte(activityEvents.createdAt, sql`${users.createdAt} + INTERVAL '7 days'`)
@@ -543,6 +543,7 @@ export async function getTrends(dateFrom: Date, dateTo: Date, interval: 'day' | 
       imageEditing: sql<number>`COUNT(CASE WHEN ${activityEvents.feature} = 'image_editing' AND ${activityEvents.status} = 'succeeded' THEN 1 END)`,
       carGeneration: sql<number>`COUNT(CASE WHEN ${activityEvents.feature} = 'car_generation' AND ${activityEvents.status} = 'succeeded' THEN 1 END)`,
       batchCarGeneration: sql<number>`COUNT(CASE WHEN ${activityEvents.feature} = 'batch_car_generation' AND ${activityEvents.status} = 'succeeded' THEN 1 END)`,
+      photoToStudio: sql<number>`COUNT(CASE WHEN ${activityEvents.feature} = 'photo_to_studio' AND ${activityEvents.status} = 'succeeded' THEN 1 END)`,
       upscale: sql<number>`COUNT(CASE WHEN ${activityEvents.feature} = 'upscale' AND ${activityEvents.status} = 'succeeded' THEN 1 END)`,
       videoGeneration: sql<number>`COUNT(CASE WHEN ${activityEvents.feature} = 'video_generation' AND ${activityEvents.status} = 'succeeded' THEN 1 END)`
     })
@@ -589,6 +590,7 @@ export async function getTrends(dateFrom: Date, dateTo: Date, interval: 'day' | 
       imageEditing: Number(t.imageEditing),
       carGeneration: Number(t.carGeneration),
       batchCarGeneration: Number(t.batchCarGeneration),
+      photoToStudio: Number(t.photoToStudio),
       upscale: Number(t.upscale),
       videoGeneration: Number(t.videoGeneration)
     })),

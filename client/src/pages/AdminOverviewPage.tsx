@@ -366,6 +366,13 @@ export default function AdminOverviewPage() {
                   strokeWidth={2}
                   name="Car Generation"
                 />
+                <Line 
+                  type="monotone" 
+                  dataKey="photoToStudio" 
+                  stroke="#ff6b6b" 
+                  strokeWidth={2}
+                  name="Photo to Studio"
+                />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -390,6 +397,7 @@ export default function AdminOverviewPage() {
                 <Bar dataKey="imageEditing" fill="#ffc658" name="Image Editing" />
                 <Bar dataKey="carGeneration" fill="#82ca9d" name="Car Generation" />
                 <Bar dataKey="batchCarGeneration" fill="#d084d0" name="Batch Car Generation" />
+                <Bar dataKey="photoToStudio" fill="#ff6b6b" name="Photo to Studio" />
                 <Bar dataKey="upscale" fill="#ff9999" name="Upscale" />
                 <Bar dataKey="videoGeneration" fill="#66b3ff" name="Video Generation" />
               </BarChart>
