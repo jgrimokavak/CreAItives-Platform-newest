@@ -204,80 +204,97 @@ export function JobsTray({ isOpen, onClose, onJobCompleted }: JobsTrayProps) {
   };
 
   return (
-    <div className={`fixed right-0 top-0 h-full w-80 bg-white border-l border-gray-200 shadow-lg transform transition-transform duration-300 z-40 ${
+    <div className={`fixed right-0 top-0 h-full w-96 bg-white border-l border-gray-200 shadow-xl transform transition-transform duration-300 z-40 ${
       isOpen ? 'translate-x-0' : 'translate-x-full'
     }`}>
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
-        <h3 className="font-semibold text-lg">Jobs Tray</h3>
+      <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <div>
+          <h3 className="font-semibold text-xl text-gray-900">Jobs Tray</h3>
+          <p className="text-sm text-gray-600 mt-1">Track your image generations</p>
+        </div>
         <Button
           variant="ghost"
           size="sm"
           onClick={onClose}
-          className="h-8 w-8 p-0"
+          className="h-9 w-9 p-0 hover:bg-white/50 rounded-full"
         >
-          <X className="h-4 w-4" />
+          <X className="h-5 w-5" />
         </Button>
       </div>
 
-      <div className="p-4 space-y-3 overflow-y-auto h-[calc(100vh-80px)]">
+      <div className="p-6 space-y-4 overflow-y-auto h-[calc(100vh-120px)]">
         {jobs.length === 0 ? (
-          <div className="text-center text-gray-500 py-8">
-            <Clock className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-            <p>No active jobs</p>
-            <p className="text-sm">Your generated images will appear here</p>
+          <div className="text-center text-gray-500 py-12">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Clock className="h-8 w-8 text-gray-400" />
+            </div>
+            <h4 className="font-medium text-gray-900 mb-2">No active jobs</h4>
+            <p className="text-sm text-gray-500">Your generated images will appear here</p>
           </div>
         ) : (
           jobs.map((job) => (
             <div 
               key={job.jobId} 
-              className="bg-gray-50 rounded-lg p-3 border border-gray-200 space-y-2"
+              className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm hover:shadow-md transition-shadow space-y-3"
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   {getStatusIcon(job.status)}
-                  <span className="font-medium text-sm">
-                    {getStatusText(job.status)}
-                  </span>
+                  <div>
+                    <span className="font-semibold text-sm text-gray-900">
+                      {getStatusText(job.status)}
+                    </span>
+                    <div className="text-xs text-gray-500 mt-0.5">
+                      {getModeDisplayName(job.mode)}
+                    </div>
+                  </div>
                 </div>
-                <div className="text-xs text-gray-500">
-                  {getModeDisplayName(job.mode)}
+                <div className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded-full">
+                  {getModelDisplayName(job.modelKey)}
                 </div>
-              </div>
-
-              <div className="text-xs text-gray-600">
-                <div>Model: {getModelDisplayName(job.modelKey)}</div>
               </div>
 
               {job.status === 'processing' && (
-                <div className="space-y-1">
-                  <div className="w-full bg-gray-200 rounded-full h-1.5">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-600">Generating image...</span>
+                    <span className="font-medium text-blue-600">{job.progress}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
                     <div 
-                      className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
+                      className="bg-gradient-to-r from-blue-500 to-indigo-500 h-2 rounded-full transition-all duration-500 ease-out"
                       style={{ width: `${job.progress}%` }}
                     ></div>
-                  </div>
-                  <div className="text-xs text-gray-500 text-center">
-                    {job.progress}%
                   </div>
                 </div>
               )}
 
               {job.status === 'failed' && job.errorMessage && (
-                <div className="text-xs text-red-600 bg-red-50 p-2 rounded border border-red-200">
-                  {job.errorMessage.length > 100 
-                    ? job.errorMessage.substring(0, 100) + '...'
-                    : job.errorMessage
-                  }
+                <div className="bg-red-50 border border-red-100 rounded-lg p-3">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
+                    <div className="text-xs text-red-700">
+                      {job.errorMessage.length > 120 
+                        ? job.errorMessage.substring(0, 120) + '...'
+                        : job.errorMessage
+                      }
+                    </div>
+                  </div>
                 </div>
               )}
 
               {job.status === 'completed' && job.resultThumbUrl && (
-                <div className="flex justify-center">
-                  <img 
-                    src={job.resultThumbUrl}
-                    alt="Generated result"
-                    className="h-20 w-20 object-cover rounded border border-gray-200"
-                  />
+                <div className="bg-gray-50 rounded-lg p-3 flex items-center justify-center">
+                  <div className="relative group">
+                    <img 
+                      src={job.resultThumbUrl}
+                      alt="Generated result"
+                      className="h-24 w-24 object-cover rounded-lg border-2 border-gray-200 group-hover:border-blue-300 transition-colors"
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors rounded-lg flex items-center justify-center">
+                      <CheckCircle className="h-6 w-6 text-green-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -286,8 +303,13 @@ export function JobsTray({ isOpen, onClose, onJobCompleted }: JobsTrayProps) {
       </div>
 
       {jobs.length > 0 && (
-        <div className="absolute bottom-4 left-4 right-4 text-xs text-gray-500 text-center bg-white py-2">
-          {jobs.filter(j => j.status === 'pending' || j.status === 'processing').length} active • Max 4 concurrent
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-white via-white to-transparent">
+          <div className="p-4 text-center border-t border-gray-100">
+            <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full text-xs font-medium">
+              <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+              {jobs.filter(j => j.status === 'pending' || j.status === 'processing').length} active jobs • Max 4 concurrent
+            </div>
+          </div>
         </div>
       )}
     </div>
