@@ -129,6 +129,13 @@ export function useWebSocket() {
         queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
         break;
         
+      case 'jobCreated':
+      case 'jobUpdated':
+        // Dispatch job events for JobsTray component
+        console.log(`[TRACE] Processing ${ev} event, dispatching ws-message`);
+        window.dispatchEvent(new CustomEvent('ws-message', { detail: { type: ev, data } }));
+        break;
+        
       default:
         console.log('Unknown WebSocket event:', ev);
     }

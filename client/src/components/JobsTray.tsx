@@ -31,24 +31,25 @@ export function JobsTray({ isOpen, onClose, onJobCompleted }: JobsTrayProps) {
 
   // WebSocket message handler
   useEffect(() => {
-    const handleJobUpdate = (event: MessageEvent) => {
-      try {
-        const data = JSON.parse(event.data);
-        
-        if (data.type === 'jobCreated') {
+    const handleWebSocketMessage = (event: any) => {
+      console.log('[JobsTray] WebSocket message received:', event.detail);
+      
+      const { type, data } = event.detail || {};
+      
+      if (type === 'jobCreated') {
           const newJob: JobStatus = {
-            jobId: data.data.jobId,
-            userId: data.data.userId,
+            jobId: data.jobId,
+            userId: data.userId,
             status: 'pending',
-            mode: data.data.mode,
-            modelKey: data.data.modelKey,
+            mode: data.mode,
+            modelKey: data.modelKey,
             progress: 0
           };
           
           setJobs(prev => [newJob, ...prev]);
         } 
-        else if (data.type === 'jobUpdated') {
-          const updatedJob = data.data;
+        else if (type === 'jobUpdated') {
+          const updatedJob = data;
           
           setJobs(prev => prev.map(job => 
             job.jobId === updatedJob.jobId 
@@ -99,17 +100,14 @@ export function JobsTray({ isOpen, onClose, onJobCompleted }: JobsTrayProps) {
             }, 3000);
           }
         }
-      } catch (error) {
-        console.warn('Failed to parse WebSocket message:', error);
-      }
     };
 
-    // Add WebSocket listener (assuming global WebSocket connection)
-    if (typeof window !== 'undefined' && (window as any).ws) {
-      (window as any).ws.addEventListener('message', handleJobUpdate);
+    // Listen for custom WebSocket events dispatched by the useWebSocket hook
+    if (typeof window !== 'undefined') {
+      window.addEventListener('ws-message', handleWebSocketMessage);
       
       return () => {
-        (window as any).ws.removeEventListener('message', handleJobUpdate);
+        window.removeEventListener('ws-message', handleWebSocketMessage);
       };
     }
   }, [onJobCompleted]);

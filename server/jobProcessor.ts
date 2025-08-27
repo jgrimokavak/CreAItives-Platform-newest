@@ -122,7 +122,8 @@ async function processJob(job: any): Promise<void> {
     // Generate the image
     await updateJobStatus(job.id, 'processing', { progress: 50 });
     
-    const result = await provider.generate({
+    // Use the edit method instead of generate for photo-to-studio
+    const result = await provider.edit({
       modelKey: job.modelKey,
       prompt,
       images: imageDataUris
@@ -134,26 +135,12 @@ async function processJob(job: any): Promise<void> {
     if (result && result.images && result.images.length > 0) {
       const imageUrl = result.images[0].url;
       
-      // Download and persist the image
-      console.log(`Downloading result image from: ${imageUrl}`);
+      // Download and persist the image using the ReplicateProvider's method
+      console.log(`Processing result image from Replicate: ${imageUrl}`);
       
-      const response = await fetch(imageUrl);
-      if (!response.ok) {
-        throw new Error(`Failed to download image: ${response.status} ${response.statusText}`);
-      }
-      
-      const imageBuffer = Buffer.from(await response.arrayBuffer());
-      const base64Data = imageBuffer.toString('base64');
-      
-      const image = await persistImage(base64Data, {
-        prompt: prompt,
-        params: {
-          mode: job.mode,
-          model: job.modelKey
-        },
-        userId: job.userId,
-        sources: ['photo-to-studio-job']
-      });
+      // The ReplicateProvider already handles downloading and persisting the image
+      // We just need to get the persisted image info
+      const image = result.images[0]; // This already contains fullUrl and thumbUrl
       
       await updateJobStatus(job.id, 'processing', { progress: 95 });
       
