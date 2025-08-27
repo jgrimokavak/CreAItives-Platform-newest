@@ -729,8 +729,22 @@ const CarCreationPage: React.FC = () => {
         clearInterval(interval);
         
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to generate studio image');
+          let errorMessage = 'Failed to generate studio image';
+          
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.error || errorMessage;
+          } catch (parseError) {
+            // If response is not JSON, try to get text response
+            try {
+              const textResponse = await response.text();
+              errorMessage = textResponse || `Server error (${response.status})`;
+            } catch (textError) {
+              errorMessage = `Server error (${response.status})`;
+            }
+          }
+          
+          throw new Error(errorMessage);
         }
         
         setPhotoToStudioProgress(95);
