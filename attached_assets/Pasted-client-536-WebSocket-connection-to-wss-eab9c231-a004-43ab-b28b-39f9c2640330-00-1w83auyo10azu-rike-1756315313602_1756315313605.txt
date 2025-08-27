@@ -1,0 +1,2129 @@
+client:536 WebSocket connection to 'wss://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/?token=AFqV6dYT3tCU' failed: 
+setupWebSocket @ client:536
+(anonymous) @ client:531
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=AFqV6dYT3tCU' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+setupWebSocket @ client:536
+fallback @ client:509
+(anonymous) @ client:555
+chunk-C43VWYGG.js?v=9ca7ebfc:21507 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+VideoPage.tsx:1751 [DIAGNOSTIC] Loading VIDEO_MODELS configuration
+VideoPage.tsx:1771 [DIAGNOSTIC] VIDEO_MODELS loaded: {modelKeys: Array(1), models: {…}}
+websocket.ts:17 [DIAGNOSTIC] WebSocket URL construction: {protocol: 'wss:', hostname: 'eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev', port: '', fullUrl: 'wss://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/ws', windowLocation: {…}}
+main.tsx:13 SW registered:  ServiceWorkerRegistration {installing: null, waiting: null, active: ServiceWorker, navigationPreload: NavigationPreloadManager, scope: 'https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/', …}
+car:1 <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">
+websocket.ts:17 [DIAGNOSTIC] WebSocket URL construction: {protocol: 'wss:', hostname: 'eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev', port: '', fullUrl: 'wss://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/ws', windowLocation: {…}}
+websocket.ts:40 WebSocket connected
+websocket.ts:40 WebSocket connected
+JobsTray.tsx:195 Warning: Each child in a list should have a unique "key" prop.
+
+Check the render method of `JobsTray`. See https://reactjs.org/link/warning-keys for more information.
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ react_jsx-dev-runtime.js?v=9ca7ebfc:64
+error @ react_jsx-dev-runtime.js?v=9ca7ebfc:48
+validateExplicitKey @ react_jsx-dev-runtime.js?v=9ca7ebfc:724
+validateChildKeys @ react_jsx-dev-runtime.js?v=9ca7ebfc:737
+jsxWithValidation @ react_jsx-dev-runtime.js?v=9ca7ebfc:854
+JobsTray @ JobsTray.tsx:195
+renderWithHooks @ chunk-C43VWYGG.js?v=9ca7ebfc:12151
+updateFunctionComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14557
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15892
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+websocket.ts:101 [TRACE] WebSocket received event: imageCreated with data: {image: {…}}
+websocket.ts:104 [TRACE] Processing imageCreated event, dispatching gallery-updated
+websocket.ts:109 [TRACE] Dispatching gallery-updated event: {type: 'created', data: {…}}
+CarCreationPage.tsx:189 [TRACE CarCreationPage] Received gallery-updated event: {type: 'created', data: {…}}
+CarCreationPage.tsx:192 [TRACE CarCreationPage] New image data: {id: 'edit_1756315218951_0', url: '/api/object-storage/image/dev/edit_1756315218951_0.png', prompt: 'Replace only the background with a clean, seamless…tive floor. Do not change any detail of the car. ', size: 1579586, model: 'google/nano-banana', …}
+websocket.ts:101 [TRACE] WebSocket received event: imageCreated with data: {image: {…}}
+websocket.ts:104 [TRACE] Processing imageCreated event, dispatching gallery-updated
+websocket.ts:109 [TRACE] Dispatching gallery-updated event: {type: 'created', data: {…}}
+CarCreationPage.tsx:189 [TRACE CarCreationPage] Received gallery-updated event: {type: 'created', data: {…}}
+CarCreationPage.tsx:192 [TRACE CarCreationPage] New image data: {id: 'edit_1756315218951_0', url: '/api/object-storage/image/dev/edit_1756315218951_0.png', prompt: 'Replace only the background with a clean, seamless…tive floor. Do not change any detail of the car. ', size: 1579586, model: 'google/nano-banana', …}
+websocket.ts:101 [TRACE] WebSocket received event: jobUpdated with data: {jobId: 'job_1756315204197_ujilugtud', userId: '41316054', status: 'processing', progress: 80, resultImageUrl: null, …}
+websocket.ts:135 [TRACE] Processing jobUpdated event, dispatching ws-message
+JobsTray.tsx:35 [JobsTray] WebSocket message received: {type: 'jobUpdated', data: {…}}
+websocket.ts:101 [TRACE] WebSocket received event: jobUpdated with data: {jobId: 'job_1756315204197_ujilugtud', userId: '41316054', status: 'processing', progress: 80, resultImageUrl: null, …}
+websocket.ts:135 [TRACE] Processing jobUpdated event, dispatching ws-message
+JobsTray.tsx:35 [JobsTray] WebSocket message received: {type: 'jobUpdated', data: {…}}
+websocket.ts:101 [TRACE] WebSocket received event: jobUpdated with data: {jobId: 'job_1756315204197_ujilugtud', userId: '41316054', status: 'processing', progress: 95, resultImageUrl: null, …}
+websocket.ts:135 [TRACE] Processing jobUpdated event, dispatching ws-message
+JobsTray.tsx:35 [JobsTray] WebSocket message received: {type: 'jobUpdated', data: {…}}
+websocket.ts:101 [TRACE] WebSocket received event: jobUpdated with data: {jobId: 'job_1756315204197_ujilugtud', userId: '41316054', status: 'processing', progress: 95, resultImageUrl: null, …}
+websocket.ts:135 [TRACE] Processing jobUpdated event, dispatching ws-message
+JobsTray.tsx:35 [JobsTray] WebSocket message received: {type: 'jobUpdated', data: {…}}
+websocket.ts:101 [TRACE] WebSocket received event: jobUpdated with data: {jobId: 'job_1756315204197_ujilugtud', userId: '41316054', status: 'completed', progress: 100, resultImageUrl: '/api/object-storage/image/dev/edit_1756315218951_0.png', …}
+websocket.ts:135 [TRACE] Processing jobUpdated event, dispatching ws-message
+JobsTray.tsx:35 [JobsTray] WebSocket message received: {type: 'jobUpdated', data: {…}}
+CarCreationPage.tsx:957 Warning: Cannot update a component (`CarCreationPage`) while rendering a different component (`JobsTray`). To locate the bad setState() call inside `JobsTray`, follow the stack trace as described in https://reactjs.org/link/setstate-in-render
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnAboutRenderPhaseUpdatesInDEV @ chunk-C43VWYGG.js?v=9ca7ebfc:19761
+scheduleUpdateOnFiber @ chunk-C43VWYGG.js?v=9ca7ebfc:18514
+dispatchSetState @ chunk-C43VWYGG.js?v=9ca7ebfc:13006
+handleJobCompleted @ CarCreationPage.tsx:957
+(anonymous) @ JobsTray.tsx:86
+basicStateReducer @ chunk-C43VWYGG.js?v=9ca7ebfc:12306
+updateReducer @ chunk-C43VWYGG.js?v=9ca7ebfc:12397
+updateState @ chunk-C43VWYGG.js?v=9ca7ebfc:12624
+useState @ chunk-C43VWYGG.js?v=9ca7ebfc:13356
+useState @ chunk-4RFDBWQV.js?v=9ca7ebfc:1066
+JobsTray @ JobsTray.tsx:25
+renderWithHooks @ chunk-C43VWYGG.js?v=9ca7ebfc:12151
+updateFunctionComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14557
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15892
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+websocket.ts:101 [TRACE] WebSocket received event: jobUpdated with data: {jobId: 'job_1756315204197_ujilugtud', userId: '41316054', status: 'completed', progress: 100, resultImageUrl: '/api/object-storage/image/dev/edit_1756315218951_0.png', …}
+websocket.ts:135 [TRACE] Processing jobUpdated event, dispatching ws-message
+JobsTray.tsx:35 [JobsTray] WebSocket message received: {type: 'jobUpdated', data: {…}}
+websocket.ts:101 [TRACE] WebSocket received event: jobCreated with data: {jobId: 'job_1756315225289_pja70fcov', userId: '41316054', status: 'pending', mode: 'background-only', modelKey: 'google/nano-banana', …}
+websocket.ts:135 [TRACE] Processing jobCreated event, dispatching ws-message
+JobsTray.tsx:35 [JobsTray] WebSocket message received: {type: 'jobCreated', data: {…}}
+websocket.ts:101 [TRACE] WebSocket received event: jobCreated with data: {jobId: 'job_1756315225289_pja70fcov', userId: '41316054', status: 'pending', mode: 'background-only', modelKey: 'google/nano-banana', …}
+websocket.ts:135 [TRACE] Processing jobCreated event, dispatching ws-message
+JobsTray.tsx:35 [JobsTray] WebSocket message received: {type: 'jobCreated', data: {…}}
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315225289_pja70fcov`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315225289_pja70fcov`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+websocket.ts:101 [TRACE] WebSocket received event: jobUpdated with data: {jobId: 'job_1756315225289_pja70fcov', userId: '41316054', status: 'processing', progress: 10, resultImageUrl: null, …}
+websocket.ts:135 [TRACE] Processing jobUpdated event, dispatching ws-message
+JobsTray.tsx:35 [JobsTray] WebSocket message received: {type: 'jobUpdated', data: {…}}
+websocket.ts:101 [TRACE] WebSocket received event: jobUpdated with data: {jobId: 'job_1756315225289_pja70fcov', userId: '41316054', status: 'processing', progress: 10, resultImageUrl: null, …}
+websocket.ts:135 [TRACE] Processing jobUpdated event, dispatching ws-message
+JobsTray.tsx:35 [JobsTray] WebSocket message received: {type: 'jobUpdated', data: {…}}
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315225289_pja70fcov`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+websocket.ts:101 [TRACE] WebSocket received event: jobUpdated with data: {jobId: 'job_1756315225289_pja70fcov', userId: '41316054', status: 'processing', progress: 25, resultImageUrl: null, …}
+websocket.ts:135 [TRACE] Processing jobUpdated event, dispatching ws-message
+JobsTray.tsx:35 [JobsTray] WebSocket message received: {type: 'jobUpdated', data: {…}}
+websocket.ts:101 [TRACE] WebSocket received event: jobUpdated with data: {jobId: 'job_1756315225289_pja70fcov', userId: '41316054', status: 'processing', progress: 25, resultImageUrl: null, …}
+websocket.ts:135 [TRACE] Processing jobUpdated event, dispatching ws-message
+JobsTray.tsx:35 [JobsTray] WebSocket message received: {type: 'jobUpdated', data: {…}}
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315225289_pja70fcov`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+websocket.ts:101 [TRACE] WebSocket received event: jobUpdated with data: {jobId: 'job_1756315225289_pja70fcov', userId: '41316054', status: 'processing', progress: 40, resultImageUrl: null, …}
+websocket.ts:135 [TRACE] Processing jobUpdated event, dispatching ws-message
+JobsTray.tsx:35 [JobsTray] WebSocket message received: {type: 'jobUpdated', data: {…}}
+websocket.ts:101 [TRACE] WebSocket received event: jobUpdated with data: {jobId: 'job_1756315225289_pja70fcov', userId: '41316054', status: 'processing', progress: 40, resultImageUrl: null, …}
+websocket.ts:135 [TRACE] Processing jobUpdated event, dispatching ws-message
+JobsTray.tsx:35 [JobsTray] WebSocket message received: {type: 'jobUpdated', data: {…}}
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315225289_pja70fcov`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+websocket.ts:101 [TRACE] WebSocket received event: jobUpdated with data: {jobId: 'job_1756315225289_pja70fcov', userId: '41316054', status: 'processing', progress: 50, resultImageUrl: null, …}
+websocket.ts:135 [TRACE] Processing jobUpdated event, dispatching ws-message
+JobsTray.tsx:35 [JobsTray] WebSocket message received: {type: 'jobUpdated', data: {…}}
+websocket.ts:101 [TRACE] WebSocket received event: jobUpdated with data: {jobId: 'job_1756315225289_pja70fcov', userId: '41316054', status: 'processing', progress: 50, resultImageUrl: null, …}
+websocket.ts:135 [TRACE] Processing jobUpdated event, dispatching ws-message
+JobsTray.tsx:35 [JobsTray] WebSocket message received: {type: 'jobUpdated', data: {…}}
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315225289_pja70fcov`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315225289_pja70fcov`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+websocket.ts:101 [TRACE] WebSocket received event: jobCreated with data: {jobId: 'job_1756315227209_jtcxjpsr8', userId: '41316054', status: 'pending', mode: 'background-only', modelKey: 'google/nano-banana', …}
+websocket.ts:135 [TRACE] Processing jobCreated event, dispatching ws-message
+JobsTray.tsx:35 [JobsTray] WebSocket message received: {type: 'jobCreated', data: {…}}
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315225289_pja70fcov`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+websocket.ts:101 [TRACE] WebSocket received event: jobCreated with data: {jobId: 'job_1756315227209_jtcxjpsr8', userId: '41316054', status: 'pending', mode: 'background-only', modelKey: 'google/nano-banana', …}
+websocket.ts:135 [TRACE] Processing jobCreated event, dispatching ws-message
+JobsTray.tsx:35 [JobsTray] WebSocket message received: {type: 'jobCreated', data: {…}}
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315227209_jtcxjpsr8`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315225289_pja70fcov`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315227209_jtcxjpsr8`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315225289_pja70fcov`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315227209_jtcxjpsr8`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315225289_pja70fcov`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315227209_jtcxjpsr8`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315225289_pja70fcov`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315227209_jtcxjpsr8`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315225289_pja70fcov`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315227209_jtcxjpsr8`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315225289_pja70fcov`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+websocket.ts:101 [TRACE] WebSocket received event: imageCreated with data: {image: {…}}
+websocket.ts:104 [TRACE] Processing imageCreated event, dispatching gallery-updated
+websocket.ts:109 [TRACE] Dispatching gallery-updated event: {type: 'created', data: {…}}
+CarCreationPage.tsx:189 [TRACE CarCreationPage] Received gallery-updated event: {type: 'created', data: {…}}
+CarCreationPage.tsx:192 [TRACE CarCreationPage] New image data: {id: 'edit_1756315238830_0', url: '/api/object-storage/image/dev/edit_1756315238830_0.png', prompt: 'Replace only the background with a clean, seamless…tive floor. Do not change any detail of the car. ', size: 1816891, model: 'google/nano-banana', …}
+websocket.ts:101 [TRACE] WebSocket received event: imageCreated with data: {image: {…}}
+websocket.ts:104 [TRACE] Processing imageCreated event, dispatching gallery-updated
+websocket.ts:109 [TRACE] Dispatching gallery-updated event: {type: 'created', data: {…}}
+CarCreationPage.tsx:189 [TRACE CarCreationPage] Received gallery-updated event: {type: 'created', data: {…}}
+CarCreationPage.tsx:192 [TRACE CarCreationPage] New image data: {id: 'edit_1756315238830_0', url: '/api/object-storage/image/dev/edit_1756315238830_0.png', prompt: 'Replace only the background with a clean, seamless…tive floor. Do not change any detail of the car. ', size: 1816891, model: 'google/nano-banana', …}
+websocket.ts:101 [TRACE] WebSocket received event: jobUpdated with data: {jobId: 'job_1756315225289_pja70fcov', userId: '41316054', status: 'processing', progress: 80, resultImageUrl: null, …}
+websocket.ts:135 [TRACE] Processing jobUpdated event, dispatching ws-message
+JobsTray.tsx:35 [JobsTray] WebSocket message received: {type: 'jobUpdated', data: {…}}
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315227209_jtcxjpsr8`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315225289_pja70fcov`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+websocket.ts:101 [TRACE] WebSocket received event: jobUpdated with data: {jobId: 'job_1756315225289_pja70fcov', userId: '41316054', status: 'processing', progress: 80, resultImageUrl: null, …}
+websocket.ts:135 [TRACE] Processing jobUpdated event, dispatching ws-message
+JobsTray.tsx:35 [JobsTray] WebSocket message received: {type: 'jobUpdated', data: {…}}
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315227209_jtcxjpsr8`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315225289_pja70fcov`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+websocket.ts:101 [TRACE] WebSocket received event: jobUpdated with data: {jobId: 'job_1756315225289_pja70fcov', userId: '41316054', status: 'processing', progress: 95, resultImageUrl: null, …}
+websocket.ts:135 [TRACE] Processing jobUpdated event, dispatching ws-message
+JobsTray.tsx:35 [JobsTray] WebSocket message received: {type: 'jobUpdated', data: {…}}
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315227209_jtcxjpsr8`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315225289_pja70fcov`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+websocket.ts:101 [TRACE] WebSocket received event: jobUpdated with data: {jobId: 'job_1756315225289_pja70fcov', userId: '41316054', status: 'processing', progress: 95, resultImageUrl: null, …}
+websocket.ts:135 [TRACE] Processing jobUpdated event, dispatching ws-message
+JobsTray.tsx:35 [JobsTray] WebSocket message received: {type: 'jobUpdated', data: {…}}
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315227209_jtcxjpsr8`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315225289_pja70fcov`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+websocket.ts:101 [TRACE] WebSocket received event: jobUpdated with data: {jobId: 'job_1756315225289_pja70fcov', userId: '41316054', status: 'completed', progress: 100, resultImageUrl: '/api/object-storage/image/dev/edit_1756315238830_0.png', …}
+websocket.ts:135 [TRACE] Processing jobUpdated event, dispatching ws-message
+JobsTray.tsx:35 [JobsTray] WebSocket message received: {type: 'jobUpdated', data: {…}}
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315227209_jtcxjpsr8`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315225289_pja70fcov`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315227209_jtcxjpsr8`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315225289_pja70fcov`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+websocket.ts:101 [TRACE] WebSocket received event: jobUpdated with data: {jobId: 'job_1756315225289_pja70fcov', userId: '41316054', status: 'completed', progress: 100, resultImageUrl: '/api/object-storage/image/dev/edit_1756315238830_0.png', …}
+websocket.ts:135 [TRACE] Processing jobUpdated event, dispatching ws-message
+JobsTray.tsx:35 [JobsTray] WebSocket message received: {type: 'jobUpdated', data: {…}}
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315227209_jtcxjpsr8`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315225289_pja70fcov`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315227209_jtcxjpsr8`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315225289_pja70fcov`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+websocket.ts:101 [TRACE] WebSocket received event: jobUpdated with data: {jobId: 'job_1756315227209_jtcxjpsr8', userId: '41316054', status: 'processing', progress: 10, resultImageUrl: null, …}
+websocket.ts:135 [TRACE] Processing jobUpdated event, dispatching ws-message
+JobsTray.tsx:35 [JobsTray] WebSocket message received: {type: 'jobUpdated', data: {…}}
+websocket.ts:101 [TRACE] WebSocket received event: jobUpdated with data: {jobId: 'job_1756315227209_jtcxjpsr8', userId: '41316054', status: 'processing', progress: 10, resultImageUrl: null, …}
+websocket.ts:135 [TRACE] Processing jobUpdated event, dispatching ws-message
+JobsTray.tsx:35 [JobsTray] WebSocket message received: {type: 'jobUpdated', data: {…}}
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315227209_jtcxjpsr8`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315225289_pja70fcov`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+websocket.ts:101 [TRACE] WebSocket received event: jobUpdated with data: {jobId: 'job_1756315227209_jtcxjpsr8', userId: '41316054', status: 'processing', progress: 25, resultImageUrl: null, …}
+websocket.ts:135 [TRACE] Processing jobUpdated event, dispatching ws-message
+JobsTray.tsx:35 [JobsTray] WebSocket message received: {type: 'jobUpdated', data: {…}}
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315227209_jtcxjpsr8`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315225289_pja70fcov`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+websocket.ts:101 [TRACE] WebSocket received event: jobUpdated with data: {jobId: 'job_1756315227209_jtcxjpsr8', userId: '41316054', status: 'processing', progress: 25, resultImageUrl: null, …}
+websocket.ts:135 [TRACE] Processing jobUpdated event, dispatching ws-message
+JobsTray.tsx:35 [JobsTray] WebSocket message received: {type: 'jobUpdated', data: {…}}
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315227209_jtcxjpsr8`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315225289_pja70fcov`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+websocket.ts:101 [TRACE] WebSocket received event: jobUpdated with data: {jobId: 'job_1756315227209_jtcxjpsr8', userId: '41316054', status: 'processing', progress: 40, resultImageUrl: null, …}
+websocket.ts:135 [TRACE] Processing jobUpdated event, dispatching ws-message
+JobsTray.tsx:35 [JobsTray] WebSocket message received: {type: 'jobUpdated', data: {…}}
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315227209_jtcxjpsr8`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315225289_pja70fcov`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+websocket.ts:101 [TRACE] WebSocket received event: jobUpdated with data: {jobId: 'job_1756315227209_jtcxjpsr8', userId: '41316054', status: 'processing', progress: 40, resultImageUrl: null, …}
+websocket.ts:135 [TRACE] Processing jobUpdated event, dispatching ws-message
+JobsTray.tsx:35 [JobsTray] WebSocket message received: {type: 'jobUpdated', data: {…}}
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315227209_jtcxjpsr8`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315225289_pja70fcov`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+websocket.ts:101 [TRACE] WebSocket received event: jobUpdated with data: {jobId: 'job_1756315227209_jtcxjpsr8', userId: '41316054', status: 'processing', progress: 50, resultImageUrl: null, …}
+websocket.ts:135 [TRACE] Processing jobUpdated event, dispatching ws-message
+JobsTray.tsx:35 [JobsTray] WebSocket message received: {type: 'jobUpdated', data: {…}}
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315227209_jtcxjpsr8`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315225289_pja70fcov`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+websocket.ts:101 [TRACE] WebSocket received event: jobUpdated with data: {jobId: 'job_1756315227209_jtcxjpsr8', userId: '41316054', status: 'processing', progress: 50, resultImageUrl: null, …}
+websocket.ts:135 [TRACE] Processing jobUpdated event, dispatching ws-message
+JobsTray.tsx:35 [JobsTray] WebSocket message received: {type: 'jobUpdated', data: {…}}
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315227209_jtcxjpsr8`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315225289_pja70fcov`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315227209_jtcxjpsr8`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315227209_jtcxjpsr8`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+websocket.ts:101 [TRACE] WebSocket received event: jobUpdated with data: {jobId: 'job_1756315227209_jtcxjpsr8', userId: '41316054', status: 'failed', progress: 0, resultImageUrl: null, …}
+websocket.ts:135 [TRACE] Processing jobUpdated event, dispatching ws-message
+JobsTray.tsx:35 [JobsTray] WebSocket message received: {type: 'jobUpdated', data: {…}}
+websocket.ts:101 [TRACE] WebSocket received event: jobUpdated with data: {jobId: 'job_1756315227209_jtcxjpsr8', userId: '41316054', status: 'failed', progress: 0, resultImageUrl: null, …}
+websocket.ts:135 [TRACE] Processing jobUpdated event, dispatching ws-message
+JobsTray.tsx:35 [JobsTray] WebSocket message received: {type: 'jobUpdated', data: {…}}
+chunk-C43VWYGG.js?v=9ca7ebfc:521 Warning: Encountered two children with the same key, `job_1756315227209_jtcxjpsr8`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+    at div
+    at div
+    at JobsTray (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/JobsTray.tsx:21:28)
+    at div
+    at CarCreationPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/CarCreationPage.tsx:101:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=clcFEh9Yz2dwJytd39Sqw:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+printWarning @ chunk-C43VWYGG.js?v=9ca7ebfc:521
+error @ chunk-C43VWYGG.js?v=9ca7ebfc:505
+warnOnInvalidKey @ chunk-C43VWYGG.js?v=9ca7ebfc:11487
+reconcileChildrenArray @ chunk-C43VWYGG.js?v=9ca7ebfc:11503
+reconcileChildFibers2 @ chunk-C43VWYGG.js?v=9ca7ebfc:11827
+reconcileChildren @ chunk-C43VWYGG.js?v=9ca7ebfc:14274
+updateHostComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14782
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15903
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18646
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384

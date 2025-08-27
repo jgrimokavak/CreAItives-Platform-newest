@@ -81,9 +81,11 @@ export function JobsTray({ isOpen, onClose, onJobCompleted }: JobsTrayProps) {
                 resultThumbUrl: updatedJob.resultThumbUrl
               };
               
-              // Notify parent component
+              // Notify parent component with setTimeout to avoid setState during render
               if (onJobCompleted) {
-                onJobCompleted(completedJob);
+                setTimeout(() => {
+                  onJobCompleted(completedJob);
+                }, 0);
               }
               
               // Return updated jobs

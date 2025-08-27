@@ -140,7 +140,7 @@ const CarCreationPage: React.FC = () => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [photoToStudioProgress, setPhotoToStudioProgress] = useState<number | null>(null);
-  const [photoToStudioImage, setPhotoToStudioImage] = useState<GeneratedImage | null>(null);
+  const [photoToStudioImages, setPhotoToStudioImages] = useState<GeneratedImage[]>([]);
   
   // Generate years from 1990 to current year
   const currentYear = new Date().getFullYear();
@@ -842,7 +842,7 @@ const CarCreationPage: React.FC = () => {
       }
     },
     onSuccess: (data) => {
-      setPhotoToStudioImage(data);
+      setPhotoToStudioImages([data]);
       // Invalidate gallery cache to make sure the new image shows up
       queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
       
@@ -954,11 +954,18 @@ const CarCreationPage: React.FC = () => {
         deletedAt: null
       };
       
-      setPhotoToStudioImage(completedImage);
+      // Add to array instead of replacing
+      setPhotoToStudioImages(prev => {
+        // Avoid duplicates by checking if job ID already exists
+        if (prev.some(img => img.id === job.jobId)) {
+          return prev;
+        }
+        return [completedImage, ...prev];
+      });
       
       toast({
         title: "Studio image completed",
-        description: "Your image has been generated and placed in the preview",
+        description: "Your image has been generated and added to the results",
       });
     }
   };
@@ -2218,7 +2225,7 @@ const CarCreationPage: React.FC = () => {
               
               {/* Preview Section */}
               <div className="space-y-6">
-                {photoToStudioImage ? (
+                {photoToStudioImages.length > 0 ? (
                   <div className="flex flex-col bg-card border rounded-lg shadow-sm overflow-hidden">
                     {/* Header */}
                     <div className="p-4 border-b bg-muted/30">
@@ -2230,30 +2237,35 @@ const CarCreationPage: React.FC = () => {
                     
                     {/* Image display */}
                     <div className="flex-1 p-4">
-                      <CarImageCard
-                        image={photoToStudioImage}
-                        make={photoToStudioForm.watch('brand') || undefined}
-                        onEdit={(img) => {
-                          // Use the same edit handler approach as the gallery page
-                          const sourceUrl = img.fullUrl || img.url;
-                          
-                          // Set editor context for edit mode
-                          setMode('edit');
-                          setSourceImages([sourceUrl]);
-                          
-                          // Navigate to the create page with edit mode
-                          setLocation('/create?mode=edit');
-                        }}
-                        onUpscale={(img) => {
-                          // Navigate to upscale page with the image URL
-                          const imageUrl = img.fullUrl || img.url;
-                          setLocation(`/upscale?sourceUrl=${encodeURIComponent(imageUrl)}`);
-                        }}
-                        onDownload={handleDownload}
-                        onClick={() => {
-                          setSelectedImage(photoToStudioImage.fullUrl || photoToStudioImage.url);
-                        }}
-                      />
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {photoToStudioImages.map((image, index) => (
+                          <CarImageCard
+                            key={image.id}
+                            image={image}
+                            make={photoToStudioForm.watch('brand') || undefined}
+                            onEdit={(img) => {
+                              // Use the same edit handler approach as the gallery page
+                              const sourceUrl = img.fullUrl || img.url;
+                              
+                              // Set editor context for edit mode
+                              setMode('edit');
+                              setSourceImages([sourceUrl]);
+                              
+                              // Navigate to the create page with edit mode
+                              setLocation('/create?mode=edit');
+                            }}
+                            onUpscale={(img) => {
+                              // Navigate to upscale page with the image URL
+                              const imageUrl = img.fullUrl || img.url;
+                              setLocation(`/upscale?sourceUrl=${encodeURIComponent(imageUrl)}`);
+                            }}
+                            onDownload={handleDownload}
+                            onClick={() => {
+                              setSelectedImage(image.fullUrl || image.url);
+                            }}
+                          />
+                        ))}
+                      </div>
                     </div>
                     
                     {/* Details */}
@@ -2270,14 +2282,19 @@ const CarCreationPage: React.FC = () => {
                       
                       {/* Disclaimer Downloads */}
                       <div className="pt-2 border-t">
-                        <CarImageCard
-                          image={photoToStudioImage}
-                          make={photoToStudioForm.watch('brand') || 'Unknown'}
-                          model=""
-                          bodyStyle=""
-                          color=""
-                          disclaimerOnly={true}
-                        />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {photoToStudioImages.map((image, index) => (
+                            <CarImageCard
+                              key={`disclaimer-${image.id}`}
+                              image={image}
+                              make={photoToStudioForm.watch('brand') || 'Unknown'}
+                              model=""
+                              bodyStyle=""
+                              color=""
+                              disclaimerOnly={true}
+                            />
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
