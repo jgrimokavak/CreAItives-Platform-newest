@@ -640,24 +640,37 @@ const CarCreationPage: React.FC = () => {
   // Process selected files - updated for multiple file support
   const processFiles = (files: FileList | File[]) => {
     const fileArray = Array.from(files);
+    const currentModel = photoToStudioForm.watch('modelKey');
     
-    // Validate max number of files (10, but recommend 5 for better reliability)
-    if (selectedFiles.length + fileArray.length > 10) {
-      toast({
-        title: "Too many files",
-        description: "You can upload a maximum of 10 images",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Warn when approaching limits for better user experience
-    if (selectedFiles.length + fileArray.length > 5) {
-      toast({
-        title: "Large batch detected",
-        description: "For best results and faster processing, consider using 5 or fewer images at a time",
-        variant: "default"
-      });
+    // Validate based on selected model
+    if (currentModel === 'flux-kontext-max') {
+      if (fileArray.length > 1 || selectedFiles.length >= 1) {
+        toast({
+          title: "Single image only",
+          description: "Flux Kontext Max only supports one image at a time",
+          variant: "destructive"
+        });
+        return;
+      }
+    } else {
+      // Nano banana - allow up to 10
+      if (selectedFiles.length + fileArray.length > 10) {
+        toast({
+          title: "Too many files",
+          description: "You can upload a maximum of 10 images",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Warn when approaching limits for better user experience
+      if (selectedFiles.length + fileArray.length > 5) {
+        toast({
+          title: "Large batch detected",
+          description: "For best results and faster processing, consider using 5 or fewer images at a time",
+          variant: "default"
+        });
+      }
     }
     
     const validFiles: File[] = [];
@@ -1852,41 +1865,49 @@ const CarCreationPage: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="text-lg font-medium">Photo-to-Studio</h3>
-                    <p className="text-sm text-muted-foreground">Transform real car photos into studio-ready images</p>
+                    <p className="text-sm text-muted-foreground">Transform car photos into studio-ready images</p>
                   </div>
                 </div>
                 
-                {/* Section description */}
-                <div className="bg-blue-50 border border-blue-100 rounded-md p-4 mb-6">
-                  <p className="text-sm text-blue-700 leading-relaxed">
-                    Upload photos of cars to transform them into professional studio images. For best results and faster processing, use 5 or fewer high-quality images at a time.
-                  </p>
-                </div>
-                
-                {/* Quality disclaimer */}
-                <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mb-6">
-                  <div className="flex items-start gap-3">
-                    <div className="text-amber-600 mt-0.5">
-                      <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-amber-800 mb-1">Image Quality Matters</p>
-                      <p className="text-sm text-amber-700 leading-relaxed">
-                        High-resolution, well-lit photos produce the best results. For multiple images, smaller file sizes help avoid timeouts. Aim for under 10MB per image when uploading multiple files.
-                      </p>
-                    </div>
+                {/* Model Selection - Compact */}
+                <div className="bg-background/60 p-3 rounded-lg border border-border/40 shadow-sm mb-4">
+                  <div className="flex items-center gap-3">
+                    <Label className="text-sm font-medium shrink-0">AI Model:</Label>
+                    <Select
+                      value={photoToStudioForm.watch('modelKey')}
+                      onValueChange={(value) => {
+                        photoToStudioForm.setValue('modelKey', value as 'google/nano-banana' | 'flux-kontext-max');
+                        // Clear extra files if switching to flux-kontext-max
+                        if (value === 'flux-kontext-max' && selectedFiles.length > 1) {
+                          setSelectedFiles([selectedFiles[0]]);
+                          setPreviewUrls([previewUrls[0]]);
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-auto min-w-[200px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="google/nano-banana">Nano Banana (Recommended)</SelectItem>
+                        <SelectItem value="flux-kontext-max">Flux Kontext Max</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {photoToStudioForm.watch('modelKey') === 'flux-kontext-max' && (
+                      <span className="text-xs text-muted-foreground">Single image only</span>
+                    )}
                   </div>
                 </div>
-                
+
                 {/* Form fields */}
                 <div className="space-y-5">
                   {/* File upload section */}
                   <div className="bg-background/60 p-4 rounded-lg border border-border/40 shadow-sm">
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <Label htmlFor="car-photo">Car Photos (max 10)</Label>
+                        <Label htmlFor="car-photo">
+                          Car Photos 
+                          {photoToStudioForm.watch('modelKey') === 'flux-kontext-max' ? ' (1 image max)' : ' (up to 10)'}
+                        </Label>
                         {selectedFiles.length > 0 && (
                           <Button
                             type="button"
@@ -1918,10 +1939,11 @@ const CarCreationPage: React.FC = () => {
                               Drag & drop your car photos here
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              or click to browse (max 10 images)
+                              or click to browse
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              JPG, PNG, or WebP • Max 25MB each • Tip: 5 images or fewer work best
+                              JPG, PNG, or WebP • Max 25MB each
+                              {photoToStudioForm.watch('modelKey') === 'google/nano-banana' && ' • Best with 5 or fewer images'}
                             </p>
                           </div>
                         </div>
@@ -1929,7 +1951,7 @@ const CarCreationPage: React.FC = () => {
                           id="car-photo"
                           type="file"
                           accept="image/jpeg,image/png,image/webp"
-                          multiple
+                          multiple={photoToStudioForm.watch('modelKey') !== 'flux-kontext-max'}
                           onChange={handleFileUpload}
                           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                         />
@@ -2017,64 +2039,6 @@ const CarCreationPage: React.FC = () => {
                     </div>
                   </div>
                   
-                  {/* Model selection section */}
-                  <div className="bg-background/60 p-4 rounded-lg border border-border/40 shadow-sm">
-                    <div className="space-y-3">
-                      <Label>AI Model</Label>
-                      <RadioGroup 
-                        value={photoToStudioForm.watch('modelKey')} 
-                        onValueChange={(value) => photoToStudioForm.setValue('modelKey', value as 'google/nano-banana' | 'flux-kontext-max')}
-                        className="space-y-3"
-                      >
-                        <div 
-                          className={`flex items-start space-x-3 p-3 rounded-md border transition-colors cursor-pointer ${
-                            photoToStudioForm.watch('modelKey') === 'google/nano-banana' 
-                              ? 'border-primary bg-primary/5' 
-                              : 'border-border/60 hover:bg-accent/30'
-                          }`}
-                          onClick={() => photoToStudioForm.setValue('modelKey', 'google/nano-banana')}
-                        >
-                          <RadioGroupItem value="google/nano-banana" id="nano-banana" className="mt-1" />
-                          <div className="space-y-1 flex-1">
-                            <div className="flex items-center gap-2">
-                              <Label htmlFor="nano-banana" className="font-medium text-sm cursor-pointer">
-                                Nano Banana (Recommended)
-                              </Label>
-                              <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">New</span>
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                              Google's latest multi-image model. Supports up to 10 images with enhanced understanding and better studio results.
-                            </p>
-                          </div>
-                        </div>
-                        <div 
-                          className={`flex items-start space-x-3 p-3 rounded-md border transition-colors cursor-pointer ${
-                            photoToStudioForm.watch('modelKey') === 'flux-kontext-max' 
-                              ? 'border-primary bg-primary/5' 
-                              : 'border-border/60 hover:bg-accent/30'
-                          }`}
-                          onClick={() => photoToStudioForm.setValue('modelKey', 'flux-kontext-max')}
-                        >
-                          <RadioGroupItem value="flux-kontext-max" id="flux-kontext-max" className="mt-1" />
-                          <div className="space-y-1 flex-1">
-                            <Label htmlFor="flux-kontext-max" className="font-medium text-sm cursor-pointer">
-                              Flux Kontext Max
-                            </Label>
-                            <p className="text-xs text-muted-foreground">
-                              Previous generation model. Single image only but proven results for studio transformations.
-                            </p>
-                          </div>
-                        </div>
-                      </RadioGroup>
-                      {photoToStudioForm.watch('modelKey') === 'flux-kontext-max' && selectedFiles.length > 1 && (
-                        <div className="bg-amber-50 border border-amber-200 rounded-md p-3">
-                          <p className="text-xs text-amber-700">
-                            Note: Flux Kontext Max only supports single images. Only the first image will be processed.
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
                   
                   {/* Brand field - shown only when Studio Enhance is selected */}
                   {watchMode === 'studio-enhance' && (

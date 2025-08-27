@@ -24,7 +24,8 @@ const getCurrentEnv = () => {
 // Valid models for validation
 const VALID_MODELS = [
   'gpt-image-1', 'imagen-4', 'imagen-3', 'flux-pro', 
-  'flux-kontext-max', 'flux-krea-dev', 'wan-2.2', 'hailuo-02', 'upscale'
+  'flux-kontext-max', 'flux-krea-dev', 'wan-2.2', 'hailuo-02', 'upscale',
+  'google/nano-banana'
 ];
 
 // Event logging for analytics with model validation
