@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import { useAuth } from '@/hooks/useAuth';
 
 export interface JobStatus {
   jobId: string;
@@ -23,6 +24,7 @@ interface JobsTrayProps {
 
 export function JobsTray({ isOpen, onClose, onJobCompleted }: JobsTrayProps) {
   const [jobs, setJobs] = useState<JobStatus[]>([]);
+  const { user } = useAuth();
 
   // Fetch active jobs on mount
   useEffect(() => {
@@ -37,6 +39,11 @@ export function JobsTray({ isOpen, onClose, onJobCompleted }: JobsTrayProps) {
       const { type, data } = event.detail || {};
       
       if (type === 'jobCreated') {
+          // Only show jobs for the current user (session-specific)
+          if (!user || data.userId !== user.id) {
+            return;
+          }
+          
           const newJob: JobStatus = {
             jobId: data.jobId,
             userId: data.userId,
@@ -55,6 +62,11 @@ export function JobsTray({ isOpen, onClose, onJobCompleted }: JobsTrayProps) {
           });
         } 
         else if (type === 'jobUpdated') {
+          // Only process job updates for the current user (session-specific)
+          if (!user || data.userId !== user.id) {
+            return;
+          }
+          
           const updatedJob = data;
           
           setJobs(prev => prev.map(job => 
