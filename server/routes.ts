@@ -32,7 +32,7 @@ import analyticsRoutes from "./routes/analytics-routes";
 import objectStorageRoutes from "./routes/object-storage-routes";
 import galleryObjectStorageRoutes from "./gallery-object-storage";
 import { compileMjml, testMjmlCompilation } from "./routes/email-routes";
-import { listMakes, listModels, listBodyStyles, listTrims, listColors, flushCarCache, loadCarData, loadColorData, getLastFetchTime, setupCarDataAutoRefresh, debugCarDataStorage } from "./carData";
+import { listMakes, listModels, listBodyStyles, listTrims, listColors, flushCarCache, loadCarData, loadColorData, getLastFetchTime, setupCarDataAutoRefresh, debugCarDataStorage, getPrompt, loadPromptData } from "./carData";
 import axios from "axios";
 import Papa from "papaparse";
 import cron from "node-cron";
@@ -2073,17 +2073,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Define prompt templates (use exact text as specified)
-      const PROMPT_TEMPLATES = {
-        'background-only': `Replace only the background with a clean, seamless light-gray curved studio wall and matte dark reflective floor. Do not change the car. `,
-        'studio-enhance': `This is a {{make}} vehicle. Replace only the background with a clean, professional car studio: seamless curved light-gray wall with a soft lateral gradient, and a dark matte reflective floor. Use cool-toned white lighting from above only. The car must be evenly and brightly illuminated from the top, without any frontal or side lighting. Make the body panels and glass appear clean and naturally shiny and glossy under the studio lights. Do not alter any part of the vehicle. Preserve every original visual detail with zero modification: paint tone and color, grille, headlights, stickers, trim, the antenna, and damage, dents and scratches. Only rotate the vehicle to a 45° front-three-quarter angle if the current yaw deviates more than 20°.`
-      };
+      // Get prompt from Google Sheets
+      let prompt = await getPrompt(mode, selectedModel);
       
-      // Get the appropriate template
-      let prompt = PROMPT_TEMPLATES[mode as keyof typeof PROMPT_TEMPLATES];
+      if (!prompt) {
+        // Fallback to hardcoded prompts if Google Sheets fails
+        console.warn(`No prompt found in Google Sheets for mode: ${mode}, model: ${selectedModel}. Using fallback.`);
+        const FALLBACK_PROMPTS = {
+          'background-only': `Replace only the background with a clean, seamless light-gray curved studio wall and matte dark reflective floor. Do not change the car. `,
+          'studio-enhance': `This is a {{make}} vehicle. Replace only the background with a clean, professional car studio: seamless curved light-gray wall with a soft lateral gradient, and a dark matte reflective floor. Use cool-toned white lighting from above only. The car must be evenly and brightly illuminated from the top, without any frontal or side lighting. Make the body panels and glass appear clean and naturally shiny and glossy under the studio lights. Do not alter any part of the vehicle. Preserve every original visual detail with zero modification: paint tone and color, grille, headlights, stickers, trim, the antenna, and damage, dents and scratches. Only rotate the vehicle to a 45° front-three-quarter angle if the current yaw deviates more than 20°.`
+        };
+        prompt = FALLBACK_PROMPTS[mode as keyof typeof FALLBACK_PROMPTS] || '';
+      }
       
-      // Substitute brand if Studio Enhance mode
-      if (mode === 'studio-enhance' && brand) {
-        prompt = prompt.replace('{{make}}', brand.trim());
+      // Substitute brand if Studio Enhance mode and {{make}} placeholder exists
+      if (mode === 'studio-enhance' && brand && prompt.includes('{{make}}')) {
+        prompt = prompt.replace(/\{\{make\}\}/g, brand.trim());
       }
       
       // Append additional instructions if provided

@@ -13,16 +13,21 @@ const objectStorage = new ObjectStorageService();
 
 type Row = { make:string; model:string; body_style:string; trim:string };
 type ColorRow = { "Color List": string };
+type PromptRow = { mode: string; model: string; prompt: string; description?: string };
 
 // Color Sheets configuration
 const COLOR_SHEET_ID = "1ftpeFWjClvZINpJMxae1qrNRS1a7XPKAC0FUGizfgzs";
 const COLOR_SHEET_GID = "1643991184";
+
+// Photo-to-Studio Prompt Sheets configuration
+const PROMPT_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQb-bDvaNqOTOJXonaHf_VfzGZSW8BraE_tGoFAsJortqGRG6UVyA7MoxdN8Muvap_BrprDBT8n4V2B/pub?gid=67778922&single=true&output=csv";
 
 // Setup initial car data load - no auto-refresh for performance optimization
 export function setupCarDataAutoRefresh(): void {
   // Load data from object storage on startup (or fallback to Google Sheets if not found)
   loadCarData(false).catch(err => console.error("Initial car data load failed:", err));
   loadColorData(false).catch(err => console.error("Initial color data load failed:", err));
+  loadPromptData(false).catch(err => console.error("Initial prompt data load failed:", err));
   
   // REMOVED: All automatic refresh schedules for performance optimization
   // Data will only be refreshed when "Refresh car data" button is clicked
@@ -34,6 +39,7 @@ export function setupCarDataAutoRefresh(): void {
     console.log('Environment:', process.env.REPLIT_DEPLOYMENT === '1' ? 'PRODUCTION' : 'DEVELOPMENT');
     console.log('Car data stored at:', getCarDataStoragePath());
     console.log('Color data stored at:', getColorDataStoragePath());
+    console.log('Prompt data stored at:', getPromptDataStoragePath());
     console.log('✅ Data is cached in object storage for instant loading!');
   }, 1000);
 }
@@ -47,6 +53,11 @@ function getCarDataStoragePath(): string {
 function getColorDataStoragePath(): string {
   const envPrefix = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
   return `${envPrefix}/car-data/color-database.csv`;
+}
+
+function getPromptDataStoragePath(): string {
+  const envPrefix = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
+  return `${envPrefix}/car-data/prompt-database.csv`;
 }
 
 // Load car data from object storage first, fallback to Google Sheets only if not found
@@ -326,6 +337,103 @@ async function storeColorDataInObjectStorage(csvText: string): Promise<void> {
   console.log(`📋 First few lines stored:\n${lines.join('\n')}`);
 }
 
+// Photo-to-Studio Prompt data loading with object storage caching
+export async function loadPromptData(forceRefresh: boolean = false): Promise<PromptRow[]> {
+  const cached = cache.get<PromptRow[]>("promptRows");
+  if (cached && !forceRefresh) return cached;
+
+  try {
+    let csvText: string = "";
+    let dataSource = "";
+
+    if (forceRefresh) {
+      // Force refresh: Fetch from Google Sheets and update object storage
+      csvText = await fetchPromptDataFromGoogleSheets();
+      await storePromptDataInObjectStorage(csvText);
+      dataSource = "Google Sheets (forced refresh)";
+    } else {
+      // Try to load from object storage first
+      try {
+        csvText = await loadPromptDataFromObjectStorage();
+        dataSource = "object storage (cached)";
+      } catch (storageError) {
+        // Fallback to Google Sheets if object storage fails
+        console.log("Prompt data not found in object storage, fetching from Google Sheets...");
+        csvText = await fetchPromptDataFromGoogleSheets();
+        await storePromptDataInObjectStorage(csvText);
+        dataSource = "Google Sheets (object storage fallback)";
+      }
+    }
+    
+    const parseResult = Papa.parse<PromptRow>(csvText, { 
+      header: true, 
+      skipEmptyLines: true 
+    });
+    
+    if (parseResult.errors && parseResult.errors.length > 0) {
+      console.warn("Prompt CSV parsing errors:", parseResult.errors);
+    }
+    
+    const rows = parseResult.data || [];
+    cache.set("promptRows", rows);
+    console.log(`Prompt data loaded from ${dataSource}: ${rows.length} prompts`);
+    return rows;
+  } catch (error) {
+    console.error("Error loading prompt data:", error);
+    return cached || [];
+  }
+}
+
+// Fetch prompt data from Google Sheets with aggressive cache-busting
+async function fetchPromptDataFromGoogleSheets(): Promise<string> {
+  // Multiple cache-busting techniques for Google Sheets
+  const timestamp = Date.now();
+  const randomId = Math.random().toString(36).substring(7);
+  
+  console.log(`📝 Fetching fresh prompt data from Google Sheets (timestamp: ${timestamp})`);
+  
+  const response = await axios.get(PROMPT_SHEET_URL, { 
+    responseType: "text",
+    params: { 
+      _t: timestamp,
+      _r: randomId,
+      v: timestamp // Additional cache buster
+    },
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    },
+    timeout: 30000 // 30 second timeout
+  });
+  
+  const csvText = response.data as string;
+  const previewLength = Math.min(200, csvText.length);
+  const preview = csvText.substring(0, previewLength).replace(/\n/g, '\\n');
+  console.log(`📄 Fetched prompt CSV preview (${csvText.length} chars): ${preview}...`);
+  
+  return csvText;
+}
+
+// Load prompt data from object storage
+async function loadPromptDataFromObjectStorage(): Promise<string> {
+  const storagePath = getPromptDataStoragePath();
+  const dataBuffer = await objectStorage.downloadData(storagePath);
+  return dataBuffer.toString('utf-8');
+}
+
+// Store prompt data in object storage
+async function storePromptDataInObjectStorage(csvText: string): Promise<void> {
+  const storagePath = getPromptDataStoragePath();
+  const dataBuffer = Buffer.from(csvText, 'utf-8');
+  await objectStorage.uploadData(dataBuffer, storagePath);
+  
+  // Show first few lines to verify the data being stored
+  const lines = csvText.split('\n').slice(0, 3);
+  console.log(`📝 Prompt data stored in object storage: ${storagePath}`);
+  console.log(`📋 First few lines stored:\n${lines.join('\n')}`);
+}
+
 export async function listColors(): Promise<string[]> {
   const rows = await loadColorData();
   const colors: string[] = [];
@@ -337,6 +445,27 @@ export async function listColors(): Promise<string[]> {
   });
   // Return colors in the order they appear in the sheet (maintaining color wheel order)
   return colors;
+}
+
+// Helper function to get a specific prompt from Google Sheets data
+export async function getPrompt(mode: string, model: string): Promise<string | null> {
+  try {
+    const data = await loadPromptData();
+    const promptRow = data.find(row => 
+      row.mode?.toLowerCase() === mode.toLowerCase() && 
+      row.model?.toLowerCase() === model.toLowerCase()
+    );
+    
+    return promptRow?.prompt || null;
+  } catch (error) {
+    console.error(`Error getting prompt for mode: ${mode}, model: ${model}:`, error);
+    return null;
+  }
+}
+
+// Helper function to get all prompts for debugging
+export async function getAllPrompts(): Promise<PromptRow[]> {
+  return await loadPromptData();
 }
 
 export function flushCarCache() { 
