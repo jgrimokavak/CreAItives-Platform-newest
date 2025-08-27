@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { X, Clock, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/hooks/useAuth';
 
@@ -20,16 +20,27 @@ interface JobsTrayProps {
   isOpen: boolean;
   onClose: () => void;
   onJobCompleted?: (job: JobStatus) => void;
+  onJobsUpdate?: (jobs: JobStatus[]) => void;
 }
 
-export function JobsTray({ isOpen, onClose, onJobCompleted }: JobsTrayProps) {
+export function JobsTray({ isOpen, onClose, onJobCompleted, onJobsUpdate }: JobsTrayProps) {
   const [jobs, setJobs] = useState<JobStatus[]>([]);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const { user } = useAuth();
 
-  // Fetch active jobs on mount
+  // Fetch active jobs on mount and periodically refresh
   useEffect(() => {
     fetchActiveJobs();
-  }, []);
+    
+    // Set up periodic refresh for active jobs (every 10 seconds)
+    const refreshInterval = setInterval(() => {
+      if (jobs.some(job => job.status === 'pending' || job.status === 'processing')) {
+        fetchActiveJobs();
+      }
+    }, 10000);
+    
+    return () => clearInterval(refreshInterval);
+  }, [jobs.length]);
 
   // WebSocket message handler
   useEffect(() => {
@@ -58,7 +69,11 @@ export function JobsTray({ isOpen, onClose, onJobCompleted }: JobsTrayProps) {
             if (prev.some(j => j.jobId === newJob.jobId)) {
               return prev;
             }
-            return [newJob, ...prev];
+            const updatedJobs = [newJob, ...prev];
+            if (onJobsUpdate) {
+              onJobsUpdate(updatedJobs);
+            }
+            return updatedJobs;
           });
         } 
         else if (type === 'jobUpdated') {
@@ -69,18 +84,24 @@ export function JobsTray({ isOpen, onClose, onJobCompleted }: JobsTrayProps) {
           
           const updatedJob = data;
           
-          setJobs(prev => prev.map(job => 
-            job.jobId === updatedJob.jobId 
-              ? { 
-                  ...job, 
-                  status: updatedJob.status,
-                  progress: updatedJob.progress || job.progress,
-                  resultImageUrl: updatedJob.resultImageUrl || job.resultImageUrl,
-                  resultThumbUrl: updatedJob.resultThumbUrl || job.resultThumbUrl,
-                  errorMessage: updatedJob.errorMessage || job.errorMessage
-                }
-              : job
-          ));
+          setJobs(prev => {
+            const updatedJobsList = prev.map(job => 
+              job.jobId === updatedJob.jobId 
+                ? { 
+                    ...job, 
+                    status: updatedJob.status,
+                    progress: updatedJob.progress || job.progress,
+                    resultImageUrl: updatedJob.resultImageUrl || job.resultImageUrl,
+                    resultThumbUrl: updatedJob.resultThumbUrl || job.resultThumbUrl,
+                    errorMessage: updatedJob.errorMessage || job.errorMessage
+                  }
+                : job
+            );
+            if (onJobsUpdate) {
+              onJobsUpdate(updatedJobsList);
+            }
+            return updatedJobsList;
+          });
           
           // Handle completed or failed jobs
           if (updatedJob.status === 'completed' && updatedJob.resultImageUrl) {
@@ -107,24 +128,41 @@ export function JobsTray({ isOpen, onClose, onJobCompleted }: JobsTrayProps) {
               }
               
               // Return updated jobs
-              return currentJobs.map((job: JobStatus) => 
+              const updatedJobsList = currentJobs.map((job: JobStatus) => 
                 job.jobId === updatedJob.jobId 
                   ? completedJob
                   : job
               );
+              if (onJobsUpdate) {
+                onJobsUpdate(updatedJobsList);
+              }
+              return updatedJobsList;
             });
             
             // Remove completed job from tray after a short delay
             setTimeout(() => {
-              setJobs(prevJobs => prevJobs.filter((job: JobStatus) => job.jobId !== updatedJob.jobId));
+              setJobs(prevJobs => {
+                const filteredJobs = prevJobs.filter((job: JobStatus) => job.jobId !== updatedJob.jobId);
+                if (onJobsUpdate) {
+                  onJobsUpdate(filteredJobs);
+                }
+                return filteredJobs;
+              });
             }, 3000);
           }
           
-          // Handle failed jobs - remove them after 5 seconds
+          // Handle failed jobs - show retry option and remove after longer delay
           if (updatedJob.status === 'failed') {
+            // Show failed job for 10 seconds to give user time to see error
             setTimeout(() => {
-              setJobs(prevJobs => prevJobs.filter((job: JobStatus) => job.jobId !== updatedJob.jobId));
-            }, 5000);
+              setJobs(prevJobs => {
+                const filteredJobs = prevJobs.filter((job: JobStatus) => job.jobId !== updatedJob.jobId);
+                if (onJobsUpdate) {
+                  onJobsUpdate(filteredJobs);
+                }
+                return filteredJobs;
+              });
+            }, 10000);
           }
         }
     };
@@ -139,16 +177,33 @@ export function JobsTray({ isOpen, onClose, onJobCompleted }: JobsTrayProps) {
     }
   }, [onJobCompleted]);
 
-  const fetchActiveJobs = async () => {
+  const fetchActiveJobs = async (showLoading = false) => {
     try {
+      if (showLoading) setIsRefreshing(true);
+      
       const response = await fetch('/api/jobs/active');
       if (response.ok) {
         const data = await response.json();
-        setJobs(data.jobs || []);
+        const fetchedJobs = data.jobs || [];
+        setJobs(fetchedJobs);
+        if (onJobsUpdate) {
+          onJobsUpdate(fetchedJobs);
+        }
+      } else {
+        console.warn('Failed to fetch active jobs - server returned:', response.status);
       }
     } catch (error) {
       console.error('Failed to fetch active jobs:', error);
+      // On error, try again after a delay
+      setTimeout(() => fetchActiveJobs(), 5000);
+    } finally {
+      setIsRefreshing(false);
     }
+  };
+  
+  // Manual refresh function
+  const handleRefresh = () => {
+    fetchActiveJobs(true);
   };
 
   const getStatusIcon = (status: string) => {
@@ -212,14 +267,26 @@ export function JobsTray({ isOpen, onClose, onJobCompleted }: JobsTrayProps) {
           <h3 className="font-semibold text-xl text-gray-900">Jobs Tray</h3>
           <p className="text-sm text-gray-600 mt-1">Track your image generations</p>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onClose}
-          className="h-9 w-9 p-0 hover:bg-white/50 rounded-full"
-        >
-          <X className="h-5 w-5" />
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="h-9 w-9 p-0 hover:bg-white/50 rounded-full"
+            title="Refresh jobs"
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="h-9 w-9 p-0 hover:bg-white/50 rounded-full"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
       </div>
 
       <div className="p-6 space-y-4 overflow-y-auto h-[calc(100vh-120px)]">

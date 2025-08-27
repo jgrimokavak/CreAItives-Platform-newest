@@ -128,6 +128,7 @@ const CarCreationPage: React.FC = () => {
   // Jobs Tray state
   const [isJobsTrayOpen, setIsJobsTrayOpen] = useState<boolean>(false);
   const [isGeneratingStudio, setIsGeneratingStudio] = useState<boolean>(false);
+  const [currentJobs, setCurrentJobs] = useState<JobStatus[]>([]);
   const [isUploadingBatch, setIsUploadingBatch] = useState<boolean>(false);
   
   // Modal state
@@ -2347,15 +2348,35 @@ const CarCreationPage: React.FC = () => {
             {/* Jobs Tray Toggle Button */}
             <button
               onClick={() => setIsJobsTrayOpen(!isJobsTrayOpen)}
-              className={`fixed right-4 top-1/2 transform -translate-y-1/2 z-50 bg-primary text-primary-foreground px-3 py-2 rounded-l-lg shadow-lg transition-all duration-300 ${
+              className={`fixed right-0 top-1/2 transform -translate-y-1/2 z-50 group transition-all duration-300 ${
                 isJobsTrayOpen ? 'translate-x-0' : 'translate-x-0'
               }`}
-              style={{ 
-                writingMode: 'vertical-rl',
-                textOrientation: 'mixed'
-              }}
             >
-              Jobs {isJobsTrayOpen ? '→' : '←'}
+              <div className="relative">
+                {/* Main button */}
+                <div className="bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-6 rounded-l-xl shadow-xl border-r-0 transition-all duration-300 group-hover:shadow-2xl">
+                  <div className="flex flex-col items-center gap-2" style={{ writingMode: 'horizontal-tb' }}>
+                    <div className="text-xs font-semibold tracking-wider">JOBS</div>
+                    <div className={`transition-transform duration-300 ${isJobsTrayOpen ? 'rotate-180' : ''}`}>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Pulse indicator for active jobs */}
+                {currentJobs.some(job => job.status === 'pending' || job.status === 'processing') && (
+                  <div className="absolute -top-1 -left-1 w-3 h-3 bg-orange-400 rounded-full animate-pulse"></div>
+                )}
+                
+                {/* Job count badge */}
+                {currentJobs.length > 0 && (
+                  <div className="absolute -top-2 -left-2 bg-white text-blue-600 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md border border-blue-200">
+                    {currentJobs.length}
+                  </div>
+                )}
+              </div>
             </button>
             
             {/* Jobs Tray Component */}
@@ -2363,6 +2384,7 @@ const CarCreationPage: React.FC = () => {
               isOpen={isJobsTrayOpen}
               onClose={() => setIsJobsTrayOpen(false)}
               onJobCompleted={handleJobCompleted}
+              onJobsUpdate={setCurrentJobs}
             />
           </>
         )}
