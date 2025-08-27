@@ -440,6 +440,12 @@ export default function CarImageCard({
           <span className="bg-muted/50 rounded-full px-2 py-0.5">
             {image.size}
           </span>
+          {/* Only show make if it exists and is not undefined */}
+          {make && make !== 'None' && make !== 'undefined' && (
+            <span className="bg-muted/50 rounded-full px-2 py-0.5">
+              {make}
+            </span>
+          )}
         </div>
       </CardContent>
     </div>
