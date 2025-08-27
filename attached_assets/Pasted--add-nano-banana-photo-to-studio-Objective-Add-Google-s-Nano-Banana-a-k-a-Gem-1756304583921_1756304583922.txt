@@ -1,0 +1,184 @@
+```
+add-nano-banana-photo-to-studio
+```
+
+````
+Objective: Add Google’s “Nano Banana” (a.k.a. Gemini 2.5 Flash Image) as the new default model for the Photo-to-Studio feature, keep Flux-Kontext-Max available via a simple toggle, support multiple input images (max 10), and output PNG — with minimal changes reusing our existing Replicate plumbing.
+
+Tasks:
+1) Add model selection UI (default to Nano Banana)
+   - In client/src/pages/CarCreationPage.tsx (Photo-to-Studio tab):
+     - Add a compact model selector (radio or dropdown) with these options:
+       • “Nano Banana (recommended)” → maps to replicate model "google/nano-banana" (default)
+       • “Flux-Kontext-Max (legacy)” → maps to our current Flux-Kontext-Max
+     - Display short, neutral descriptions that encourage the new model:
+       • Nano Banana: “Faster, better edits, supports multiple reference images.”
+       • Flux-Kontext-Max: “Legacy option for continuity.”
+     - Persist the selected model in local component state and include it in the POST body for /api/car/photo-to-studio.
+
+2) Update image input component to support multiple images (max 10)
+   - In the upload component used by the Photo-to-Studio tab:
+     - Allow selecting/dropping multiple files (up to 10).
+     - Maintain previews as we do today; reuse existing file handling.
+     - Ensure max file size per file and total stays aligned with our current constraints (≤25 MB per image).
+     - On submit, produce an array of URLs (or file streams that our backend already converts to URLs) suitable for Replicate’s image_input array.
+
+3) Backend: thread model selection through to ReplicateProvider
+   - In server route /api/car/photo-to-studio:
+     - Accept a new field modelKey: "google/nano-banana" | "flux-kontext-max" (or similar enum).
+     - For "google/nano-banana", call Replicate with the following input schema (exact per provider):
+       - Use the schema below verbatim for inputs:
+         {
+           "type": "object",
+           "title": "Input",
+           "required": ["prompt"],
+           "properties": {
+             "prompt": {
+               "type": "string",
+               "title": "Prompt",
+               "x-order": 0,
+               "description": "A text description of the image you want to generate"
+             },
+             "image_input": {
+               "type": "array",
+               "items": {
+                 "type": "string",
+                 "anyOf": [],
+                 "format": "uri"
+               },
+               "title": "Image Input",
+               "x-order": 1,
+               "nullable": true,
+               "description": "Input images to transform or use as reference (supports multiple images)"
+             },
+             "output_format": {
+               "enum": ["jpg","png"],
+               "type": "string",
+               "title": "output_format",
+               "description": "Format of the output image",
+               "default": "jpg",
+               "x-order": 2
+             }
+           }
+         }
+       - IMPORTANT overrides for our use case:
+         • Always set output_format = "png".
+         • Pass image_input as an array of image URLs (0–10).
+         • Build prompt exactly from current mode:
+           - Background Only: 
+             "Replace only the background with a clean, seamless light-gray curved studio wall and matte dark reflective floor. Do not alter the car in any way."
+           - Studio Enhance:
+             "This is a {{make}} vehicle. Replace only the background with a clean, professional car studio: seamless curved light-gray wall with a soft lateral gradient, and a dark matte reflective floor. Use cool-toned white lighting from above only. The car must be evenly and brightly illuminated from the top, without any frontal or side lighting. Make the body panels and glass appear clean and naturally shiny and glossy under the studio lights. Do not alter any part of the vehicle. Preserve every original visual detail with zero modification: paint tone and color, grille, headlights, stickers, trim, the antenna, and damage, dents and scratches. Only rotate the vehicle to a 45° front-three-quarter angle if the current yaw deviates more than 20°."
+         • If user provided Additional Instructions, append them verbatim at the end of the prompt.
+     - For "flux-kontext-max", keep existing behavior unchanged.
+
+4) ReplicateProvider integration (minimal change)
+   - If ReplicateProvider already supports a generic .edit(modelName, input), reuse it.
+   - Example TypeScript (keep to minimal diff):
+     ```ts
+     // server/providers/ReplicateProvider.ts (usage example)
+     import Replicate from "replicate";
+
+     const replicate = new Replicate();
+
+     export async function runNanoBanana(input: {
+       prompt: string;
+       image_input?: string[]; // URLs
+       output_format?: "jpg" | "png";
+     }) {
+       // Force PNG as requested
+       const finalInput = { ...input, output_format: "png" };
+       // Model name exactly as provided
+       const output = await replicate.run("google/nano-banana", { input: finalInput });
+       return output;
+     }
+     ```
+   - If we need parity with the current provider wrapper, expose a small switch in our service layer:
+     ```ts
+     // server/services/photoToStudio.ts
+     export async function runPhotoToStudioModel(modelKey: "google/nano-banana" | "flux-kontext-max", input: any) {
+       if (modelKey === "google/nano-banana") {
+         return runNanoBanana(input);
+       }
+       // Fallback to existing Flux-Kontext-Max path
+       return runFluxKontextMax(input);
+     }
+     ```
+
+5) Keep persistence & gallery flow unchanged
+   - After receiving the Replicate output, continue using persistImage(...) (unchanged):
+     - Save full PNG to Object Storage.
+     - Generate 256×256 WebP thumbnail.
+     - Insert DB row and emit WebSocket "imageCreated".
+   - Reuse existing download with/without disclaimer components.
+
+6) Validation & limits
+   - Enforce image_input length 0–10. If >10, show a simple client-side error and block submit.
+   - Ensure total upload pipeline still respects per-file ≤25 MB.
+   - If no image provided, still allow prompt-only (schema allows nullable image_input), but our UI should gently nudge to include at least one photo for edits.
+
+Code snippets & integration points:
+- Frontend model selector (example prop wiring):
+  ```ts
+  // client/src/pages/CarCreationPage.tsx (Photo-to-Studio tab)
+  const [modelKey, setModelKey] = useState<"google/nano-banana" | "flux-kontext-max">("google/nano-banana");
+
+  // include in submit payload:
+  const payload = {
+    mode, // "background-only" | "studio-enhance"
+    make, // when Studio Enhance
+    additionalInstructions, // appended verbatim
+    modelKey,               // new
+    images: selectedImageUrls // array of up to 10 URLs our backend will pass as image_input
+  };
+````
+
+* Backend route shape (example):
+
+  ```ts
+  // server/routes/carPhotoToStudio.ts
+  // Pseudocode, minimal diff
+  const { mode, make, additionalInstructions, modelKey = "google/nano-banana", images = [] } = req.body;
+
+  const prompt = buildPrompt({ mode, make, additionalInstructions }); // reuse existing helper
+  const input = { prompt, image_input: images, output_format: "png" };
+
+  const replicated = await runPhotoToStudioModel(modelKey, input);
+
+  // Then persistImage(...) exactly as today
+  ```
+
+Testing:
+
+1. UI & defaults
+
+   * Load /car → Photo-to-Studio tab: confirm “Nano Banana (recommended)” is preselected.
+   * Confirm descriptions render and encourage using Nano Banana.
+2. Multiple images
+
+   * Upload 2–3 images (<25 MB each): ensure previews show, POST includes an array, and backend forwards image\_input as an array (0–10).
+   * Try 11 images: verify client-side error prevents submission.
+3. Output format
+
+   * Confirm persisted file is PNG; thumbnail remains 256×256 WebP.
+4. Model parity
+
+   * Run the same input with Flux-Kontext-Max (legacy): ensure unchanged behavior and no regressions in gallery/WebSocket.
+5. Prompts
+
+   * Background Only and Studio Enhance produce expected results; Additional Instructions append verbatim.
+6. Persistence
+
+   * Validate gallery item, metadata row, and imageCreated event fire identically to existing flow.
+
+Reminders & Constraints:
+
+* Do not refactor unrelated parts; keep diffs minimal.
+* Model name must be exactly: "google/nano-banana".
+* Enforce output\_format = "png".
+* Respect the provided input schema; image\_input is an array of URLs (0–10).
+* Preserve existing persistence, WebSocket, and download/disclaimer flows.
+* Avoid introducing new dependencies or storage paths.
+* If any ambiguity in current upload → URL path exists, reuse the same code paths used by our existing Replicate edits to obtain URLs.
+
+```
