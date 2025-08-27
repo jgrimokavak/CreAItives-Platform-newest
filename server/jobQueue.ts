@@ -46,8 +46,8 @@ export async function createJob(data: CreateJobData): Promise<string> {
 
   console.log(`Created job ${jobId} for user ${data.userId}`);
   
-  // Broadcast job creation only to the specific user's clients (prevents duplicates)
-  pushToUser(data.userId, 'jobCreated', {
+  // Broadcast job creation to all connected clients
+  push('jobCreated', {
     jobId,
     userId: data.userId,
     status: 'pending',
@@ -119,8 +119,8 @@ export async function updateJobStatus(
   if (job.length > 0) {
     const jobData = job[0];
     
-    // Broadcast status update to user's clients only (prevents duplicates)
-    pushToUser(jobData.userId, 'jobUpdated', {
+    // Broadcast status update to all connected clients
+    push('jobUpdated', {
       jobId,
       userId: jobData.userId,
       status,
