@@ -2044,9 +2044,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Maximum 10 images allowed" });
       }
       
-      // Validate each file
+      // Validate each file and total size
       const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-      for (const file of req.files) {
+      let totalSize = 0;
+      
+      for (const file of req.files as Express.Multer.File[]) {
         if (!allowedTypes.includes(file.mimetype)) {
           return res.status(400).json({ error: "Invalid file type. Please upload JPG, PNG, or WebP images only" });
         }
@@ -2054,6 +2056,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (file.size > 25 * 1024 * 1024) {
           return res.status(400).json({ error: "File too large. Please upload images smaller than 25MB each" });
         }
+        
+        totalSize += file.size;
+      }
+      
+      // Check total payload size (limit to 100MB total to avoid 413 errors)
+      if (totalSize > 100 * 1024 * 1024) {
+        return res.status(400).json({ 
+          error: `Total file size too large (${(totalSize / 1024 / 1024).toFixed(1)}MB). Please reduce image count or file sizes. Maximum total: 100MB` 
+        });
+      }
+      
+      // For nano-banana with many images, recommend fewer for better results
+      if (selectedModel === 'google/nano-banana' && req.files.length > 5 && totalSize > 50 * 1024 * 1024) {
+        console.warn(`Large nano-banana request: ${req.files.length} files, ${(totalSize / 1024 / 1024).toFixed(1)}MB total`);
       }
       
       // Define prompt templates (use exact text as specified)
@@ -2091,7 +2107,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Using Replicate model: ${selectedModel}`);
       
       // Convert uploaded images to base64
-      const imageDataUris = req.files.map(file => {
+      const imageDataUris = (req.files as Express.Multer.File[]).map(file => {
         const imageBase64 = file.buffer.toString('base64');
         const imageMimeType = file.mimetype;
         return `data:${imageMimeType};base64,${imageBase64}`;
@@ -2170,11 +2186,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
           fullUrl: image.fullUrl,
           thumbUrl: image.thumbUrl,
           prompt: prompt,
-          model: "flux-kontext-max"
+          model: selectedModel
         }
       });
     } catch (error: any) {
       console.error("Error generating photo-to-studio image:", error);
+      
+      // Enhanced error handling for specific error types
+      let errorMessage = error.message || "Failed to generate studio image";
+      let statusCode = 500;
+      
+      if (error.message?.includes('413') || error.message?.includes('Request Entity Too Large')) {
+        errorMessage = "Images too large. Please reduce file sizes or number of images and try again.";
+        statusCode = 413;
+      } else if (error.message?.includes('Prediction interrupted') || error.message?.includes('code: PA')) {
+        errorMessage = "Generation was interrupted. This often happens with large requests. Please try with fewer images or smaller file sizes.";
+        statusCode = 408; // Request Timeout
+      } else if (error.message?.includes('timeout')) {
+        errorMessage = "Request timed out. Please try with fewer or smaller images.";
+        statusCode = 408;
+      }
       
       // Track failed photo-to-studio generation
       try {
@@ -2185,21 +2216,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           sessionId: req.sessionID,
           event: 'photo_to_studio_generate',
           feature: 'photo_to_studio',
-          model: selectedModel,
+          model: req.body.modelKey || 'google/nano-banana',
           status: 'failed',
           duration: Date.now() - startTime,
           errorCode: error.response?.status?.toString() || 'unknown_error',
           metadata: {
             error: error.message,
             mode: req.body.mode,
-            brand: req.body.brand
+            brand: req.body.brand || null,
+            hasAdditionalInstructions: !!req.body.additionalInstructions,
+            imageCount: req.files?.length || 0
           }
         });
       } catch (analyticsError) {
         console.error('Failed to log photo-to-studio generation failure:', analyticsError);
       }
       
-      res.status(500).json({ error: error.message || "Failed to generate studio image" });
+      res.status(statusCode).json({ error: errorMessage });
     }
   });
 

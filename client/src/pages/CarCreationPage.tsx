@@ -641,7 +641,7 @@ const CarCreationPage: React.FC = () => {
   const processFiles = (files: FileList | File[]) => {
     const fileArray = Array.from(files);
     
-    // Validate max number of files (10)
+    // Validate max number of files (10, but recommend 5 for better reliability)
     if (selectedFiles.length + fileArray.length > 10) {
       toast({
         title: "Too many files",
@@ -649,6 +649,15 @@ const CarCreationPage: React.FC = () => {
         variant: "destructive"
       });
       return;
+    }
+    
+    // Warn when approaching limits for better user experience
+    if (selectedFiles.length + fileArray.length > 5) {
+      toast({
+        title: "Large batch detected",
+        description: "For best results and faster processing, consider using 5 or fewer images at a time",
+        variant: "default"
+      });
     }
     
     const validFiles: File[] = [];
@@ -1850,7 +1859,7 @@ const CarCreationPage: React.FC = () => {
                 {/* Section description */}
                 <div className="bg-blue-50 border border-blue-100 rounded-md p-4 mb-6">
                   <p className="text-sm text-blue-700 leading-relaxed">
-                    Upload a photo of any car and transform it into a professional studio image. The car remains exactly as captured while the background becomes a clean studio setting.
+                    Upload photos of cars to transform them into professional studio images. For best results and faster processing, use 5 or fewer high-quality images at a time.
                   </p>
                 </div>
                 
@@ -1865,7 +1874,7 @@ const CarCreationPage: React.FC = () => {
                     <div>
                       <p className="text-sm font-medium text-amber-800 mb-1">Image Quality Matters</p>
                       <p className="text-sm text-amber-700 leading-relaxed">
-                        High-resolution, well-lit photos produce the best results. Low-resolution, blurry, or poorly-lit images will result in sub-optimal studio transformations.
+                        High-resolution, well-lit photos produce the best results. For multiple images, smaller file sizes help avoid timeouts. Aim for under 10MB per image when uploading multiple files.
                       </p>
                     </div>
                   </div>
@@ -1912,7 +1921,7 @@ const CarCreationPage: React.FC = () => {
                               or click to browse (max 10 images)
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              JPG, PNG, or WebP • Max 25MB each
+                              JPG, PNG, or WebP • Max 25MB each • Tip: 5 images or fewer work best
                             </p>
                           </div>
                         </div>
