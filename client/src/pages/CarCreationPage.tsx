@@ -24,6 +24,7 @@ import { Badge } from '@/components/ui/badge';
 import CarImageCard from '@/components/CarImageCard';
 import ImageModal from '@/components/ImageModal';
 import CarListEditModal from '@/components/CarListEditModal';
+import { JobsTray, type JobStatus } from '@/components/JobsTray';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
 import { useEditor } from '@/context/EditorContext';
@@ -123,6 +124,9 @@ const CarCreationPage: React.FC = () => {
   // Creation mode state - updated to include photo-to-studio
   const [carCreationMode, setCarCreationMode] = useState<"single" | "batch" | "photo-to-studio">("single");
   const [batchJobId, setBatchJobId] = useState<string | null>(null);
+  
+  // Jobs Tray state
+  const [isJobsTrayOpen, setIsJobsTrayOpen] = useState<boolean>(false);
   const [isUploadingBatch, setIsUploadingBatch] = useState<boolean>(false);
   
   // Modal state
@@ -867,7 +871,96 @@ const CarCreationPage: React.FC = () => {
   // Photo-to-Studio form submission handler
   const handlePhotoToStudioGenerate = () => {
     const values = photoToStudioForm.getValues();
-    photoToStudioMutation.mutate(values);
+    
+    // Since we're now using the job queue, we need to call the API directly
+    // instead of using the old mutation
+    handlePhotoToStudioGenerateAsync(values);
+  };
+
+  // New async photo-to-studio handler for job queue
+  const handlePhotoToStudioGenerateAsync = async (values: PhotoToStudioFormValues) => {
+    if (!selectedFiles || selectedFiles.length === 0) {
+      toast({
+        title: "No files selected",
+        description: "Please select at least one image file",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      // Create form data
+      const formData = new FormData();
+      
+      // Append all selected images
+      selectedFiles.forEach((file, index) => {
+        formData.append('images', file);
+      });
+      
+      formData.append('mode', values.mode);
+      formData.append('modelKey', values.modelKey);
+      if (values.brand) {
+        formData.append('brand', values.brand);
+      }
+      if (values.additionalInstructions) {
+        formData.append('additionalInstructions', values.additionalInstructions);
+      }
+
+      const response = await fetch('/api/car/photo-to-studio', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create generation job');
+      }
+
+      const result = await response.json();
+      
+      toast({
+        title: "Job created",
+        description: `Generation started - queue position ${result.queuePosition}`,
+      });
+      
+      // Open the jobs tray to show progress
+      setIsJobsTrayOpen(true);
+
+    } catch (error: any) {
+      console.error('Error creating job:', error);
+      toast({
+        title: "Failed to create job",
+        description: error.message || "Failed to create generation job",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Handle completed jobs from the tray
+  const handleJobCompleted = (job: JobStatus) => {
+    if (job.resultImageUrl && job.resultThumbUrl) {
+      const completedImage: GeneratedImage = {
+        id: job.jobId,
+        url: job.resultImageUrl,
+        fullUrl: job.resultImageUrl,
+        thumbUrl: job.resultThumbUrl,
+        prompt: `Photo-to-Studio (${job.mode})`,
+        size: "unknown",
+        model: job.modelKey,
+        createdAt: new Date().toISOString(),
+        width: 1024,
+        height: 1024,
+        starred: false,
+        deletedAt: null
+      };
+      
+      setPhotoToStudioImage(completedImage);
+      
+      toast({
+        title: "Studio image completed",
+        description: "Your image has been generated and placed in the preview",
+      });
+    }
   };
 
   return (
@@ -2235,6 +2328,32 @@ const CarCreationPage: React.FC = () => {
           open={showEditModal} 
           onOpenChange={setShowEditModal} 
         />
+        
+        {/* Jobs Tray - only shown in photo-to-studio mode */}
+        {carCreationMode === "photo-to-studio" && (
+          <>
+            {/* Jobs Tray Toggle Button */}
+            <button
+              onClick={() => setIsJobsTrayOpen(!isJobsTrayOpen)}
+              className={`fixed right-4 top-1/2 transform -translate-y-1/2 z-50 bg-primary text-primary-foreground px-3 py-2 rounded-l-lg shadow-lg transition-all duration-300 ${
+                isJobsTrayOpen ? 'translate-x-0' : 'translate-x-0'
+              }`}
+              style={{ 
+                writingMode: 'vertical-rl',
+                textOrientation: 'mixed'
+              }}
+            >
+              Jobs {isJobsTrayOpen ? '→' : '←'}
+            </button>
+            
+            {/* Jobs Tray Component */}
+            <JobsTray
+              isOpen={isJobsTrayOpen}
+              onClose={() => setIsJobsTrayOpen(false)}
+              onJobCompleted={handleJobCompleted}
+            />
+          </>
+        )}
       </div>
     </>
   );

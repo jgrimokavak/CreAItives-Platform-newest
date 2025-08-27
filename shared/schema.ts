@@ -172,11 +172,38 @@ export const activityEvents = pgTable("activity_events", {
   index("idx_activity_events_env").on(table.environment),
 ]);
 
+// Photo-to-Studio Jobs Queue (Phase 3)
+export const photoStudioJobs = pgTable("photo_studio_jobs", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  status: text("status").notNull(), // pending, processing, completed, failed
+  mode: text("mode").notNull(), // background-only, studio-enhance
+  modelKey: text("model_key").notNull(),
+  brand: text("brand"),
+  additionalInstructions: text("additional_instructions"),
+  imageFiles: jsonb("image_files").notNull(), // Array of file info
+  resultImageUrl: text("result_image_url"),
+  resultThumbUrl: text("result_thumb_url"),
+  errorMessage: text("error_message"),
+  progress: integer("progress").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  environment: text("environment").notNull().default('dev'),
+}, (table) => [
+  index("idx_photo_studio_jobs_user_id").on(table.userId),
+  index("idx_photo_studio_jobs_status").on(table.status),
+  index("idx_photo_studio_jobs_created_at").on(table.createdAt),
+  index("idx_photo_studio_jobs_user_status").on(table.userId, table.status),
+]);
+
 export const insertDailyAnalyticsSchema = createInsertSchema(dailyAnalytics);
 export const insertActivityEventSchema = createInsertSchema(activityEvents);
+export const insertPhotoStudioJobSchema = createInsertSchema(photoStudioJobs);
 
 export type DailyAnalytics = typeof dailyAnalytics.$inferSelect;
 export type ActivityEvent = typeof activityEvents.$inferSelect;
+export type PhotoStudioJob = typeof photoStudioJobs.$inferSelect;
 
 // Image generation schema
 export const generateSchema = z.object({

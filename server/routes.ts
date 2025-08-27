@@ -33,6 +33,8 @@ import objectStorageRoutes from "./routes/object-storage-routes";
 import galleryObjectStorageRoutes from "./gallery-object-storage";
 import { compileMjml, testMjmlCompilation } from "./routes/email-routes";
 import { listMakes, listModels, listBodyStyles, listTrims, listColors, flushCarCache, loadCarData, loadColorData, getLastFetchTime, setupCarDataAutoRefresh, debugCarDataStorage, getPrompt, loadPromptData } from "./carData";
+import { createJob, getUserActiveJobs, countUserActiveJobs } from "./jobQueue";
+import { startJobProcessor } from "./jobProcessor";
 import axios from "axios";
 import Papa from "papaparse";
 import cron from "node-cron";
@@ -2009,235 +2011,116 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Photo-to-Studio generation endpoint
+  // Photo-to-Studio endpoint - now uses job queue for non-blocking processing
   app.post("/api/car/photo-to-studio", isAuthenticated, upload.array("images", 10), async (req: any, res) => {
-    const startTime = Date.now();
+    const userId = req.user?.claims?.sub;
+    
     try {
       const { mode, brand, additionalInstructions, modelKey } = req.body;
       
-      // Validate required fields
+      if (!req.files || req.files.length === 0) {
+        return res.status(400).json({ error: "No images provided" });
+      }
+      
+      // Check for user ID (authentication requirement)
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+      
+      // Check active job limit (4 per user)
+      const activeJobsCount = await countUserActiveJobs(userId);
+      if (activeJobsCount >= 4) {
+        return res.status(429).json({ 
+          error: "You've got 4 cooking. Start a new one when one finishes.",
+          activeJobs: activeJobsCount
+        });
+      }
+      
+      // Validate that mode is provided
       if (!mode) {
         return res.status(400).json({ error: "Mode is required" });
       }
       
+      // Validate brand is provided for studio-enhance mode
       if (mode === 'studio-enhance' && (!brand || brand.trim().length === 0)) {
-        return res.status(400).json({ error: "Brand is required when Studio Enhance mode is selected" });
+        return res.status(400).json({ error: "Brand is required for Studio Enhance mode" });
       }
       
-      // Validate model selection
+      // Validate selected model
       const validModels = ['google/nano-banana', 'flux-kontext-max'];
       const selectedModel = modelKey || 'google/nano-banana'; // Default to nano-banana
       if (!validModels.includes(selectedModel)) {
         return res.status(400).json({ error: `Invalid model. Must be one of: ${validModels.join(', ')}` });
       }
-
-      if (!req.files || req.files.length === 0) {
-        return res.status(400).json({ error: "At least one image file is required" });
-      }
       
-      // Validate max file count (10 for nano-banana, 1 for flux-kontext-max)
-      if (selectedModel === 'flux-kontext-max' && req.files.length > 1) {
-        return res.status(400).json({ error: "Flux Kontext Max only supports a single image" });
-      }
+      console.log(`Photo-to-studio job request: mode=${mode}, model=${selectedModel}, files=${req.files.length}, user=${userId}`);
       
-      if (req.files.length > 10) {
-        return res.status(400).json({ error: "Maximum 10 images allowed" });
-      }
+      // Validate file size limits
+      const files = req.files as Express.Multer.File[];
       
-      // Validate each file and total size
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-      let totalSize = 0;
+      // Calculate total request size
+      const totalSize = files.reduce((sum, file) => sum + file.size, 0);
+      const maxTotalSize = 100 * 1024 * 1024; // 100MB total limit
       
-      for (const file of req.files as Express.Multer.File[]) {
-        if (!allowedTypes.includes(file.mimetype)) {
-          return res.status(400).json({ error: "Invalid file type. Please upload JPG, PNG, or WebP images only" });
-        }
-        
-        if (file.size > 25 * 1024 * 1024) {
-          return res.status(400).json({ error: "File too large. Please upload images smaller than 25MB each" });
-        }
-        
-        totalSize += file.size;
-      }
-      
-      // Check total payload size (limit to 100MB total to avoid 413 errors)
-      if (totalSize > 100 * 1024 * 1024) {
-        return res.status(400).json({ 
-          error: `Total file size too large (${(totalSize / 1024 / 1024).toFixed(1)}MB). Please reduce image count or file sizes. Maximum total: 100MB` 
+      if (totalSize > maxTotalSize) {
+        return res.status(413).json({ 
+          error: "Total request size exceeds 100MB limit", 
+          details: "Try with fewer images or smaller file sizes",
+          totalSizeMB: (totalSize / 1024 / 1024).toFixed(1),
+          maxSizeMB: (maxTotalSize / 1024 / 1024).toFixed(1)
         });
       }
       
-      // For nano-banana with many images, recommend fewer for better results
-      if (selectedModel === 'google/nano-banana' && req.files.length > 5 && totalSize > 50 * 1024 * 1024) {
-        console.warn(`Large nano-banana request: ${req.files.length} files, ${(totalSize / 1024 / 1024).toFixed(1)}MB total`);
-      }
+      // Convert files to job data format
+      const imageFiles = files.map(file => ({
+        name: file.originalname,
+        size: file.size,
+        type: file.mimetype,
+        base64: file.buffer.toString('base64')
+      }));
       
-      // Define prompt templates (use exact text as specified)
-      // Get prompt from Google Sheets
-      let prompt = await getPrompt(mode, selectedModel);
-      
-      if (!prompt) {
-        // Fallback to hardcoded prompts if Google Sheets fails
-        console.warn(`No prompt found in Google Sheets for mode: ${mode}, model: ${selectedModel}. Using fallback.`);
-        const FALLBACK_PROMPTS = {
-          'background-only': `Replace only the background with a clean, seamless light-gray curved studio wall and matte dark reflective floor. Do not change the car. `,
-          'studio-enhance': `This is a {{make}} vehicle. Replace only the background with a clean, professional car studio: seamless curved light-gray wall with a soft lateral gradient, and a dark matte reflective floor. Use cool-toned white lighting from above only. The car must be evenly and brightly illuminated from the top, without any frontal or side lighting. Make the body panels and glass appear clean and naturally shiny and glossy under the studio lights. Do not alter any part of the vehicle. Preserve every original visual detail with zero modification: paint tone and color, grille, headlights, stickers, trim, the antenna, and damage, dents and scratches. Only rotate the vehicle to a 45° front-three-quarter angle if the current yaw deviates more than 20°.`
-        };
-        prompt = FALLBACK_PROMPTS[mode as keyof typeof FALLBACK_PROMPTS] || '';
-      }
-      
-      // Substitute brand if Studio Enhance mode and {{make}} placeholder exists
-      if (mode === 'studio-enhance' && brand && prompt.includes('{{make}}')) {
-        prompt = prompt.replace(/\{\{make\}\}/g, brand.trim());
-      }
-      
-      // Append additional instructions if provided
-      if (additionalInstructions && additionalInstructions.trim()) {
-        prompt += ' ' + additionalInstructions.trim();
-      }
-      
-      console.log(`Photo-to-Studio generation request with mode: ${mode}, prompt: ${prompt}`);
-      
-      // Check if REPLICATE_API_TOKEN is set
-      if (!process.env.REPLICATE_API_TOKEN) {
-        return res.status(500).json({ error: "REPLICATE_API_TOKEN environment variable is not set" });
-      }
-      
-      // Get the selected model from the configured models
-      const selectedModelConfig = models.find(m => m.key === selectedModel);
-      if (!selectedModelConfig) {
-        return res.status(500).json({ error: `${selectedModel} model not properly initialized` });
-      }
-      
-      console.log(`Using Replicate model: ${selectedModel}`);
-      
-      // Convert uploaded images to base64
-      const imageDataUris = (req.files as Express.Multer.File[]).map(file => {
-        const imageBase64 = file.buffer.toString('base64');
-        const imageMimeType = file.mimetype;
-        return `data:${imageMimeType};base64,${imageBase64}`;
-      });
-      
-      // Get the Replicate provider
-      const { ReplicateProvider } = await import('./providers/replicate-provider');
-      const replicateProvider = new ReplicateProvider();
-      
-      // Use the provider's edit method with selected model
-      const editParams: any = {
-        prompt,
+      // Create job in queue
+      const jobId = await createJob({
+        userId,
+        mode,
         modelKey: selectedModel,
-        images: imageDataUris,
-        mask: undefined, // No mask needed for background replacement
-      };
-      
-      // Add model-specific parameters
-      if (selectedModel === 'flux-kontext-max') {
-        editParams.aspect_ratio = 'match_input_image';
-        editParams.output_format = 'png';
-        editParams.safety_tolerance = 2;
-        editParams.prompt_upsampling = false;
-      } else if (selectedModel === 'google/nano-banana') {
-        // nano-banana parameters will be handled in the provider
-        editParams.output_format = 'png';
-      }
-      
-      const result = await replicateProvider.edit(editParams);
-      
-      if (!result.images || result.images.length === 0) {
-        return res.status(500).json({ error: "No images were generated" });
-      }
-      
-      // Get the first (and typically only) generated image
-      const generatedImage = result.images[0];
-      
-      // Get user ID for analytics tracking
-      const userId = req.user?.claims?.sub || "system";
-      console.log(`[Analytics Debug] User ID for photo-to-studio generation: ${userId}`);
-
-      // The ReplicateProvider.edit() already downloaded, saved, and persisted the image
-      // Extract image ID from the URL path for response consistency
-      const imageId = generatedImage.url.split('/').pop()?.split('.')[0] || `edit_${Date.now()}`;
-      
-      const image = {
-        id: imageId,
-        fullUrl: generatedImage.fullUrl,
-        thumbUrl: generatedImage.thumbUrl,
-        url: generatedImage.fullUrl // Client expects this field
-      };
-
-      // Track successful photo-to-studio generation
-      const { logActivity } = await import('./analytics');
-      await logActivity({
-        userId: userId,
-        sessionId: req.sessionID,
-        event: 'photo_to_studio_generate',
-        feature: 'photo_to_studio',
-        model: selectedModel,
-        status: 'succeeded',
-        duration: Date.now() - startTime,
-        metadata: {
-          mode: mode,
-          brand: brand || null,
-          hasAdditionalInstructions: !!additionalInstructions
-        }
+        brand,
+        additionalInstructions,
+        imageFiles
       });
       
-      // Return the generated image data using persistImage result
+      console.log(`Created photo-to-studio job ${jobId} for user ${userId}`);
+      
+      // Return immediately with job ID - fire and forget behavior
       res.json({
         success: true,
-        image: {
-          id: image.id,
-          url: image.fullUrl, // Use fullUrl from persistImage
-          fullUrl: image.fullUrl,
-          thumbUrl: image.thumbUrl,
-          prompt: prompt,
-          model: selectedModel
-        }
+        jobId,
+        message: "Generation started",
+        queuePosition: activeJobsCount + 1
       });
+      
     } catch (error: any) {
-      console.error("Error generating photo-to-studio image:", error);
+      console.error("Error creating photo-to-studio job:", error);
       
-      // Enhanced error handling for specific error types
-      let errorMessage = error.message || "Failed to generate studio image";
-      let statusCode = 500;
-      
-      if (error.message?.includes('413') || error.message?.includes('Request Entity Too Large')) {
-        errorMessage = "Images too large. Please reduce file sizes or number of images and try again.";
-        statusCode = 413;
-      } else if (error.message?.includes('Prediction interrupted') || error.message?.includes('code: PA')) {
-        errorMessage = "Generation was interrupted. This often happens with large requests. Please try with fewer images or smaller file sizes.";
-        statusCode = 408; // Request Timeout
-      } else if (error.message?.includes('timeout')) {
-        errorMessage = "Request timed out. Please try with fewer or smaller images.";
-        statusCode = 408;
+      res.status(500).json({
+        error: "Failed to create generation job"
+      });
+    }
+  });
+
+  // Job management endpoints
+  app.get('/api/jobs/active', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
       }
       
-      // Track failed photo-to-studio generation
-      try {
-        const userId = req.user?.claims?.sub;
-        const { logActivity } = await import('./analytics');
-        await logActivity({
-          userId: userId,
-          sessionId: req.sessionID,
-          event: 'photo_to_studio_generate',
-          feature: 'photo_to_studio',
-          model: req.body.modelKey || 'google/nano-banana',
-          status: 'failed',
-          duration: Date.now() - startTime,
-          errorCode: error.response?.status?.toString() || 'unknown_error',
-          metadata: {
-            error: error.message,
-            mode: req.body.mode,
-            brand: req.body.brand || null,
-            hasAdditionalInstructions: !!req.body.additionalInstructions,
-            imageCount: req.files?.length || 0
-          }
-        });
-      } catch (analyticsError) {
-        console.error('Failed to log photo-to-studio generation failure:', analyticsError);
-      }
-      
-      res.status(statusCode).json({ error: errorMessage });
+      const activeJobs = await getUserActiveJobs(userId);
+      res.json({ jobs: activeJobs });
+    } catch (error: any) {
+      console.error("Error fetching active jobs:", error);
+      res.status(500).json({ error: "Failed to fetch active jobs" });
     }
   });
 
@@ -2300,6 +2183,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Initialize cleanup job for trashed images
   setupCleanupJob();
+  
+  // Start the background job processor
+  startJobProcessor();
   
   // REMOVED: Gallery sync that was causing images to be incorrectly moved to trash
   // due to dev/prod environment isolation issues. This system is no longer necessary.
