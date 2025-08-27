@@ -2291,23 +2291,6 @@ const CarCreationPage: React.FC = () => {
                           </p>
                         </div>
                       </div>
-                      
-                      {/* Disclaimer Downloads */}
-                      <div className="pt-2 border-t">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {photoToStudioImages.map((image, index) => (
-                            <CarImageCard
-                              key={`disclaimer-${image.id}`}
-                              image={image}
-                              make={photoToStudioForm.watch('brand') || 'Unknown'}
-                              model=""
-                              bodyStyle=""
-                              color=""
-                              disclaimerOnly={true}
-                            />
-                          ))}
-                        </div>
-                      </div>
                     </div>
                   </div>
                 ) : (
