@@ -37,11 +37,6 @@ export function JobsTray({ isOpen, onClose, onJobCompleted }: JobsTrayProps) {
       const { type, data } = event.detail || {};
       
       if (type === 'jobCreated') {
-          // Only show jobs for the current user
-          if (data.userId !== user?.id) {
-            return;
-          }
-          
           const newJob: JobStatus = {
             jobId: data.jobId,
             userId: data.userId,
@@ -60,11 +55,6 @@ export function JobsTray({ isOpen, onClose, onJobCompleted }: JobsTrayProps) {
           });
         } 
         else if (type === 'jobUpdated') {
-          // Only process job updates for the current user
-          if (data.userId !== user?.id) {
-            return;
-          }
-          
           const updatedJob = data;
           
           setJobs(prev => prev.map(job => 
