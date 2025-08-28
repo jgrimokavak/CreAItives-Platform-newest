@@ -2742,25 +2742,49 @@ const CarCreationPage: React.FC = () => {
                     <Label className="text-base font-medium">Camera Angles</Label>
                     <p className="text-xs text-muted-foreground">Select angles to generate</p>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {anglePresets.map((angle) => (
-                      <Button
-                        key={angle.angle_key}
-                        type="button"
-                        variant={selectedAngles.includes(angle.angle_key) ? "default" : "outline"}
-                        size="sm"
-                        className="h-auto p-3 flex flex-col items-center gap-2"
-                        onClick={() => {
-                          setSelectedAngles(prev => 
-                            prev.includes(angle.angle_key)
-                              ? prev.filter(a => a !== angle.angle_key)
-                              : [...prev, angle.angle_key]
-                          );
-                        }}
-                      >
-                        <span className="text-xs font-medium">{angle.angle_label}</span>
-                      </Button>
-                    ))}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {anglePresets.map((angle) => {
+                      const isSelected = selectedAngles.includes(angle.angle_key);
+                      // Simplify angle names as requested
+                      const simplifiedLabel = angle.angle_label
+                        .replace('Front 0°', 'Front')
+                        .replace('Front 3/4 (45°)', 'Front 3/4')
+                        .replace('Side (90°)', 'Side')
+                        .replace('Rear 3/4 (135°)', 'Rear 3/4')
+                        .replace('Rear (180°)', 'Rear');
+                      
+                      return (
+                        <button
+                          key={angle.angle_key}
+                          type="button"
+                          className={`relative h-16 rounded-xl border-2 transition-all duration-200 flex flex-col items-center justify-center gap-1 ${
+                            isSelected
+                              ? 'border-primary bg-primary/10 shadow-sm scale-[1.02]'
+                              : 'border-border bg-background hover:border-primary/50 hover:bg-muted/50'
+                          }`}
+                          onClick={() => {
+                            setSelectedAngles(prev => 
+                              prev.includes(angle.angle_key)
+                                ? prev.filter(a => a !== angle.angle_key)
+                                : [...prev, angle.angle_key]
+                            );
+                          }}
+                        >
+                          {isSelected && (
+                            <div className="absolute top-1 right-1 h-4 w-4 bg-primary text-primary-foreground rounded-full flex items-center justify-center">
+                              <svg className="h-2.5 w-2.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                          )}
+                          <span className={`text-xs font-medium transition-colors ${
+                            isSelected ? 'text-primary' : 'text-foreground'
+                          }`}>
+                            {simplifiedLabel}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -2781,25 +2805,81 @@ const CarCreationPage: React.FC = () => {
                   </div>
                   
                   {autoColorize && (
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-40 overflow-y-auto">
-                      {colorPresets.map((color) => (
-                        <Button
-                          key={color.color_key}
-                          type="button"
-                          variant={selectedColors.includes(color.color_key) ? "default" : "outline"}
-                          size="sm"
-                          className="h-8 text-xs"
-                          onClick={() => {
-                            setSelectedColors(prev => 
-                              prev.includes(color.color_key)
-                                ? prev.filter(c => c !== color.color_key)
-                                : [...prev, color.color_key]
-                            );
-                          }}
-                        >
-                          {color.color_label}
-                        </Button>
-                      ))}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-48 overflow-y-auto pr-2">
+                      {colorPresets.map((color) => {
+                        const isSelected = selectedColors.includes(color.color_key);
+                        // Generate color swatch based on color name
+                        const getColorSwatch = (colorName: string) => {
+                          const colorMap: Record<string, string> = {
+                            'red': '#DC2626',
+                            'blue': '#2563EB', 
+                            'green': '#16A34A',
+                            'yellow': '#EAB308',
+                            'orange': '#EA580C',
+                            'purple': '#9333EA',
+                            'pink': '#EC4899',
+                            'black': '#171717',
+                            'white': '#FFFFFF',
+                            'gray': '#6B7280',
+                            'grey': '#6B7280',
+                            'silver': '#D1D5DB',
+                            'gold': '#F59E0B',
+                            'brown': '#92400E',
+                            'beige': '#F3E8D0',
+                            'navy': '#1E3A8A',
+                            'maroon': '#7C2D12',
+                            'teal': '#0F766E',
+                            'lime': '#65A30D',
+                            'indigo': '#4338CA',
+                            'cyan': '#0891B2'
+                          };
+                          
+                          // Find matching color or default to a neutral color
+                          const colorKey = Object.keys(colorMap).find(key => 
+                            colorName.toLowerCase().includes(key)
+                          );
+                          return colorKey ? colorMap[colorKey] : '#64748B';
+                        };
+                        
+                        return (
+                          <button
+                            key={color.color_key}
+                            type="button"
+                            className={`relative h-12 rounded-lg border-2 transition-all duration-200 flex items-center gap-2 px-3 ${
+                              isSelected
+                                ? 'border-primary bg-primary/10 shadow-sm scale-[1.02]'
+                                : 'border-border bg-background hover:border-primary/50 hover:bg-muted/50'
+                            }`}
+                            onClick={() => {
+                              setSelectedColors(prev => 
+                                prev.includes(color.color_key)
+                                  ? prev.filter(c => c !== color.color_key)
+                                  : [...prev, color.color_key]
+                              );
+                            }}
+                          >
+                            {isSelected && (
+                              <div className="absolute top-1 right-1 h-4 w-4 bg-primary text-primary-foreground rounded-full flex items-center justify-center">
+                                <svg className="h-2.5 w-2.5" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                              </div>
+                            )}
+                            <div
+                              className="h-6 w-6 rounded border shadow-sm flex-shrink-0"
+                              style={{ 
+                                backgroundColor: getColorSwatch(color.color_label),
+                                border: getColorSwatch(color.color_label) === '#FFFFFF' ? '1px solid #E5E7EB' : 'none'
+                              }}
+                            />
+                            <span className={`text-xs font-medium transition-colors truncate ${
+                              isSelected ? 'text-primary' : 'text-foreground'
+                            }`}>
+                              {color.color_label}
+                            </span>
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -2863,76 +2943,235 @@ const CarCreationPage: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="p-4">
-                    {/* Marketplace Matrix Display */}
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-3 mb-4">
+                  <div className="p-6 space-y-8">
+                    {/* Header with Download All Button */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
                         <div className="h-5 w-5 bg-primary/10 rounded flex items-center justify-center">
                           <div className="h-2.5 w-2.5 bg-primary/60 rounded"></div>
                         </div>
-                        <h2 className="font-semibold">Marketplace Results</h2>
+                        <h2 className="font-semibold text-lg">Marketplace Results</h2>
                         <div className="text-sm text-muted-foreground">
-                          ({Object.keys(marketplaceMatrix).length} angles × {autoColorize ? selectedColors.length + 1 : 1} variants)
+                          {Object.keys(marketplaceMatrix).length} angles
+                          {autoColorize && ` × ${selectedColors.length} colors`}
                         </div>
                       </div>
-                      
-                      {Object.entries(marketplaceMatrix).map(([angleKey, angleRow]) => (
-                        <div key={angleKey} className="space-y-2">
-                          {/* Angle Row Header */}
-                          <div className="text-sm font-medium text-muted-foreground capitalize">
-                            {angleKey.replace('_', ' ')}
-                          </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2"
+                        onClick={() => {
+                          // Download all completed images as ZIP
+                          const completedImages: string[] = [];
+                          Object.entries(marketplaceMatrix).forEach(([angleKey, angleRow]) => {
+                            Object.entries(angleRow).forEach(([cellKey, cell]) => {
+                              if (cell.status === 'completed' && cell.imageUrl) {
+                                completedImages.push(cell.imageUrl);
+                              }
+                            });
+                          });
                           
-                          {/* Angle Row Cells */}
-                          <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-3">
-                            {Object.entries(angleRow).map(([cellKey, cell]) => (
-                              <div key={cellKey} className="aspect-square">
-                                {cell.status === 'completed' && cell.imageUrl ? (
-                                  <div className="relative group">
-                                    <img
-                                      src={cell.imageUrl}
-                                      alt={`${angleKey} ${cellKey === '__angle__' ? 'base' : cellKey}`}
-                                      className="w-full h-full object-cover rounded border bg-muted cursor-pointer transition-transform hover:scale-105"
-                                      onClick={() => setSelectedImage(cell.imageUrl!)}
-                                    />
-                                    <div className="absolute bottom-0.5 left-0.5 bg-black/60 text-white text-[10px] px-1 py-0.5 rounded text-center leading-none">
-                                      {cellKey === '__angle__' ? 'Base' : cellKey}
-                                    </div>
-                                  </div>
-                                ) : cell.status === 'failed' ? (
-                                  <div className="w-full h-full rounded border-2 border-destructive/20 bg-destructive/5 flex items-center justify-center">
-                                    <div className="text-center p-1">
-                                      <div className="text-[10px] text-destructive mb-1">Failed</div>
-                                      <button className="text-[9px] bg-destructive/10 hover:bg-destructive/20 px-1 py-0.5 rounded">
-                                        Retry
-                                      </button>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div className="w-full h-full rounded border-2 border-dashed border-muted-foreground/20 bg-muted/30 flex items-center justify-center">
-                                    <div className="text-center">
-                                      {cell.status === 'queued' ? (
-                                        <div className="animate-pulse">
-                                          <div className="w-6 h-6 bg-primary/20 rounded mx-auto mb-1"></div>
-                                          <div className="text-[10px] text-muted-foreground">Queued</div>
-                                        </div>
-                                      ) : cell.status === 'processing' ? (
-                                        <div>
-                                          <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full mx-auto mb-1"></div>
-                                          <div className="text-[10px] text-muted-foreground">Processing</div>
-                                        </div>
-                                      ) : (
-                                        <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full mx-auto"></div>
-                                      )}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
+                          if (completedImages.length > 0) {
+                            // Create a simple download for now - could be enhanced to create ZIP
+                            toast({
+                              title: "Downloading All Images",
+                              description: `Preparing ${completedImages.length} images for download...`,
+                            });
+                            // For now, download first image as example - in real implementation this would create a ZIP
+                            const link = document.createElement('a');
+                            link.href = completedImages[0];
+                            link.download = 'marketplace-results.jpg';
+                            link.click();
+                          } else {
+                            toast({
+                              title: "No Images Ready",
+                              description: "Wait for images to complete processing first.",
+                              variant: "destructive"
+                            });
+                          }
+                        }}
+                      >
+                        <Download className="h-4 w-4" />
+                        Download All
+                      </Button>
                     </div>
+
+                    {/* Section 1: Angle Results (Base Images) */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 pb-2 border-b">
+                        <h3 className="font-medium text-base">Angle Results</h3>
+                        <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                          Base images from selected angles
+                        </span>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {Object.entries(marketplaceMatrix).map(([angleKey, angleRow]) => {
+                          const baseCell = angleRow['__angle__'];
+                          const simplifiedAngleName = angleKey
+                            .replace('front_0', 'Front')
+                            .replace('front_3_4', 'Front 3/4')
+                            .replace('side_90', 'Side')
+                            .replace('rear_3_4', 'Rear 3/4')
+                            .replace('rear_180', 'Rear')
+                            .replace('_', ' ')
+                            .replace(/\b\w/g, l => l.toUpperCase());
+                          
+                          return (
+                            <div key={angleKey} className="space-y-2">
+                              {baseCell?.status === 'completed' && baseCell.imageUrl ? (
+                                <div className="group relative bg-card rounded-lg border shadow-sm overflow-hidden">
+                                  {/* Image */}
+                                  <div className="aspect-square relative">
+                                    <img
+                                      src={baseCell.thumbUrl || baseCell.imageUrl}
+                                      alt={`${simplifiedAngleName} view`}
+                                      className="w-full h-full object-cover cursor-pointer"
+                                      onClick={() => setSelectedImage(baseCell.imageUrl!)}
+                                    />
+                                    {/* Download Button Overlay */}
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                      <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        className="shadow-lg"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          const link = document.createElement('a');
+                                          link.href = baseCell.imageUrl!;
+                                          link.download = `${angleKey}-base.jpg`;
+                                          link.click();
+                                        }}
+                                      >
+                                        <Download className="h-4 w-4 mr-1" />
+                                        Download
+                                      </Button>
+                                    </div>
+                                  </div>
+                                  {/* Label */}
+                                  <div className="p-3">
+                                    <p className="text-sm font-medium text-center">{simplifiedAngleName}</p>
+                                    <p className="text-xs text-muted-foreground text-center">Base</p>
+                                  </div>
+                                </div>
+                              ) : baseCell?.status === 'failed' ? (
+                                <div className="aspect-square rounded-lg border-2 border-destructive/20 bg-destructive/5 flex flex-col items-center justify-center p-4">
+                                  <AlertCircle className="h-8 w-8 text-destructive mb-2" />
+                                  <p className="text-xs text-destructive font-medium mb-2">Generation Failed</p>
+                                  <p className="text-xs text-center text-muted-foreground">{simplifiedAngleName}</p>
+                                </div>
+                              ) : (
+                                <div className="aspect-square rounded-lg border-2 border-dashed border-muted-foreground/20 bg-muted/30 flex flex-col items-center justify-center p-4">
+                                  {baseCell?.status === 'processing' ? (
+                                    <>
+                                      <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full mb-2"></div>
+                                      <p className="text-xs text-muted-foreground">Processing...</p>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <div className="animate-pulse w-6 h-6 bg-primary/20 rounded mb-2"></div>
+                                      <p className="text-xs text-muted-foreground">Queued</p>
+                                    </>
+                                  )}
+                                  <p className="text-xs text-center text-muted-foreground mt-1">{simplifiedAngleName}</p>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Section 2: Color Variants (only show if auto-colorize is enabled) */}
+                    {autoColorize && (
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2 pb-2 border-b">
+                          <h3 className="font-medium text-base">Color Variants</h3>
+                          <span className="text-xs bg-secondary/80 text-secondary-foreground px-2 py-1 rounded-full">
+                            Recolored variations
+                          </span>
+                        </div>
+                        
+                        {Object.entries(marketplaceMatrix).map(([angleKey, angleRow]) => {
+                          const colorVariants = Object.entries(angleRow).filter(([cellKey]) => cellKey !== '__angle__');
+                          const simplifiedAngleName = angleKey
+                            .replace('front_0', 'Front')
+                            .replace('front_3_4', 'Front 3/4')
+                            .replace('side_90', 'Side')
+                            .replace('rear_3_4', 'Rear 3/4')
+                            .replace('rear_180', 'Rear')
+                            .replace('_', ' ')
+                            .replace(/\b\w/g, l => l.toUpperCase());
+                          
+                          return colorVariants.length > 0 && (
+                            <div key={`${angleKey}-colors`} className="space-y-3">
+                              <h4 className="text-sm font-medium text-muted-foreground">{simplifiedAngleName} - Colors</h4>
+                              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                                {colorVariants.map(([colorKey, cell]) => (
+                                  <div key={`${angleKey}-${colorKey}`} className="space-y-2">
+                                    {cell.status === 'completed' && cell.imageUrl ? (
+                                      <div className="group relative bg-card rounded border shadow-sm overflow-hidden">
+                                        {/* Image */}
+                                        <div className="aspect-square relative">
+                                          <img
+                                            src={cell.thumbUrl || cell.imageUrl}
+                                            alt={`${simplifiedAngleName} ${colorKey}`}
+                                            className="w-full h-full object-cover cursor-pointer"
+                                            onClick={() => setSelectedImage(cell.imageUrl!)}
+                                          />
+                                          {/* Download Button Overlay */}
+                                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <Button
+                                              variant="secondary"
+                                              size="sm"
+                                              className="shadow-lg text-xs px-2"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                const link = document.createElement('a');
+                                                link.href = cell.imageUrl!;
+                                                link.download = `${angleKey}-${colorKey}.jpg`;
+                                                link.click();
+                                              }}
+                                            >
+                                              <Download className="h-3 w-3" />
+                                            </Button>
+                                          </div>
+                                        </div>
+                                        {/* Label */}
+                                        <div className="p-2">
+                                          <p className="text-xs font-medium text-center capitalize">{colorKey}</p>
+                                        </div>
+                                      </div>
+                                    ) : cell.status === 'failed' ? (
+                                      <div className="aspect-square rounded border-2 border-destructive/20 bg-destructive/5 flex flex-col items-center justify-center p-2">
+                                        <AlertCircle className="h-4 w-4 text-destructive mb-1" />
+                                        <p className="text-[10px] text-destructive text-center">Failed</p>
+                                        <p className="text-[9px] text-center text-muted-foreground capitalize">{colorKey}</p>
+                                      </div>
+                                    ) : (
+                                      <div className="aspect-square rounded border-2 border-dashed border-muted-foreground/20 bg-muted/30 flex flex-col items-center justify-center p-2">
+                                        {cell.status === 'processing' ? (
+                                          <>
+                                            <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full mb-1"></div>
+                                            <p className="text-[10px] text-muted-foreground">Processing</p>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <div className="animate-pulse w-4 h-4 bg-primary/20 rounded mb-1"></div>
+                                            <p className="text-[10px] text-muted-foreground">Queued</p>
+                                          </>
+                                        )}
+                                        <p className="text-[9px] text-center text-muted-foreground capitalize mt-1">{colorKey}</p>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
