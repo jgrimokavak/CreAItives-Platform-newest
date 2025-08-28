@@ -241,8 +241,15 @@ const CarCreationPage: React.FC = () => {
   // Load marketplace data when marketplace tab is selected
   useEffect(() => {
     if (carCreationMode === 'marketplace') {
-      loadAnglePresets().then(setAnglePresets).catch(console.error);
-      loadColorPresets().then(setColorPresets).catch(console.error);
+      console.log('[MP] Loading marketplace data...');
+      loadAnglePresets().then(angles => {
+        console.log('[MP] loaded angle presets:', { count: angles.length, firstRow: angles[0] });
+        setAnglePresets(angles);
+      }).catch(console.error);
+      loadColorPresets().then(colors => {
+        console.log('[MP] loaded color presets:', { count: colors.length, firstRow: colors[0] });
+        setColorPresets(colors);
+      }).catch(console.error);
     }
   }, [carCreationMode]);
 
@@ -250,6 +257,7 @@ const CarCreationPage: React.FC = () => {
   useEffect(() => {
     const handleMarketplaceUpdate = (event: CustomEvent) => {
       const { type, data } = event.detail || {};
+      console.log('[MP] ws-message', { type, batchId: data?.batchId, currentBatchId: marketplaceBatchId });
       
       if (type === 'marketplaceJobUpdated') {
         const { batchId, result } = data;
@@ -895,6 +903,7 @@ const CarCreationPage: React.FC = () => {
   // Start marketplace batch
   const handleMarketplaceGenerate = async () => {
     try {
+      console.log('[MP] Generate button clicked');
       if (marketplaceFiles.length === 0) {
         toast({
           title: "No source images",
@@ -916,28 +925,39 @@ const CarCreationPage: React.FC = () => {
       setIsGeneratingStudio(true);
 
       // Upload files first
+      console.log('[MP] Uploading files:', { fileCount: marketplaceFiles.length });
       const imageUrls = await uploadMarketplaceFiles();
+      console.log('[MP] Upload response:', { imageUrls: imageUrls.length });
       setMarketplaceImageUrls(imageUrls);
 
       // Start marketplace batch
+      const batchPayload = {
+        sourceImageUrls: imageUrls,
+        angles: selectedAngles,
+        colors: selectedColors,
+        autoColorize
+      };
+      console.log('[MP] submit batch', { sourceCount: imageUrls.length, angles: selectedAngles, colors: selectedColors, autoColorize });
+      
       const response = await fetch('/api/car/marketplace/batch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sourceImageUrls: imageUrls,
-          angles: selectedAngles,
-          colors: selectedColors,
-          autoColorize
-        })
+        body: JSON.stringify(batchPayload)
       });
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.log('[MP] batch error response:', errorData);
         throw new Error(errorData.error || 'Failed to start marketplace batch');
       }
 
       const { batchId } = await response.json();
+      console.log('[MP] batch response', { batchId });
       setMarketplaceBatchId(batchId);
+      
+      // Log placeholder creation
+      const totalJobs = selectedAngles.length + (autoColorize ? selectedAngles.length * selectedColors.length : 0);
+      console.log('[MP] placeholders created', { angles: selectedAngles, colors: selectedColors, keysCreated: totalJobs });
 
       toast({
         title: "Marketplace batch started",

@@ -177,8 +177,9 @@ async function processMarketplaceJob(batchId: string, resultIndex: number) {
     let imageInput: string[] = [];
     
     if (result.type === 'angle') {
-      // Build angle generation prompt
+      // Build angle generation prompt  
       const anglePrompt = globalPrompts.find(p => p.angle_generation === 'TRUE' || p.angle_generation === 'true' || p.angle_generation === true);
+      console.log('[MP] enqueue angle', { batchId, angleKey: result.angleKey, imgCount: batch.sourceImageUrls.length });
       if (!anglePrompt) {
         console.log('Available global prompts:', globalPrompts);
         throw new Error('Angle generation prompt not found');
@@ -198,6 +199,7 @@ async function processMarketplaceJob(batchId: string, resultIndex: number) {
     } else if (result.type === 'color') {
       // Build colorization prompt
       const colorPrompt = globalPrompts.find(p => p.colorization === 'TRUE' || p.colorization === 'true' || p.colorization === true);
+      console.log('[MP] enqueue color', { batchId, angleKey: result.angleKey, colorKey: result.colorKey });
       if (!colorPrompt) {
         console.log('Available global prompts:', globalPrompts);
         throw new Error('Colorization prompt not found');
@@ -227,9 +229,14 @@ async function processMarketplaceJob(batchId: string, resultIndex: number) {
       imageInput = [angleResult.imageUrl];
     }
     
-    console.log(`Creating prediction for ${result.type} job: ${result.angleKey}${result.colorKey ? ` (${result.colorKey})` : ''}`);
-    console.log(`Prompt: ${prompt.substring(0, 100)}...`);
-    console.log(`Image input: ${imageInput}`);
+    console.log(`[MP] replicate.run google/nano-banana`, { 
+      type: result.type, 
+      angleKey: result.angleKey, 
+      colorKey: result.colorKey,
+      image_input_len: imageInput.length, 
+      output_format: 'png',
+      promptLen: prompt.length
+    });
     
     // Create prediction with google/nano-banana
     const prediction = await createPrediction('google/nano-banana', {
@@ -271,9 +278,11 @@ async function processMarketplaceJob(batchId: string, resultIndex: number) {
       result.imageUrl = persistResult.fullUrl;
       result.thumbUrl = persistResult.thumbUrl;
       
+      console.log(`[MP] persisted`, { imageUrl: persistResult.fullUrl });
       console.log(`Marketplace job completed: ${result.type} ${result.angleKey}${result.colorKey ? ` (${result.colorKey})` : ''}`);
       
       // Send WebSocket update
+      console.log(`[MP] push('marketplaceJobUpdated', ...)`, { batchId, type: result.type, status: result.status });
       push('marketplaceJobUpdated', {
         batchId,
         result: {
@@ -351,6 +360,12 @@ router.post('/upload', upload.array('images', 10), async (req: any, res) => {
 router.post('/batch', async (req: any, res) => {
   try {
     const { sourceImageUrls, angles, colors, autoColorize } = req.body;
+    console.log('[MP] /batch body', { 
+      imageCount: sourceImageUrls?.length || 0, 
+      angleCount: angles?.length || 0, 
+      colorCount: colors?.length || 0, 
+      autoColorize 
+    });
     
     if (!sourceImageUrls || !Array.isArray(sourceImageUrls) || sourceImageUrls.length === 0) {
       return res.status(400).json({ error: 'Source image URLs are required' });

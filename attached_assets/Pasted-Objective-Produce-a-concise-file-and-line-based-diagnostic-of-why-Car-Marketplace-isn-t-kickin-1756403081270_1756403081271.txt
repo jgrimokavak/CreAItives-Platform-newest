@@ -1,0 +1,88 @@
+Objective
+Produce a concise, file-and-line based diagnostic of why **Car Marketplace** isn’t kicking off generations or updating the UI after pressing **Generate**. DO NOT change behavior yet—only instrument, verify, and report. Use **Photo-to-Studio** as the reference for uploads → Replicate → persistImage → WebSocket → image_card.
+
+Known Symptoms (from console)
+- WebSocket URL errors (earlier): invalid `wss://localhost:undefined/...`; duplicate “WebSocket connected”.
+- Marketplace events arrive but are unhandled:
+  - `[TRACE] WebSocket received event: marketplaceBatchCreated ...`
+  - `[TRACE] WebSocket received event: marketplaceJobUpdated ...`
+  - `Unknown WebSocket event: marketplaceBatchCreated / marketplaceJobUpdated`
+- CSVs appear to load counts (angles/colors), but confirm URLs are correct.
+- UX: After **Generate**, nothing seems to happen in-page.
+
+CSV URLs (use EXACTLY these in code checks)
+- Global prompts:
+  https://docs.google.com/spreadsheets/d/e/2PACX-1vQb-bDvaNqOTOJXonaHf_VfzGZSW8BraE_tGoFAsJortqGRG6UVyA7MoxdN8Muvap_BrprDBT8n4V2B/pub?gid=1909445017&single=true&output=csv
+- Angle presets:
+  https://docs.google.com/spreadsheets/d/e/2PACX-1vQb-bDvaNqOTOJXonaHf_VfzGZSW8BraE_tGoFAsJortqGRG6UVyA7MoxdN8Muvap_BrprDBT8n4V2B/pub?gid=375187395&single=true&output=csv
+- Color presets:
+  https://docs.google.com/spreadsheets/d/e/2PACX-1vQb-bDvaNqOTOJXonaHf_VfzGZSW8BraE_tGoFAsJortqGRG6UVyA7MoxdN8Muvap_BrprDBT8n4V2B/pub?gid=41565075&single=true&output=csv
+
+What to verify (add small console logs only)
+1) Client → Generate button actually fires the batch request
+   - File: `client/src/pages/CarCreationPage.tsx` (Car Marketplace section).
+   - Log before and after the request:
+     - `[MP] submit batch`, payload shape: `{sourceCount, angles[], colors[], autoColorize}`
+     - `[MP] batch response`, show `batchId` or error body.
+   - Confirm `/api/car/marketplace/upload` is called first and returns public `imageUrls[]`.
+
+2) Client → CSV usage & parsing
+   - File: `client/src/services/marketplaceData.ts`
+   - Confirm the **exact** CSV constants match the URLs above (no `...` placeholders).
+   - Log:
+     - `[MP] loaded angle presets: count + first row`
+     - `[MP] loaded color presets: count + first row`
+     - `[MP] angle_generation template length`, `[MP] colorization template length`
+
+3) Client → WebSocket construction & event bridging
+   - File: `client/src/lib/websocket.ts`
+   - Log computed parts: protocol, hostname, port, and final URL (one line).
+   - Confirm only **one** connection is created on the Car Creation page (log mount/unmount).
+   - IMPORTANT: list all `switch` cases handled and confirm whether
+     - `marketplaceBatchCreated`, `marketplaceJobUpdated`
+     are present or not. Log “unhandled event” with the raw `ev` string.
+
+4) Client → UI reacts to marketplace events
+   - File: `client/src/pages/CarCreationPage.tsx`
+   - The page listens to a custom `ws-message` event. Log in the handler:
+     - `[MP] ws-message`, `type` + normalized payload for the **current** `batchId`.
+   - Confirm placeholders matrix is created **after** batch start (angles × colors). Log a snapshot:
+     - `[MP] placeholders created`, `{angles, colors, keysCreated: N}`
+
+5) Server → Marketplace routes and CSV constants
+   - File: `server/routes/marketplace-routes.ts`
+   - Confirm the CSV constants use the **exact** URLs above (no `...` placeholders).
+   - Log on `/batch`:
+     - `[MP] /batch body`, sizes only (counts of images, angles, colors); do not dump full URLs.
+     - For each **angle job**: `[MP] enqueue angle`, `{batchId, angleKey, imgCount, promptLen}`
+     - For each **color job** (auto-colorize): `[MP] enqueue color`, `{batchId, angleKey, colorKey, promptLen}`
+   - When a job runs, log the Replicate call summary (mask secrets):
+     - `[MP] replicate.run google/nano-banana`, `{image_input_len, output_format}`
+   - After success: log `persistImage(...)` called and the WebSocket push:
+     - `[MP] persisted`, `{imageUrl}`, then `push('marketplaceJobUpdated', ...)`
+
+6) Server → WebSocket push names arriving to the client
+   - Confirm the server pushes these exact event names:
+     - `marketplaceBatchCreated`, `marketplaceJobUpdated`, `marketplaceBatchCompleted`
+   - Provide one sample payload for each from server logs.
+
+7) Visual pass (align with spec)
+   - Right column = **Jobs Tray** (only queued/processing).
+   - Center = **matrix**: rows=angles, first column=angle image, remaining columns=colors for that angle.
+   - Confirm current DOM renders these containers and their empty states.
+
+Deliverables (post back as Markdown)
+- **Summary**: What works vs broken (1–2 paragraphs).
+- **Findings** (bullet list with file:line):
+  - Whether **Generate** posts to `/batch` and returns `batchId`.
+  - Whether CSV URLs are correct and templates are loaded.
+  - Whether WebSocket URL is valid and connection is singular.
+  - Whether `marketplaceBatchCreated` / `marketplaceJobUpdated` are handled in `websocket.ts` (yes/no).
+  - Whether placeholders are created; if not, where that’s missing.
+  - Whether server actually enqueues and pushes events.
+- **Minimal Fix Plan** (just a checklist, no code yet):
+  - e.g., “Add switch-cases for marketplace events and dispatch `ws-message`”, “Initialize matrix placeholders after batch response,” “Use exact CSV URLs.”
+
+Test scenario to run (include logs + screenshots)
+- Upload 2 source images → select angles: `front_0`, `side_90` → colors: `red_metallic`, `blue_metallic` → **Auto-colorize ON**.
+- Expect: `/batch` call with a new `batchId`; WS: `marketplaceBatchCreated` then multiple `marketplaceJobUpdated`; placeholders visible; cells fill as results come in.

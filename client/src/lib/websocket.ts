@@ -136,8 +136,16 @@ export function useWebSocket() {
         window.dispatchEvent(new CustomEvent('ws-message', { detail: { type: ev, data } }));
         break;
         
+      case 'marketplaceBatchCreated':
+      case 'marketplaceJobUpdated': 
+      case 'marketplaceBatchCompleted':
+        // Dispatch marketplace events for Car Marketplace component
+        console.log(`[TRACE] Processing marketplace ${ev} event, dispatching ws-message`);
+        window.dispatchEvent(new CustomEvent('ws-message', { detail: { type: ev, data } }));
+        break;
+        
       default:
-        console.log('Unknown WebSocket event:', ev);
+        console.log(`[TRACE] Unknown WebSocket event: ${ev}, with payload:`, data);
     }
   };
   

@@ -127,13 +127,17 @@ export async function loadColorPresets(): Promise<ColorPreset[]> {
 export async function getAngleGenerationPrompt(): Promise<string> {
   const prompts = await loadGlobalPrompts();
   const anglePrompt = prompts.find(p => p.angle_generation === 'TRUE' || p.angle_generation === 'true' || p.angle_generation === true);
-  return anglePrompt?.prompt_template || '';
+  const template = anglePrompt?.prompt_template || '';
+  console.log('[MP] angle_generation template length', template.length);
+  return template;
 }
 
 export async function getColorizationPrompt(): Promise<string> {
   const prompts = await loadGlobalPrompts();
   const colorPrompt = prompts.find(p => p.colorization === 'TRUE' || p.colorization === 'true' || p.colorization === true);
-  return colorPrompt?.prompt_template || '';
+  const template = colorPrompt?.prompt_template || '';
+  console.log('[MP] colorization template length', template.length);
+  return template;
 }
 
 // Clear cache function for refreshing data
