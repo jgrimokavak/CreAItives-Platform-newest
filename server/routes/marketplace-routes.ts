@@ -27,6 +27,7 @@ interface MarketplaceBatch {
   colors: string[];
   autoColorize: boolean;
   additionalInstructions?: string;
+  carMakeModel?: string;
   status: 'pending' | 'processing' | 'completed' | 'failed';
   results: MarketplaceResult[];
   createdAt: Date;
@@ -434,7 +435,7 @@ router.post('/upload', upload.array('images', 10), async (req: any, res) => {
 // Create marketplace batch
 router.post('/batch', async (req: any, res) => {
   try {
-    const { sourceImageUrls, angles, colors, autoColorize, additionalInstructions } = req.body;
+    const { sourceImageUrls, angles, colors, autoColorize, additionalInstructions, carMakeModel } = req.body;
     console.log('[MP][SERVER] /batch', { 
       imgs: sourceImageUrls?.length || 0, 
       angles: angles?.length || 0, 
@@ -487,6 +488,7 @@ router.post('/batch', async (req: any, res) => {
       colors,
       autoColorize,
       additionalInstructions,
+      carMakeModel,
       status: 'pending',
       results,
       createdAt: new Date()
@@ -672,9 +674,11 @@ router.post('/batch/:batchId/download', async (req, res) => {
           imageBuffer = Buffer.from(imageResponse.data);
         }
         
-        // Create a filename for the image
-        const colorSuffix = result.colorKey ? `_${result.colorKey}` : '_base';
-        const fileName = `${result.angleKey}${colorSuffix}.jpg`;
+        // Create a meaningful filename for the image
+        const carName = batch.carMakeModel || 'Car';
+        const safeCarName = carName.replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '_');
+        const colorSuffix = result.colorKey ? `_${result.colorKey.replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '_')}` : '';
+        const fileName = `${safeCarName}_${result.angleKey}${colorSuffix}.jpg`;
         
         // Add to archive
         archive.append(imageBuffer, { name: fileName });
@@ -702,18 +706,25 @@ router.post('/batch/:batchId/download', async (req, res) => {
     }
     
     // Add a summary file
+    const carName = batch.carMakeModel || 'Car';
+    const safeCarName = carName.replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '_');
+    
     const summary = {
       batchId: batch.id,
+      carMakeModel: batch.carMakeModel,
       createdAt: batch.createdAt,
       completedAt: new Date(),
       totalImages: completedResults.length,
       angles: Array.from(new Set(completedResults.map(r => r.angleKey))),
       colors: Array.from(new Set(completedResults.map(r => r.colorKey).filter(Boolean))),
-      results: completedResults.map(r => ({
-        angleKey: r.angleKey,
-        colorKey: r.colorKey,
-        fileName: `${r.angleKey}${r.colorKey ? `_${r.colorKey}` : '_base'}.jpg`
-      }))
+      results: completedResults.map(r => {
+        const colorSuffix = r.colorKey ? `_${r.colorKey.replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '_')}` : '';
+        return {
+          angleKey: r.angleKey,
+          colorKey: r.colorKey,
+          fileName: `${safeCarName}_${r.angleKey}${colorSuffix}.jpg`
+        };
+      })
     };
     
     archive.append(JSON.stringify(summary, null, 2), { name: 'summary.json' });

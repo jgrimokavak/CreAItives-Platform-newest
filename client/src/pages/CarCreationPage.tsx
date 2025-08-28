@@ -163,6 +163,7 @@ const CarCreationPage: React.FC = () => {
   const [showMarketplaceCustomColor, setShowMarketplaceCustomColor] = useState<boolean>(false);
   const [marketplaceCustomColor, setMarketplaceCustomColor] = useState<string>('');
   const [marketplaceCustomColors, setMarketplaceCustomColors] = useState<string[]>([]);
+  const [carMakeModel, setCarMakeModel] = useState<string>('');
   
   // Generate years from 1990 to current year
   const currentYear = new Date().getFullYear();
@@ -995,7 +996,8 @@ const CarCreationPage: React.FC = () => {
         angles: selectedAngles,
         colors: allColors,
         autoColorize,
-        additionalInstructions: additionalInstructions.trim() || undefined
+        additionalInstructions: additionalInstructions.trim() || undefined,
+        carMakeModel: carMakeModel.trim() || undefined
       };
       if (process.env.NODE_ENV !== 'production') console.log('[MP] submit batch', { sourceCount: imageUrls.length, angles: selectedAngles, colors: selectedColors, autoColorize });
       
@@ -2742,6 +2744,20 @@ const CarCreationPage: React.FC = () => {
                       </div>
                     </div>
                   )}
+                </div>
+
+                {/* Car Make/Model Field */}
+                <div className="space-y-4">
+                  <Label className="text-base font-medium">Car Make/Model (Optional)</Label>
+                  <Input
+                    placeholder="e.g., Toyota Camry, BMW X5, Ford Mustang"
+                    value={carMakeModel}
+                    onChange={(e) => setCarMakeModel(e.target.value)}
+                    className="w-full"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    This will be used to name your generated images for easy identification
+                  </p>
                 </div>
 
                 {/* Angle Selection */}
