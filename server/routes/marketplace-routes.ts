@@ -656,20 +656,31 @@ router.post('/batch/:batchId/download', async (req, res) => {
         }
         
         console.log(`[MP][SERVER] Downloading image ${i + 1}/${completedResults.length}: ${result.imageUrl}`);
-        const imageResponse = await axios.get(result.imageUrl, { 
-          responseType: 'arraybuffer',
-          timeout: 30000 
-        });
+        
+        let imageBuffer: Buffer;
+        
+        if (result.imageUrl.startsWith('/api/object-storage/')) {
+          // Download from our own object storage
+          const objectPath = result.imageUrl.replace('/api/object-storage/image/', '');
+          imageBuffer = await objectStorage.downloadImage(objectPath);
+        } else {
+          // External URL
+          const imageResponse = await axios.get(result.imageUrl, { 
+            responseType: 'arraybuffer',
+            timeout: 30000 
+          });
+          imageBuffer = Buffer.from(imageResponse.data);
+        }
         
         // Create a filename for the image
         const colorSuffix = result.colorKey ? `_${result.colorKey}` : '_base';
         const fileName = `${result.angleKey}${colorSuffix}.jpg`;
         
         // Add to archive
-        archive.append(Buffer.from(imageResponse.data), { name: fileName });
+        archive.append(imageBuffer, { name: fileName });
         successfulDownloads++;
         
-        console.log(`[MP][SERVER] Added to ZIP: ${fileName} (${imageResponse.data.byteLength} bytes)`);
+        console.log(`[MP][SERVER] Added to ZIP: ${fileName} (${imageBuffer.length} bytes)`);
         
       } catch (error) {
         console.error(`[MP][SERVER] Failed to download image for ${result.angleKey}:`, error);
