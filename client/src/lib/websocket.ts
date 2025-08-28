@@ -9,23 +9,11 @@ export function setupWebSocket(onMessage: (ev: string, data: any) => void): WebS
   try {
     // Create proper WebSocket URL based on environment
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const hostname = window.location.hostname || 'localhost';
+    const hostname = window.location.hostname;
     const port = window.location.port ? `:${window.location.port}` : '';
     const wsUrl = `${protocol}//${hostname}${port}/ws`;
     
-    // DIAGNOSTIC: Log WebSocket URL construction
-    console.log('[DIAGNOSTIC] WebSocket URL construction:', {
-      protocol,
-      hostname,
-      port,
-      fullUrl: wsUrl,
-      windowLocation: {
-        protocol: window.location.protocol,
-        hostname: window.location.hostname,
-        port: window.location.port,
-        href: window.location.href
-      }
-    });
+    console.log('[MP][CLIENT] WS URL', { protocol, hostname, port, url: wsUrl });
     
     // Create the socket with proper error handling
     let socket: WebSocket;

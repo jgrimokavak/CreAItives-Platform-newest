@@ -179,7 +179,16 @@ async function processMarketplaceJob(batchId: string, resultIndex: number) {
     if (result.type === 'angle') {
       // Build angle generation prompt using key-based lookup
       const angleGen = globalPrompts.find(p => p.key === 'angle_generation');
-      console.log('[MP] enqueue angle', { batchId, angleKey: result.angleKey, imgCount: batch.sourceImageUrls.length });
+      // Send processing status immediately
+    push('marketplaceJobUpdated', {
+      batchId,
+      result: {
+        type: result.type,
+        angleKey: result.angleKey,
+        colorKey: result.colorKey,
+        status: 'processing'
+      }
+    });
       if (!angleGen) {
         console.log('Available global prompts:', globalPrompts);
         throw new Error('Angle generation prompt not found');
@@ -197,12 +206,22 @@ async function processMarketplaceJob(batchId: string, resultIndex: number) {
       imageInput = batch.sourceImageUrls;
       
     } else if (result.type === 'color') {
+      // Send processing status immediately  
+      push('marketplaceJobUpdated', {
+        batchId,
+        result: {
+          type: result.type,
+          angleKey: result.angleKey,
+          colorKey: result.colorKey,
+          status: 'processing'
+        }
+      });
+      
       // Build colorization prompt using key-based lookup
       const colorize = globalPrompts.find(p => p.key === 'colorization');
-      console.log('[MP] enqueue color', { batchId, angleKey: result.angleKey, colorKey: result.colorKey });
       if (!colorize) {
         console.log('Available global prompts:', globalPrompts);
-        throw new Error('Colorization prompt not found');
+        throw new Error('[MP][SERVER] Missing global prompts');
       }
       
       const colorPresets = await loadColorPresets();
@@ -229,19 +248,28 @@ async function processMarketplaceJob(batchId: string, resultIndex: number) {
       imageInput = [angleResult.imageUrl];
     }
     
-    console.log(`[MP] replicate.run google/nano-banana`, { 
+    // Convert relative URLs to absolute URLs for Replicate
+    const absoluteImageInput = imageInput.map(url => {
+      if (url.startsWith('/api/')) {
+        const baseUrl = process.env.REPLIT_CLUSTER ? 
+          `https://${process.env.REPL_SLUG}--${process.env.REPL_OWNER}.repl.co` :
+          `http://localhost:${process.env.PORT || 5000}`;
+        return `${baseUrl}${url}`;
+      }
+      return url;
+    });
+    
+    console.log(`[MP][SERVER] run`, { 
       type: result.type, 
       angleKey: result.angleKey, 
       colorKey: result.colorKey,
-      image_input_len: imageInput.length, 
-      output_format: 'png',
-      promptLen: prompt.length
+      image_input_len: absoluteImageInput.length
     });
     
-    // Create prediction with google/nano-banana
+    // Create prediction with google/nano-banana using absolute URLs
     const prediction = await createPrediction('google/nano-banana', {
       prompt,
-      image_input: imageInput,
+      image_input: absoluteImageInput,
       output_format: 'png'
     });
     
@@ -278,11 +306,9 @@ async function processMarketplaceJob(batchId: string, resultIndex: number) {
       result.imageUrl = persistResult.fullUrl;
       result.thumbUrl = persistResult.thumbUrl;
       
-      console.log(`[MP] persisted`, { imageUrl: persistResult.fullUrl });
-      console.log(`Marketplace job completed: ${result.type} ${result.angleKey}${result.colorKey ? ` (${result.colorKey})` : ''}`);
+      console.log(`[MP][SERVER] persisted`, { hasImageUrl: !!persistResult.fullUrl, hasThumb: !!persistResult.thumbUrl });
       
       // Send WebSocket update
-      console.log(`[MP] push('marketplaceJobUpdated', ...)`, { batchId, type: result.type, status: result.status });
       push('marketplaceJobUpdated', {
         batchId,
         result: {
@@ -300,7 +326,12 @@ async function processMarketplaceJob(batchId: string, resultIndex: number) {
     }
     
   } catch (error: any) {
-    console.error(`Marketplace job failed: ${error.message}`);
+    console.error(`[MP][SERVER] job error`, { 
+      type: result.type, 
+      angleKey: result.angleKey, 
+      colorKey: result.colorKey, 
+      msg: String(error?.message || error) 
+    });
     result.status = 'failed';
     result.error = error.message;
     
@@ -360,10 +391,10 @@ router.post('/upload', upload.array('images', 10), async (req: any, res) => {
 router.post('/batch', async (req: any, res) => {
   try {
     const { sourceImageUrls, angles, colors, autoColorize } = req.body;
-    console.log('[MP] /batch body counts', { 
-      imageCount: sourceImageUrls?.length || 0, 
-      angleCount: angles?.length || 0, 
-      colorCount: colors?.length || 0, 
+    console.log('[MP][SERVER] /batch', { 
+      imgs: sourceImageUrls?.length || 0, 
+      angles: angles?.length || 0, 
+      colors: colors?.length || 0, 
       autoColorize 
     });
     

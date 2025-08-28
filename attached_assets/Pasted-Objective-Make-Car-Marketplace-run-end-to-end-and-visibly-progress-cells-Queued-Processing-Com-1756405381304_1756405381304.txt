@@ -1,0 +1,89 @@
+Objective
+Make Car Marketplace run end-to-end and visibly progress cells (Queued → Processing → Completed) while sending real requests to Replicate (model: google/nano-banana, PNG). Add concise logging to confirm each stage. Keep changes minimal.
+
+Must keep
+- Model: "google/nano-banana"
+- output_format: "png"
+- Prompts read from CSVs (no hardcoding)
+- Reuse Photo-to-Studio upload/persist/WebSocket/image_card patterns
+- No new limits
+
+CSV URLs (use literally)
+- Global prompts: https://docs.google.com/spreadsheets/d/e/2PACX-1vQb-bDvaNqOTOJXonaHf_VfzGZSW8BraE_tGoFAsJortqGRG6UVyA7MoxdN8Muvap_BrprDBT8n4V2B/pub?gid=1909445017&single=true&output=csv
+- Angle presets:  https://docs.google.com/spreadsheets/d/e/2PACX-1vQb-bDvaNqOTOJXonaHf_VfzGZSW8BraE_tGoFAsJortqGRG6UVyA7MoxdN8Muvap_BrprDBT8n4V2B/pub?gid=375187395&single=true&output=csv
+- Color presets:  https://docs.google.com/spreadsheets/d/e/2PACX-1vQb-bDvaNqOTOJXonaHf_VfzGZSW8BraE_tGoFAsJortqGRG6UVyA7MoxdN8Muvap_BrprDBT8n4V2B/pub?gid=41565075&single=true&output=csv
+
+Fix steps (do in this order)
+
+1) Server – ensure Replicate is actually called + correct prompts
+   File: server/routes/marketplace-routes.ts
+   - Prompt lookups:
+     ```ts
+     const angleGen = globalPrompts.find(p => p.key === "angle_generation");
+     const colorize = globalPrompts.find(p => p.key === "colorization");
+     if (!angleGen || !colorize) throw new Error("[MP][SERVER] Missing global prompts");
+     ```
+   - Build prompts:
+     - angle: replace `{{ANGLE_DESC}}` with preset.angle_desc (by angle_key)
+     - color: replace `{{COLOR_NAME}}` with preset.prompt_value (by color_key)
+   - Call Replicate (no mocks):
+     ```ts
+     const output = await replicate.run("google/nano-banana", {
+       input: { prompt, image_input, output_format: "png" }
+     });
+     ```
+     where `image_input = sourceImageUrls` for angle jobs, and `[angleResultUrl]` for color jobs.
+   - Surround each job with status pushes:
+     ```ts
+     push("marketplaceJobUpdated", { batchId, result: { type, angleKey, colorKey, status: "processing" }});
+     // after persistImage(...)
+     push("marketplaceJobUpdated", { batchId, result: { type, angleKey, colorKey, status: "completed", imageUrl: fullUrl, thumbUrl }});
+     ```
+     On error: status "failed" with short error.
+   - Logging (single-line, concise):
+     - On batch receive: `console.log("[MP][SERVER] /batch", { imgs: sourceImageUrls.length, angles: angles.length, colors: colors.length, autoColorize });`
+     - Before call: `console.log("[MP][SERVER] run", { type, angleKey, colorKey, image_input_len: image_input.length });`
+     - After persist: `console.log("[MP][SERVER] persisted", { hasImageUrl: !!fullUrl, hasThumb: !!thumbUrl });`
+     - On error: `console.error("[MP][SERVER] job error", { type, angleKey, colorKey, msg: String(err?.message||err) });`
+
+2) Client – map events to matrix cells (no complex state refactor)
+   File: client/src/pages/CarCreationPage.tsx (Marketplace section)
+   - After successful `/api/car/marketplace/batch`:
+     - Create placeholders for each selected angle row:
+       - base cell (“__angle__”) + one cell per selected colorKey
+     - Render immediately in “Marketplace Results”.
+     - Log: `console.log("[MP][CLIENT] placeholders", { batchId, angles: A, colors: C });`
+   - WebSocket listener (current batch only):
+     - On `"marketplaceJobUpdated"`:
+       - status "processing" → set that cell to “Processing…”
+       - status "completed" → replace with image_card using `imageUrl`/`thumbUrl`
+       - status "failed" → mark cell failed with small “Retry” button
+     - Log each transition:
+       `console.log("[MP][CLIENT] cell", { batchId, angleKey, colorKey, status });`
+
+3) Jobs Tray – reflect active jobs
+   File: client/src/components/JobsTray.tsx
+   - On first `"processing"` for a cell → add/mark as active
+   - On `"completed"` or `"failed"` → remove from active, toast short result
+   - Log: `console.log("[MP][CLIENT][TRAY]", { type, status, batchId, angleKey, colorKey });`
+
+4) WebSocket – remove localhost fallback, keep single connection
+   File: client/src/lib/websocket.ts
+   - Delete/disable any branch that builds `wss://localhost:undefined/...`.
+   - Ensure only one connection; log once on init:
+     `console.log("[MP][CLIENT] WS URL", { protocol, hostname, port, url });`
+
+Verification checklist (do not stop until all pass)
+A) Replicate traffic
+   - Start a marketplace run (1 angle, 2 colors). Confirm Replicate dashboard shows calls.
+   - Server logs show `run` → `persisted` for each cell.
+
+B) UI progress
+   - Placeholders appear immediately.
+   - Cells switch to Processing, then Completed with images.
+   - Jobs Tray shows active during processing, then clears.
+
+C) CSV prompts in use
+   - Change a `prompt_value` in ColorPresets, reload, run once; server log should show updated text length in prompt (quick sanity).
+
+If any step fails, keep going: log what happened, fix, and rerun until A–C all pass.

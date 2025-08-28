@@ -76,6 +76,48 @@ export function JobsTray({ isOpen, onClose, onJobCompleted, onJobsUpdate }: Jobs
             return updatedJobs;
           });
         } 
+        else if (type === 'marketplaceJobUpdated') {
+          console.log('[MP][CLIENT][TRAY]', { 
+            type, 
+            status: data.result?.status, 
+            batchId: data.batchId, 
+            angleKey: data.result?.angleKey, 
+            colorKey: data.result?.colorKey 
+          });
+          
+          const { result } = data;
+          if (!result) return;
+          
+          const jobKey = `${data.batchId}-${result.angleKey}-${result.colorKey || 'base'}`;
+          
+          if (result.status === 'processing') {
+            // Add marketplace job to active jobs on first processing event
+            const marketplaceJob: JobStatus = {
+              jobId: jobKey,
+              userId: user?.id || 'anonymous',
+              status: 'processing',
+              mode: result.type === 'angle' ? 'background-only' : 'studio-enhance',
+              modelKey: 'google/nano-banana',
+              progress: 50
+            };
+            
+            setJobs(prev => {
+              if (prev.some(j => j.jobId === jobKey)) {
+                return prev.map(j => j.jobId === jobKey ? { ...j, status: 'processing' } : j);
+              }
+              return [marketplaceJob, ...prev];
+            });
+          } else if (result.status === 'completed') {
+            // Remove from active jobs and show toast
+            setJobs(prev => prev.filter(j => j.jobId !== jobKey));
+          } else if (result.status === 'failed') {
+            // Mark as failed and remove after delay
+            setJobs(prev => prev.map(j => j.jobId === jobKey ? { ...j, status: 'failed', errorMessage: result.error } : j));
+            setTimeout(() => {
+              setJobs(prev => prev.filter(j => j.jobId !== jobKey));
+            }, 3000);
+          }
+        }
         else if (type === 'jobUpdated') {
           // Only process job updates for the current user (session-specific)
           if (!user || data.userId !== user.id) {

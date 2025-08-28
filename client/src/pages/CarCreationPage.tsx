@@ -267,45 +267,75 @@ const CarCreationPage: React.FC = () => {
         // Batch created - placeholders already set up
       } else if (type === 'marketplaceJobUpdated') {
         const { result } = data;
-        if (result && result.status === 'completed') {
+        if (result) {
+          console.log('[MP][CLIENT] cell', { 
+            batchId: data.batchId, 
+            angleKey: result.angleKey, 
+            colorKey: result.colorKey, 
+            status: result.status 
+          });
+          
           // Update the matrix cell for this result
           const cellKey = result.type === 'angle' ? '__angle__' : result.colorKey;
           
-          setMarketplaceMatrix(prev => ({
-            ...prev,
-            [result.angleKey]: {
-              ...prev[result.angleKey],
-              [cellKey]: {
-                status: 'completed',
-                imageUrl: result.imageUrl,
-                thumbUrl: result.thumbUrl
+          if (result.status === 'processing') {
+            setMarketplaceMatrix(prev => ({
+              ...prev,
+              [result.angleKey]: {
+                ...prev[result.angleKey],
+                [cellKey]: {
+                  status: 'processing'
+                }
               }
-            }
-          }));
-          
-          // Also update the legacy results map for backwards compatibility
-          const resultKey = result.colorKey 
-            ? `${result.angleKey}-${result.colorKey}`
-            : `${result.angleKey}-base`;
+            }));
+          } else if (result.status === 'completed') {
+            setMarketplaceMatrix(prev => ({
+              ...prev,
+              [result.angleKey]: {
+                ...prev[result.angleKey],
+                [cellKey]: {
+                  status: 'completed',
+                  imageUrl: result.imageUrl,
+                  thumbUrl: result.thumbUrl
+                }
+              }
+            }));
             
-          const transformedImage: GeneratedImage = {
-            id: resultKey,
-            url: result.imageUrl,
-            prompt: `${result.type} generation`,
-            size: '1024x1024',
-            model: 'google/nano-banana',
-            createdAt: new Date().toISOString(),
-            sourceThumb: undefined,
-            sourceImage: undefined,
-            width: 1024,
-            height: 1024,
-            thumbUrl: result.thumbUrl || result.imageUrl,
-            fullUrl: result.imageUrl,
-            starred: false,
-            deletedAt: null
-          };
-          
-          setMarketplaceResults(prev => new Map(prev.set(resultKey, transformedImage)));
+            // Also update the legacy results map for backwards compatibility
+            const resultKey = result.colorKey 
+              ? `${result.angleKey}-${result.colorKey}`
+              : `${result.angleKey}-base`;
+              
+            const transformedImage: GeneratedImage = {
+              id: resultKey,
+              url: result.imageUrl,
+              prompt: `${result.type} generation`,
+              size: '1024x1024',
+              model: 'google/nano-banana',
+              createdAt: new Date().toISOString(),
+              sourceThumb: undefined,
+              sourceImage: undefined,
+              width: 1024,
+              height: 1024,
+              thumbUrl: result.thumbUrl || result.imageUrl,
+              fullUrl: result.imageUrl,
+              starred: false,
+              deletedAt: null
+            };
+            
+            setMarketplaceResults(prev => new Map(prev.set(resultKey, transformedImage)));
+          } else if (result.status === 'failed') {
+            setMarketplaceMatrix(prev => ({
+              ...prev,
+              [result.angleKey]: {
+                ...prev[result.angleKey],
+                [cellKey]: {
+                  status: 'failed',
+                  error: result.error
+                }
+              }
+            }));
+          }
         }
       } else if (type === 'marketplaceBatchCompleted') {
         // Batch completed
@@ -997,7 +1027,7 @@ const CarCreationPage: React.FC = () => {
       
       // Log placeholder creation
       const totalJobs = selectedAngles.length + (autoColorize ? selectedAngles.length * selectedColors.length : 0);
-      if (process.env.NODE_ENV !== 'production') console.log('[MP] placeholders created for batch', batchId, ':', { angles: selectedAngles.length, colors: autoColorize ? selectedColors.length : 0, totalCells: totalJobs });
+      console.log('[MP][CLIENT] placeholders', { batchId, angles: selectedAngles.length, colors: autoColorize ? selectedColors.length : 0 });
 
       toast({
         title: "Marketplace batch started",
@@ -2869,6 +2899,15 @@ const CarCreationPage: React.FC = () => {
                                       {cellKey === '__angle__' ? 'Base' : cellKey}
                                     </div>
                                   </div>
+                                ) : cell.status === 'failed' ? (
+                                  <div className="w-full h-full rounded border-2 border-destructive/20 bg-destructive/5 flex items-center justify-center">
+                                    <div className="text-center p-1">
+                                      <div className="text-[10px] text-destructive mb-1">Failed</div>
+                                      <button className="text-[9px] bg-destructive/10 hover:bg-destructive/20 px-1 py-0.5 rounded">
+                                        Retry
+                                      </button>
+                                    </div>
+                                  </div>
                                 ) : (
                                   <div className="w-full h-full rounded border-2 border-dashed border-muted-foreground/20 bg-muted/30 flex items-center justify-center">
                                     <div className="text-center">
@@ -2876,6 +2915,11 @@ const CarCreationPage: React.FC = () => {
                                         <div className="animate-pulse">
                                           <div className="w-6 h-6 bg-primary/20 rounded mx-auto mb-1"></div>
                                           <div className="text-[10px] text-muted-foreground">Queued</div>
+                                        </div>
+                                      ) : cell.status === 'processing' ? (
+                                        <div>
+                                          <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full mx-auto mb-1"></div>
+                                          <div className="text-[10px] text-muted-foreground">Processing</div>
                                         </div>
                                       ) : (
                                         <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full mx-auto"></div>
