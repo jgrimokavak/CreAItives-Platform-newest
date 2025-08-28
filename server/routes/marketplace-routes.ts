@@ -240,8 +240,13 @@ async function processMarketplaceJob(batchId: string, resultIndex: number) {
       
       const colorPresets = await loadColorPresets();
       const colorData = colorPresets.find(c => c.color_key === result.colorKey);
-      if (!colorData) {
-        throw new Error(`Color preset ${result.colorKey} not found`);
+      
+      // Handle custom colors that aren't in the preset list
+      let colorPromptValue = result.colorKey; // Use the colorKey directly as fallback
+      if (colorData) {
+        colorPromptValue = colorData.prompt_value;
+      } else {
+        console.log(`[MP][SERVER] Using custom color: ${result.colorKey}`);
       }
       
       // Find the base angle result to use as input
@@ -257,7 +262,7 @@ async function processMarketplaceJob(batchId: string, resultIndex: number) {
       }
       
       prompt = buildPrompt(colorize.prompt_template, {
-        COLOR_NAME: colorData.prompt_value
+        COLOR_NAME: colorPromptValue
       });
       
       // Append additional instructions if provided
@@ -577,8 +582,21 @@ router.post('/batch/:batchId/download', async (req, res) => {
   const batch = marketplaceBatches.get(batchId);
   
   if (!batch) {
+    console.error(`[MP][SERVER] Batch ${batchId} not found for export`);
     return res.status(404).json({ error: 'Batch not found' });
   }
+  
+  // Debug: Log batch status
+  console.log(`[MP][SERVER] Export request for batch ${batchId}:`, {
+    totalResults: batch.results.length,
+    resultsByStatus: {
+      pending: batch.results.filter(r => r.status === 'pending').length,
+      processing: batch.results.filter(r => r.status === 'processing').length,
+      completed: batch.results.filter(r => r.status === 'completed').length,
+      failed: batch.results.filter(r => r.status === 'failed').length
+    },
+    resultsWithImages: batch.results.filter(r => r.imageUrl).length
+  });
   
   // Get all completed results with images
   const completedResults = batch.results.filter(result => 
@@ -586,7 +604,22 @@ router.post('/batch/:batchId/download', async (req, res) => {
   );
   
   if (completedResults.length === 0) {
-    return res.status(400).json({ error: 'No completed images found' });
+    console.error(`[MP][SERVER] No completed images found for batch ${batchId}`);
+    // Provide detailed error information
+    const statusBreakdown = batch.results.reduce((acc, result) => {
+      acc[result.status] = (acc[result.status] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    return res.status(400).json({ 
+      error: 'No completed images found',
+      debug: {
+        batchId,
+        totalResults: batch.results.length,
+        statusBreakdown,
+        details: 'All results must be completed with valid image URLs to export'
+      }
+    });
   }
   
   try {
@@ -608,17 +641,21 @@ router.post('/batch/:batchId/download', async (req, res) => {
     
     archive.pipe(res);
     
+    console.log(`[MP][SERVER] Processing ${completedResults.length} completed images for ZIP`);
+    
     // Add each completed image to the ZIP
+    let successfulDownloads = 0;
     for (let i = 0; i < completedResults.length; i++) {
       const result = completedResults[i];
       
       try {
         // Download the image
         if (!result.imageUrl) {
-          console.warn(`Skipping result without imageUrl: ${result.angleKey}`);
+          console.warn(`[MP][SERVER] Skipping result without imageUrl: ${result.angleKey}`);
           continue;
         }
         
+        console.log(`[MP][SERVER] Downloading image ${i + 1}/${completedResults.length}: ${result.imageUrl}`);
         const imageResponse = await axios.get(result.imageUrl, { 
           responseType: 'arraybuffer',
           timeout: 30000 
@@ -630,11 +667,27 @@ router.post('/batch/:batchId/download', async (req, res) => {
         
         // Add to archive
         archive.append(Buffer.from(imageResponse.data), { name: fileName });
+        successfulDownloads++;
+        
+        console.log(`[MP][SERVER] Added to ZIP: ${fileName} (${imageResponse.data.byteLength} bytes)`);
         
       } catch (error) {
-        console.error(`Failed to download image for ${result.angleKey}:`, error);
+        console.error(`[MP][SERVER] Failed to download image for ${result.angleKey}:`, error);
         // Continue with other images even if one fails
       }
+    }
+    
+    console.log(`[MP][SERVER] Successfully downloaded ${successfulDownloads}/${completedResults.length} images for ZIP`);
+    
+    if (successfulDownloads === 0) {
+      return res.status(400).json({ 
+        error: 'Failed to download any images for ZIP creation',
+        debug: {
+          batchId,
+          completedResults: completedResults.length,
+          successfulDownloads
+        }
+      });
     }
     
     // Add a summary file
