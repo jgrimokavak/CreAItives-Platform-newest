@@ -2674,8 +2674,11 @@ const CarCreationPage: React.FC = () => {
                 </div>
 
                 {/* File Upload Section */}
-                <div className="space-y-4">
-                  <Label className="text-base font-medium">Source Images</Label>
+                <div className="space-y-4 pb-6 border-b border-border/50">
+                  <div className="flex items-center gap-2">
+                    <Upload className="h-4 w-4 text-primary" />
+                    <Label className="text-base font-medium">Source Images</Label>
+                  </div>
                   <div 
                     className="border-2 border-dashed border-border rounded-lg p-6 text-center bg-muted/30"
                     onDragOver={handleMarketplaceDragOver}
@@ -2747,8 +2750,11 @@ const CarCreationPage: React.FC = () => {
                 </div>
 
                 {/* Car Make/Model Field */}
-                <div className="space-y-4">
-                  <Label className="text-base font-medium">Car Make/Model (Optional)</Label>
+                <div className="space-y-4 pb-6 border-b border-border/50">
+                  <div className="flex items-center gap-2">
+                    <CarFront className="h-4 w-4 text-primary" />
+                    <Label className="text-base font-medium">Car Make/Model (Optional)</Label>
+                  </div>
                   <Input
                     placeholder="e.g., Toyota Camry, BMW X5, Ford Mustang"
                     value={carMakeModel}
@@ -2761,9 +2767,12 @@ const CarCreationPage: React.FC = () => {
                 </div>
 
                 {/* Angle Selection */}
-                <div className="space-y-4">
+                <div className="space-y-4 pb-6 border-b border-border/50">
                   <div className="flex items-center justify-between">
-                    <Label className="text-base font-medium">Camera Angles</Label>
+                    <div className="flex items-center gap-2">
+                      <Maximize2 className="h-4 w-4 text-primary" />
+                      <Label className="text-base font-medium">Camera Angles</Label>
+                    </div>
                     <p className="text-xs text-muted-foreground">Select angles to generate</p>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -2813,8 +2822,11 @@ const CarCreationPage: React.FC = () => {
                 </div>
 
                 {/* Additional Instructions (Optional) */}
-                <div className="space-y-4">
-                  <Label className="text-base font-medium">Additional Instructions (Optional)</Label>
+                <div className="space-y-4 pb-6 border-b border-border/50">
+                  <div className="flex items-center gap-2">
+                    <Pencil className="h-4 w-4 text-primary" />
+                    <Label className="text-base font-medium">Additional Instructions (Optional)</Label>
+                  </div>
                   <Input
                     placeholder="e.g., remove license plate, add racing stripes, etc."
                     value={additionalInstructions}
@@ -2827,9 +2839,12 @@ const CarCreationPage: React.FC = () => {
                 </div>
 
                 {/* Color Selection */}
-                <div className="space-y-4">
+                <div className="space-y-4 pb-6">
                   <div className="flex items-center justify-between">
-                    <Label className="text-base font-medium">Color Variations</Label>
+                    <div className="flex items-center gap-2">
+                      <ImageIcon className="h-4 w-4 text-primary" />
+                      <Label className="text-base font-medium">Color Variations</Label>
+                    </div>
                     <div className="flex items-center space-x-2">
                       <input
                         type="checkbox"
@@ -2926,7 +2941,7 @@ const CarCreationPage: React.FC = () => {
                       
                       {/* Preset Colors */}
                       <div className="space-y-3">
-                        <Label className="text-sm font-medium">Preset Colors</Label>
+                        <Label className="text-sm font-normal">Preset Colors</Label>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-48 overflow-y-auto pr-2">
                       {colorPresets.map((color) => {
                         const isSelected = selectedColors.includes(color.color_key);
@@ -3009,6 +3024,7 @@ const CarCreationPage: React.FC = () => {
                 </div>
 
                 {/* Generate Button */}
+                <div className="pt-2 border-t border-border/50">
                 <Button
                   onClick={handleMarketplaceGenerate}
                   disabled={isGeneratingStudio || marketplaceFiles.length === 0 || selectedAngles.length === 0}
@@ -3026,6 +3042,7 @@ const CarCreationPage: React.FC = () => {
                       : `Generate ${selectedAngles.length} Angles (colors later)`
                   )}
                 </Button>
+                </div>
               </div>
 
               {/* Preview Section */}
