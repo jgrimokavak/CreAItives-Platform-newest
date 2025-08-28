@@ -1,0 +1,156 @@
+
+```
+Objective
+Add a new tool called **Car Marketplace** inside the Car Creation hub (/car page) that: (1) takes multiple poor-lit source photos of the same car, (2) generates selected **target angles** using Google’s `google/nano-banana` model, and (3) optionally auto-generates **color variants** for each angle. Reuse the existing Photo-to-Studio patterns for uploads, jobs, persistence, image cards, and WebSocket updates. No caps/limits for now.
+
+Context (read first)
+- This feature is closely related to **Photo-to-Studio**. Mirror its working patterns:
+  - Multi-image uploads pass intact to Replicate (no compression/downscaling).
+  - Use our existing **Replicate** integration and **Object Storage** persistence (`persistImage(...)`), DB row, and **WebSocket** events to update the UI.
+  - Use the existing **Jobs list/Tray** and **image_card** components as reference for job lifecycle and rendering finished results.
+  - Results must appear **in-page** as image_card components (saved to Gallery as usual).
+- Model to use: **`google/nano-banana`** on Replicate. Input schema (provided by the user):
+```
+
+{
+"type": "object",
+"title": "Input",
+"required": \["prompt"],
+"properties": {
+"prompt": { "type": "string", "title": "Prompt", "x-order": 0, "description": "A text description of the image you want to generate" },
+"image\_input": {
+"type": "array",
+"items": { "type": "string", "anyOf": \[], "format": "uri" },
+"title": "Image Input",
+"x-order": 1,
+"nullable": true,
+"description": "Input images to transform or use as reference (supports multiple images)"
+},
+"output\_format": {
+"enum": \["jpg","png"],
+"type": "string",
+"title": "output\_format",
+"description": "Format of the output image",
+"default": "jpg",
+"x-order": 2
+}
+}
+}
+
+````
+- Always set `output_format` to **"png"** for this tool.
+- Public CSVs to load prompts/presets (use these exact URLs):
+- **Global prompts**: https://docs.google.com/spreadsheets/d/e/2PACX-1vQb-bDvaNqOTOJXonaHf_VfzGZSW8BraE_tGoFAsJortqGRG6UVyA7MoxdN8Muvap_BrprDBT8n4V2B/pub?gid=1909445017&single=true&output=csv
+- **Angle presets**: https://docs.google.com/spreadsheets/d/e/2PACX-1vQb-bDvaNqOTOJXonaHf_VfzGZSW8BraE_tGoFAsJortqGRG6UVyA7MoxdN8Muvap_BrprDBT8n4V2B/pub?gid=375187395&single=true&output=csv
+- **Color presets**: https://docs.google.com/spreadsheets/d/e/2PACX-1vQb-bDvaNqOTOJXonaHf_VfzGZSW8BraE_tGoFAsJortqGRG6UVyA7MoxdN8Muvap_BrprDBT8n4V2B/pub?gid=41565075&single=true&output=csv
+
+High-Level Flow
+- **Step A (Angles):** user uploads multiple source images of the same car → selects target angles (checkbox list) → we send **one Replicate job per angle** with `image_input` = the uploaded image URLs and a prompt built from the **angle_generation** template + the chosen angle’s `angle_desc`.
+- **Step B (Colors):** after each angle completes, if “Auto-colorize” is ON, create **one job per selected color** using the angle’s output URL as `image_input` and the **colorization** template with `COLOR_NAME` from `prompt_value`. If OFF, user can trigger colorization later from the UI.
+- Results render in a **matrix**: rows = angles, columns = colors. The first column in each row is the base **angle** output; color cells fill in as those jobs complete.
+
+Tasks
+1) **Add a new tab in Car Creation**
+ - Location: the same page that shows **Custom Build | Photo Studio | Bulk Generate**. Add **Car Marketplace** as a fourth tab.
+ - Use the same tab styling and layout conventions as Photo-to-Studio.
+ - File to touch: `client/src/pages/CarCreationPage.tsx` (or the file that registers these tabs—mirror Photo-to-Studio wiring).
+
+2) **UI for Car Marketplace**
+ - Left panel:
+   - Multi-image upload for **source images** (same component and behavior as Photo-to-Studio; allow multiple files).
+   - **Angle selector** (checkbox list) populated from **Angle presets CSV** (`angle_label` displayed; keep sort order by `order`).
+   - **Color selector** (multi-select) populated from **Color presets CSV** (`color_label` displayed).
+   - Toggle: **Auto-colorize after angles** (default **ON**).
+   - Primary button: **Generate**.
+   - A small info line that shows how many outputs will be produced (Angles + Angles×Colors).
+ - Center panel:
+   - **Matrix grid** (rows = angles, columns = colors). The leftmost column is the base **Angle** image.
+   - Each cell is an **image_card**:
+     - Pending/processing state with progress (reuse styles from Photo-to-Studio jobs).
+     - On complete, show the image, download options, and “Save to Gallery” (same components you already use).
+ - Right panel:
+   - Use the existing **Jobs Tray** pattern (as in Photo-to-Studio) to show queued/processing items; items disappear on completion.
+ - Small screens: follow the same responsive behavior as Photo-to-Studio (tray can slide in).
+
+3) **Load prompts & presets from Google Sheets CSV**
+ - Add a small client/service that fetches the three CSVs above on tab mount and caches the parsed rows.
+ - Map columns:
+   - GlobalPrompts: keys `angle_generation`, `colorization` → use `prompt_template` column; note `variables` for replacement.
+   - AnglePresets: use `angle_key`, `angle_label`, `angle_desc`, `order`, `enabled`.
+   - ColorPresets: use `color_key`, `color_label`, `prompt_value`, `enabled`.
+ - Do not hardcode prompts; always read from these CSVs.
+
+4) **Backend: new batch endpoint (reuse Photo-to-Studio patterns)**
+ - Create `POST /api/car/marketplace/batch`.
+ - Request body:
+   ```ts
+   {
+     sourceImageUrls: string[];          // URLs of uploaded sources (use the same upload → URL path as Photo-to-Studio)
+     angles: string[];                   // angle_key[]
+     colors: string[];                   // color_key[]
+     autoColorize: boolean;              // default true
+   }
+   ```
+ - Response: `{ batchId: string }`
+ - Behavior:
+   - For each selected angle, enqueue a job **stage: "angle"** with a prompt built as:
+     - Get the **angle_generation** template from CSV.
+     - Replace `{{ANGLE_DESC}}` with the `angle_desc` of that angle.
+     - Set `image_input` to `sourceImageUrls`.
+     - Set `output_format` to `"png"`.
+     - Model name: **`google/nano-banana`**.
+   - On each angle completion, if `autoColorize` is true, enqueue **one job per selected color** **stage: "color"**:
+     - Get the **colorization** template from CSV.
+     - Replace `{{COLOR_NAME}}` with the color row’s `prompt_value` (e.g., “Red #C00000 (metallic)”).
+     - Set `image_input` to `[angleOutputUrl]` (the just-completed angle image).
+     - Set `output_format` to `"png"`.
+ - Reuse the same persistence as Photo-to-Studio: after Replicate returns, **download the output**, call `persistImage(...)`, create thumbnail and DB row, and emit the existing WebSocket update(s) so the UI can render the image_card.
+ - Keep the job queue implementation/style consistent with Photo-to-Studio (same claiming, progress updates, events). No new limits or caps.
+
+5) **Replicate integration (Nano Banana)**
+ - Use the same Replicate client setup as Photo-to-Studio.
+ - Minimal helper to run the model:
+   ```ts
+   // server/services/marketplaceModel.ts
+   import Replicate from "replicate";
+   const replicate = new Replicate();
+
+   type NanoBananaInput = {
+     prompt: string;
+     image_input?: string[];               // array of URLs
+     output_format?: "jpg" | "png";
+   };
+
+   export async function runNanoBanana(input: NanoBananaInput) {
+     const finalInput = { ...input, output_format: "png" };
+     const output = await replicate.run("google/nano-banana", { input: finalInput });
+     return output; // then persist as per Photo-to-Studio
+   }
+   ```
+ - IMPORTANT: `image_input` is an **array**. Ensure we send all user source images for **angle** jobs, and a single-element array with the angle output URL for **color** jobs.
+
+6) **Front-end wiring**
+ - On **Generate**:
+   - Ensure uploads follow the same path as Photo-to-Studio to obtain public URLs for `image_input`.
+   - Call `/api/car/marketplace/batch` with `sourceImageUrls`, `angles[]`, `colors[]`, `autoColorize`.
+   - Show a toast “Batch started” and start rendering the matrix placeholders (pending state per cell).
+ - WebSocket events:
+   - Subscribe as Photo-to-Studio does.
+   - When a job completes, place the result in the correct **matrix cell** using job metadata (`batchId`, `angle_key`, `color_key`, `stage`).
+   - Also push the finished asset through the standard image_card rendering and Gallery save path.
+
+Testing
+1) **Angles only**: upload 3 source images, select “Front (0°)” + “Side (90°)”, turn OFF auto-colorize → expect two angle jobs; both populate the first column of two rows; no color cells triggered.
+2) **Auto-chain colors**: same angles, choose colors Red/Blue, auto-colorize ON → expect 2 angle jobs, then 4 color jobs (each angle spawns 2). Cells fill left-to-right per row as they finish.
+3) **CSV-driven prompts**: temporarily change a `prompt_value` in the ColorPresets sheet and reload → confirm the new wording is used in the colorization prompt.
+4) **Multi-image input**: verify request to Replicate includes all source `image_input` URLs for angle jobs; verify color jobs pass a single element array with the angle output URL.
+5) **Persistence/UI**: confirm each completed job fires the same events as Photo-to-Studio and appears as an image_card in the matrix; confirm asset is available in Gallery as usual.
+6) **No artificial limits**: ensure the UI and backend do not block based on counts (we will add limits later if needed).
+
+Reminders & Constraints
+- Do **not** add new rate/concurrency limits in this feature pass.
+- Do **not** refactor Photo-to-Studio; only **reference** it for patterns (uploads, queue, object storage, WebSocket, image_card).
+- Model name must be exactly **`google/nano-banana`** and outputs must be **PNG**.
+- Prompts must be loaded from the provided CSV URLs; do not hardcode.
+- Keep diffs minimal and follow the existing folder structure and naming conventions.
+````

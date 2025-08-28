@@ -31,6 +31,7 @@ import analyticsRoutes from "./routes/analytics-routes";
 
 import objectStorageRoutes from "./routes/object-storage-routes";
 import galleryObjectStorageRoutes from "./gallery-object-storage";
+import marketplaceRoutes from "./routes/marketplace-routes";
 import { compileMjml, testMjmlCompilation } from "./routes/email-routes";
 import { listMakes, listModels, listBodyStyles, listTrims, listColors, flushCarCache, loadCarData, loadColorData, getLastFetchTime, setupCarDataAutoRefresh, debugCarDataStorage, getPrompt, loadPromptData } from "./carData";
 import { createJob, getUserActiveJobs, countUserActiveJobs } from "./jobQueue";
@@ -1607,6 +1608,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Add Object Storage routes
   app.use('/api', objectStorageRoutes);
   app.use('/api', galleryObjectStorageRoutes);
+  app.use('/api/car/marketplace', marketplaceRoutes);
   
   // Email Builder routes
   app.post('/api/email/compile-mjml', compileMjml);

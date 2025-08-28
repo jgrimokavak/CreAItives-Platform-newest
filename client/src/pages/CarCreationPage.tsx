@@ -30,6 +30,7 @@ import { useLocation } from 'wouter';
 import { useEditor } from '@/context/EditorContext';
 import { downloadImageMobile } from '@/utils/mobileDownload';
 import { useWebSocket } from '@/lib/websocket';
+import { loadAnglePresets, loadColorPresets, type AnglePreset, type ColorPreset } from '@/services/marketplaceData';
 
 // Import car angle SVG assets
 import defaultSvg from '@/assets/car-angles/default.svg';
@@ -121,8 +122,8 @@ const CarCreationPage: React.FC = () => {
   const [image, setImage] = useState<GeneratedImage | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   
-  // Creation mode state - updated to include photo-to-studio
-  const [carCreationMode, setCarCreationMode] = useState<"single" | "batch" | "photo-to-studio">("single");
+  // Creation mode state - updated to include photo-to-studio and marketplace
+  const [carCreationMode, setCarCreationMode] = useState<"single" | "batch" | "photo-to-studio" | "marketplace">("single");
   const [batchJobId, setBatchJobId] = useState<string | null>(null);
   
   // Jobs Tray state
@@ -143,6 +144,18 @@ const CarCreationPage: React.FC = () => {
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [photoToStudioProgress, setPhotoToStudioProgress] = useState<number | null>(null);
   const [photoToStudioImages, setPhotoToStudioImages] = useState<GeneratedImage[]>([]);
+
+  // Car Marketplace state
+  const [marketplaceFiles, setMarketplaceFiles] = useState<File[]>([]);
+  const [marketplacePreviewUrls, setMarketplacePreviewUrls] = useState<string[]>([]);
+  const [marketplaceImageUrls, setMarketplaceImageUrls] = useState<string[]>([]);
+  const [selectedAngles, setSelectedAngles] = useState<string[]>([]);
+  const [selectedColors, setSelectedColors] = useState<string[]>([]);
+  const [autoColorize, setAutoColorize] = useState<boolean>(true);
+  const [marketplaceBatchId, setMarketplaceBatchId] = useState<string | null>(null);
+  const [marketplaceResults, setMarketplaceResults] = useState<Map<string, GeneratedImage>>(new Map());
+  const [anglePresets, setAnglePresets] = useState<any[]>([]);
+  const [colorPresets, setColorPresets] = useState<any[]>([]);
   
   // Generate years from 1990 to current year
   const currentYear = new Date().getFullYear();
@@ -224,6 +237,57 @@ const CarCreationPage: React.FC = () => {
       window.removeEventListener('gallery-updated', handleGalleryUpdate as EventListener);
     };
   }, [image]);
+
+  // Load marketplace data when marketplace tab is selected
+  useEffect(() => {
+    if (carCreationMode === 'marketplace') {
+      loadAnglePresets().then(setAnglePresets).catch(console.error);
+      loadColorPresets().then(setColorPresets).catch(console.error);
+    }
+  }, [carCreationMode]);
+
+  // Listen for marketplace WebSocket updates
+  useEffect(() => {
+    const handleMarketplaceUpdate = (event: CustomEvent) => {
+      const { type, data } = event.detail || {};
+      
+      if (type === 'marketplaceJobUpdated') {
+        const { batchId, result } = data;
+        if (batchId === marketplaceBatchId) {
+          // Create result key for matrix positioning
+          const resultKey = result.colorKey 
+            ? `${result.angleKey}-${result.colorKey}`
+            : `${result.angleKey}-base`;
+          
+          if (result.status === 'completed' && result.imageUrl) {
+            const transformedImage: GeneratedImage = {
+              id: resultKey,
+              url: result.imageUrl,
+              prompt: `${result.type} generation`,
+              size: '1024x1024',
+              model: 'google/nano-banana',
+              createdAt: new Date().toISOString(),
+              sourceThumb: undefined,
+              sourceImage: undefined,
+              width: 1024,
+              height: 1024,
+              thumbUrl: result.thumbUrl || result.imageUrl,
+              fullUrl: result.imageUrl,
+              starred: false,
+              deletedAt: null
+            };
+            
+            setMarketplaceResults(prev => new Map(prev.set(resultKey, transformedImage)));
+          }
+        }
+      }
+    };
+    
+    window.addEventListener('ws-message', handleMarketplaceUpdate as EventListener);
+    return () => {
+      window.removeEventListener('ws-message', handleMarketplaceUpdate as EventListener);
+    };
+  }, [marketplaceBatchId]);
 
   // Fetch makes
   const fetchMakes = async () => {
@@ -741,6 +805,156 @@ const CarCreationPage: React.FC = () => {
       fileInput.value = '';
     }
   };
+
+  // Marketplace file handlers
+  const handleMarketplaceFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+    processMarketplaceFiles(files);
+  };
+
+  const handleMarketplaceDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleMarketplaceDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      processMarketplaceFiles(files);
+    }
+  };
+
+  const processMarketplaceFiles = (files: FileList | File[]) => {
+    const fileArray = Array.from(files);
+    
+    // Validate file count
+    if (marketplaceFiles.length + fileArray.length > 10) {
+      toast({
+        title: "Too many files",
+        description: "You can upload a maximum of 10 source images",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validate each file
+    for (const file of fileArray) {
+      if (!validateFile(file)) return;
+    }
+
+    // Add files to state
+    setMarketplaceFiles(prev => [...prev, ...fileArray]);
+
+    // Create preview URLs
+    const newPreviewUrls = fileArray.map(file => URL.createObjectURL(file));
+    setMarketplacePreviewUrls(prev => [...prev, ...newPreviewUrls]);
+  };
+
+  const clearMarketplaceFiles = () => {
+    setMarketplaceFiles([]);
+    setMarketplacePreviewUrls([]);
+    setMarketplaceImageUrls([]);
+    // Reset the file input
+    const fileInput = document.getElementById('marketplace-photos') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  };
+
+  const removeMarketplaceFile = (index: number) => {
+    setMarketplaceFiles(prev => prev.filter((_, i) => i !== index));
+    setMarketplacePreviewUrls(prev => {
+      const urlToRevoke = prev[index];
+      URL.revokeObjectURL(urlToRevoke);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  // Upload marketplace files to server
+  const uploadMarketplaceFiles = async (): Promise<string[]> => {
+    if (marketplaceFiles.length === 0) return [];
+
+    const formData = new FormData();
+    marketplaceFiles.forEach(file => formData.append('images', file));
+
+    const response = await fetch('/api/car/marketplace/upload', {
+      method: 'POST',
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to upload images');
+    }
+
+    const { imageUrls } = await response.json();
+    return imageUrls;
+  };
+
+  // Start marketplace batch
+  const handleMarketplaceGenerate = async () => {
+    try {
+      if (marketplaceFiles.length === 0) {
+        toast({
+          title: "No source images",
+          description: "Please upload at least one source image",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (selectedAngles.length === 0) {
+        toast({
+          title: "No angles selected",
+          description: "Please select at least one angle to generate",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      setIsGeneratingStudio(true);
+
+      // Upload files first
+      const imageUrls = await uploadMarketplaceFiles();
+      setMarketplaceImageUrls(imageUrls);
+
+      // Start marketplace batch
+      const response = await fetch('/api/car/marketplace/batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sourceImageUrls: imageUrls,
+          angles: selectedAngles,
+          colors: selectedColors,
+          autoColorize
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to start marketplace batch');
+      }
+
+      const { batchId } = await response.json();
+      setMarketplaceBatchId(batchId);
+
+      toast({
+        title: "Marketplace batch started",
+        description: `Processing ${selectedAngles.length} angles${autoColorize ? ` and ${selectedColors.length * selectedAngles.length} color variants` : ''}`,
+      });
+
+    } catch (error: any) {
+      console.error('Error starting marketplace batch:', error);
+      toast({
+        title: "Generation failed",
+        description: error.message || "Failed to start marketplace generation",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGeneratingStudio(false);
+    }
+  };
   
   // Remove a specific file
   const removeFile = (index: number) => {
@@ -1023,10 +1237,10 @@ const CarCreationPage: React.FC = () => {
         
         <Tabs 
           value={carCreationMode} 
-          onValueChange={(value) => setCarCreationMode(value as "single" | "batch" | "photo-to-studio")}
+          onValueChange={(value) => setCarCreationMode(value as "single" | "batch" | "photo-to-studio" | "marketplace")}
           className="mb-6"
         >
-          <TabsList className="grid w-full grid-cols-3 gap-1 h-auto min-h-[44px] p-1 bg-gray-400/60 dark:bg-gray-500/60 rounded-lg">
+          <TabsList className="grid w-full grid-cols-4 gap-1 h-auto min-h-[44px] p-1 bg-gray-400/60 dark:bg-gray-500/60 rounded-lg">
             <TabsTrigger 
               value="single" 
               className="rounded-md font-medium text-xs sm:text-sm py-2 px-2 sm:px-4 transition-all duration-200 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground data-[state=inactive]:text-gray-700 dark:data-[state=inactive]:text-gray-200 hover:bg-gray-300/50 dark:hover:bg-gray-400/50"
@@ -1047,6 +1261,15 @@ const CarCreationPage: React.FC = () => {
               className="rounded-md font-medium text-xs sm:text-sm py-2 px-2 sm:px-4 transition-all duration-200 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground data-[state=inactive]:text-gray-700 dark:data-[state=inactive]:text-gray-200 hover:bg-gray-300/50 dark:hover:bg-gray-400/50"
             >
               <span className="whitespace-nowrap">Bulk Generate</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="marketplace" 
+              className="rounded-md font-medium text-xs sm:text-sm py-2 px-1.5 sm:px-3 transition-all duration-200 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground data-[state=inactive]:text-gray-700 dark:data-[state=inactive]:text-gray-200 hover:bg-gray-300/50 dark:hover:bg-gray-400/50 flex items-center justify-center gap-0.5 sm:gap-1"
+            >
+              <span className="whitespace-nowrap text-[10px] sm:text-xs md:text-sm">Marketplace</span>
+              <span className="inline-flex items-center justify-center px-1 py-0.5 text-[6px] sm:text-[7px] md:text-[8px] font-bold leading-none text-white bg-gradient-to-r from-green-500 to-blue-500 rounded-full min-w-[18px] sm:min-w-[20px]">
+                NEW
+              </span>
             </TabsTrigger>
           </TabsList>
           
@@ -2334,6 +2557,241 @@ const CarCreationPage: React.FC = () => {
               </div>
             </div>
           </TabsContent>
+
+          <TabsContent value="marketplace">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+              {/* Form Section */}
+              <div className="space-y-6 bg-card p-6 rounded-lg shadow-sm border">
+                {/* Header with icon */}
+                <div className="flex items-center space-x-3 border-b pb-4 mb-4">
+                  <div className="bg-primary/10 p-2 rounded-full">
+                    <Upload className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium">Car Marketplace</h3>
+                    <p className="text-sm text-muted-foreground">Generate multi-angle & color variations from photos</p>
+                  </div>
+                </div>
+
+                {/* File Upload Section */}
+                <div className="space-y-4">
+                  <Label className="text-base font-medium">Source Images</Label>
+                  <div 
+                    className="border-2 border-dashed border-border rounded-lg p-6 text-center bg-muted/30"
+                    onDragOver={handleMarketplaceDragOver}
+                    onDrop={handleMarketplaceDrop}
+                  >
+                    <div className="flex flex-col items-center gap-3">
+                      <Upload className="h-8 w-8 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">Drop car photos here or click to upload</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          JPG, PNG, or WebP • Max 25MB • Up to 10 images
+                        </p>
+                      </div>
+                      <input
+                        id="marketplace-photos"
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        multiple
+                        className="hidden"
+                        onChange={handleMarketplaceFileUpload}
+                      />
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => document.getElementById('marketplace-photos')?.click()}
+                      >
+                        Browse Files
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Preview uploaded files */}
+                  {marketplaceFiles.length > 0 && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium">Selected Images ({marketplaceFiles.length})</p>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={clearMarketplaceFiles}
+                        >
+                          Clear All
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {marketplacePreviewUrls.map((url, index) => (
+                          <div key={index} className="relative group">
+                            <img
+                              src={url}
+                              alt={`Preview ${index + 1}`}
+                              className="w-full h-20 object-cover rounded border bg-muted"
+                            />
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              className="absolute -top-2 -right-2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => removeMarketplaceFile(index)}
+                            >
+                              ×
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Angle Selection */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-base font-medium">Camera Angles</Label>
+                    <p className="text-xs text-muted-foreground">Select angles to generate</p>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {anglePresets.map((angle) => (
+                      <Button
+                        key={angle.key}
+                        type="button"
+                        variant={selectedAngles.includes(angle.key) ? "default" : "outline"}
+                        size="sm"
+                        className="h-auto p-3 flex flex-col items-center gap-2"
+                        onClick={() => {
+                          setSelectedAngles(prev => 
+                            prev.includes(angle.key)
+                              ? prev.filter(a => a !== angle.key)
+                              : [...prev, angle.key]
+                          );
+                        }}
+                      >
+                        <span className="text-xs font-medium">{angle.name}</span>
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Color Selection */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-base font-medium">Color Variations</Label>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="auto-colorize"
+                        checked={autoColorize}
+                        onChange={(e) => setAutoColorize(e.target.checked)}
+                        className="rounded"
+                      />
+                      <Label htmlFor="auto-colorize" className="text-xs">Auto-colorize</Label>
+                    </div>
+                  </div>
+                  
+                  {autoColorize && (
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-40 overflow-y-auto">
+                      {colorPresets.map((color) => (
+                        <Button
+                          key={color.key}
+                          type="button"
+                          variant={selectedColors.includes(color.key) ? "default" : "outline"}
+                          size="sm"
+                          className="h-8 text-xs"
+                          onClick={() => {
+                            setSelectedColors(prev => 
+                              prev.includes(color.key)
+                                ? prev.filter(c => c !== color.key)
+                                : [...prev, color.key]
+                            );
+                          }}
+                        >
+                          {color.name}
+                        </Button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Generate Button */}
+                <Button
+                  onClick={handleMarketplaceGenerate}
+                  disabled={isGeneratingStudio || marketplaceFiles.length === 0 || selectedAngles.length === 0}
+                  className="w-full h-12 text-base font-medium"
+                  size="lg"
+                >
+                  {isGeneratingStudio ? (
+                    <div className="flex items-center gap-2">
+                      <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full"></div>
+                      Processing...
+                    </div>
+                  ) : (
+                    `Generate ${selectedAngles.length} Angles${autoColorize ? ` × ${selectedColors.length} Colors` : ''}`
+                  )}
+                </Button>
+              </div>
+
+              {/* Preview Section */}
+              <div className="bg-card rounded-lg shadow-sm border overflow-hidden">
+                {marketplaceResults.size === 0 ? (
+                  <div className="h-full min-h-[400px] flex flex-col">
+                    {/* Header */}
+                    <div className="p-4 border-b bg-muted/30">
+                      <div className="flex items-center gap-3">
+                        <Upload className="h-5 w-5 text-muted-foreground" />
+                        <h2 className="font-semibold text-muted-foreground">Marketplace Preview</h2>
+                      </div>
+                    </div>
+                    
+                    {/* Empty state content */}
+                    <div className="flex-1 flex items-center justify-center py-16 px-6">
+                      <div className="text-center max-w-xs">
+                        <div className="relative mx-auto mb-4 w-20 h-20">
+                          <div className="absolute inset-0 bg-primary/5 rounded-full animate-ping opacity-50"></div>
+                          <div className="relative bg-primary/10 rounded-full p-5">
+                            <Upload className="h-10 w-10 text-primary/60" />
+                          </div>
+                        </div>
+                        <h3 className="text-lg font-medium mb-2">Ready for marketplace generation</h3>
+                        <p className="text-muted-foreground text-sm mb-6">
+                          Upload car photos, select angles and colors, then generate a complete marketplace set
+                        </p>
+                        <div className="text-xs text-muted-foreground flex items-center justify-center gap-4">
+                          <div className="flex items-center gap-1.5">
+                            <CheckCircle className="h-3.5 w-3.5 text-primary/60" />
+                            <span>Multiple angles</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <CheckCircle className="h-3.5 w-3.5 text-primary/60" />
+                            <span>Color variations</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {Array.from(marketplaceResults.entries()).map(([key, image]) => (
+                        <div key={key} className="relative group">
+                          <img
+                            src={image.url}
+                            alt={`Generated ${key}`}
+                            className="w-full h-40 object-cover rounded border bg-muted cursor-pointer transition-transform hover:scale-105"
+                            onClick={() => setSelectedImage(image.url)}
+                          />
+                          <div className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
+                            {key}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </TabsContent>
         </Tabs>
         
         {/* Car List Edit Modal */}
@@ -2342,8 +2800,8 @@ const CarCreationPage: React.FC = () => {
           onOpenChange={setShowEditModal} 
         />
         
-        {/* Jobs Tray - only shown in photo-to-studio mode */}
-        {carCreationMode === "photo-to-studio" && (
+        {/* Jobs Tray - only shown in photo-to-studio and marketplace modes */}
+        {(carCreationMode === "photo-to-studio" || carCreationMode === "marketplace") && (
           <>
             {/* Jobs Tray Toggle Button */}
             <button
