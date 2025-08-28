@@ -2847,7 +2847,7 @@ const CarCreationPage: React.FC = () => {
                       {/* Custom Color Input */}
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm font-medium">Custom Colors</Label>
+                          <Label className="text-sm font-normal">Custom Colors</Label>
                           <Button
                             type="button"
                             variant="outline"
