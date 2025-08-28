@@ -1,0 +1,112 @@
+Objective
+Fix the new **Car Marketplace** feature so it actually runs end-to-end:
+1) Load prompts/presets from the provided Google Sheets CSVs.
+2) Upload multiple source images, kick off angle jobs, then (if enabled) color jobs.
+3) Stream progress via WebSocket and render results inline using our existing image_card components.
+4) Use Replicate model **google/nano-banana** with `image_input[]` and force `output_format: "png"`.
+
+Context (read first)
+- Reuse working patterns from **Photo-to-Studio** (uploads → Replicate → persistImage → gallery + WebSocket + image_card).
+- This tool uses **CSV-configured prompts** (GlobalPrompts / AnglePresets / ColorPresets).
+- Results must appear **inside Car Creation → Car Marketplace** (no need to visit Gallery), but still save to Gallery as usual.
+
+Real CSV URLs (use exactly these)
+- Global prompts: https://docs.google.com/spreadsheets/d/e/2PACX-1vQb-bDvaNqOTOJXonaHf_VfzGZSW8BraE_tGoFAsJortqGRG6UVyA7MoxdN8Muvap_BrprDBT8n4V2B/pub?gid=1909445017&single=true&output=csv
+- Angle presets:  https://docs.google.com/spreadsheets/d/e/2PACX-1vQb-bDvaNqOTOJXonaHf_VfzGZSW8BraE_tGoFAsJortqGRG6UVyA7MoxdN8Muvap_BrprDBT8n4V2B/pub?gid=375187395&single=true&output=csv
+- Color presets:  https://docs.google.com/spreadsheets/d/e/2PACX-1vQb-bDvaNqOTOJXonaHf_VfzGZSW8BraE_tGoFAsJortqGRG6UVyA7MoxdN8Muvap_BrprDBT8n4V2B/pub?gid=41565075&single=true&output=csv
+
+Key issues to fix (found in repo)
+1) **Broken CSV URLs / placeholders**  
+   - `server/routes/marketplace-routes.ts` has shortened constants like `'https://docs.google.com/spreadsheets...` → replace with the real URLs above.
+   - `client/src/services/marketplaceData.ts` has the same problem → replace with the real URLs.
+
+2) **Corrupted imports / stray “...” tokens**  
+   - `client/src/pages/CarCreationPage.tsx` has an invalid lucide import line:  
+     `Downl...aximize2` → fix to valid icon names or remove if unused. A safe default is:  
+     `import { CarFront, RefreshCw, CheckCircle, AlertCircle, Download, Maximize2, ImageIcon, ExternalLink, Upload } from 'lucide-react';`
+   - Scan this file (and any marketplace-related files) for stray `...` inserted into identifiers or code. Remove/fix them so TypeScript compiles.
+
+3) **Marketplace batch processing not wired to Replicate**  
+   - `server/routes/marketplace-routes.ts` imports `{ createPrediction, waitForPrediction }` but does not actually call them in the marketplace flow. Implement the processing:
+     - **Angles stage**: for each selected angle, build prompt from GlobalPrompts.angle_generation and the angle’s `angle_desc`; call Replicate with:
+       ```ts
+       model: "google/nano-banana",
+       input: {
+         prompt,
+         image_input: sourceImageUrls, // array of uploaded source URLs
+         output_format: "png"
+       }
+       ```
+     - **Colors stage** (if `autoColorize: true`): when an angle finishes, for each selected color, build prompt from GlobalPrompts.colorization with `{{COLOR_NAME}}` = ColorPresets.prompt_value; call Replicate with:
+       ```ts
+       image_input: [angleResultUrl], // single-element array
+       output_format: "png"
+       ```
+     - After each job succeeds, **persist** with existing `persistImage(...)`, then push a WebSocket event:
+       ```ts
+       push('marketplaceJobUpdated', {
+         batchId,
+         result: { type: 'angle'|'color', angleKey, colorKey?, status: 'completed', imageUrl, thumbUrl }
+       });
+       ```
+
+4) **Client data loaders need to parse CSVs**  
+   - `client/src/services/marketplaceData.ts`:
+     - Ensure functions exist and work: `loadGlobalPrompts()`, `loadAnglePresets()`, `loadColorPresets()`, plus helpers `getAngleGenerationPrompt()`, `getColorizationPrompt()`.
+     - Use Papa.parse on the fetched CSV text; map to interfaces:
+       ```ts
+       // GlobalPrompts: use `prompt_template` by key
+       // AnglePresets: angle_key, angle_label, angle_desc, order, enabled
+       // ColorPresets: color_key, color_label, prompt_value, enabled
+       ```
+     - Do not hardcode prompts; always read from CSV.
+
+5) **Client UI wiring and events**
+   - In `client/src/pages/CarCreationPage.tsx` (Car Marketplace section):
+     - **Upload**: POST files to `/api/car/marketplace/upload` (already present) → use returned URLs as `sourceImageUrls`.
+     - **Start batch**: POST `/api/car/marketplace/batch` with `{ sourceImageUrls, angles: angle_key[], colors: color_key[], autoColorize }` → store `batchId`.
+     - **Matrix rendering**: pre-create placeholders for each selected angle and color. When a `marketplaceJobUpdated` WebSocket arrives (see `useWebSocket`), place the result into the correct cell using `batchId`, `angleKey`, `colorKey`, `stage`.
+     - Ensure completed images render via existing **image_card** and are also saved to Gallery automatically (persistence unchanged).
+     - Keep the **Jobs Tray** behavior identical to Photo-to-Studio for queued/in-progress jobs.
+
+6) **Server routes that must exist/work**
+   - `POST /api/car/marketplace/upload` → returns `{ imageUrls: string[] }` (public URLs suitable for Replicate).
+   - `POST /api/car/marketplace/batch` → returns `{ batchId }` and kicks off stage 1 jobs asynchronously.
+   - (Optional) `GET /api/car/marketplace/batch/:batchId` → status snapshot (useful for debugging).
+   - All marketplace server logic should be **minimal and consistent** with Photo-to-Studio’s patterns for uploads, persistence, and events.
+
+Implementation tasks
+1) Replace CSV URL constants with the real URLs (both server + client). Remove all placeholder `...` in URLs.
+2) Fix corrupted imports (lucide) and any stray `...` in identifiers in `client/src/pages/CarCreationPage.tsx`. Ensure TypeScript compiles.
+3) In `server/routes/marketplace-routes.ts`, implement:
+   - CSV loading helpers (server-side cache is fine).
+   - `POST /upload` (already present) → verify it returns resolvable public URLs.
+   - `POST /batch` → create a batch object and kick off **angle jobs** (one per angle). On completion of an angle, if `autoColorize`, enqueue **color jobs** (one per selected color).
+   - For each job: call Replicate (`google/nano-banana`) with correct **input schema**:
+     ```ts
+     input = { prompt, image_input: string[], output_format: "png" }
+     ```
+   - On success: `persistImage(...)` and `push('marketplaceJobUpdated', { batchId, result: { ... }})`.
+4) In `client/src/services/marketplaceData.ts`, implement CSV fetch + Papa.parse + mapping to types; export `loadAnglePresets`, `loadColorPresets`, and prompt getters; used by the Marketplace tab.
+5) In `client/src/pages/CarCreationPage.tsx`, confirm:
+   - On tab mount, load presets/prompts from the CSV service.
+   - Generate flow: upload → batch POST → toast “Batch started” → show matrix placeholders → fill cells from WebSocket updates.
+   - Results appear **in-page** as image_card (and are saved to Gallery).
+
+Testing
+- Upload 3 source images, select angles: Front (0°) + Side (90°); colors: Red + Blue; Auto-colorize ON.
+- Expect: 2 angle jobs start; as each angle completes, 2 color jobs kick off for that angle. The matrix fills left-to-right per angle row.
+- Temporarily change a prompt in the Google Sheet (e.g., ColorPresets.prompt_value for Red) → verify the prompt used reflects the change after reload.
+- Verify Replicate inputs:
+  - Angles: `image_input` array includes all uploaded source URLs.
+  - Colors: `image_input` is the single angle output URL.
+  - `output_format` is always `"png"`.
+- Verify WebSocket events named `marketplaceJobUpdated` are received and correctly mapped to cells.
+- Verify persisted images appear in image_card components and are present in Gallery.
+
+Constraints
+- Keep diffs minimal; do not refactor unrelated code.
+- Do not add new caps/limits in this pass.
+- Model name must be exactly **"google/nano-banana"**.
+- Prompts/presets must be loaded from the CSV URLs above (no hardcoding).
+- Preserve existing persistence (Object Storage + DB + thumbnail) and WebSocket patterns used by Photo-to-Studio.

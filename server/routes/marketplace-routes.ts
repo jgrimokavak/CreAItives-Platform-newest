@@ -43,8 +43,8 @@ interface MarketplaceResult {
 }
 
 interface GlobalPrompt {
-  angle_generation?: string;
-  colorization?: string;
+  angle_generation?: string | boolean;
+  colorization?: string | boolean;
   prompt_template: string;
   variables?: string;
 }
@@ -178,8 +178,9 @@ async function processMarketplaceJob(batchId: string, resultIndex: number) {
     
     if (result.type === 'angle') {
       // Build angle generation prompt
-      const anglePrompt = globalPrompts.find(p => p.angle_generation);
+      const anglePrompt = globalPrompts.find(p => p.angle_generation === 'TRUE' || p.angle_generation === 'true' || p.angle_generation === true);
       if (!anglePrompt) {
+        console.log('Available global prompts:', globalPrompts);
         throw new Error('Angle generation prompt not found');
       }
       
@@ -196,8 +197,9 @@ async function processMarketplaceJob(batchId: string, resultIndex: number) {
       
     } else if (result.type === 'color') {
       // Build colorization prompt
-      const colorPrompt = globalPrompts.find(p => p.colorization);
+      const colorPrompt = globalPrompts.find(p => p.colorization === 'TRUE' || p.colorization === 'true' || p.colorization === true);
       if (!colorPrompt) {
+        console.log('Available global prompts:', globalPrompts);
         throw new Error('Colorization prompt not found');
       }
       
@@ -249,10 +251,13 @@ async function processMarketplaceJob(batchId: string, resultIndex: number) {
       
       const response = await axios.get(outputUrl, { responseType: 'arraybuffer' });
       const imageBuffer = Buffer.from(response.data);
+      const base64Data = imageBuffer.toString('base64');
       
       // Persist to object storage and database
-      const persistResult = await persistImage(imageBuffer, {
+      const persistResult = await persistImage(base64Data, {
         prompt,
+        userId: batch.userId,
+        sources: batch.sourceImageUrls,
         params: {
           model: 'google/nano-banana',
           type: result.type,
@@ -413,7 +418,7 @@ router.post('/batch', async (req: any, res) => {
     const angleJobs = results.filter(r => r.type === 'angle');
     for (let i = 0; i < angleJobs.length; i++) {
       const resultIndex = results.findIndex(r => r === angleJobs[i]);
-      processMarketplaceJob(batchId, resultIndex).catch(console.error);
+      processMarketplaceJobWithColorTrigger(batchId, resultIndex).catch(console.error);
     }
     
     res.json({ batchId });
@@ -466,10 +471,9 @@ async function processColorJobsForAngle(batchId: string, angleKey: string) {
   }
 }
 
-// Listen for angle completions to trigger color jobs
-const originalProcessJob = processMarketplaceJob;
-processMarketplaceJob = async (batchId: string, resultIndex: number) => {
-  await originalProcessJob(batchId, resultIndex);
+// Wrapper function to handle angle completions and trigger color jobs
+async function processMarketplaceJobWithColorTrigger(batchId: string, resultIndex: number) {
+  await processMarketplaceJob(batchId, resultIndex);
   
   const batch = marketplaceBatches.get(batchId);
   if (!batch) return;
@@ -479,6 +483,6 @@ processMarketplaceJob = async (batchId: string, resultIndex: number) => {
     // Trigger color jobs for this angle
     await processColorJobsForAngle(batchId, result.angleKey);
   }
-};
+}
 
 export default router;

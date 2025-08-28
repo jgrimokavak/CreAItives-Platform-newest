@@ -2655,20 +2655,20 @@ const CarCreationPage: React.FC = () => {
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {anglePresets.map((angle) => (
                       <Button
-                        key={angle.key}
+                        key={angle.angle_key}
                         type="button"
-                        variant={selectedAngles.includes(angle.key) ? "default" : "outline"}
+                        variant={selectedAngles.includes(angle.angle_key) ? "default" : "outline"}
                         size="sm"
                         className="h-auto p-3 flex flex-col items-center gap-2"
                         onClick={() => {
                           setSelectedAngles(prev => 
-                            prev.includes(angle.key)
-                              ? prev.filter(a => a !== angle.key)
-                              : [...prev, angle.key]
+                            prev.includes(angle.angle_key)
+                              ? prev.filter(a => a !== angle.angle_key)
+                              : [...prev, angle.angle_key]
                           );
                         }}
                       >
-                        <span className="text-xs font-medium">{angle.name}</span>
+                        <span className="text-xs font-medium">{angle.angle_label}</span>
                       </Button>
                     ))}
                   </div>
@@ -2694,20 +2694,20 @@ const CarCreationPage: React.FC = () => {
                     <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-40 overflow-y-auto">
                       {colorPresets.map((color) => (
                         <Button
-                          key={color.key}
+                          key={color.color_key}
                           type="button"
-                          variant={selectedColors.includes(color.key) ? "default" : "outline"}
+                          variant={selectedColors.includes(color.color_key) ? "default" : "outline"}
                           size="sm"
                           className="h-8 text-xs"
                           onClick={() => {
                             setSelectedColors(prev => 
-                              prev.includes(color.key)
-                                ? prev.filter(c => c !== color.key)
-                                : [...prev, color.key]
+                              prev.includes(color.color_key)
+                                ? prev.filter(c => c !== color.color_key)
+                                : [...prev, color.color_key]
                             );
                           }}
                         >
-                          {color.name}
+                          {color.color_label}
                         </Button>
                       ))}
                     </div>
