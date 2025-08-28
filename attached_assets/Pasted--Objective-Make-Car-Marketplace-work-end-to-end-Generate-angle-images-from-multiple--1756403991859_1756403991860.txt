@@ -1,0 +1,140 @@
+
+````
+Objective
+Make **Car Marketplace** work end-to-end:
+- Generate angle images from multiple source photos, then (if enabled) auto-generate color variants.
+- Show a live **angle × color matrix** with placeholders that fill as jobs complete.
+- Reuse Photo-to-Studio patterns for uploads → Replicate → persistImage → WebSocket → image_card.
+
+Non-negotiables
+- Model: **google/nano-banana** on Replicate, always `output_format: "png"`.
+- No new caps/limits in this pass.
+- Prompts must come from the CSVs (no hardcoding).
+- Keep diffs minimal.
+
+CSV URLs (use literally)
+- Global prompts: https://docs.google.com/spreadsheets/d/e/2PACX-1vQb-bDvaNqOTOJXonaHf_VfzGZSW8BraE_tGoFAsJortqGRG6UVyA7MoxdN8Muvap_BrprDBT8n4V2B/pub?gid=1909445017&single=true&output=csv
+- Angle presets:  https://docs.google.com/spreadsheets/d/e/2PACX-1vQb-bDvaNqOTOJXonaHf_VfzGZSW8BraE_tGoFAsJortqGRG6UVyA7MoxdN8Muvap_BrprDBT8n4V2B/pub?gid=375187395&single=true&output=csv
+- Color presets:  https://docs.google.com/spreadsheets/d/e/2PACX-1vQb-bDvaNqOTOJXonaHf_VfzGZSW8BraE_tGoFAsJortqGRG6UVyA7MoxdN8Muvap_BrprDBT8n4V2B/pub?gid=41565075&single=true&output=csv
+
+Fix Scope (from your report)
+1) **SERVER prompt lookup is wrong** (uses boolean checks). Must look up by `key` fields.
+2) **CLIENT missing matrix placeholders** after batch creation; results have nowhere to land.
+3) **CLIENT event mapping**: ensure `marketplaceBatchCreated` / `marketplaceJobUpdated` update the matrix cells for the current `batchId`.
+4) Re-verify WebSocket dispatch (you added switch-cases already) and preserve Photo-to-Studio parity.
+5) Keep uploads, batch request, CSV loads as they are (already OK).
+
+Tasks — Server (marketplace-routes.ts)
+1) Fix global prompt lookups (both places called out in your diagnostic).
+   - Replace boolean checks with:
+     ```ts
+     const angleGen = globalPrompts.find(p => p.key === "angle_generation");
+     const colorize = globalPrompts.find(p => p.key === "colorization");
+     if (!angleGen || !colorize) throw new Error("Missing global prompts from CSV");
+     ```
+   - Angle prompt build:
+     - Use `angleGen.prompt_template`, replace `{{ANGLE_DESC}}` with the selected angle’s `angle_desc` (from AnglePresets CSV by `angle_key`).
+   - Color prompt build:
+     - Use `colorize.prompt_template`, replace `{{COLOR_NAME}}` with ColorPresets `prompt_value` (by `color_key`).
+2) Confirm Replicate call inputs:
+   - **Angle job**: `image_input = sourceImageUrls` (array of uploaded URLs).
+   - **Color job**: `image_input = [angleResultUrl]`.
+   - Always pass `output_format: "png"`.
+3) After each job completes:
+   - Persist via existing `persistImage(...)` → obtain `{ fullUrl, thumbUrl }`.
+   - Push:
+     ```ts
+     push('marketplaceJobUpdated', {
+       batchId,
+       result: { type: 'angle'|'color', angleKey, colorKey, status: 'completed', imageUrl: fullUrl, thumbUrl }
+     });
+     ```
+4) Batch lifecycle:
+   - On `/batch` start push `marketplaceBatchCreated` `{batchId, totalJobs, angles, colors}`.
+   - When all jobs for batch done, push `marketplaceBatchCompleted` `{batchId}`.
+
+Tasks — Client (websocket + page)
+A) **websocket.ts** (you added switch cases — keep them):
+   - Ensure dispatched CustomEvent name is consistent with Photo-to-Studio:
+     ```ts
+     window.dispatchEvent(new CustomEvent("ws-message", { detail: { type, data } }));
+     ```
+   - Log one line per event:
+     `[MP] ws event`, `type`, and `data.batchId`.
+
+B) **CarCreationPage.tsx** (Marketplace section)
+1) Immediately after successful `/api/car/marketplace/batch` response:
+   - **Create the matrix placeholders** for the returned `batchId`.
+   - For each selected `angleKey`:
+     - Create an **angle cell placeholder** (first column of that row) with state `queued`.
+     - For each selected `colorKey`:
+       - Create a **color cell placeholder** in the same row with state `queued`.
+   - Render this matrix in the **Marketplace Preview** right panel (replace the static “Ready…” placeholder).
+   - Keep the **Jobs Tray** as is for active jobs list.
+2) Add a `ws-message` listener scoped to the **current batchId**:
+   - On `marketplaceBatchCreated` for this `batchId`: no UI change beyond showing placeholders (already created).
+   - On `marketplaceJobUpdated` for this `batchId`:
+     - If `result.type === "angle"` → update the angle cell (row by `angleKey`, first column) to completed and show image_card with URLs provided.
+     - If `result.type === "color"` → update the cell (row `angleKey`, column `colorKey`) to completed and show image_card.
+   - Ignore events for other batchIds.
+3) State shape suggestion (keep minimal):
+   ```ts
+   type CellKey = `${batchId}:${angleKey}:${colorKey|""}`;
+   // or a nested object: matrix[angleKey]['__angle__'] and matrix[angleKey][colorKey]
+````
+
+Use whatever matches your current pattern; the key point is stable addressing for updates.
+4\) Button copy tweak for clarity (no design refactor):
+
+* If Auto-colorize ON: **“Generate {A} Angles → {C} Colors each”**
+* If OFF: **“Generate {A} Angles (colors later)”**
+
+Instrumentation (keep until passing)
+
+* Client:
+
+  * `[MP] submit batch {sourceCount, angles, colors, autoColorize}`
+  * `[MP] batch response {batchId}`
+  * `[MP] placeholders created for batch {batchId}: angles={A}, colors={C}, totalCells={A + A*C}`
+  * `[MP] ws-message {type} batch={batchId} payloadKeys={...}`
+* Server:
+
+  * `[MP] /batch body counts`
+  * `[MP] enqueue angle` / `[MP] enqueue color` with keys and prompt lengths
+  * `[MP] replicate.run google/nano-banana {image_input_len, output_format}`
+  * `[MP] persisted {imageUrl}` and `push marketplaceJobUpdated`
+
+Acceptance Tests (must pass before you stop)
+
+1. Scenario A — angles + auto-colors:
+
+   * Upload 2 source images; select angles: `front_0`, `side_90`; colors: `red_metallic`, `blue_metallic`; Auto-colorize ON.
+   * Expect:
+
+     * Batch POST returns `batchId`.
+     * Placeholders appear immediately in the right panel (2 rows, 1+2 columns).
+     * WebSocket logs show `marketplaceBatchCreated` then multiple `marketplaceJobUpdated`.
+     * Cells fill left→right as jobs finish (angle image first column; then two color cells).
+     * Completed cells display image\_card; assets also present in Gallery.
+2. Scenario B — angles only:
+
+   * Auto-colorize OFF; same angles.
+   * Expect only angle cells populate; no color cells run.
+3. CSV proof:
+
+   * Temporarily change a `prompt_value` in ColorPresets; reload tab; confirm the color job prompt uses the new value (log prompt excerpt).
+
+Definition of Done
+
+* End-to-end flow works for both scenarios above with real images; no “Unknown WebSocket event” messages; placeholders and cells behave as specified.
+* Minimal UI polish applied (button copy; placeholders visible).
+* Leave the instrumentation logs in place but behind a simple `if (process.env.NODE_ENV !== 'production')` guard or a local `DEBUG_MP` flag.
+
+Important
+
+* Do not refactor unrelated code.
+* Do not add concurrency/limits in this pass.
+* If something blocks you, write what you tried and why, then continue until the Acceptance Tests pass.
+
+```
+```

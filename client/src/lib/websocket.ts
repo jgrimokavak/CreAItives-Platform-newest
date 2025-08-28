@@ -140,7 +140,7 @@ export function useWebSocket() {
       case 'marketplaceJobUpdated': 
       case 'marketplaceBatchCompleted':
         // Dispatch marketplace events for Car Marketplace component
-        console.log(`[TRACE] Processing marketplace ${ev} event, dispatching ws-message`);
+        console.log(`[MP] ws event`, ev, `batchId:`, data.batchId);
         window.dispatchEvent(new CustomEvent('ws-message', { detail: { type: ev, data } }));
         break;
         

@@ -6,8 +6,8 @@ const ANGLE_PRESETS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQb-b
 const COLOR_PRESETS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQb-bDvaNqOTOJXonaHf_VfzGZSW8BraE_tGoFAsJortqGRG6UVyA7MoxdN8Muvap_BrprDBT8n4V2B/pub?gid=41565075&single=true&output=csv';
 
 export interface GlobalPrompt {
-  angle_generation?: string | boolean;
-  colorization?: string | boolean;
+  key: string;
+  description?: string;
   prompt_template: string;
   variables?: string;
 }
@@ -126,7 +126,7 @@ export async function loadColorPresets(): Promise<ColorPreset[]> {
 // Helper functions to get specific prompt templates
 export async function getAngleGenerationPrompt(): Promise<string> {
   const prompts = await loadGlobalPrompts();
-  const anglePrompt = prompts.find(p => p.angle_generation === 'TRUE' || p.angle_generation === 'true' || p.angle_generation === true);
+  const anglePrompt = prompts.find(p => p.key === 'angle_generation');
   const template = anglePrompt?.prompt_template || '';
   console.log('[MP] angle_generation template length', template.length);
   return template;
@@ -134,7 +134,7 @@ export async function getAngleGenerationPrompt(): Promise<string> {
 
 export async function getColorizationPrompt(): Promise<string> {
   const prompts = await loadGlobalPrompts();
-  const colorPrompt = prompts.find(p => p.colorization === 'TRUE' || p.colorization === 'true' || p.colorization === true);
+  const colorPrompt = prompts.find(p => p.key === 'colorization');
   const template = colorPrompt?.prompt_template || '';
   console.log('[MP] colorization template length', template.length);
   return template;

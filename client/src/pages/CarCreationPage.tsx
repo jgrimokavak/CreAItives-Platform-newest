@@ -154,6 +154,7 @@ const CarCreationPage: React.FC = () => {
   const [autoColorize, setAutoColorize] = useState<boolean>(true);
   const [marketplaceBatchId, setMarketplaceBatchId] = useState<string | null>(null);
   const [marketplaceResults, setMarketplaceResults] = useState<Map<string, GeneratedImage>>(new Map());
+  const [marketplaceMatrix, setMarketplaceMatrix] = useState<Record<string, Record<string, { status: string; imageUrl?: string; thumbUrl?: string }>>>({});
   const [anglePresets, setAnglePresets] = useState<any[]>([]);
   const [colorPresets, setColorPresets] = useState<any[]>([]);
   
@@ -241,13 +242,13 @@ const CarCreationPage: React.FC = () => {
   // Load marketplace data when marketplace tab is selected
   useEffect(() => {
     if (carCreationMode === 'marketplace') {
-      console.log('[MP] Loading marketplace data...');
+      if (process.env.NODE_ENV !== 'production') console.log('[MP] Loading marketplace data...');
       loadAnglePresets().then(angles => {
-        console.log('[MP] loaded angle presets:', { count: angles.length, firstRow: angles[0] });
+        if (process.env.NODE_ENV !== 'production') console.log('[MP] loaded angle presets:', { count: angles.length, firstRow: angles[0] });
         setAnglePresets(angles);
       }).catch(console.error);
       loadColorPresets().then(colors => {
-        console.log('[MP] loaded color presets:', { count: colors.length, firstRow: colors[0] });
+        if (process.env.NODE_ENV !== 'production') console.log('[MP] loaded color presets:', { count: colors.length, firstRow: colors[0] });
         setColorPresets(colors);
       }).catch(console.error);
     }
@@ -257,37 +258,58 @@ const CarCreationPage: React.FC = () => {
   useEffect(() => {
     const handleMarketplaceUpdate = (event: CustomEvent) => {
       const { type, data } = event.detail || {};
-      console.log('[MP] ws-message', { type, batchId: data?.batchId, currentBatchId: marketplaceBatchId });
+      if (process.env.NODE_ENV !== 'production') console.log('[MP] ws-message', type, 'batch=', data?.batchId, 'payloadKeys=', Object.keys(data || {}));
       
-      if (type === 'marketplaceJobUpdated') {
-        const { batchId, result } = data;
-        if (batchId === marketplaceBatchId) {
-          // Create result key for matrix positioning
+      // Only handle events for the current batch
+      if (data?.batchId !== marketplaceBatchId) return;
+      
+      if (type === 'marketplaceBatchCreated') {
+        // Batch created - placeholders already set up
+      } else if (type === 'marketplaceJobUpdated') {
+        const { result } = data;
+        if (result && result.status === 'completed') {
+          // Update the matrix cell for this result
+          const cellKey = result.type === 'angle' ? '__angle__' : result.colorKey;
+          
+          setMarketplaceMatrix(prev => ({
+            ...prev,
+            [result.angleKey]: {
+              ...prev[result.angleKey],
+              [cellKey]: {
+                status: 'completed',
+                imageUrl: result.imageUrl,
+                thumbUrl: result.thumbUrl
+              }
+            }
+          }));
+          
+          // Also update the legacy results map for backwards compatibility
           const resultKey = result.colorKey 
             ? `${result.angleKey}-${result.colorKey}`
             : `${result.angleKey}-base`;
-          
-          if (result.status === 'completed' && result.imageUrl) {
-            const transformedImage: GeneratedImage = {
-              id: resultKey,
-              url: result.imageUrl,
-              prompt: `${result.type} generation`,
-              size: '1024x1024',
-              model: 'google/nano-banana',
-              createdAt: new Date().toISOString(),
-              sourceThumb: undefined,
-              sourceImage: undefined,
-              width: 1024,
-              height: 1024,
-              thumbUrl: result.thumbUrl || result.imageUrl,
-              fullUrl: result.imageUrl,
-              starred: false,
-              deletedAt: null
-            };
             
-            setMarketplaceResults(prev => new Map(prev.set(resultKey, transformedImage)));
-          }
+          const transformedImage: GeneratedImage = {
+            id: resultKey,
+            url: result.imageUrl,
+            prompt: `${result.type} generation`,
+            size: '1024x1024',
+            model: 'google/nano-banana',
+            createdAt: new Date().toISOString(),
+            sourceThumb: undefined,
+            sourceImage: undefined,
+            width: 1024,
+            height: 1024,
+            thumbUrl: result.thumbUrl || result.imageUrl,
+            fullUrl: result.imageUrl,
+            starred: false,
+            deletedAt: null
+          };
+          
+          setMarketplaceResults(prev => new Map(prev.set(resultKey, transformedImage)));
         }
+      } else if (type === 'marketplaceBatchCompleted') {
+        // Batch completed
+        if (process.env.NODE_ENV !== 'production') console.log('[MP] Batch completed:', data.batchId);
       }
     };
     
@@ -903,7 +925,7 @@ const CarCreationPage: React.FC = () => {
   // Start marketplace batch
   const handleMarketplaceGenerate = async () => {
     try {
-      console.log('[MP] Generate button clicked');
+      if (process.env.NODE_ENV !== 'production') console.log('[MP] Generate button clicked');
       if (marketplaceFiles.length === 0) {
         toast({
           title: "No source images",
@@ -925,9 +947,9 @@ const CarCreationPage: React.FC = () => {
       setIsGeneratingStudio(true);
 
       // Upload files first
-      console.log('[MP] Uploading files:', { fileCount: marketplaceFiles.length });
+      if (process.env.NODE_ENV !== 'production') console.log('[MP] Uploading files:', { fileCount: marketplaceFiles.length });
       const imageUrls = await uploadMarketplaceFiles();
-      console.log('[MP] Upload response:', { imageUrls: imageUrls.length });
+      if (process.env.NODE_ENV !== 'production') console.log('[MP] Upload response:', { imageUrls: imageUrls.length });
       setMarketplaceImageUrls(imageUrls);
 
       // Start marketplace batch
@@ -937,7 +959,7 @@ const CarCreationPage: React.FC = () => {
         colors: selectedColors,
         autoColorize
       };
-      console.log('[MP] submit batch', { sourceCount: imageUrls.length, angles: selectedAngles, colors: selectedColors, autoColorize });
+      if (process.env.NODE_ENV !== 'production') console.log('[MP] submit batch', { sourceCount: imageUrls.length, angles: selectedAngles, colors: selectedColors, autoColorize });
       
       const response = await fetch('/api/car/marketplace/batch', {
         method: 'POST',
@@ -947,17 +969,35 @@ const CarCreationPage: React.FC = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.log('[MP] batch error response:', errorData);
+        if (process.env.NODE_ENV !== 'production') console.log('[MP] batch error response:', errorData);
         throw new Error(errorData.error || 'Failed to start marketplace batch');
       }
 
       const { batchId } = await response.json();
-      console.log('[MP] batch response', { batchId });
+      if (process.env.NODE_ENV !== 'production') console.log('[MP] batch response', { batchId });
       setMarketplaceBatchId(batchId);
+      
+      // Create matrix placeholders immediately after batch response
+      const newMatrix: Record<string, Record<string, { status: string; imageUrl?: string; thumbUrl?: string }>> = {};
+      
+      for (const angleKey of selectedAngles) {
+        newMatrix[angleKey] = {};
+        // Create angle cell placeholder (base column)
+        newMatrix[angleKey]['__angle__'] = { status: 'queued' };
+        
+        // Create color cell placeholders if auto-colorize is enabled
+        if (autoColorize) {
+          for (const colorKey of selectedColors) {
+            newMatrix[angleKey][colorKey] = { status: 'queued' };
+          }
+        }
+      }
+      
+      setMarketplaceMatrix(newMatrix);
       
       // Log placeholder creation
       const totalJobs = selectedAngles.length + (autoColorize ? selectedAngles.length * selectedColors.length : 0);
-      console.log('[MP] placeholders created', { angles: selectedAngles, colors: selectedColors, keysCreated: totalJobs });
+      if (process.env.NODE_ENV !== 'production') console.log('[MP] placeholders created for batch', batchId, ':', { angles: selectedAngles.length, colors: autoColorize ? selectedColors.length : 0, totalCells: totalJobs });
 
       toast({
         title: "Marketplace batch started",
@@ -2747,14 +2787,16 @@ const CarCreationPage: React.FC = () => {
                       Processing...
                     </div>
                   ) : (
-                    `Generate ${selectedAngles.length} Angles${autoColorize ? ` × ${selectedColors.length} Colors` : ''}`
+                    autoColorize 
+                      ? `Generate ${selectedAngles.length} Angles → ${selectedColors.length} Colors each`
+                      : `Generate ${selectedAngles.length} Angles (colors later)`
                   )}
                 </Button>
               </div>
 
               {/* Preview Section */}
               <div className="bg-card rounded-lg shadow-sm border overflow-hidden">
-                {marketplaceResults.size === 0 ? (
+                {Object.keys(marketplaceMatrix).length === 0 ? (
                   <div className="h-full min-h-[400px] flex flex-col">
                     {/* Header */}
                     <div className="p-4 border-b bg-muted/30">
@@ -2792,17 +2834,57 @@ const CarCreationPage: React.FC = () => {
                   </div>
                 ) : (
                   <div className="p-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {Array.from(marketplaceResults.entries()).map(([key, image]) => (
-                        <div key={key} className="relative group">
-                          <img
-                            src={image.url}
-                            alt={`Generated ${key}`}
-                            className="w-full h-40 object-cover rounded border bg-muted cursor-pointer transition-transform hover:scale-105"
-                            onClick={() => setSelectedImage(image.url)}
-                          />
-                          <div className="absolute bottom-2 left-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
-                            {key}
+                    {/* Marketplace Matrix Display */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="h-5 w-5 bg-primary/10 rounded flex items-center justify-center">
+                          <div className="h-2.5 w-2.5 bg-primary/60 rounded"></div>
+                        </div>
+                        <h2 className="font-semibold">Marketplace Results</h2>
+                        <div className="text-sm text-muted-foreground">
+                          ({Object.keys(marketplaceMatrix).length} angles × {autoColorize ? selectedColors.length + 1 : 1} variants)
+                        </div>
+                      </div>
+                      
+                      {Object.entries(marketplaceMatrix).map(([angleKey, angleRow]) => (
+                        <div key={angleKey} className="space-y-2">
+                          {/* Angle Row Header */}
+                          <div className="text-sm font-medium text-muted-foreground capitalize">
+                            {angleKey.replace('_', ' ')}
+                          </div>
+                          
+                          {/* Angle Row Cells */}
+                          <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-3">
+                            {Object.entries(angleRow).map(([cellKey, cell]) => (
+                              <div key={cellKey} className="aspect-square">
+                                {cell.status === 'completed' && cell.imageUrl ? (
+                                  <div className="relative group">
+                                    <img
+                                      src={cell.imageUrl}
+                                      alt={`${angleKey} ${cellKey === '__angle__' ? 'base' : cellKey}`}
+                                      className="w-full h-full object-cover rounded border bg-muted cursor-pointer transition-transform hover:scale-105"
+                                      onClick={() => setSelectedImage(cell.imageUrl!)}
+                                    />
+                                    <div className="absolute bottom-0.5 left-0.5 bg-black/60 text-white text-[10px] px-1 py-0.5 rounded text-center leading-none">
+                                      {cellKey === '__angle__' ? 'Base' : cellKey}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="w-full h-full rounded border-2 border-dashed border-muted-foreground/20 bg-muted/30 flex items-center justify-center">
+                                    <div className="text-center">
+                                      {cell.status === 'queued' ? (
+                                        <div className="animate-pulse">
+                                          <div className="w-6 h-6 bg-primary/20 rounded mx-auto mb-1"></div>
+                                          <div className="text-[10px] text-muted-foreground">Queued</div>
+                                        </div>
+                                      ) : (
+                                        <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full mx-auto"></div>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
                           </div>
                         </div>
                       ))}

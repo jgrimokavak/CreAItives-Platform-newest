@@ -43,8 +43,8 @@ interface MarketplaceResult {
 }
 
 interface GlobalPrompt {
-  angle_generation?: string | boolean;
-  colorization?: string | boolean;
+  key: string;
+  description?: string;
   prompt_template: string;
   variables?: string;
 }
@@ -177,10 +177,10 @@ async function processMarketplaceJob(batchId: string, resultIndex: number) {
     let imageInput: string[] = [];
     
     if (result.type === 'angle') {
-      // Build angle generation prompt  
-      const anglePrompt = globalPrompts.find(p => p.angle_generation === 'TRUE' || p.angle_generation === 'true' || p.angle_generation === true);
+      // Build angle generation prompt using key-based lookup
+      const angleGen = globalPrompts.find(p => p.key === 'angle_generation');
       console.log('[MP] enqueue angle', { batchId, angleKey: result.angleKey, imgCount: batch.sourceImageUrls.length });
-      if (!anglePrompt) {
+      if (!angleGen) {
         console.log('Available global prompts:', globalPrompts);
         throw new Error('Angle generation prompt not found');
       }
@@ -191,16 +191,16 @@ async function processMarketplaceJob(batchId: string, resultIndex: number) {
         throw new Error(`Angle preset ${result.angleKey} not found`);
       }
       
-      prompt = buildPrompt(anglePrompt.prompt_template, {
+      prompt = buildPrompt(angleGen.prompt_template, {
         ANGLE_DESC: angleData.angle_desc
       });
       imageInput = batch.sourceImageUrls;
       
     } else if (result.type === 'color') {
-      // Build colorization prompt
-      const colorPrompt = globalPrompts.find(p => p.colorization === 'TRUE' || p.colorization === 'true' || p.colorization === true);
+      // Build colorization prompt using key-based lookup
+      const colorize = globalPrompts.find(p => p.key === 'colorization');
       console.log('[MP] enqueue color', { batchId, angleKey: result.angleKey, colorKey: result.colorKey });
-      if (!colorPrompt) {
+      if (!colorize) {
         console.log('Available global prompts:', globalPrompts);
         throw new Error('Colorization prompt not found');
       }
@@ -223,7 +223,7 @@ async function processMarketplaceJob(batchId: string, resultIndex: number) {
         throw new Error(`Base angle result not found for ${result.angleKey}`);
       }
       
-      prompt = buildPrompt(colorPrompt.prompt_template, {
+      prompt = buildPrompt(colorize.prompt_template, {
         COLOR_NAME: colorData.prompt_value
       });
       imageInput = [angleResult.imageUrl];
@@ -360,7 +360,7 @@ router.post('/upload', upload.array('images', 10), async (req: any, res) => {
 router.post('/batch', async (req: any, res) => {
   try {
     const { sourceImageUrls, angles, colors, autoColorize } = req.body;
-    console.log('[MP] /batch body', { 
+    console.log('[MP] /batch body counts', { 
       imageCount: sourceImageUrls?.length || 0, 
       angleCount: angles?.length || 0, 
       colorCount: colors?.length || 0, 
