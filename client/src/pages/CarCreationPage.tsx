@@ -158,6 +158,12 @@ const CarCreationPage: React.FC = () => {
   const [anglePresets, setAnglePresets] = useState<any[]>([]);
   const [colorPresets, setColorPresets] = useState<any[]>([]);
   
+  // Additional marketplace state for new features
+  const [additionalInstructions, setAdditionalInstructions] = useState<string>('');
+  const [showMarketplaceCustomColor, setShowMarketplaceCustomColor] = useState<boolean>(false);
+  const [marketplaceCustomColor, setMarketplaceCustomColor] = useState<string>('');
+  const [marketplaceCustomColors, setMarketplaceCustomColors] = useState<string[]>([]);
+  
   // Generate years from 1990 to current year
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: currentYear - 1990 + 1 }, (_, i) => String(currentYear - i));
@@ -983,11 +989,13 @@ const CarCreationPage: React.FC = () => {
       setMarketplaceImageUrls(imageUrls);
 
       // Start marketplace batch
+      const allColors = [...selectedColors, ...marketplaceCustomColors];
       const batchPayload = {
         sourceImageUrls: imageUrls,
         angles: selectedAngles,
-        colors: selectedColors,
-        autoColorize
+        colors: allColors,
+        autoColorize,
+        additionalInstructions: additionalInstructions.trim() || undefined
       };
       if (process.env.NODE_ENV !== 'production') console.log('[MP] submit batch', { sourceCount: imageUrls.length, angles: selectedAngles, colors: selectedColors, autoColorize });
       
@@ -2788,6 +2796,20 @@ const CarCreationPage: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Additional Instructions (Optional) */}
+                <div className="space-y-4">
+                  <Label className="text-base font-medium">Additional Instructions (Optional)</Label>
+                  <Input
+                    placeholder="e.g., remove license plate, add racing stripes, etc."
+                    value={additionalInstructions}
+                    onChange={(e) => setAdditionalInstructions(e.target.value)}
+                    className="w-full"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    These instructions will be added to each angle prompt for more customized results
+                  </p>
+                </div>
+
                 {/* Color Selection */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
@@ -2805,7 +2827,91 @@ const CarCreationPage: React.FC = () => {
                   </div>
                   
                   {autoColorize && (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-48 overflow-y-auto pr-2">
+                    <div className="space-y-4">
+                      {/* Custom Color Input */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-medium">Custom Colors</Label>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setShowMarketplaceCustomColor(!showMarketplaceCustomColor)}
+                            className="text-xs"
+                          >
+                            {showMarketplaceCustomColor ? 'Cancel' : '+ Add Custom Color'}
+                          </Button>
+                        </div>
+                        
+                        {showMarketplaceCustomColor && (
+                          <div className="space-y-2 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                            <Label htmlFor="marketplace_custom_color" className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                              Enter Custom Color Name
+                            </Label>
+                            <Input
+                              id="marketplace_custom_color"
+                              placeholder="e.g., midnight pearl, copper metallic, forest green..."
+                              value={marketplaceCustomColor}
+                              onChange={(e) => setMarketplaceCustomColor(e.target.value)}
+                              className="bg-white dark:bg-gray-900 border-blue-300 dark:border-blue-700 focus:border-blue-500"
+                            />
+                            <div className="flex gap-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setShowMarketplaceCustomColor(false);
+                                  setMarketplaceCustomColor("");
+                                }}
+                                className="text-xs"
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={() => {
+                                  if (marketplaceCustomColor.trim()) {
+                                    setMarketplaceCustomColors(prev => [...prev, marketplaceCustomColor.trim()]);
+                                    setMarketplaceCustomColor("");
+                                    setShowMarketplaceCustomColor(false);
+                                  }
+                                }}
+                                disabled={!marketplaceCustomColor.trim()}
+                                className="text-xs"
+                              >
+                                Add Color
+                              </Button>
+                            </div>
+                            <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                              Tip: Be descriptive for best results (e.g., "metallic dark green" instead of just "green")
+                            </p>
+                          </div>
+                        )}
+                        
+                        {/* Display custom colors */}
+                        {marketplaceCustomColors.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {marketplaceCustomColors.map((color, index) => (
+                              <div key={index} className="flex items-center gap-1 bg-blue-100 dark:bg-blue-900/30 px-2 py-1 rounded text-xs">
+                                <span>{color}</span>
+                                <button
+                                  onClick={() => setMarketplaceCustomColors(prev => prev.filter((_, i) => i !== index))}
+                                  className="text-blue-600 hover:text-blue-800 ml-1"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Preset Colors */}
+                      <div className="space-y-3">
+                        <Label className="text-sm font-medium">Preset Colors</Label>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-48 overflow-y-auto pr-2">
                       {colorPresets.map((color) => {
                         const isSelected = selectedColors.includes(color.color_key);
                         // Generate color swatch based on color name
@@ -2880,6 +2986,8 @@ const CarCreationPage: React.FC = () => {
                           </button>
                         );
                       })}
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -2898,7 +3006,7 @@ const CarCreationPage: React.FC = () => {
                     </div>
                   ) : (
                     autoColorize 
-                      ? `Generate ${selectedAngles.length} Angles → ${selectedColors.length} Colors each`
+                      ? `Generate ${selectedAngles.length} Angles → ${selectedColors.length + marketplaceCustomColors.length} Colors each`
                       : `Generate ${selectedAngles.length} Angles (colors later)`
                   )}
                 </Button>
@@ -2953,39 +3061,67 @@ const CarCreationPage: React.FC = () => {
                         <h2 className="font-semibold text-lg">Marketplace Results</h2>
                         <div className="text-sm text-muted-foreground">
                           {Object.keys(marketplaceMatrix).length} angles
-                          {autoColorize && ` × ${selectedColors.length} colors`}
+                          {autoColorize && ` × ${selectedColors.length + marketplaceCustomColors.length} colors`}
                         </div>
                       </div>
                       <Button
                         variant="outline"
                         size="sm"
                         className="flex items-center gap-2"
-                        onClick={() => {
+                        onClick={async () => {
                           // Download all completed images as ZIP
-                          const completedImages: string[] = [];
-                          Object.entries(marketplaceMatrix).forEach(([angleKey, angleRow]) => {
-                            Object.entries(angleRow).forEach(([cellKey, cell]) => {
-                              if (cell.status === 'completed' && cell.imageUrl) {
-                                completedImages.push(cell.imageUrl);
-                              }
-                            });
-                          });
+                          const completedImageCount = Object.entries(marketplaceMatrix).reduce((count, [angleKey, angleRow]) => {
+                            return count + Object.entries(angleRow).filter(([cellKey, cell]) => 
+                              cell.status === 'completed' && cell.imageUrl
+                            ).length;
+                          }, 0);
                           
-                          if (completedImages.length > 0) {
-                            // Create a simple download for now - could be enhanced to create ZIP
-                            toast({
-                              title: "Downloading All Images",
-                              description: `Preparing ${completedImages.length} images for download...`,
-                            });
-                            // For now, download first image as example - in real implementation this would create a ZIP
-                            const link = document.createElement('a');
-                            link.href = completedImages[0];
-                            link.download = 'marketplace-results.jpg';
-                            link.click();
-                          } else {
+                          if (completedImageCount === 0) {
                             toast({
                               title: "No Images Ready",
                               description: "Wait for images to complete processing first.",
+                              variant: "destructive"
+                            });
+                            return;
+                          }
+
+                          if (!marketplaceBatchId) {
+                            toast({
+                              title: "Batch Not Found",
+                              description: "Unable to find the marketplace batch for download.",
+                              variant: "destructive"
+                            });
+                            return;
+                          }
+                          
+                          try {
+                            toast({
+                              title: "Preparing Download",
+                              description: `Creating ZIP file with ${completedImageCount} images...`,
+                            });
+                            
+                            // Create a form to trigger the download
+                            const form = document.createElement('form');
+                            form.method = 'POST';
+                            form.action = `/api/car/marketplace/batch/${marketplaceBatchId}/download`;
+                            form.style.display = 'none';
+                            document.body.appendChild(form);
+                            form.submit();
+                            document.body.removeChild(form);
+                            
+                            // Show success message after a delay
+                            setTimeout(() => {
+                              toast({
+                                title: "Download Started",
+                                description: "Your ZIP file should start downloading shortly.",
+                              });
+                            }, 1000);
+                            
+                          } catch (error) {
+                            console.error('Download error:', error);
+                            toast({
+                              title: "Download Failed",
+                              description: "There was an error creating the ZIP file.",
                               variant: "destructive"
                             });
                           }
@@ -3183,6 +3319,12 @@ const CarCreationPage: React.FC = () => {
         <CarListEditModal 
           open={showEditModal} 
           onOpenChange={setShowEditModal} 
+        />
+        
+        {/* Image Modal for fullscreen viewing */}
+        <ImageModal 
+          imageUrl={selectedImage} 
+          onClose={() => setSelectedImage(null)} 
         />
         
         {/* Jobs Tray - only shown in photo-to-studio and marketplace modes */}

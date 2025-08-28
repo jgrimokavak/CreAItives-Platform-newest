@@ -7,6 +7,7 @@ import { persistImage } from '../fs-storage';
 import { push } from '../ws';
 import Papa from 'papaparse';
 import axios from 'axios';
+import archiver from 'archiver';
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -25,6 +26,7 @@ interface MarketplaceBatch {
   angles: string[];
   colors: string[];
   autoColorize: boolean;
+  additionalInstructions?: string;
   status: 'pending' | 'processing' | 'completed' | 'failed';
   results: MarketplaceResult[];
   createdAt: Date;
@@ -210,6 +212,11 @@ async function processMarketplaceJob(batchId: string, resultIndex: number) {
       prompt = buildPrompt(angleGen.prompt_template, {
         ANGLE_DESC: angleData.angle_desc
       });
+      
+      // Append additional instructions if provided
+      if (batch.additionalInstructions) {
+        prompt += `. ${batch.additionalInstructions}`;
+      }
       imageInput = batch.sourceImageUrls;
       
     } else if (result.type === 'color') {
@@ -252,6 +259,11 @@ async function processMarketplaceJob(batchId: string, resultIndex: number) {
       prompt = buildPrompt(colorize.prompt_template, {
         COLOR_NAME: colorData.prompt_value
       });
+      
+      // Append additional instructions if provided
+      if (batch.additionalInstructions) {
+        prompt += `. ${batch.additionalInstructions}`;
+      }
       imageInput = [angleResult.imageUrl];
     }
     
@@ -417,7 +429,7 @@ router.post('/upload', upload.array('images', 10), async (req: any, res) => {
 // Create marketplace batch
 router.post('/batch', async (req: any, res) => {
   try {
-    const { sourceImageUrls, angles, colors, autoColorize } = req.body;
+    const { sourceImageUrls, angles, colors, autoColorize, additionalInstructions } = req.body;
     console.log('[MP][SERVER] /batch', { 
       imgs: sourceImageUrls?.length || 0, 
       angles: angles?.length || 0, 
@@ -469,6 +481,7 @@ router.post('/batch', async (req: any, res) => {
       angles,
       colors,
       autoColorize,
+      additionalInstructions,
       status: 'pending',
       results,
       createdAt: new Date()
@@ -557,5 +570,97 @@ async function processMarketplaceJobWithColorTrigger(batchId: string, resultInde
     await processColorJobsForAngle(batchId, result.angleKey);
   }
 }
+
+// ZIP download endpoint for marketplace results
+router.post('/batch/:batchId/download', async (req, res) => {
+  const { batchId } = req.params;
+  const batch = marketplaceBatches.get(batchId);
+  
+  if (!batch) {
+    return res.status(404).json({ error: 'Batch not found' });
+  }
+  
+  // Get all completed results with images
+  const completedResults = batch.results.filter(result => 
+    result.status === 'completed' && result.imageUrl
+  );
+  
+  if (completedResults.length === 0) {
+    return res.status(400).json({ error: 'No completed images found' });
+  }
+  
+  try {
+    // Set headers for ZIP download
+    const timestamp = new Date().toISOString().replace(/[:T.-]/g, "").slice(0, 14);
+    const zipFileName = `marketplace_${batchId}_${timestamp}.zip`;
+    
+    res.set({
+      'Content-Type': 'application/zip',
+      'Content-Disposition': `attachment; filename="${zipFileName}"`
+    });
+    
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    
+    archive.on('error', (err: Error) => {
+      console.error('Archive error:', err);
+      res.status(500).json({ error: 'Failed to create ZIP archive' });
+    });
+    
+    archive.pipe(res);
+    
+    // Add each completed image to the ZIP
+    for (let i = 0; i < completedResults.length; i++) {
+      const result = completedResults[i];
+      
+      try {
+        // Download the image
+        if (!result.imageUrl) {
+          console.warn(`Skipping result without imageUrl: ${result.angleKey}`);
+          continue;
+        }
+        
+        const imageResponse = await axios.get(result.imageUrl, { 
+          responseType: 'arraybuffer',
+          timeout: 30000 
+        });
+        
+        // Create a filename for the image
+        const colorSuffix = result.colorKey ? `_${result.colorKey}` : '_base';
+        const fileName = `${result.angleKey}${colorSuffix}.jpg`;
+        
+        // Add to archive
+        archive.append(Buffer.from(imageResponse.data), { name: fileName });
+        
+      } catch (error) {
+        console.error(`Failed to download image for ${result.angleKey}:`, error);
+        // Continue with other images even if one fails
+      }
+    }
+    
+    // Add a summary file
+    const summary = {
+      batchId: batch.id,
+      createdAt: batch.createdAt,
+      completedAt: new Date(),
+      totalImages: completedResults.length,
+      angles: Array.from(new Set(completedResults.map(r => r.angleKey))),
+      colors: Array.from(new Set(completedResults.map(r => r.colorKey).filter(Boolean))),
+      results: completedResults.map(r => ({
+        angleKey: r.angleKey,
+        colorKey: r.colorKey,
+        fileName: `${r.angleKey}${r.colorKey ? `_${r.colorKey}` : '_base'}.jpg`
+      }))
+    };
+    
+    archive.append(JSON.stringify(summary, null, 2), { name: 'summary.json' });
+    
+    // Finalize the archive
+    await archive.finalize();
+    
+  } catch (error) {
+    console.error('ZIP creation error:', error);
+    res.status(500).json({ error: 'Failed to create ZIP file' });
+  }
+});
 
 export default router;
