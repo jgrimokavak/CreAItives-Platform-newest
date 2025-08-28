@@ -41,6 +41,12 @@ export function setupCarDataAutoRefresh(): void {
     console.log('Color data stored at:', getColorDataStoragePath());
     console.log('Prompt data stored at:', getPromptDataStoragePath());
     console.log('✅ Data is cached in object storage for instant loading!');
+
+    // Step 1: Document Photo-to-Studio reference path for Marketplace
+    console.log('[MP][SERVER] PS reference', { 
+      helper: 'objectStorage.uploadImage + persistImage', 
+      usesPublicBase: !!process.env.PUBLIC_BASE_URL 
+    });
   }, 1000);
 }
 

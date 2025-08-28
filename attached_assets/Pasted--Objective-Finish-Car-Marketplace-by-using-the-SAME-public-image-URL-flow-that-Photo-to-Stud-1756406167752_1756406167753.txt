@@ -1,0 +1,105 @@
+
+````
+Objective
+Finish Car Marketplace by using the SAME public-image URL flow that Photo-to-Studio uses. Ensure Replicate receives externally reachable HTTPS URLs (no workspace--*.repl.co), and the UI progresses Queued → Processing → Completed. Keep changes minimal and add concise logs.
+
+Non-negotiables
+- Model: "google/nano-banana", output_format: "png"
+- Prompts from CSV (no hardcoding)
+- Reuse Photo-to-Studio patterns for: uploads → public URL → Replicate → persistImage → WebSocket → image_card
+- No new limits
+
+Step 1 — Find and document the working Photo-to-Studio path (no changes yet)
+Files to inspect (names may differ slightly; search if needed):
+- `server/routes/photo-to-studio.ts` (or similar)
+- `server/storage/fs-storage.ts` (where `persistImage(...)` lives)
+- Any shared helper that returns `{ fullUrl, thumbUrl }`
+
+Confirm and LOG (one-time console.log on server boot):
+- The helper/function that Photo-to-Studio uses to turn stored files into **public absolute** URLs.
+- The base it relies on (env `PUBLIC_BASE_URL` or `req.get('host')`).
+Log: `console.log("[MP][SERVER] PS reference", { helper: "<name>", usesPublicBase: !!process.env.PUBLIC_BASE_URL })`
+
+Step 2 — Make Car Marketplace use the same URL method
+Files: `server/routes/marketplace-routes.ts`, `server/storage/fs-storage.ts` (if needed)
+
+Changes:
+- **Uploads endpoint (Marketplace)** must return `imageUrls[]` constructed by the SAME helper used by Photo-to-Studio (do NOT build URLs differently here). If the helper isn’t exported, export it; do not duplicate logic.
+- **persistImage(...)** already returns `{ fullUrl, thumbUrl }` for Photo-to-Studio. Ensure Marketplace uses those exact fields (no rewriting) when:
+  - pushing WebSocket events,
+  - sending `image_input` to Replicate for color jobs (the angle result URL must be `fullUrl`).
+
+- **Replicate input for angle jobs**: use the **upload** URLs returned by Marketplace’s upload endpoint (which now match Photo-to-Studio).
+- **Replicate input for color jobs**: `[angleFullUrl]` from the `persistImage(...)` result of the angle job.
+
+Step 3 — Validate URL reachability BEFORE Replicate (keep it compact)
+Add a small helper:
+```ts
+async function headOk(url: string) {
+  const r = await fetch(url, { method: "HEAD" });
+  console.log("[MP][SERVER] HEAD", { url, ok: r.ok, status: r.status });
+  if (!r.ok) throw new Error(`HEAD ${r.status} for ${url}`);
+}
+````
+
+* For angle jobs: `await Promise.all(sourceImageUrls.map(headOk))`
+* For color jobs: `await headOk(angleResultUrl)`
+
+Step 4 — Status pushes + logging (retain existing, keep concise)
+Before calling Replicate:
+
+```ts
+push("marketplaceJobUpdated", { batchId, result: { type, angleKey, colorKey, status: "processing" }});
+console.log("[MP][SERVER] run", { type, angleKey, colorKey, image_input_len: input.image_input.length });
+```
+
+After `persistImage(...)`:
+
+```ts
+push("marketplaceJobUpdated", { batchId, result: { type, angleKey, colorKey, status: "completed", imageUrl: fullUrl, thumbUrl }});
+console.log("[MP][SERVER] persisted", { hasImageUrl: !!fullUrl, hasThumb: !!thumbUrl });
+```
+
+On error:
+
+```ts
+push("marketplaceJobUpdated", { batchId, result: { type, angleKey, colorKey, status: "failed", error: String(err?.message||err) }});
+console.error("[MP][SERVER] job error", { type, angleKey, colorKey, msg: String(err?.message||err) });
+```
+
+Step 5 — Client stays as is, but confirm completed cells use server URLs
+File: `client/src/pages/CarCreationPage.tsx`
+
+* On `status:"completed"`, render image\_card with the **server-provided** `imageUrl` / `thumbUrl`.
+* Log: `console.log("[MP][CLIENT] cell", { batchId, angleKey, colorKey, status });`
+
+Step 6 — WebSocket single connection; remove localhost fallback (if any remains)
+File: `client/src/lib/websocket.ts`
+
+* Ensure there’s **one** WS connection and no `wss://localhost:undefined` fallback.
+* Keep: `console.log("[MP][CLIENT] WS URL", { protocol, hostname, port, url });`
+
+Environment
+
+* Confirm the same env used by Photo-to-Studio is present for Marketplace:
+
+  * `PUBLIC_BASE_URL` (e.g. `https://<your>.riker.replit.dev`)
+  * `REPLICATE_API_TOKEN`
+* If Photo-to-Studio builds public URLs without `PUBLIC_BASE_URL` (from `req.get('host')`), Marketplace must do the same.
+
+Verification (do not stop until all pass)
+A) **Parity check**
+
+* Log once: `[MP][SERVER] PS reference` shows the helper name being reused.
+  B) **Public URLs**
+* Run one batch (1 angle, 1 color). Server logs show `HEAD ok` for each URL.
+* Copy an `imageUrl` from the server logs and open it in incognito → loads directly.
+  C) **Replicate**
+* Dashboard shows calls; no NameResolutionError.
+  D) **UI**
+* Placeholders appear → cells go Processing → Completed with images; Jobs Tray updates.
+
+If any step fails, fix it and re-run until A–D pass.
+
+```
+

@@ -67,6 +67,13 @@ interface ColorPreset {
 // In-memory storage for marketplace batches
 const marketplaceBatches = new Map<string, MarketplaceBatch>();
 
+// Step 3: URL validation helper
+async function headOk(url: string) {
+  const r = await fetch(url, { method: "HEAD" });
+  console.log("[MP][SERVER] HEAD", { url, ok: r.ok, status: r.status });
+  if (!r.ok) throw new Error(`HEAD ${r.status} for ${url}`);
+}
+
 // Cache for CSV data
 let globalPromptsCache: GlobalPrompt[] | null = null;
 let anglePresetsCache: AnglePreset[] | null = null;
@@ -248,28 +255,48 @@ async function processMarketplaceJob(batchId: string, resultIndex: number) {
       imageInput = [angleResult.imageUrl];
     }
     
-    // Convert relative URLs to absolute URLs for Replicate
-    const absoluteImageInput = imageInput.map(url => {
-      if (url.startsWith('/api/')) {
-        const baseUrl = process.env.REPLIT_CLUSTER ? 
-          `https://${process.env.REPL_SLUG}--${process.env.REPL_OWNER}.repl.co` :
-          `http://localhost:${process.env.PORT || 5000}`;
-        return `${baseUrl}${url}`;
+    // Convert hosted URLs to data URIs (same pattern as Photo-to-Studio)
+    const imageDataUris: string[] = [];
+    for (const url of imageInput) {
+      try {
+        let imageBuffer: Buffer;
+        
+        if (url.startsWith('/api/object-storage/')) {
+          // Download from our own object storage
+          const objectPath = url.replace('/api/object-storage/image/', '');
+          imageBuffer = await objectStorage.downloadImage(objectPath);
+        } else {
+          // External URL (e.g., angle result from previous job)
+          const response = await fetch(url);
+          if (!response.ok) {
+            throw new Error(`Failed to download image: ${response.status}`);
+          }
+          const arrayBuffer = await response.arrayBuffer();
+          imageBuffer = Buffer.from(arrayBuffer);
+        }
+        
+        // Convert to data URI like Photo-to-Studio does
+        const base64 = imageBuffer.toString('base64');
+        const dataUri = `data:image/png;base64,${base64}`;
+        imageDataUris.push(dataUri);
+        
+      } catch (error) {
+        console.error(`Failed to convert ${url} to data URI:`, error);
+        throw new Error(`Failed to process image: ${url}`);
       }
-      return url;
-    });
+    }
     
     console.log(`[MP][SERVER] run`, { 
       type: result.type, 
       angleKey: result.angleKey, 
       colorKey: result.colorKey,
-      image_input_len: absoluteImageInput.length
+      image_input_len: imageDataUris.length
     });
     
-    // Create prediction with google/nano-banana using absolute URLs
+    // Create prediction with google/nano-banana using data URIs (same as Photo-to-Studio)
     const prediction = await createPrediction('google/nano-banana', {
       prompt,
-      image_input: absoluteImageInput,
+      image_input: imageDataUris,
       output_format: 'png'
     });
     
