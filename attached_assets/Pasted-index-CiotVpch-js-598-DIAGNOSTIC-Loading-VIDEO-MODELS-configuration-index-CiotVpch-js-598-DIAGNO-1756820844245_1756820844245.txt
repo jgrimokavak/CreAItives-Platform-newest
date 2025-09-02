@@ -1,0 +1,177 @@
+index-CiotVpch.js:598 [DIAGNOSTIC] Loading VIDEO_MODELS configuration
+index-CiotVpch.js:598 [DIAGNOSTIC] VIDEO_MODELS loaded: Object
+index-CiotVpch.js:582 [MP][CLIENT] WS URL Object
+index-CiotVpch.js:677 SW registered:  ServiceWorkerRegistration
+create:1 <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">
+index-CiotVpch.js:582 WebSocket connected
+index-CiotVpch.js:582 [MP][CLIENT] WS URL Object
+index-CiotVpch.js:582 WebSocket connected
+index-CiotVpch.js:582 ImageModal: No image URL provided, not rendering modal
+index-CiotVpch.js:582 [MP][CLIENT] WS URL Object
+index-CiotVpch.js:582 ImageModal: No image URL provided, not rendering modal
+index-CiotVpch.js:582 ImageModal: No image URL provided, not rendering modal
+index-CiotVpch.js:582 WebSocket connected
+index-CiotVpch.js:582 ImageModal: No image URL provided, not rendering modal
+index-CiotVpch.js:582 ImageModal: No image URL provided, not rendering modal
+index-CiotVpch.js:582 ImageModal: No image URL provided, not rendering modal
+index-CiotVpch.js:598 Loaded 7 color presets
+index-CiotVpch.js:582 ImageModal: No image URL provided, not rendering modal
+index-CiotVpch.js:598 Loaded 6 angle presets
+index-CiotVpch.js:582 ImageModal: No image URL provided, not rendering modal
+index-CiotVpch.js:582 ImageModal: No image URL provided, not rendering modal
+index-CiotVpch.js:582 ImageModal: No image URL provided, not rendering modal
+index-CiotVpch.js:582 ImageModal: No image URL provided, not rendering modal
+index-CiotVpch.js:582 ImageModal: No image URL provided, not rendering modal
+index-CiotVpch.js:582 ImageModal: No image URL provided, not rendering modal
+index-CiotVpch.js:582 ImageModal: No image URL provided, not rendering modal
+index-CiotVpch.js:582 ImageModal: No image URL provided, not rendering modal
+index-CiotVpch.js:582 ImageModal: No image URL provided, not rendering modal
+index-CiotVpch.js:582 ImageModal: No image URL provided, not rendering modal
+index-CiotVpch.js:582 ImageModal: No image URL provided, not rendering modal
+index-CiotVpch.js:582 [TRACE] WebSocket received event: marketplaceBatchCreated with data: Object
+index-CiotVpch.js:582 [MP] ws event marketplaceBatchCreated batchId: 67d735e7-88d1-45b9-a24b-e8b1c00d397a
+index-CiotVpch.js:598 [JobsTray] WebSocket message received: Object
+index-CiotVpch.js:582 [TRACE] WebSocket received event: marketplaceBatchCreated with data: Object
+index-CiotVpch.js:582 [MP] ws event marketplaceBatchCreated batchId: 67d735e7-88d1-45b9-a24b-e8b1c00d397a
+index-CiotVpch.js:598 [JobsTray] WebSocket message received: Object
+index-CiotVpch.js:598 [MP][CLIENT] placeholders Object
+index-CiotVpch.js:582 ImageModal: No image URL provided, not rendering modal
+index-CiotVpch.js:582 [TRACE] WebSocket received event: marketplaceJobUpdated with data: Object
+index-CiotVpch.js:582 [MP] ws event marketplaceJobUpdated batchId: 67d735e7-88d1-45b9-a24b-e8b1c00d397a
+index-CiotVpch.js:598 [JobsTray] WebSocket message received: Object
+index-CiotVpch.js:598 [MP][CLIENT][TRAY] Object
+index-CiotVpch.js:598 [MP][CLIENT] cell Object
+index-CiotVpch.js:582 ImageModal: No image URL provided, not rendering modal
+index-CiotVpch.js:582 [TRACE] WebSocket received event: marketplaceJobUpdated with data: Object
+index-CiotVpch.js:582 [MP] ws event marketplaceJobUpdated batchId: 67d735e7-88d1-45b9-a24b-e8b1c00d397a
+index-CiotVpch.js:598 [MP][CLIENT] cell Object
+index-CiotVpch.js:598 [JobsTray] WebSocket message received: Object
+index-CiotVpch.js:598 [MP][CLIENT][TRAY] Object
+index-CiotVpch.js:582 ImageModal: No image URL provided, not rendering modal
+index-CiotVpch.js:582 [TRACE] WebSocket received event: marketplaceJobUpdated with data: Object
+index-CiotVpch.js:582 [MP] ws event marketplaceJobUpdated batchId: 67d735e7-88d1-45b9-a24b-e8b1c00d397a
+index-CiotVpch.js:598 [MP][CLIENT] cell Object
+index-CiotVpch.js:598 [JobsTray] WebSocket message received: Object
+index-CiotVpch.js:598 [MP][CLIENT][TRAY] Object
+index-CiotVpch.js:582 [TRACE] WebSocket received event: marketplaceJobUpdated with data: Object
+index-CiotVpch.js:582 [MP] ws event marketplaceJobUpdated batchId: 67d735e7-88d1-45b9-a24b-e8b1c00d397a
+index-CiotVpch.js:598 [MP][CLIENT] cell Object
+index-CiotVpch.js:598 [JobsTray] WebSocket message received: Object
+index-CiotVpch.js:598 [MP][CLIENT][TRAY] Object
+index-CiotVpch.js:582 ImageModal: No image URL provided, not rendering modal
+index-CiotVpch.js:582 [TRACE] WebSocket received event: marketplaceJobUpdated with data: Object
+index-CiotVpch.js:582 [MP] ws event marketplaceJobUpdated batchId: 67d735e7-88d1-45b9-a24b-e8b1c00d397a
+index-CiotVpch.js:598 [MP][CLIENT] cell Object
+index-CiotVpch.js:598 [JobsTray] WebSocket message received: Object
+index-CiotVpch.js:598 [MP][CLIENT][TRAY] Object
+index-CiotVpch.js:582 [TRACE] WebSocket received event: marketplaceJobUpdated with data: Object
+index-CiotVpch.js:582 [MP] ws event marketplaceJobUpdated batchId: 67d735e7-88d1-45b9-a24b-e8b1c00d397a
+index-CiotVpch.js:598 [MP][CLIENT] cell Object
+index-CiotVpch.js:598 [JobsTray] WebSocket message received: Object
+index-CiotVpch.js:598 [MP][CLIENT][TRAY] Object
+index-CiotVpch.js:582 ImageModal: No image URL provided, not rendering modal
+index-CiotVpch.js:582 [TRACE] WebSocket received event: marketplaceJobUpdated with data: Object
+index-CiotVpch.js:582 [MP] ws event marketplaceJobUpdated batchId: 67d735e7-88d1-45b9-a24b-e8b1c00d397a
+index-CiotVpch.js:598 [MP][CLIENT] cell Object
+index-CiotVpch.js:598 [JobsTray] WebSocket message received: Object
+index-CiotVpch.js:598 [MP][CLIENT][TRAY] Object
+index-CiotVpch.js:582 [TRACE] WebSocket received event: marketplaceJobUpdated with data: Object
+index-CiotVpch.js:582 [MP] ws event marketplaceJobUpdated batchId: 67d735e7-88d1-45b9-a24b-e8b1c00d397a
+index-CiotVpch.js:598 [MP][CLIENT] cell Object
+index-CiotVpch.js:598 [JobsTray] WebSocket message received: Object
+index-CiotVpch.js:598 [MP][CLIENT][TRAY] Object
+index-CiotVpch.js:582 ImageModal: No image URL provided, not rendering modal
+index-CiotVpch.js:582 ImageModal: No image URL provided, not rendering modal
+index-CiotVpch.js:582 ImageModal: No image URL provided, not rendering modal
+index-CiotVpch.js:582 ImageModal: No image URL provided, not rendering modal
+api/jobs/active:1  Failed to load resource: the server responded with a status of 500 ()
+index-CiotVpch.js:598 Failed to fetch active jobs - server returned: 500
+u @ index-CiotVpch.js:598
+index-CiotVpch.js:582 ImageModal: No image URL provided, not rendering modal
+api/jobs/active:1  Failed to load resource: the server responded with a status of 500 ()
+index-CiotVpch.js:598 Failed to fetch active jobs - server returned: 500
+u @ index-CiotVpch.js:598
+index-CiotVpch.js:582 [MP][CLIENT] WS URL Object
+index-CiotVpch.js:582 ImageModal: No image URL provided, not rendering modal
+index-CiotVpch.js:582 WebSocket connection to 'wss://creaitives-platform-2-0.replit.app/ws' failed: 
+Dre @ index-CiotVpch.js:582
+index-CiotVpch.js:582 WebSocket error event: Event
+Dre.i.onerror @ index-CiotVpch.js:582
+index-CiotVpch.js:582 [MP][CLIENT] WS URL Object
+index-CiotVpch.js:582 WebSocket connection to 'wss://creaitives-platform-2-0.replit.app/ws' failed: 
+Dre @ index-CiotVpch.js:582
+index-CiotVpch.js:582 WebSocket error event: Event
+Dre.i.onerror @ index-CiotVpch.js:582
+index-CdHEvoz3.css:1  Failed to load resource: the server responded with a status of 500 ()
+car:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+car:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+car:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+car:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+car:1  Failed to load resource: the server responded with a status of 500 ()
+index-CiotVpch.js:582 [MP][CLIENT] WS URL Object
+index-CiotVpch.js:582 [MP][CLIENT] WS URL Object
+index-CiotVpch.js:582 WebSocket connection to 'wss://creaitives-platform-2-0.replit.app/ws' failed: 
+Dre @ index-CiotVpch.js:582
+i @ index-CiotVpch.js:582
+(anonymous) @ index-CiotVpch.js:582
+index-CiotVpch.js:582 WebSocket error event: Event
+Dre.i.onerror @ index-CiotVpch.js:582
+index-CiotVpch.js:582 WebSocket connection to 'wss://creaitives-platform-2-0.replit.app/ws' failed: 
+Dre @ index-CiotVpch.js:582
+i @ index-CiotVpch.js:582
+(anonymous) @ index-CiotVpch.js:582
+index-CiotVpch.js:582 WebSocket error event: Event
+Dre.i.onerror @ index-CiotVpch.js:582
+index-CiotVpch.js:582 [MP][CLIENT] WS URL Object
+index-CiotVpch.js:582 [MP][CLIENT] WS URL Object
+index-CiotVpch.js:582 WebSocket connection to 'wss://creaitives-platform-2-0.replit.app/ws' failed: 
+Dre @ index-CiotVpch.js:582
+i @ index-CiotVpch.js:582
+(anonymous) @ index-CiotVpch.js:582
+index-CiotVpch.js:582 WebSocket error event: Event
+Dre.i.onerror @ index-CiotVpch.js:582
+index-CiotVpch.js:582 WebSocket connection to 'wss://creaitives-platform-2-0.replit.app/ws' failed: 
+Dre @ index-CiotVpch.js:582
+i @ index-CiotVpch.js:582
+(anonymous) @ index-CiotVpch.js:582
+index-CiotVpch.js:582 WebSocket error event: Event
+Dre.i.onerror @ index-CiotVpch.js:582
+index-CiotVpch.js:582 [MP][CLIENT] WS URL Object
+index-CiotVpch.js:582 WebSocket connection to 'wss://creaitives-platform-2-0.replit.app/ws' failed: 
+Dre @ index-CiotVpch.js:582
+i @ index-CiotVpch.js:582
+(anonymous) @ index-CiotVpch.js:582
+index-CiotVpch.js:582 WebSocket error event: Event
+Dre.i.onerror @ index-CiotVpch.js:582
+index-CiotVpch.js:582 [MP][CLIENT] WS URL Object
+index-CiotVpch.js:582 WebSocket connection to 'wss://creaitives-platform-2-0.replit.app/ws' failed: 
+Dre @ index-CiotVpch.js:582
+i @ index-CiotVpch.js:582
+(anonymous) @ index-CiotVpch.js:582
+index-CiotVpch.js:582 WebSocket error event: Event
+Dre.i.onerror @ index-CiotVpch.js:582
+index-CiotVpch.js:582 [MP][CLIENT] WS URL Object
+index-CiotVpch.js:582 WebSocket connection to 'wss://creaitives-platform-2-0.replit.app/ws' failed: 
+Dre @ index-CiotVpch.js:582
+i @ index-CiotVpch.js:582
+(anonymous) @ index-CiotVpch.js:582
+index-CiotVpch.js:582 WebSocket error event: Event
+Dre.i.onerror @ index-CiotVpch.js:582
+index-CiotVpch.js:582 [MP][CLIENT] WS URL Object
+index-CiotVpch.js:582 WebSocket connection to 'wss://creaitives-platform-2-0.replit.app/ws' failed: 
+Dre @ index-CiotVpch.js:582
+i @ index-CiotVpch.js:582
+(anonymous) @ index-CiotVpch.js:582
+index-CiotVpch.js:582 WebSocket error event: Event
+Dre.i.onerror @ index-CiotVpch.js:582
+index-CiotVpch.js:582 [MP][CLIENT] WS URL Object
+index-CiotVpch.js:582 WebSocket connection to 'wss://creaitives-platform-2-0.replit.app/ws' failed: 
+Dre @ index-CiotVpch.js:582
+i @ index-CiotVpch.js:582
+(anonymous) @ index-CiotVpch.js:582
+index-CiotVpch.js:582 WebSocket error event: Event
+Dre.i.onerror @ index-CiotVpch.js:582
+index-CiotVpch.js:582 [MP][CLIENT] WS URL Object
+index-CiotVpch.js:582 WebSocket connected
+index-CiotVpch.js:582 [MP][CLIENT] WS URL Object
+index-CiotVpch.js:582 WebSocket connected
