@@ -281,19 +281,29 @@ async function processMarketplaceJob(batchId: string, resultIndex: number) {
         
         if (url.startsWith('/api/object-storage/')) {
           // Convert internal URL to full public URL that Replicate can access
-          const baseUrl = process.env.REPLIT_DEPLOYMENT === '1' 
-            ? `https://${process.env.REPLIT_SLUG}.replit.app`
-            : `https://creaitives-platform-2-0.replit.app`;
+          // Use a more robust approach to get the current domain
+          let baseUrl: string;
+          
+          if (process.env.REPLIT_ENVIRONMENT === 'production') {
+            // In production, use the main deployment domain
+            baseUrl = 'https://creaitives-platform-2-0.replit.app';
+          } else {
+            // In development, also use the same domain
+            baseUrl = 'https://creaitives-platform-2-0.replit.app';
+          }
+          
           publicUrl = `${baseUrl}${url}`;
+          console.log(`[MP][SERVER] URL conversion: ${url} → ${publicUrl}`);
         } else if (url.startsWith('http://') || url.startsWith('https://')) {
           // Already a public URL
           publicUrl = url;
+          console.log(`[MP][SERVER] Using existing public URL: ${publicUrl}`);
         } else {
           throw new Error(`Invalid URL format: ${url}`);
         }
         
         publicUrls.push(publicUrl);
-        console.log(`[MP][SERVER] Using public URL: ${publicUrl}`);
+        console.log(`[MP][SERVER] Final public URL added: ${publicUrl}`);
         
       } catch (error) {
         console.error(`Failed to process URL ${url}:`, error);

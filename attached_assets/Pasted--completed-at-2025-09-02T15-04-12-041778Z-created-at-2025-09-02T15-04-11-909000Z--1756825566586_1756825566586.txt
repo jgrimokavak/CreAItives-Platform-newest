@@ -1,0 +1,34 @@
+{
+  "completed_at": "2025-09-02T15:04:12.041778Z",
+  "created_at": "2025-09-02T15:04:11.909000Z",
+  "data_removed": false,
+  "error": "404 Client Error: Not Found for url: https://undefined.replit.app/api/object-storage/image/prod/temp-marketplace/c7ef3f0b-dc87-4add-8d68-9ab36ca22e39/ref-4.png",
+  "id": "8x0xxpqxgnrme0cs1bt9dwedew",
+  "input": {
+    "prompt": "Using the provided reference photos of the SAME vehicle, create a studio-quality image at rear three-quarter view ~135°, camera at taillight height..\nPreserve the exact vehicle identity and details (trim, wheels, grille, badges, stickers, dents, scratches).\nDo NOT change color. Do NOT invent new parts or angles.\nBackground: seamless light-gray curved wall + matte dark reflective floor. Cool top lighting only.\nFaithfully match the real proportions and perspective of the target angle. No added decals or props.",
+    "image_input": [
+      "https://undefined.replit.app/api/object-storage/image/prod/temp-marketplace/c7ef3f0b-dc87-4add-8d68-9ab36ca22e39/ref-1.png",
+      "https://undefined.replit.app/api/object-storage/image/prod/temp-marketplace/c7ef3f0b-dc87-4add-8d68-9ab36ca22e39/ref-2.png",
+      "https://undefined.replit.app/api/object-storage/image/prod/temp-marketplace/c7ef3f0b-dc87-4add-8d68-9ab36ca22e39/ref-3.png",
+      "https://undefined.replit.app/api/object-storage/image/prod/temp-marketplace/c7ef3f0b-dc87-4add-8d68-9ab36ca22e39/ref-4.png",
+      "https://undefined.replit.app/api/object-storage/image/prod/temp-marketplace/c7ef3f0b-dc87-4add-8d68-9ab36ca22e39/ref-5.png",
+      "https://undefined.replit.app/api/object-storage/image/prod/temp-marketplace/c7ef3f0b-dc87-4add-8d68-9ab36ca22e39/ref-6.png"
+    ],
+    "output_format": "png"
+  },
+  "logs": null,
+  "metrics": {
+    "predict_time": 0.12218128,
+    "total_time": 0.132778
+  },
+  "output": null,
+  "started_at": "2025-09-02T15:04:11.919597Z",
+  "status": "failed",
+  "urls": {
+    "stream": "https://stream.replicate.com/v1/files/bcwr-2kqbykyqjm43yyjmknkjsn43au2vpcbsw64aafvsjc4vupfckk7a",
+    "get": "https://api.replicate.com/v1/predictions/8x0xxpqxgnrme0cs1bt9dwedew",
+    "cancel": "https://api.replicate.com/v1/predictions/8x0xxpqxgnrme0cs1bt9dwedew/cancel",
+    "web": "https://replicate.com/p/8x0xxpqxgnrme0cs1bt9dwedew"
+  },
+  "version": "hidden"
+}
