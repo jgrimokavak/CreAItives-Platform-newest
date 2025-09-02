@@ -449,6 +449,119 @@ export class ObjectStorageService {
   }
 
   /**
+   * Upload temporary marketplace reference images
+   */
+  async uploadTempMarketplaceImages(imageBuffers: Buffer[], batchId: string): Promise<string[]> {
+    const envPrefix = this.getEnvironmentPrefix();
+    const urls: string[] = [];
+    
+    for (let i = 0; i < imageBuffers.length; i++) {
+      const imageId = `ref-${i + 1}`;
+      const imagePath = `${envPrefix}/temp-marketplace/${batchId}/${imageId}.png`;
+      
+      try {
+        console.log(`[MP][TEMP] Uploading reference image ${i + 1}/${imageBuffers.length} to: ${imagePath}`);
+        const uploadResult = await this.client.uploadFromBytes(imagePath, imageBuffers[i]);
+        if (!uploadResult.ok) {
+          throw new Error(`Failed to upload reference image ${i + 1}`);
+        }
+        
+        const publicUrl = `/api/object-storage/image/${imagePath}`;
+        urls.push(publicUrl);
+        console.log(`[MP][TEMP] Reference image ${i + 1} uploaded: ${publicUrl}`);
+      } catch (error) {
+        console.error(`Error uploading reference image ${i + 1}:`, error);
+        throw new Error(`Failed to upload reference image ${i + 1}: ${error}`);
+      }
+    }
+    
+    return urls;
+  }
+
+  /**
+   * Clean up temporary marketplace images for a batch
+   */
+  async cleanupTempMarketplaceImages(batchId: string): Promise<void> {
+    const envPrefix = this.getEnvironmentPrefix();
+    const batchPrefix = `${envPrefix}/temp-marketplace/${batchId}/`;
+    
+    try {
+      console.log(`[MP][CLEANUP] Starting cleanup for batch: ${batchId}`);
+      
+      // List all objects with the batch prefix
+      const listResult = await this.client.list({ prefix: batchPrefix });
+      
+      if (!listResult.ok || !listResult.value) {
+        console.log(`[MP][CLEANUP] No objects found for batch ${batchId}`);
+        return;
+      }
+      
+      const objects = listResult.value;
+      console.log(`[MP][CLEANUP] Found ${objects.length} temp objects to delete for batch ${batchId}`);
+      
+      // Delete each object
+      for (const obj of objects) {
+        const objPath = obj.name || (obj as any).path || (obj as any).key;
+        if (objPath) {
+          try {
+            await this.client.delete(objPath);
+            console.log(`[MP][CLEANUP] Deleted: ${objPath}`);
+          } catch (deleteError) {
+            console.error(`[MP][CLEANUP] Failed to delete ${objPath}:`, deleteError);
+          }
+        }
+      }
+      
+      console.log(`[MP][CLEANUP] Cleanup completed for batch ${batchId}`);
+    } catch (error) {
+      console.error(`[MP][CLEANUP] Error during cleanup for batch ${batchId}:`, error);
+    }
+  }
+
+  /**
+   * Clean up old temporary marketplace images (older than specified hours)
+   */
+  async cleanupOldTempMarketplaceImages(olderThanHours: number = 6): Promise<void> {
+    const envPrefix = this.getEnvironmentPrefix();
+    const tempPrefix = `${envPrefix}/temp-marketplace/`;
+    const cutoffTime = new Date(Date.now() - (olderThanHours * 60 * 60 * 1000));
+    
+    try {
+      console.log(`[MP][CLEANUP] Starting cleanup of temp images older than ${olderThanHours} hours`);
+      
+      // List all temp marketplace objects
+      const listResult = await this.client.list({ prefix: tempPrefix });
+      
+      if (!listResult.ok || !listResult.value) {
+        console.log(`[MP][CLEANUP] No temp marketplace objects found`);
+        return;
+      }
+      
+      const objects = listResult.value;
+      let deletedCount = 0;
+      
+      for (const obj of objects) {
+        const objPath = obj.name || (obj as any).path || (obj as any).key;
+        const lastModified = (obj as any).lastModified ? new Date((obj as any).lastModified) : new Date(0);
+        
+        if (objPath && lastModified < cutoffTime) {
+          try {
+            await this.client.delete(objPath);
+            deletedCount++;
+            console.log(`[MP][CLEANUP] Deleted old temp file: ${objPath}`);
+          } catch (deleteError) {
+            console.error(`[MP][CLEANUP] Failed to delete old temp file ${objPath}:`, deleteError);
+          }
+        }
+      }
+      
+      console.log(`[MP][CLEANUP] Cleanup completed. Deleted ${deletedCount} old temp files.`);
+    } catch (error) {
+      console.error(`[MP][CLEANUP] Error during old temp files cleanup:`, error);
+    }
+  }
+
+  /**
    * Extract first frame from video buffer and return as optimized thumbnail
    */
   private async extractVideoThumbnail(videoBuffer: Buffer): Promise<Buffer> {

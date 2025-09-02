@@ -263,7 +263,7 @@ async function processMarketplaceJob(batchId: string, resultIndex: number) {
       }
       
       prompt = buildPrompt(colorize.prompt_template, {
-        COLOR_NAME: colorPromptValue
+        COLOR_NAME: colorPromptValue || result.colorKey || 'default color'
       });
       
       // Append additional instructions if provided
@@ -273,34 +273,31 @@ async function processMarketplaceJob(batchId: string, resultIndex: number) {
       imageInput = [angleResult.imageUrl];
     }
     
-    // Convert hosted URLs to data URIs (same pattern as Photo-to-Studio)
-    const imageDataUris: string[] = [];
+    // Convert internal storage URLs to full public URLs for Replicate
+    const publicUrls: string[] = [];
     for (const url of imageInput) {
       try {
-        let imageBuffer: Buffer;
+        let publicUrl: string;
         
         if (url.startsWith('/api/object-storage/')) {
-          // Download from our own object storage
-          const objectPath = url.replace('/api/object-storage/image/', '');
-          imageBuffer = await objectStorage.downloadImage(objectPath);
+          // Convert internal URL to full public URL that Replicate can access
+          const baseUrl = process.env.REPLIT_DEPLOYMENT === '1' 
+            ? `https://${process.env.REPLIT_SLUG}.replit.app`
+            : `https://creaitives-platform-2-0.replit.app`;
+          publicUrl = `${baseUrl}${url}`;
+        } else if (url.startsWith('http://') || url.startsWith('https://')) {
+          // Already a public URL
+          publicUrl = url;
         } else {
-          // External URL (e.g., angle result from previous job)
-          const response = await fetch(url);
-          if (!response.ok) {
-            throw new Error(`Failed to download image: ${response.status}`);
-          }
-          const arrayBuffer = await response.arrayBuffer();
-          imageBuffer = Buffer.from(arrayBuffer);
+          throw new Error(`Invalid URL format: ${url}`);
         }
         
-        // Convert to data URI like Photo-to-Studio does
-        const base64 = imageBuffer.toString('base64');
-        const dataUri = `data:image/png;base64,${base64}`;
-        imageDataUris.push(dataUri);
+        publicUrls.push(publicUrl);
+        console.log(`[MP][SERVER] Using public URL: ${publicUrl}`);
         
       } catch (error) {
-        console.error(`Failed to convert ${url} to data URI:`, error);
-        throw new Error(`Failed to process image: ${url}`);
+        console.error(`Failed to process URL ${url}:`, error);
+        throw new Error(`Failed to process image URL: ${url}`);
       }
     }
     
@@ -308,13 +305,14 @@ async function processMarketplaceJob(batchId: string, resultIndex: number) {
       type: result.type, 
       angleKey: result.angleKey, 
       colorKey: result.colorKey,
-      image_input_len: imageDataUris.length
+      image_input_count: publicUrls.length,
+      using_urls: true
     });
     
-    // Create prediction with google/nano-banana using data URIs (same as Photo-to-Studio)
+    // Create prediction with google/nano-banana using public URLs (optimized approach)
     const prediction = await createPrediction('google/nano-banana', {
       prompt,
-      image_input: imageDataUris,
+      image_input: publicUrls,
       output_format: 'png'
     });
     
@@ -403,12 +401,21 @@ async function processMarketplaceJob(batchId: string, resultIndex: number) {
       batchId,
       status: batch.status
     });
+    
+    // Clean up temporary reference images for this batch after a delay
+    setTimeout(async () => {
+      try {
+        await objectStorage.cleanupTempMarketplaceImages(batchId);
+      } catch (error) {
+        console.error(`[MP][CLEANUP] Failed to cleanup temp images for batch ${batchId}:`, error);
+      }
+    }, 30000); // Wait 30 seconds before cleanup to allow for downloads
   }
 }
 
 // Routes
 
-// Upload source images for marketplace
+// Upload source images for marketplace (temporary storage)
 router.post('/upload', upload.array('images', 10), async (req: any, res) => {
   try {
     const files = req.files as Express.Multer.File[];
@@ -416,15 +423,19 @@ router.post('/upload', upload.array('images', 10), async (req: any, res) => {
       return res.status(400).json({ error: 'No images provided' });
     }
     
-    const uploadPromises = files.map(async (file) => {
-      const imageId = uuidv4();
-      const { fullUrl } = await objectStorage.uploadImage(file.buffer, imageId, 'png');
-      return fullUrl;
+    // Generate a temporary batch ID for this upload session
+    const tempBatchId = uuidv4();
+    const imageBuffers = files.map(file => file.buffer);
+    
+    console.log(`[MP][UPLOAD] Uploading ${files.length} reference images to temporary storage for batch: ${tempBatchId}`);
+    
+    // Upload all images to temporary storage
+    const imageUrls = await objectStorage.uploadTempMarketplaceImages(imageBuffers, tempBatchId);
+    
+    res.json({ 
+      imageUrls,
+      tempBatchId  // Return the temp batch ID so it can be used for cleanup
     });
-    
-    const imageUrls = await Promise.all(uploadPromises);
-    
-    res.json({ imageUrls });
     
   } catch (error: any) {
     console.error('Error uploading marketplace images:', error);
@@ -731,6 +742,16 @@ router.post('/batch/:batchId/download', async (req, res) => {
     
     // Finalize the archive
     await archive.finalize();
+    
+    // Clean up temporary reference images after successful ZIP creation
+    setTimeout(async () => {
+      try {
+        await objectStorage.cleanupTempMarketplaceImages(batchId);
+        console.log(`[MP][CLEANUP] Cleaned up temp images for batch ${batchId} after ZIP download`);
+      } catch (error) {
+        console.error(`[MP][CLEANUP] Failed to cleanup temp images for batch ${batchId}:`, error);
+      }
+    }, 5000); // Wait 5 seconds after ZIP completion
     
   } catch (error) {
     console.error('ZIP creation error:', error);

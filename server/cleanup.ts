@@ -105,6 +105,15 @@ export const setupCleanupJob = () => {
         }
       }
       
+      // Step 3: Clean up old marketplace temporary reference images
+      try {
+        const { objectStorage } = await import('./objectStorage');
+        await objectStorage.cleanupOldTempMarketplaceImages(6); // Clean temp files older than 6 hours
+        console.log('Successfully cleaned up old marketplace temporary images');
+      } catch (marketplaceCleanupErr) {
+        console.error('Error cleaning up marketplace temporary images:', marketplaceCleanupErr);
+      }
+      
       console.log(`Cleanup completed: ${dbRecordsDeleted} database records removed, ${filesDeleted} temp files deleted`);
       console.log('NOTE: Image files in /uploads are now preserved and only removed when database records are deleted');
       
