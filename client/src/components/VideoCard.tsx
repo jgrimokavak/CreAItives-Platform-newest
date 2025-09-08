@@ -32,6 +32,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
+import { useIntersectionObserver } from '@/hooks/use-intersection-observer';
 import { 
   MoreHorizontal, 
   Download, 
@@ -55,13 +56,14 @@ export interface VideoCardProps {
     firstFrameImage?: string | null; // base64 encoded first frame image
     status: 'pending' | 'processing' | 'completed' | 'failed';
     prompt: string;
-    model: string;
+    model?: string; // Made optional for lazy loading
     resolution?: string | null;
     duration?: string | null;
     projectId?: string | null;
     createdAt?: string | null;
     referenceImageUrl?: string | null; // Reference image used in generation (if any)
   };
+  lazyLoad?: boolean; // Enable lazy loading of full video details
   draggable?: boolean;
   onDelete?: (id: string) => void;
   onMove?: (id: string, projectId: string | null) => void;
@@ -79,6 +81,7 @@ interface Project {
 
 export default function VideoCard({ 
   video, 
+  lazyLoad = false,
   draggable = false, 
   onDelete, 
   onMove, 
@@ -94,6 +97,25 @@ export default function VideoCard({
   const [showPromptDialog, setShowPromptDialog] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
+  // Intersection observer for lazy loading
+  const { elementRef, isVisible } = useIntersectionObserver({
+    threshold: 0.1,
+    rootMargin: '50px',
+    triggerOnce: true,
+  });
+
+  // Lazy load full video details when card becomes visible
+  const { data: fullVideoData, isLoading: isLoadingDetails } = useQuery({
+    queryKey: ['/api/video', video.id, 'details'],
+    queryFn: () => apiRequest(`/api/video/${video.id}`),
+    enabled: lazyLoad && isVisible,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
+  // Use full data if available, otherwise use initial video data
+  const currentVideo = lazyLoad && fullVideoData?.video ? fullVideoData.video : video;
+  const isLoadingVideo = lazyLoad && isVisible && isLoadingDetails;
+
   // Force video element to reload when source changes to prevent mismatches
   useEffect(() => {
     if (!videoRef.current) return;
@@ -103,13 +125,13 @@ export default function VideoCard({
         videoRef.current.pause();
       } catch {}
       videoRef.current.load();
-      prevUrlRef.current = video.url || undefined;
+      prevUrlRef.current = currentVideo.url || undefined;
     }
-  }, [video.url]);
+  }, [currentVideo.url]);
 
   // Auto-play functionality
   useEffect(() => {
-    if (autoPlay && video.status === 'completed' && video.url && videoRef.current) {
+    if (autoPlay && currentVideo.status === 'completed' && currentVideo.url && videoRef.current) {
       const videoElement = videoRef.current;
       const playVideo = () => {
         videoElement.play().catch(console.warn);
@@ -118,7 +140,7 @@ export default function VideoCard({
       // Slight delay to ensure video is loaded
       setTimeout(playVideo, 300);
     }
-  }, [autoPlay, video.status, video.url]);
+  }, [autoPlay, currentVideo.status, currentVideo.url]);
 
   // Fetch projects for move menu
   const { data: projects } = useQuery<Project[]>({
@@ -136,13 +158,13 @@ export default function VideoCard({
       // Invalidate all relevant queries
       queryClient.invalidateQueries({ queryKey: ['/api/video'] });
       queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
-      if (video.projectId) {
+      if (currentVideo.projectId) {
         queryClient.invalidateQueries({ 
-          queryKey: ['/api/projects', video.projectId, 'details'] 
+          queryKey: ['/api/projects', currentVideo.projectId, 'details'] 
         });
       }
       
-      onDelete?.(video.id);
+      onDelete?.(currentVideo.id);
     },
     onError: (error: any) => {
       toast({
@@ -173,9 +195,9 @@ export default function VideoCard({
       // Invalidate all relevant queries
       queryClient.invalidateQueries({ queryKey: ['/api/video'] });
       queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
-      if (video.projectId) {
+      if (currentVideo.projectId) {
         queryClient.invalidateQueries({ 
-          queryKey: ['/api/projects', video.projectId, 'details'] 
+          queryKey: ['/api/projects', currentVideo.projectId, 'details'] 
         });
       }
       if (projectId) {
@@ -184,7 +206,7 @@ export default function VideoCard({
         });
       }
       
-      onMove?.(video.id, projectId || null);
+      onMove?.(currentVideo.id, projectId || null);
     },
     onError: (error: any) => {
       toast({
@@ -204,16 +226,16 @@ export default function VideoCard({
   };
 
   const handleDownload = async () => {
-    if (!video.url) return;
+    if (!currentVideo.url) return;
     
     setIsDownloading(true);
     try {
-      const response = await fetch(video.url);
+      const response = await fetch(currentVideo.url);
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `video-${video.id}.mp4`;
+      link.download = `video-${currentVideo.id}.mp4`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -233,12 +255,12 @@ export default function VideoCard({
 
   const handleDelete = () => {
     if (window.confirm('Are you sure you want to delete this video? This action cannot be undone.')) {
-      deleteMutation.mutate(video.id);
+      deleteMutation.mutate(currentVideo.id);
     }
   };
 
   const handleMove = (projectId: string | null) => {
-    moveMutation.mutate({ videoId: video.id, projectId });
+    moveMutation.mutate({ videoId: currentVideo.id, projectId });
   };
 
   const copyToClipboard = async (text: string, successMessage: string) => {
@@ -357,7 +379,11 @@ export default function VideoCard({
   };
 
   return (
-    <Card className={cn("group relative overflow-hidden", className)} draggable={draggable}>
+    <Card 
+      ref={elementRef}
+      className={cn("group relative overflow-hidden", className)} 
+      draggable={draggable}
+    >
       <CardContent className="p-0">
         {/* Video/Thumbnail Section - Responsive aspect ratio */}
         <div className={`bg-muted relative overflow-hidden ${
@@ -378,7 +404,7 @@ export default function VideoCard({
             </div>
           )}
           
-          {video.url && video.status === 'completed' ? (
+          {currentVideo.url && currentVideo.status === 'completed' ? (
             <video
               ref={videoRef}
               controls
@@ -392,13 +418,13 @@ export default function VideoCard({
               onPause={() => setIsPlaying(false)}
               onEnded={() => setIsPlaying(false)}
             >
-              <source src={video.url} type="video/mp4" />
+              <source src={currentVideo.url} type="video/mp4" />
               Your browser does not support the video tag.
             </video>
           ) : hasThumbnail() ? (
             <img
               src={getPosterSrc()!}
-              alt={video.prompt}
+              alt={currentVideo.prompt}
               className={expanded 
                 ? "max-w-full max-h-[70vh] object-contain" 
                 : "w-full h-full object-cover"
@@ -407,7 +433,7 @@ export default function VideoCard({
           ) : null}
 
           {/* Status processing overlay */}
-          {video.status === 'processing' && (
+          {currentVideo.status === 'processing' && (
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
               <Loader2 className="w-8 h-8 animate-spin text-white" />
             </div>
@@ -416,7 +442,7 @@ export default function VideoCard({
           {/* Top-right action cluster */}
           <div className="absolute top-3 right-3 flex items-center gap-2">
             {/* Download Button - visible for completed videos */}
-            {video.url && video.status === 'completed' && (
+            {currentVideo.url && currentVideo.status === 'completed' && (
               <Button
                 size="sm"
                 variant="secondary"
@@ -445,7 +471,7 @@ export default function VideoCard({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                {video.url && video.status === 'completed' && (
+                {currentVideo.url && currentVideo.status === 'completed' && (
                   <>
                     <DropdownMenuItem onClick={handleDownload}>
                       <Download className="w-4 h-4 mr-2" />
@@ -455,7 +481,7 @@ export default function VideoCard({
                   </>
                 )}
                 
-                <DropdownMenuItem onClick={() => copyToClipboard(video.prompt, 'Prompt copied to clipboard')}>
+                <DropdownMenuItem onClick={() => copyToClipboard(currentVideo.prompt, 'Prompt copied to clipboard')}>
                   <Copy className="w-4 h-4 mr-2" />
                   Copy prompt
                 </DropdownMenuItem>
@@ -476,10 +502,10 @@ export default function VideoCard({
                       <DropdownMenuItem 
                         key={project.id} 
                         onClick={() => handleMove(project.id)}
-                        disabled={video.projectId === project.id}
+                        disabled={currentVideo.projectId === project.id}
                       >
                         {project.name}
-                        {video.projectId === project.id && (
+                        {currentVideo.projectId === project.id && (
                           <span className="ml-auto text-xs text-muted-foreground">Current</span>
                         )}
                       </DropdownMenuItem>
@@ -502,11 +528,11 @@ export default function VideoCard({
             
             {/* Status Badge */}
             <Badge 
-              variant={getStatusVariant(video.status)} 
+              variant={getStatusVariant(currentVideo.status)} 
               className="text-xs flex items-center gap-1 ml-1"
             >
-              {getStatusIcon(video.status)}
-              {video.status}
+              {getStatusIcon(currentVideo.status)}
+              {currentVideo.status}
             </Badge>
           </div>
         </div>
@@ -515,8 +541,8 @@ export default function VideoCard({
         <div className="p-4 space-y-3">
           {/* Prompt Section */}
           <div className="space-y-2">
-            <p className="text-sm font-medium line-clamp-2 leading-relaxed" title={video.prompt}>
-              {video.prompt}
+            <p className="text-sm font-medium line-clamp-2 leading-relaxed" title={currentVideo.prompt}>
+              {currentVideo.prompt}
             </p>
             <Dialog open={showPromptDialog} onOpenChange={setShowPromptDialog}>
               <DialogTrigger asChild>
@@ -536,14 +562,14 @@ export default function VideoCard({
                 <ScrollArea className="max-h-96 pr-4">
                   <div className="p-4 bg-muted rounded-lg">
                     <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                      {video.prompt}
+                      {currentVideo.prompt}
                     </p>
                   </div>
                 </ScrollArea>
                 <DialogFooter className="gap-2">
                   <Button
                     variant="outline"
-                    onClick={() => copyToClipboard(video.prompt, 'Prompt copied to clipboard')}
+                    onClick={() => copyToClipboard(currentVideo.prompt, 'Prompt copied to clipboard')}
                   >
                     <Copy className="w-4 h-4 mr-2" />
                     Copy prompt
@@ -559,21 +585,31 @@ export default function VideoCard({
           {/* Metadata Row */}
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <div className="flex items-center gap-2">
-              <span className="font-medium">{video.model}</span>
-              {video.resolution && (
-                <>
+              {isLoadingVideo ? (
+                <div className="flex items-center gap-2">
+                  <div className="h-3 w-16 bg-muted animate-pulse rounded" />
                   <span className="opacity-50">•</span>
-                  <span>{video.resolution}</span>
-                </>
-              )}
-              {video.duration && (
+                  <div className="h-3 w-12 bg-muted animate-pulse rounded" />
+                </div>
+              ) : (
                 <>
-                  <span className="opacity-50">•</span>
-                  <span>{video.duration}s</span>
+                  <span className="font-medium">{currentVideo.model || 'Loading...'}</span>
+                  {currentVideo.resolution && (
+                    <>
+                      <span className="opacity-50">•</span>
+                      <span>{currentVideo.resolution}</span>
+                    </>
+                  )}
+                  {currentVideo.duration && (
+                    <>
+                      <span className="opacity-50">•</span>
+                      <span>{currentVideo.duration}s</span>
+                    </>
+                  )}
                 </>
               )}
             </div>
-            <span className="tabular-nums">{formatDate(video.createdAt || null)}</span>
+            <span className="tabular-nums">{formatDate(currentVideo.createdAt || null)}</span>
           </div>
 
           {/* Reference Image Chip (only if reference was used) */}
