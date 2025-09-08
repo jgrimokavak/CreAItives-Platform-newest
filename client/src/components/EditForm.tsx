@@ -179,7 +179,7 @@ export default function EditForm({
       
       // If negative prompt exists and is applicable
       if (data.negativePrompt && 
-          dynamicEditModelCatalog[modelKey as string]?.visible?.includes("negative_prompt" as any)) {
+          (dynamicEditModelCatalog as any)[modelKey]?.visible?.includes("negative_prompt" as any)) {
         form.setValue("negative_prompt" as keyof GenericFormValues, data.negativePrompt);
       }
       
@@ -349,7 +349,7 @@ export default function EditForm({
       const imageUrls = await uploadEditFiles();
       
       // Only send values that are applicable to the current model
-      const visibleFields = dynamicEditModelCatalog[modelKey as string]?.visible || [];
+      const visibleFields = (dynamicEditModelCatalog as any)[modelKey]?.visible || [];
       const filteredValues: Record<string, any> = { modelKey };
       
       visibleFields.forEach((field: string) => {

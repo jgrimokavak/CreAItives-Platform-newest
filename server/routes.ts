@@ -1384,32 +1384,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return;
       }
       
-      // Convert all images to base64
+      // Convert all images to public URLs (following marketplace pattern)
       const images: string[] = [];
       
-      // Handle imageUrls (download and convert to base64)
+      // Handle imageUrls (convert to public URLs - marketplace pattern)
       for (const imageUrl of imageUrls) {
         try {
-          const { objectStorage } = await import('./objectStorage');
-          // Convert relative URL to absolute path
-          const imagePath = imageUrl.replace('/api/object-storage/image/', '');
-          const imageBuffer = await objectStorage.downloadAsBytes(imagePath);
+          let publicUrl: string;
           
-          // Get file extension from path to determine MIME type
-          const ext = imagePath.split('.').pop()?.toLowerCase();
-          const mimeType = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
+          if (imageUrl.startsWith('/api/object-storage/image/')) {
+            // Convert relative URL to absolute public URL (exact marketplace logic)
+            const baseUrl = process.env.REPLIT_DEPLOYMENT ? 
+              `https://${process.env.REPLIT_URL}` : 
+              'http://localhost:5000';
+            
+            publicUrl = `${baseUrl}${imageUrl}`;
+            console.log(`[EDIT] URL conversion: ${imageUrl} → ${publicUrl}`);
+          } else if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+            // Already a public URL
+            publicUrl = imageUrl;
+            console.log(`[EDIT] Using existing public URL: ${publicUrl}`);
+          } else {
+            throw new Error(`Invalid URL format: ${imageUrl}`);
+          }
           
-          const base64 = `data:${mimeType};base64,${imageBuffer.toString('base64')}`;
-          images.push(base64);
+          images.push(publicUrl);
         } catch (error) {
-          console.error(`Failed to download image ${imageUrl}:`, error);
+          console.error(`Failed to process image URL ${imageUrl}:`, error);
           job.status = "error";
-          job.error = `Failed to download image: ${imageUrl}`;
+          job.error = `Failed to process image URL: ${imageUrl}`;
           return;
         }
       }
       
-      // Handle uploaded files (convert to base64)
+      // Handle uploaded files (convert to base64 for legacy support)
       for (const file of imgFiles) {
         const base64 = `data:image/${file.mimetype.split('/')[1]};base64,${file.buffer.toString('base64')}`;
         images.push(base64);
