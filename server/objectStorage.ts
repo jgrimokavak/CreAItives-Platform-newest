@@ -7,20 +7,33 @@ import { spawn } from 'child_process';
 // Environment-aware Object Storage service for kavak-gallery bucket
 export class ObjectStorageService {
   private client: Client;
+  private environmentPrefix: string;
 
   constructor() {
-    // Initialize client - it will automatically use the default bucket
-    this.client = new Client();
+    // Determine environment at construction time for consistency
+    const isDeployed = process.env.REPLIT_DEPLOYMENT === '1';
+    this.environmentPrefix = isDeployed ? 'prod' : 'dev';
+    
+    console.log(`[OBJECT-STORAGE] Initializing with environment: ${this.environmentPrefix}`);
+    console.log(`[OBJECT-STORAGE] REPLIT_DEPLOYMENT = "${process.env.REPLIT_DEPLOYMENT}"`);
+    console.log(`[OBJECT-STORAGE] NODE_ENV = "${process.env.NODE_ENV}"`);
+    
+    try {
+      // Initialize client - it will automatically use the default bucket
+      this.client = new Client();
+      console.log(`[OBJECT-STORAGE] Client initialized successfully for ${this.environmentPrefix} environment`);
+    } catch (error) {
+      console.error(`[OBJECT-STORAGE] Failed to initialize client:`, error);
+      throw new Error(`Object Storage client initialization failed: ${error}`);
+    }
   }
 
   /**
    * Get environment-aware path prefix (dev/ or prod/)
    */
   private getEnvironmentPrefix(): string {
-    const isDeployed = process.env.REPLIT_DEPLOYMENT === '1';
-    const prefix = isDeployed ? 'prod' : 'dev';
-    console.log(`[ENV] Environment detection - REPLIT_DEPLOYMENT: "${process.env.REPLIT_DEPLOYMENT}", prefix: "${prefix}"`);
-    return prefix;
+    // Return cached environment prefix for consistency
+    return this.environmentPrefix;
   }
 
   /**
@@ -572,34 +585,64 @@ export class ObjectStorageService {
     
     console.log(`[EDIT][TEMP] Starting upload of ${imageBuffers.length} images for session: ${editSessionId}`);
     console.log(`[EDIT][TEMP] Using environment prefix: ${envPrefix}`);
+    console.log(`[EDIT][TEMP] Object storage client status: ${this.client ? 'initialized' : 'not initialized'}`);
+    
+    // Verify client is available
+    if (!this.client) {
+      const error = new Error('Object storage client not initialized');
+      console.error(`[EDIT][TEMP] ${error.message}`);
+      throw error;
+    }
     
     for (let i = 0; i < imageBuffers.length; i++) {
       const imageId = `edit-${i + 1}`;
       const imagePath = `${envPrefix}/temp-edit/${editSessionId}/${imageId}.png`;
       
+      // Validate buffer before upload
+      if (!imageBuffers[i] || imageBuffers[i].length === 0) {
+        const error = new Error(`Image buffer ${i + 1} is empty or invalid`);
+        console.error(`[EDIT][TEMP] ${error.message}`);
+        throw error;
+      }
+      
       try {
         console.log(`[EDIT][TEMP] Uploading edit image ${i + 1}/${imageBuffers.length} to: ${imagePath}`);
         console.log(`[EDIT][TEMP] Buffer size: ${imageBuffers[i].length} bytes`);
         
-        const uploadResult = await this.client.uploadFromBytes(imagePath, imageBuffers[i]);
-        console.log(`[EDIT][TEMP] Upload result:`, JSON.stringify(uploadResult, null, 2));
+        // Add timeout to prevent hanging in production
+        const uploadPromise = this.client.uploadFromBytes(imagePath, imageBuffers[i]);
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Upload timeout after 30 seconds')), 30000);
+        });
         
-        if (!uploadResult.ok) {
+        const uploadResult = await Promise.race([uploadPromise, timeoutPromise]) as any;
+        console.log(`[EDIT][TEMP] Upload result for image ${i + 1}:`, JSON.stringify(uploadResult, null, 2));
+        
+        if (!uploadResult || !uploadResult.ok) {
+          const errorMsg = uploadResult?.error || 'Upload returned false/null result';
           console.error(`[EDIT][TEMP] Upload failed for image ${i + 1}:`, uploadResult);
-          throw new Error(`Failed to upload edit image ${i + 1}: ${uploadResult.error || 'Unknown error'}`);
+          throw new Error(`Upload failed: ${errorMsg}`);
         }
         
         const publicUrl = `/api/object-storage/image/${imagePath}`;
         urls.push(publicUrl);
         console.log(`[EDIT][TEMP] Edit image ${i + 1} uploaded successfully: ${publicUrl}`);
+        
       } catch (error) {
         console.error(`[EDIT][TEMP] Error uploading edit image ${i + 1}:`, error);
-        console.error(`[EDIT][TEMP] Error stack:`, (error as Error).stack);
-        throw new Error(`Failed to upload edit image ${i + 1}: ${error}`);
+        console.error(`[EDIT][TEMP] Error details:`, {
+          message: (error as Error).message,
+          name: (error as Error).name,
+          stack: (error as Error).stack
+        });
+        
+        // Provide detailed error for troubleshooting
+        throw new Error(`Failed to upload image ${i + 1} to ${imagePath}: ${(error as Error).message}`);
       }
     }
     
-    console.log(`[EDIT][TEMP] All images uploaded successfully. URLs: ${urls.join(', ')}`);
+    console.log(`[EDIT][TEMP] All ${imageBuffers.length} images uploaded successfully!`);
+    console.log(`[EDIT][TEMP] Generated URLs:`, urls);
     return urls;
   }
 
