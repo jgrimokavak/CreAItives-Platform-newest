@@ -32,7 +32,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
-import { useIntersectionObserver } from '@/hooks/use-intersection-observer';
 import { 
   MoreHorizontal, 
   Download, 
@@ -97,24 +96,20 @@ export default function VideoCard({
   const [showPromptDialog, setShowPromptDialog] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  // Intersection observer for lazy loading
-  const { elementRef, isVisible } = useIntersectionObserver({
-    threshold: 0.1,
-    rootMargin: '50px',
-    triggerOnce: true,
-  });
+  // Click-based lazy loading state
+  const [hasClicked, setHasClicked] = useState(false);
 
-  // Lazy load full video details when card becomes visible
+  // Lazy load full video details when card is clicked
   const { data: fullVideoData, isLoading: isLoadingDetails } = useQuery({
     queryKey: ['/api/video', video.id, 'details'],
     queryFn: () => apiRequest(`/api/video/${video.id}`),
-    enabled: lazyLoad && isVisible,
+    enabled: lazyLoad && hasClicked,
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
   // Use full data if available, otherwise use initial video data
   const currentVideo = lazyLoad && fullVideoData?.video ? fullVideoData.video : video;
-  const isLoadingVideo = lazyLoad && isVisible && isLoadingDetails;
+  const isLoadingVideo = lazyLoad && hasClicked && isLoadingDetails;
 
   // Force video element to reload when source changes to prevent mismatches
   useEffect(() => {
@@ -378,11 +373,17 @@ export default function VideoCard({
     }
   };
 
+  const handleCardClick = () => {
+    if (lazyLoad && !hasClicked) {
+      setHasClicked(true);
+    }
+  };
+
   return (
     <Card 
-      ref={elementRef}
-      className={cn("group relative overflow-hidden", className)} 
+      className={cn("group relative overflow-hidden cursor-pointer", className)} 
       draggable={draggable}
+      onClick={handleCardClick}
     >
       <CardContent className="p-0">
         {/* Video/Thumbnail Section - Responsive aspect ratio */}
