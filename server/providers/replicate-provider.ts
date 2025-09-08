@@ -130,7 +130,7 @@ export class ReplicateProvider extends BaseProvider {
     }
     
     // Combine defaults with user inputs
-    const body: Record<string, any> = { 
+    let body: Record<string, any> = { 
       ...this.getDefaults(modelKey),
       ...params,
       prompt 
@@ -199,6 +199,19 @@ export class ReplicateProvider extends BaseProvider {
         
         body.image_input = publicUrls;
       }
+      
+      // Filter to only supported parameters - nano banana only accepts these three fields
+      const allowedFields = ['prompt', 'image_input', 'output_format'];
+      const filteredBody: Record<string, any> = {};
+      
+      for (const field of allowedFields) {
+        if (body[field] !== undefined) {
+          filteredBody[field] = body[field];
+        }
+      }
+      
+      console.log(`[GENERATE] Filtered nano-banana parameters:`, Object.keys(filteredBody));
+      body = filteredBody;
     }
     
     // Field mapping for flux-krea-dev
