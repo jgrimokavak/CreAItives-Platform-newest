@@ -43,7 +43,8 @@ import {
   Eye,
   Copy,
   Image as ImageIcon,
-  ExternalLink
+  ExternalLink,
+  Play
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -95,6 +96,8 @@ export default function VideoCard({
   const [isPlaying, setIsPlaying] = useState(false);
   const [showPromptDialog, setShowPromptDialog] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  // Show video player immediately if autoPlay is true, otherwise wait for click
+  const [showVideoPlayer, setShowVideoPlayer] = useState(autoPlay);
 
   // Click-based lazy loading state
   const [hasClicked, setHasClicked] = useState(false);
@@ -220,7 +223,8 @@ export default function VideoCard({
     }
   };
 
-  const handleDownload = async () => {
+  const handleDownload = async (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     if (!currentVideo.url) return;
     
     setIsDownloading(true);
@@ -377,6 +381,10 @@ export default function VideoCard({
     if (lazyLoad && !hasClicked) {
       setHasClicked(true);
     }
+    // Only show video player on click for completed videos
+    if (currentVideo.status === 'completed' && currentVideo.url && !showVideoPlayer) {
+      setShowVideoPlayer(true);
+    }
   };
 
   return (
@@ -405,7 +413,7 @@ export default function VideoCard({
             </div>
           )}
           
-          {currentVideo.url && currentVideo.status === 'completed' ? (
+          {showVideoPlayer && currentVideo.url && currentVideo.status === 'completed' ? (
             <video
               ref={videoRef}
               controls
@@ -423,14 +431,24 @@ export default function VideoCard({
               Your browser does not support the video tag.
             </video>
           ) : hasThumbnail() ? (
-            <img
-              src={getPosterSrc()!}
-              alt={currentVideo.prompt}
-              className={expanded 
-                ? "max-w-full max-h-[70vh] object-contain" 
-                : "w-full h-full object-cover"
-              }
-            />
+            <>
+              <img
+                src={getPosterSrc()!}
+                alt={currentVideo.prompt}
+                className={expanded 
+                  ? "max-w-full max-h-[70vh] object-contain" 
+                  : "w-full h-full object-cover"
+                }
+              />
+              {/* Play button overlay - show when video is ready but not loaded */}
+              {!showVideoPlayer && currentVideo.url && currentVideo.status === 'completed' && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="bg-black/60 rounded-full p-3 hover:bg-black/80 transition-colors">
+                    <Play className="w-8 h-8 text-white fill-white" />
+                  </div>
+                </div>
+              )}
+            </>
           ) : null}
 
           {/* Status processing overlay */}
