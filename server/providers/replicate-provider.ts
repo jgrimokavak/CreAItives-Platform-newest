@@ -168,15 +168,19 @@ export class ReplicateProvider extends BaseProvider {
             // Convert relative URL to absolute public URL
             let baseUrl: string;
             
-            if (process.env.REPLIT_DEPLOYMENT) {
-              // Production deployment
-              baseUrl = `https://${process.env.REPLIT_URL}`;
+            if (process.env.REPLIT_DEPLOYMENT === '1') {
+              // Production deployment - use REPLIT_DOMAINS
+              const domain = process.env.REPLIT_DOMAINS || process.env.REPLIT_DEV_DOMAIN;
+              baseUrl = `https://${domain}`;
+              console.log(`[GENERATE] Production mode - using domain: ${domain}`);
             } else if (process.env.REPLIT_DEV_DOMAIN) {
               // Development on Replit
               baseUrl = `https://${process.env.REPLIT_DEV_DOMAIN}`;
+              console.log(`[GENERATE] Development mode - using domain: ${process.env.REPLIT_DEV_DOMAIN}`);
             } else {
               // Local development fallback
               baseUrl = 'http://localhost:5000';
+              console.log(`[GENERATE] Local mode - using localhost`);
             }
             
             publicUrl = `${baseUrl}${imageUrl}`;

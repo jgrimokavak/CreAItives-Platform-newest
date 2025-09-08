@@ -1396,15 +1396,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Convert relative URL to absolute public URL (using correct Replit domains)
             let baseUrl: string;
             
-            if (process.env.REPLIT_DEPLOYMENT) {
-              // Production deployment
-              baseUrl = `https://${process.env.REPLIT_URL}`;
+            if (process.env.REPLIT_DEPLOYMENT === '1') {
+              // Production deployment - use REPLIT_DOMAINS
+              const domain = process.env.REPLIT_DOMAINS || process.env.REPLIT_DEV_DOMAIN;
+              baseUrl = `https://${domain}`;
+              console.log(`[EDIT] Production mode - using domain: ${domain}`);
             } else if (process.env.REPLIT_DEV_DOMAIN) {
               // Development on Replit
               baseUrl = `https://${process.env.REPLIT_DEV_DOMAIN}`;
+              console.log(`[EDIT] Development mode - using domain: ${process.env.REPLIT_DEV_DOMAIN}`);
             } else {
               // Local development fallback
               baseUrl = 'http://localhost:5000';
+              console.log(`[EDIT] Local mode - using localhost`);
             }
             
             publicUrl = `${baseUrl}${imageUrl}`;
