@@ -562,6 +562,119 @@ export class ObjectStorageService {
   }
 
   /**
+   * Upload temporary edit images for multi-image editing
+   */
+  async uploadTempEditImages(imageBuffers: Buffer[], editSessionId: string): Promise<string[]> {
+    const envPrefix = this.getEnvironmentPrefix();
+    const urls: string[] = [];
+    
+    for (let i = 0; i < imageBuffers.length; i++) {
+      const imageId = `edit-${i + 1}`;
+      const imagePath = `${envPrefix}/temp-edit/${editSessionId}/${imageId}.png`;
+      
+      try {
+        console.log(`[EDIT][TEMP] Uploading edit image ${i + 1}/${imageBuffers.length} to: ${imagePath}`);
+        const uploadResult = await this.client.uploadFromBytes(imagePath, imageBuffers[i]);
+        if (!uploadResult.ok) {
+          throw new Error(`Failed to upload edit image ${i + 1}`);
+        }
+        
+        const publicUrl = `/api/object-storage/image/${imagePath}`;
+        urls.push(publicUrl);
+        console.log(`[EDIT][TEMP] Edit image ${i + 1} uploaded: ${publicUrl}`);
+      } catch (error) {
+        console.error(`Error uploading edit image ${i + 1}:`, error);
+        throw new Error(`Failed to upload edit image ${i + 1}: ${error}`);
+      }
+    }
+    
+    return urls;
+  }
+
+  /**
+   * Clean up temporary edit images for a session
+   */
+  async cleanupTempEditImages(editSessionId: string): Promise<void> {
+    const envPrefix = this.getEnvironmentPrefix();
+    const sessionPrefix = `${envPrefix}/temp-edit/${editSessionId}/`;
+    
+    try {
+      console.log(`[EDIT][CLEANUP] Starting cleanup for edit session: ${editSessionId}`);
+      
+      // List all objects with the session prefix
+      const listResult = await this.client.list({ prefix: sessionPrefix });
+      
+      if (!listResult.ok || !listResult.value) {
+        console.log(`[EDIT][CLEANUP] No objects found for edit session ${editSessionId}`);
+        return;
+      }
+      
+      const objects = listResult.value;
+      console.log(`[EDIT][CLEANUP] Found ${objects.length} temp objects to delete for edit session ${editSessionId}`);
+      
+      // Delete each object
+      for (const obj of objects) {
+        const objPath = obj.name || (obj as any).path || (obj as any).key;
+        if (objPath) {
+          try {
+            await this.client.delete(objPath);
+            console.log(`[EDIT][CLEANUP] Deleted: ${objPath}`);
+          } catch (deleteError) {
+            console.error(`[EDIT][CLEANUP] Failed to delete ${objPath}:`, deleteError);
+          }
+        }
+      }
+      
+      console.log(`[EDIT][CLEANUP] Cleanup completed for edit session ${editSessionId}`);
+    } catch (error) {
+      console.error(`[EDIT][CLEANUP] Error during cleanup for edit session ${editSessionId}:`, error);
+    }
+  }
+
+  /**
+   * Clean up old temporary edit images (older than specified hours)
+   */
+  async cleanupOldTempEditImages(olderThanHours: number = 6): Promise<void> {
+    const envPrefix = this.getEnvironmentPrefix();
+    const tempPrefix = `${envPrefix}/temp-edit/`;
+    const cutoffTime = new Date(Date.now() - (olderThanHours * 60 * 60 * 1000));
+    
+    try {
+      console.log(`[EDIT][CLEANUP] Starting cleanup of temp edit images older than ${olderThanHours} hours`);
+      
+      // List all temp edit objects
+      const listResult = await this.client.list({ prefix: tempPrefix });
+      
+      if (!listResult.ok || !listResult.value) {
+        console.log(`[EDIT][CLEANUP] No temp edit objects found`);
+        return;
+      }
+      
+      const objects = listResult.value;
+      let deletedCount = 0;
+      
+      for (const obj of objects) {
+        const objPath = obj.name || (obj as any).path || (obj as any).key;
+        const lastModified = (obj as any).lastModified ? new Date((obj as any).lastModified) : new Date(0);
+        
+        if (objPath && lastModified < cutoffTime) {
+          try {
+            await this.client.delete(objPath);
+            deletedCount++;
+            console.log(`[EDIT][CLEANUP] Deleted old temp edit file: ${objPath}`);
+          } catch (deleteError) {
+            console.error(`[EDIT][CLEANUP] Failed to delete old temp edit file ${objPath}:`, deleteError);
+          }
+        }
+      }
+      
+      console.log(`[EDIT][CLEANUP] Cleanup completed. Deleted ${deletedCount} old temp edit files.`);
+    } catch (error) {
+      console.error(`[EDIT][CLEANUP] Error during old temp edit files cleanup:`, error);
+    }
+  }
+
+  /**
    * Extract first frame from video buffer and return as optimized thumbnail
    */
   private async extractVideoThumbnail(videoBuffer: Buffer): Promise<Buffer> {
