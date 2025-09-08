@@ -1393,10 +1393,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           let publicUrl: string;
           
           if (imageUrl.startsWith('/api/object-storage/image/')) {
-            // Convert relative URL to absolute public URL (exact marketplace logic)
-            const baseUrl = process.env.REPLIT_DEPLOYMENT ? 
-              `https://${process.env.REPLIT_URL}` : 
-              'http://localhost:5000';
+            // Convert relative URL to absolute public URL (using correct Replit domains)
+            let baseUrl: string;
+            
+            if (process.env.REPLIT_DEPLOYMENT) {
+              // Production deployment
+              baseUrl = `https://${process.env.REPLIT_URL}`;
+            } else if (process.env.REPLIT_DEV_DOMAIN) {
+              // Development on Replit
+              baseUrl = `https://${process.env.REPLIT_DEV_DOMAIN}`;
+            } else {
+              // Local development fallback
+              baseUrl = 'http://localhost:5000';
+            }
             
             publicUrl = `${baseUrl}${imageUrl}`;
             console.log(`[EDIT] URL conversion: ${imageUrl} → ${publicUrl}`);
