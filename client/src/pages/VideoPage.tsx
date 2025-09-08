@@ -482,6 +482,7 @@ function ProjectGroup({
                       status: video.status as 'pending' | 'processing' | 'completed' | 'failed',
                       createdAt: typeof video.createdAt === 'string' ? video.createdAt : video.createdAt?.toISOString() || null
                     }}
+                    lazyLoad={true}
                     className={`w-full ${isSelectMode && selectedVideos.has(video.id) ? 'ring-2 ring-primary' : ''}`}
                     onMove={onMove}
                   />
@@ -553,6 +554,7 @@ function ProjectVideoPreview({ selectedProject, projects, compact, onVideoPlay, 
                       status: video.status as 'pending' | 'processing' | 'completed' | 'failed',
                       createdAt: typeof video.createdAt === 'string' ? video.createdAt : video.createdAt?.toISOString() || null
                     }}
+                    lazyLoad={true}
                     className="w-full"
                   />
                 ))}
@@ -641,6 +643,7 @@ function ProjectVideoPreview({ selectedProject, projects, compact, onVideoPlay, 
                     status: video.status as 'pending' | 'processing' | 'completed' | 'failed',
                     createdAt: typeof video.createdAt === 'string' ? video.createdAt : video.createdAt?.toISOString() || null
                   }}
+                  lazyLoad={true}
                   className="w-full"
                 />
               ))}
@@ -2982,6 +2985,7 @@ export default function VideoPage() {
                                 ? activeResult.data.createdAt.toISOString() 
                                 : activeResult.data.createdAt
                             }}
+                            lazyLoad={true}
                             className="w-full"
                             autoPlay={true}
                             expanded={true}
