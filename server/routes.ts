@@ -1510,6 +1510,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
 
+  // API endpoint for uploading generation images to temporary storage
+  app.post("/api/generate/upload", 
+    isAuthenticated,
+    upload.array('images', 10), 
+    async (req: any, res) => {
+      try {
+        const files = req.files as Express.Multer.File[];
+        if (!files || files.length === 0) {
+          return res.status(400).json({ error: 'No images provided' });
+        }
+        
+        // Validate file count (nano banana supports up to 10 images)
+        if (files.length > 10) {
+          return res.status(400).json({ error: 'Maximum of 10 images allowed for generation' });
+        }
+        
+        // Generate a temporary generate session ID for this upload session
+        const generateSessionId = crypto.randomUUID();
+        const imageBuffers = files.map(file => file.buffer);
+        
+        console.log(`[GENERATE][UPLOAD] Uploading ${files.length} source images to temporary storage for session: ${generateSessionId}`);
+        
+        // Upload all images to temporary storage (reuse edit temp storage method)
+        const { objectStorage } = await import('./objectStorage');
+        const imageUrls = await objectStorage.uploadTempEditImages(imageBuffers, generateSessionId);
+        
+        res.json({ 
+          imageUrls,
+          generateSessionId  // Return the session ID so it can be used for cleanup
+        });
+        
+      } catch (error: any) {
+        console.error('Error uploading generation images:', error);
+        res.status(500).json({ error: 'Failed to upload images' });
+      }
+    }
+  );
+
   // API endpoint for uploading edit images to temporary storage
   app.post("/api/edit/upload", 
     isAuthenticated,

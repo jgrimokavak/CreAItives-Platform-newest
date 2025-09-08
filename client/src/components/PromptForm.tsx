@@ -141,15 +141,27 @@ export default function PromptForm({
         filteredValues.n = parseInt(values.count as string);
       }
       
-      // Add source images for nano banana
+      // Add source images for nano banana by uploading them first (like edit tool)
       if (modelKey === "google/nano-banana" && selectedFiles.length > 0) {
-        const imageDataUrls: string[] = [];
-        for (const file of selectedFiles) {
-          if (previews[file.name]) {
-            imageDataUrls.push(previews[file.name]);
+        try {
+          // Upload source images to temporary storage first
+          const uploadFormData = new FormData();
+          selectedFiles.forEach((file) => {
+            uploadFormData.append('images', file);
+          });
+
+          const uploadResponse = await apiRequest('/api/generate/upload', {
+            method: 'POST',
+            body: uploadFormData,
+          });
+
+          if (uploadResponse.imageUrls && uploadResponse.imageUrls.length > 0) {
+            filteredValues.image_input = uploadResponse.imageUrls;
           }
+        } catch (error) {
+          console.error('Failed to upload source images:', error);
+          throw new Error('Failed to upload source images. Please try again.');
         }
-        filteredValues.image_input = imageDataUrls;
       }
       
       // Step 1: Submit the request to the server to create a new job
@@ -240,6 +252,16 @@ export default function PromptForm({
         throw new Error("Prompt must be at least 3 characters long");
       }
       
+      // Get the first source image for context (nano banana)
+      let imageData = null;
+      if (modelKey === "google/nano-banana" && selectedFiles.length > 0) {
+        const reader = new FileReader();
+        imageData = await new Promise<string>((resolve) => {
+          reader.onload = () => resolve(reader.result as string);
+          reader.readAsDataURL(selectedFiles[0]);
+        });
+      }
+      
       const response = await apiRequest("/api/enhance-prompt", {
         method: "POST",
         headers: {
@@ -248,6 +270,7 @@ export default function PromptForm({
         body: JSON.stringify({
           text: currentPrompt,
           model: modelKey,
+          image: imageData,
         }),
       });
       
