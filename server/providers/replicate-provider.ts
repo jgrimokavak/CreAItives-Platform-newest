@@ -169,8 +169,9 @@ export class ReplicateProvider extends BaseProvider {
             let baseUrl: string;
             
             if (process.env.REPLIT_DEPLOYMENT === '1') {
-              // Production deployment - use REPLIT_DOMAINS
-              const domain = process.env.REPLIT_DOMAINS || process.env.REPLIT_DEV_DOMAIN;
+              // Production deployment - use REPLIT_DOMAINS (first domain if multiple)
+              const domains = process.env.REPLIT_DOMAINS || process.env.REPLIT_DEV_DOMAIN || '';
+              const domain = domains.split(',')[0]; // Use first domain if comma-separated
               baseUrl = `https://${domain}`;
               console.log(`[GENERATE] Production mode - using domain: ${domain}`);
             } else if (process.env.REPLIT_DEV_DOMAIN) {
