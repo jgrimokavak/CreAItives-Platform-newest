@@ -41,7 +41,7 @@ export class ProviderRegistry {
   // Check if a model supports image editing
   modelSupportsEdit(modelKey: string): boolean {
     // Currently only these models support editing
-    const editCapableModels = ['gpt-image-1', 'flux-kontext-max'];
+    const editCapableModels = ['gpt-image-1', 'flux-kontext-max', 'google/nano-banana'];
     return editCapableModels.includes(modelKey);
   }
 }
