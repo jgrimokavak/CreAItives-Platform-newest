@@ -1516,13 +1516,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     upload.array('images', 10), 
     async (req: any, res) => {
       try {
+        console.log(`[GENERATE][UPLOAD] Starting source image upload process`);
+        console.log(`[GENERATE][UPLOAD] Environment check - REPLIT_DEPLOYMENT: "${process.env.REPLIT_DEPLOYMENT}"`);
+        
         const files = req.files as Express.Multer.File[];
         if (!files || files.length === 0) {
+          console.log(`[GENERATE][UPLOAD] Error: No images provided`);
           return res.status(400).json({ error: 'No images provided' });
         }
         
+        console.log(`[GENERATE][UPLOAD] Received ${files.length} files: ${files.map(f => `${f.originalname} (${f.size} bytes)`).join(', ')}`);
+        
         // Validate file count (nano banana supports up to 10 images)
         if (files.length > 10) {
+          console.log(`[GENERATE][UPLOAD] Error: Too many files (${files.length} > 10)`);
           return res.status(400).json({ error: 'Maximum of 10 images allowed for generation' });
         }
         
@@ -1530,11 +1537,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const generateSessionId = crypto.randomUUID();
         const imageBuffers = files.map(file => file.buffer);
         
-        console.log(`[GENERATE][UPLOAD] Uploading ${files.length} source images to temporary storage for session: ${generateSessionId}`);
+        console.log(`[GENERATE][UPLOAD] Generated session ID: ${generateSessionId}`);
+        console.log(`[GENERATE][UPLOAD] Uploading ${files.length} source images to temporary storage`);
         
         // Upload all images to temporary storage (reuse edit temp storage method)
         const { objectStorage } = await import('./objectStorage');
         const imageUrls = await objectStorage.uploadTempEditImages(imageBuffers, generateSessionId);
+        
+        console.log(`[GENERATE][UPLOAD] Successfully uploaded images, URLs: ${imageUrls.join(', ')}`);
         
         res.json({ 
           imageUrls,
@@ -1542,7 +1552,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         
       } catch (error: any) {
-        console.error('Error uploading generation images:', error);
+        console.error('[GENERATE][UPLOAD] Error uploading generation images:', error);
+        console.error('[GENERATE][UPLOAD] Stack trace:', error.stack);
         res.status(500).json({ error: 'Failed to upload images' });
       }
     }

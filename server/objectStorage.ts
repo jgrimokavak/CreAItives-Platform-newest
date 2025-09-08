@@ -18,7 +18,9 @@ export class ObjectStorageService {
    */
   private getEnvironmentPrefix(): string {
     const isDeployed = process.env.REPLIT_DEPLOYMENT === '1';
-    return isDeployed ? 'prod' : 'dev';
+    const prefix = isDeployed ? 'prod' : 'dev';
+    console.log(`[ENV] Environment detection - REPLIT_DEPLOYMENT: "${process.env.REPLIT_DEPLOYMENT}", prefix: "${prefix}"`);
+    return prefix;
   }
 
   /**
@@ -568,26 +570,36 @@ export class ObjectStorageService {
     const envPrefix = this.getEnvironmentPrefix();
     const urls: string[] = [];
     
+    console.log(`[EDIT][TEMP] Starting upload of ${imageBuffers.length} images for session: ${editSessionId}`);
+    console.log(`[EDIT][TEMP] Using environment prefix: ${envPrefix}`);
+    
     for (let i = 0; i < imageBuffers.length; i++) {
       const imageId = `edit-${i + 1}`;
       const imagePath = `${envPrefix}/temp-edit/${editSessionId}/${imageId}.png`;
       
       try {
         console.log(`[EDIT][TEMP] Uploading edit image ${i + 1}/${imageBuffers.length} to: ${imagePath}`);
+        console.log(`[EDIT][TEMP] Buffer size: ${imageBuffers[i].length} bytes`);
+        
         const uploadResult = await this.client.uploadFromBytes(imagePath, imageBuffers[i]);
+        console.log(`[EDIT][TEMP] Upload result:`, JSON.stringify(uploadResult, null, 2));
+        
         if (!uploadResult.ok) {
-          throw new Error(`Failed to upload edit image ${i + 1}`);
+          console.error(`[EDIT][TEMP] Upload failed for image ${i + 1}:`, uploadResult);
+          throw new Error(`Failed to upload edit image ${i + 1}: ${uploadResult.error || 'Unknown error'}`);
         }
         
         const publicUrl = `/api/object-storage/image/${imagePath}`;
         urls.push(publicUrl);
-        console.log(`[EDIT][TEMP] Edit image ${i + 1} uploaded: ${publicUrl}`);
+        console.log(`[EDIT][TEMP] Edit image ${i + 1} uploaded successfully: ${publicUrl}`);
       } catch (error) {
-        console.error(`Error uploading edit image ${i + 1}:`, error);
+        console.error(`[EDIT][TEMP] Error uploading edit image ${i + 1}:`, error);
+        console.error(`[EDIT][TEMP] Error stack:`, (error as Error).stack);
         throw new Error(`Failed to upload edit image ${i + 1}: ${error}`);
       }
     }
     
+    console.log(`[EDIT][TEMP] All images uploaded successfully. URLs: ${urls.join(', ')}`);
     return urls;
   }
 
