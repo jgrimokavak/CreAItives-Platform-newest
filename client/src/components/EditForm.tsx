@@ -51,7 +51,7 @@ export default function EditForm({
   
   // Create edit model catalog from API response
   const dynamicEditModelCatalog = useMemo(() => {
-    if (!modelsData) return editModelCatalog;
+    if (!modelsData || !Array.isArray(modelsData)) return editModelCatalog;
     
     const editCapableModels: Record<string, any> = {};
     modelsData.forEach((model: any) => {
@@ -179,7 +179,7 @@ export default function EditForm({
       
       // If negative prompt exists and is applicable
       if (data.negativePrompt && 
-          editModelCatalog[modelKey].visible.includes("negative_prompt" as any)) {
+          dynamicEditModelCatalog[modelKey as string]?.visible?.includes("negative_prompt" as any)) {
         form.setValue("negative_prompt" as keyof GenericFormValues, data.negativePrompt);
       }
       
@@ -315,6 +315,27 @@ export default function EditForm({
     }
   };
 
+  // Upload edit files to temporary storage (following marketplace pattern)
+  const uploadEditFiles = async (): Promise<string[]> => {
+    if (selectedFiles.length === 0) return [];
+
+    const formData = new FormData();
+    selectedFiles.forEach(file => formData.append('images', file));
+
+    const response = await fetch('/api/edit/upload', {
+      method: 'POST',
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to upload images');
+    }
+
+    const { imageUrls } = await response.json();
+    return imageUrls;
+  };
+
   const editMutation = useMutation<{images: GeneratedImage[]}, Error, GenericFormValues>({
     mutationFn: async (values: GenericFormValues) => {
       if (selectedFiles.length === 0) {
@@ -324,11 +345,14 @@ export default function EditForm({
       // Reset progress
       setProgress(0);
       
+      // Upload files to temporary storage first (marketplace pattern)
+      const imageUrls = await uploadEditFiles();
+      
       // Only send values that are applicable to the current model
-      const visibleFields = dynamicEditModelCatalog[modelKey]?.visible || [];
+      const visibleFields = dynamicEditModelCatalog[modelKey as string]?.visible || [];
       const filteredValues: Record<string, any> = { modelKey };
       
-      visibleFields.forEach(field => {
+      visibleFields.forEach((field: string) => {
         if (values[field as keyof GenericFormValues] !== undefined) {
           filteredValues[field] = values[field as keyof GenericFormValues];
         }
@@ -340,20 +364,7 @@ export default function EditForm({
         filteredValues.safety_tolerance = 2;
       }
       
-      // Convert selected files to base64 for API
-      const images: string[] = [];
-      for (const file of selectedFiles) {
-        const reader = new FileReader();
-        const base64 = await new Promise<string>((resolve) => {
-          reader.onload = () => resolve(reader.result as string);
-          reader.readAsDataURL(file);
-        });
-        images.push(base64);
-      }
-      
-
-      
-      // Create FormData for multipart upload
+      // Create FormData for edit request
       const formData = new FormData();
       
       // Add text fields
@@ -363,13 +374,13 @@ export default function EditForm({
         }
       });
       
-      // Add image files
-      for (const file of selectedFiles) {
-        formData.append('image', file);
-      }
+      // Add imageUrls instead of files (following marketplace pattern)
+      imageUrls.forEach(url => {
+        formData.append('imageUrls', url);
+      });
       
-      // Add mask file if present
-      if (selectedMask) {
+      // Add mask file if present (only for non-nano-banana models)
+      if (selectedMask && modelKey !== "google/nano-banana") {
         formData.append('mask', selectedMask);
       }
       

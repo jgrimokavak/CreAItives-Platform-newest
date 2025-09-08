@@ -1,5 +1,10 @@
 import React from "react";
 import { Check, Brain, Zap, Cpu, ChevronDown, Film } from "lucide-react";
+
+// Banana emoji icon component
+const BananaIcon = ({ className }: { className?: string }) => (
+  <span className={className} style={{ fontSize: '16px' }}>🍌</span>
+);
 import { cn } from "@/lib/utils";
 import { modelCatalog, type ModelKey } from "@/lib/modelCatalog";
 import { getModelColors } from "@/lib/modelColors";
@@ -43,6 +48,7 @@ const getModelName = (modelKey: ModelKey): string => {
 const getFeatureHighlight = (modelKey: ModelKey): string => {
   switch(modelKey) {
     case "gpt-image-1": return "Most accurate";
+    case "google/nano-banana": return "Multi-image editing";
     case "imagen-4": return "Best quality";
     case "imagen-3": return "Balanced";
     case "flux-pro": return "Fast, creative";
@@ -104,6 +110,8 @@ export default function AIModelSelector({ value, onChange, className, availableM
                 >
                   {value === "gpt-image-1" ? (
                     <Brain className="h-4 w-4 text-white" />
+                  ) : value === "google/nano-banana" ? (
+                    <BananaIcon className="text-white" />
                   ) : value.startsWith("imagen") ? (
                     <Zap className="h-4 w-4 text-white" />
                   ) : value === "wan-2.2" ? (
@@ -188,6 +196,8 @@ export default function AIModelSelector({ value, onChange, className, availableM
                   >
                     {modelKey === "gpt-image-1" ? (
                       <Brain className="h-3.5 w-3.5 text-white" />
+                    ) : modelKey === "google/nano-banana" ? (
+                      <BananaIcon className="text-white" />
                     ) : modelKey.startsWith("imagen") ? (
                       <Zap className="h-3.5 w-3.5 text-white" />
                     ) : modelKey === "wan-2.2" ? (

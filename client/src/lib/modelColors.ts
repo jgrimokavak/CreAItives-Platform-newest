@@ -50,6 +50,15 @@ export const providerColors = {
     bgHover: "#bae6fd",
     text: "#0ea5e9"
   },
+  // Google Nano Banana - Deep Banana Yellow
+  "google-nano-banana": {
+    light: "#f59e0b", // Deep banana yellow
+    medium: "#d97706",
+    dark: "#b45309",
+    bg: "#fef3c7",
+    bgHover: "#fde68a",
+    text: "#f59e0b"
+  },
   // Default colors (fallback)
   default: {
     light: "#6b7280", // Gray
@@ -65,6 +74,8 @@ export const providerColors = {
 export const getModelColors = (modelKey: string) => {
   if (modelKey.includes("gpt-") || modelKey === "gpt-image-1") {
     return providerColors.openai;
+  } else if (modelKey === "google/nano-banana") {
+    return providerColors["google-nano-banana"];
   } else if (modelKey === "imagen-4") {
     return providerColors["google-imagen-4"];
   } else if (modelKey === "imagen-3") {

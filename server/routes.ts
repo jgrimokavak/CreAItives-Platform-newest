@@ -1364,26 +1364,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const n = parseInt(req.body.n || "1");
       const kavakStyle = req.body.kavakStyle === "true" || req.body.kavakStyle === true;
       
-      // Get uploaded files
+      // Handle both imageUrls (new method) and uploaded files (legacy method)
+      const imageUrls = req.body.imageUrls ? (Array.isArray(req.body.imageUrls) ? req.body.imageUrls : [req.body.imageUrls]) : [];
       const imgFiles = (req.files as any)?.image as Express.Multer.File[] || [];
       const maskFile = (req.files as any)?.mask?.[0] as Express.Multer.File | undefined;
       
-      // Check if files were uploaded
-      if (imgFiles.length === 0) {
+      // Check if we have either imageUrls or files
+      const totalImages = imageUrls.length + imgFiles.length;
+      if (totalImages === 0) {
         job.status = "error";
-        job.error = "At least one image file is required";
+        job.error = "At least one image file or imageUrl is required";
         return;
       }
       
       // Ensure we don't exceed 16 images
-      if (imgFiles.length > 16) {
+      if (totalImages > 16) {
         job.status = "error";
         job.error = "Maximum of 16 images allowed";
         return;
       }
       
-      // Convert uploaded files to base64
+      // Convert all images to base64
       const images: string[] = [];
+      
+      // Handle imageUrls (download and convert to base64)
+      for (const imageUrl of imageUrls) {
+        try {
+          const { objectStorage } = await import('./objectStorage');
+          // Convert relative URL to absolute path
+          const imagePath = imageUrl.replace('/api/object-storage/image/', '');
+          const imageBuffer = await objectStorage.downloadAsBytes(imagePath);
+          
+          // Get file extension from path to determine MIME type
+          const ext = imagePath.split('.').pop()?.toLowerCase();
+          const mimeType = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
+          
+          const base64 = `data:${mimeType};base64,${imageBuffer.toString('base64')}`;
+          images.push(base64);
+        } catch (error) {
+          console.error(`Failed to download image ${imageUrl}:`, error);
+          job.status = "error";
+          job.error = `Failed to download image: ${imageUrl}`;
+          return;
+        }
+      }
+      
+      // Handle uploaded files (convert to base64)
       for (const file of imgFiles) {
         const base64 = `data:image/${file.mimetype.split('/')[1]};base64,${file.buffer.toString('base64')}`;
         images.push(base64);
@@ -1519,16 +1545,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ message: "Prompt is required" });
         }
         
-        // Get uploaded files
+        // Check for imageUrls (new method) or uploaded files (legacy method)
+        const imageUrls = req.body.imageUrls ? (Array.isArray(req.body.imageUrls) ? req.body.imageUrls : [req.body.imageUrls]) : [];
         const imgFiles = (req.files as any)?.image as Express.Multer.File[] || [];
         
-        // Check if files were uploaded
-        if (imgFiles.length === 0) {
-          return res.status(400).json({ message: "At least one image file is required" });
+        // Must have either imageUrls or uploaded files
+        if (imageUrls.length === 0 && imgFiles.length === 0) {
+          return res.status(400).json({ message: "At least one image file or imageUrl is required" });
         }
         
-        // Ensure we don't exceed 16 images
-        if (imgFiles.length > 16) {
+        // Ensure we don't exceed limits
+        const totalImages = imageUrls.length + imgFiles.length;
+        if (totalImages > 16) {
           return res.status(400).json({ message: "Maximum of 16 images allowed" });
         }
         
@@ -1540,7 +1568,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           createdAt: new Date() 
         });
         
-        console.log(`Created job ${jobId} for edit request with ${imgFiles.length} images`);
+        console.log(`Created job ${jobId} for edit request with ${totalImages} images (${imageUrls.length} URLs + ${imgFiles.length} files)`);
         
         // Start the job processing in the background
         process.nextTick(() => runEditJob(jobId, req));
