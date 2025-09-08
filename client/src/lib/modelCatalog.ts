@@ -1,4 +1,9 @@
 export const modelCatalog = {
+  "google/nano-banana": {
+    label: "Nano Banana (Google Gemini 2.5 Flash)",
+    description: "Faster, better edits, supports multiple reference images.",
+    visible: ["prompt", "image_input"] as string[]
+  },
   "imagen-4": {
     label: "Imagen-4 (Google)",
     description: "Latest Google model with improved quality and accuracy.",
@@ -39,7 +44,8 @@ export const modelCatalog = {
 // Edit-specific model catalog with restricted models
 export const editModelCatalog = {
   "gpt-image-1": modelCatalog["gpt-image-1"],
-  "flux-kontext-max": modelCatalog["flux-kontext-max"]
+  "flux-kontext-max": modelCatalog["flux-kontext-max"],
+  "google/nano-banana": modelCatalog["google/nano-banana"]
 };
 
 export type ModelKey = keyof typeof modelCatalog;

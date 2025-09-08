@@ -9,6 +9,10 @@ const commonSchema = z.object({
 
 // Model-specific schemas
 export const modelSchemas = {
+  "google/nano-banana": commonSchema.extend({
+    image_input: z.array(z.string()).optional(), // Array of image URLs/data URIs
+    output_format: z.enum(["png", "jpg"]).optional(),
+  }),
   "gpt-image-1": commonSchema.extend({
     size: z.enum(["auto", "1024x1024", "1536x1024", "1024x1536"]),
     quality: z.enum(["auto", "high", "medium", "low"]),
@@ -49,6 +53,11 @@ export const modelSchemas = {
 
 // Default values for each model
 export const modelDefaults = {
+  "google/nano-banana": {
+    image_input: [],
+    output_format: "png",
+    kavakStyle: false,
+  },
   "gpt-image-1": {
     size: "1024x1024",
     quality: "high",
@@ -99,6 +108,8 @@ export type FormValuesForModel<T extends ModelKey> = z.infer<typeof modelSchemas
 
 // Generic form values type that includes all possible fields
 export type GenericFormValues = z.infer<typeof commonSchema> & {
+  // google/nano-banana specific fields
+  image_input?: string[];
   size?: string;
   quality?: string;
   count?: string;
