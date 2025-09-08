@@ -258,6 +258,7 @@ export const generateImageSchema = z.object({
   images: z.array(z.string()).optional(), // For image editing
   mask: z.string().optional(), // For image editing mask
   input_image: z.string().optional(), // For flux-kontext-max single image input
+  image_input: z.array(z.string()).optional(), // For google/nano-banana multiple source images
   // Flux-krea-dev specific fields
   Image: z.string().optional(), // For flux-krea-dev img2img (capital I as per spec)
   num_outputs: z.number().int().min(1).max(4).optional(), // For flux-krea-dev
@@ -311,6 +312,11 @@ export const modelFormSchemas = {
     aspect_ratio: z.enum(["1:1", "16:9", "9:16", "4:3", "3:4", "21:9"]),
     seed: z.number().int().optional(),
     juiced: z.boolean().optional(),
+  }),
+  "google/nano-banana": z.object({
+    prompt: z.string().min(1).max(32000),
+    image_input: z.array(z.string()).optional(),
+    output_format: z.enum(["png", "jpg"]).optional(),
   })
 };
 
