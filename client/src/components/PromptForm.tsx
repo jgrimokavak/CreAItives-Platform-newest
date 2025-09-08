@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, ChangeEvent } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { FaMagic } from "react-icons/fa";
+import { FaMagic, FaUpload, FaTrash } from "react-icons/fa";
 import { Sparkles } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -77,6 +77,11 @@ export default function PromptForm({
   const [availableModels, setAvailableModels] = useState<ModelInfo[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Source images state (for nano banana)
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<Record<string, string>>({});
+  const imageInputRef = useRef<HTMLInputElement>(null);
+
   // Fetch models when component mounts
   useEffect(() => {
     const fetchModels = async () => {
@@ -134,6 +139,17 @@ export default function PromptForm({
       // Special case for "count" field which needs to be sent as "n"
       if (visibleFields.includes("n" as any) && values.count) {
         filteredValues.n = parseInt(values.count as string);
+      }
+      
+      // Add source images for nano banana
+      if (modelKey === "google/nano-banana" && selectedFiles.length > 0) {
+        const imageDataUrls: string[] = [];
+        for (const file of selectedFiles) {
+          if (previews[file.name]) {
+            imageDataUrls.push(previews[file.name]);
+          }
+        }
+        filteredValues.image_input = imageDataUrls;
       }
       
       // Step 1: Submit the request to the server to create a new job
@@ -275,6 +291,77 @@ export default function PromptForm({
     event.preventDefault();
     enhancePrompt();
   });
+
+  // Source images handling (for nano banana)
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    
+    const files = Array.from(e.target.files);
+    const currentCount = selectedFiles.length;
+    const remainingSlots = 10 - currentCount;
+    
+    if (files.length > remainingSlots) {
+      toast({
+        title: "Too many files",
+        description: `You can only add ${remainingSlots} more image(s). Maximum is 10.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const validFiles: File[] = [];
+    const newPreviews: Record<string, string> = { ...previews };
+    
+    for (const file of files) {
+      // Validate file size (max 25MB)
+      if (file.size > 25 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: `${file.name} is too large. Maximum size is 25MB.`,
+          variant: "destructive",
+        });
+        continue;
+      }
+      
+      // Validate file type
+      if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+        toast({
+          title: "Invalid file type",
+          description: `${file.name} is not a valid image. Please upload PNG, JPEG, or WebP images.`,
+          variant: "destructive",
+        });
+        continue;
+      }
+      
+      validFiles.push(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          newPreviews[file.name] = e.target.result as string;
+          setPreviews(newPreviews);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+    
+    setSelectedFiles(prev => [...prev, ...validFiles]);
+    
+    // Reset input
+    if (imageInputRef.current) {
+      imageInputRef.current.value = "";
+    }
+  };
+
+  const removeFile = (filename: string) => {
+    setSelectedFiles(prev => prev.filter(file => file.name !== filename));
+    setPreviews(prev => {
+      const newPreviews = { ...prev };
+      delete newPreviews[filename];
+      return newPreviews;
+    });
+  };
   
   const onSubmit = async (values: GenericFormValues) => {
     setIsSubmitting(true);
@@ -371,6 +458,53 @@ export default function PromptForm({
                 </FormItem>
               )}
             />
+
+            {/* Source Images (for nano banana only) */}
+            {modelKey === "google/nano-banana" && (
+              <div className="border border-dashed border-border rounded-lg p-5">
+                <h3 className="text-sm font-medium mb-3">Source Images (Optional)</h3>
+                
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {selectedFiles.map((file) => (
+                    <div key={file.name} className="relative w-20 h-20 group">
+                      <img 
+                        src={previews[file.name]} 
+                        alt={file.name} 
+                        className="w-full h-full object-cover rounded-md"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeFile(file.name)}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <FaTrash size={10} />
+                      </button>
+                    </div>
+                  ))}
+                  
+                  <button
+                    type="button"
+                    onClick={() => imageInputRef.current?.click()}
+                    className="w-20 h-20 flex items-center justify-center border border-dashed border-border rounded-md hover:bg-muted transition-colors"
+                  >
+                    <FaUpload className="text-muted-foreground" />
+                  </button>
+                </div>
+                
+                <input
+                  type="file"
+                  ref={imageInputRef}
+                  onChange={handleFileChange}
+                  accept="image/png,image/jpeg,image/webp"
+                  multiple
+                  className="hidden"
+                />
+                
+                <div className="text-xs text-muted-foreground">
+                  Upload 1-10 PNG, JPEG, or WebP images (max 25MB each) to use as reference
+                </div>
+              </div>
+            )}
 
             {/* Dynamic form fields based on the selected model */}
             <div className="p-4 bg-muted/40 rounded-lg border border-border/50">
