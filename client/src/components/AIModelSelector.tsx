@@ -21,7 +21,7 @@ const getProviderName = (modelKey: ModelKey): string => {
   if (modelKey.startsWith("imagen-")) return "Google";
   if (modelKey === "flux-pro" || modelKey === "flux-kontext-max" || modelKey === "flux-krea-dev") return "Black Forest Labs";
   if (modelKey === "wan-2.2") return "PrunaAI";
-  return "AI";
+  return "Google";
 };
 
 // Get model version label
