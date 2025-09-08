@@ -227,11 +227,14 @@ export default function EditForm({
     
     const files = Array.from(e.target.files);
     
-    // Limit to 16 images total
-    if (selectedFiles.length + files.length > 16) {
+    // Model-specific image limits
+    const maxImages = modelKey === "google/nano-banana" ? 10 : 16;
+    
+    // Check if we exceed the limit
+    if (selectedFiles.length + files.length > maxImages) {
       toast({
         title: "Too many images",
-        description: "Maximum of 16 images allowed",
+        description: `Maximum of ${maxImages} images allowed for ${modelKey === "google/nano-banana" ? "Nano Banana" : "this model"}`,
         variant: "destructive",
       });
       return;
@@ -496,6 +499,28 @@ export default function EditForm({
                 onChange={(value) => setModelKey(value as ModelKey)}
                 availableModels={dynamicEditModelCatalog}
               />
+              
+              {/* Nano Banana info box */}
+              {modelKey === "google/nano-banana" && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm">
+                  <div className="flex items-start gap-2">
+                    <div className="flex-shrink-0 w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center mt-0.5">
+                      <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 8 8">
+                        <circle cx="4" cy="4" r="3"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="font-medium text-blue-900 mb-1">Nano Banana Features</p>
+                      <ul className="text-blue-800 space-y-1 text-xs">
+                        <li>• Supports up to 10 reference images for rich context</li>
+                        <li>• No mask required - uses AI understanding of your instructions</li>
+                        <li>• Faster processing with Google Gemini 2.5 Flash technology</li>
+                        <li>• Excellent at understanding relationships between multiple images</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <FormField
@@ -585,7 +610,10 @@ export default function EditForm({
               />
               
               <div className="text-xs text-muted-foreground">
-                Upload 1-16 PNG, JPEG, or WebP images (max 25MB each)
+                {modelKey === "google/nano-banana" 
+                  ? "Upload 1-10 PNG, JPEG, or WebP images (max 25MB each) • No mask needed"
+                  : "Upload 1-16 PNG, JPEG, or WebP images (max 25MB each)"
+                }
               </div>
             </div>
             
