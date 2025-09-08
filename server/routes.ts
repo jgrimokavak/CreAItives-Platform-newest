@@ -1467,6 +1467,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
 
+  // API endpoint for uploading edit images to temporary storage
+  app.post("/api/edit/upload", 
+    isAuthenticated,
+    upload.array('images', 10), 
+    async (req: any, res) => {
+      try {
+        const files = req.files as Express.Multer.File[];
+        if (!files || files.length === 0) {
+          return res.status(400).json({ error: 'No images provided' });
+        }
+        
+        // Validate file count (nano banana supports up to 10 images)
+        if (files.length > 10) {
+          return res.status(400).json({ error: 'Maximum of 10 images allowed for editing' });
+        }
+        
+        // Generate a temporary edit session ID for this upload session
+        const editSessionId = crypto.randomUUID();
+        const imageBuffers = files.map(file => file.buffer);
+        
+        console.log(`[EDIT][UPLOAD] Uploading ${files.length} edit images to temporary storage for session: ${editSessionId}`);
+        
+        // Upload all images to temporary storage
+        const { objectStorage } = await import('./objectStorage');
+        const imageUrls = await objectStorage.uploadTempEditImages(imageBuffers, editSessionId);
+        
+        res.json({ 
+          imageUrls,
+          editSessionId  // Return the session ID so it can be used for cleanup
+        });
+        
+      } catch (error: any) {
+        console.error('Error uploading edit images:', error);
+        res.status(500).json({ error: error.message || 'Failed to upload edit images' });
+      }
+    });
+
   // API endpoint for async image editing (using job queue)
   app.post("/api/edit-image", 
     isAuthenticated,
