@@ -156,6 +156,44 @@ export class ReplicateProvider extends BaseProvider {
         body.image_input = body.images;
         delete body.images;
       }
+      
+      // Convert image_input URLs to public URLs (exact same logic as edit tool)
+      if (body.image_input && Array.isArray(body.image_input)) {
+        const publicUrls: string[] = [];
+        
+        for (const imageUrl of body.image_input) {
+          let publicUrl: string;
+          
+          if (imageUrl.startsWith('/api/object-storage/image/')) {
+            // Convert relative URL to absolute public URL
+            let baseUrl: string;
+            
+            if (process.env.REPLIT_DEPLOYMENT) {
+              // Production deployment
+              baseUrl = `https://${process.env.REPLIT_URL}`;
+            } else if (process.env.REPLIT_DEV_DOMAIN) {
+              // Development on Replit
+              baseUrl = `https://${process.env.REPLIT_DEV_DOMAIN}`;
+            } else {
+              // Local development fallback
+              baseUrl = 'http://localhost:5000';
+            }
+            
+            publicUrl = `${baseUrl}${imageUrl}`;
+            console.log(`[GENERATE] URL conversion: ${imageUrl} → ${publicUrl}`);
+          } else if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+            // Already a public URL
+            publicUrl = imageUrl;
+            console.log(`[GENERATE] Using existing public URL: ${publicUrl}`);
+          } else {
+            throw new Error(`Invalid URL format: ${imageUrl}`);
+          }
+          
+          publicUrls.push(publicUrl);
+        }
+        
+        body.image_input = publicUrls;
+      }
     }
     
     // Field mapping for flux-krea-dev
