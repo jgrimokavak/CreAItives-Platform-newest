@@ -19,6 +19,7 @@ import { Switch } from "@/components/ui/switch";
 import { UseFormReturn } from "react-hook-form";
 import { GenericFormValues } from "@/lib/formSchemas";
 import ReferenceImageUpload from "@/components/ReferenceImageUpload";
+import MultiImageUpload from "@/components/MultiImageUpload";
 
 interface DynamicFormProps {
   modelKey: ModelKey;
@@ -412,6 +413,32 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form, availableMode
                   onChange={field.onChange}
                 />
               </FormControl>
+            </FormItem>
+          )}
+        />
+      )}
+
+      {/* Image Upload for google/nano-banana (supports multiple images) */}
+      {fields.includes("image_input") && (
+        <FormField
+          control={form.control}
+          name={"image_input" as FormFieldName}
+          render={({ field }) => (
+            <FormItem className="space-y-1.5">
+              <FormLabel className="text-sm font-medium">
+                Reference Images (Optional) 
+                <span className="text-xs text-muted-foreground ml-2">Up to 10 images</span>
+              </FormLabel>
+              <FormControl>
+                <MultiImageUpload
+                  value={field.value as string[]}
+                  onChange={field.onChange}
+                  maxFiles={10}
+                />
+              </FormControl>
+              <p className="text-xs text-muted-foreground">
+                Add reference images to guide the generation
+              </p>
             </FormItem>
           )}
         />

@@ -1,8 +1,8 @@
 export const modelCatalog = {
   "google/nano-banana": {
     label: "Nano Banana (Google Gemini 2.5 Flash)",
-    description: "Faster, better edits, supports multiple reference images.",
-    visible: ["prompt", "image_input"] as string[]
+    description: "Faster, better generation and edits, supports multiple reference images.",
+    visible: ["prompt", "image_input", "kavakStyle"] as string[]
   },
   "imagen-4": {
     label: "Imagen-4 (Google)",

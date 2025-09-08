@@ -37,7 +37,7 @@ export default function EditForm({
   const [previews, setPreviews] = useState<Record<string, string>>({});
   const [maskPreview, setMaskPreview] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
-  const [modelKey, setModelKey] = useState<ModelKey>("flux-kontext-max" as ModelKey);
+  const [modelKey, setModelKey] = useState<ModelKey>("google/nano-banana" as ModelKey);
   const [isEnhancing, setIsEnhancing] = useState(false);
   
   const imageInputRef = useRef<HTMLInputElement>(null);

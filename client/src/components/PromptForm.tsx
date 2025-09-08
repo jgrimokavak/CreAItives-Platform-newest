@@ -96,7 +96,7 @@ export default function PromptForm({
     fetchModels();
   }, []);
 
-  const [modelKey, setModelKey] = useState<ModelKey>("gpt-image-1");
+  const [modelKey, setModelKey] = useState<ModelKey>("google/nano-banana" as ModelKey);
   
   // Update form when model changes
   useEffect(() => {
