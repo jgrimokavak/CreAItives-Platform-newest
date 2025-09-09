@@ -14,7 +14,7 @@ const promptCache = new NodeCache({
 // Schema for the request body
 const bodySchema = z.object({
   text: z.string().min(3),
-  model: z.enum(["gpt-image-1", "imagen-3", "imagen-4", "flux-pro", "flux-kontext-max", "flux-krea-dev", "wan-2.2", "google/nano-banana"]),
+  model: z.enum(["gpt-image-1", "imagen-3", "imagen-4", "flux-pro", "flux-kontext-max", "flux-krea-dev", "wan-2.2", "google/nano-banana", "bytedance/seedream-4"]),
 });
 
 // Model-specific templates
@@ -79,6 +79,9 @@ Return a JSON object with two keys:
       break;
     case "wan-2.2":
       modelSpecificGuidance = "For WAN-2.2: Focus on cinematic quality with dramatic lighting and mood. This model excels at creating beautiful, high-resolution images with rich atmospheric details. Emphasize visual drama, depth, and professional cinematography.";
+      break;
+    case "bytedance/seedream-4":
+      modelSpecificGuidance = "For Seedream 4.0: This model excels at ultra-high resolution (4K) image generation with rich prompt understanding. Emphasize detailed descriptions, realistic textures, and high-quality visual elements. Perfect for multi-reference image workflows and sequential generation.";
       break;
     default:
       modelSpecificGuidance = "";
