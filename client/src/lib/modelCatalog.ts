@@ -38,6 +38,11 @@ export const modelCatalog = {
     label: "Flux-Pro (Black Forest Labs)",
     description: "Fast, creative, high-quality; less prompt-accurate.",
     visible: ["prompt", "aspect_ratio", "seed", "kavakStyle"] as string[]
+  },
+  "bytedance/seedream-4": {
+    label: "Seedream 4.0 (ByteDance)",
+    description: "ByteDance's next-generation image creation model that combines text-to-image generation and image editing. Offers fast, high-resolution image generation up to 4K, rich prompt understanding, and support for multi-reference and batch workflows.",
+    visible: ["prompt", "image_input", "size", "aspect_ratio", "sequential_image_generation", "max_images", "kavakStyle"] as string[]
   }
 };
 
@@ -64,3 +69,6 @@ export const fluxKreaDevAspectRatios = ["1:1", "16:9", "21:9", "3:2", "2:3", "4:
 
 // Aspect ratio options for WAN-2.2
 export const wan22AspectRatios = ["1:1", "16:9", "9:16", "4:3", "3:4", "21:9"];
+
+// Aspect ratio options for ByteDance Seedream 4
+export const seedream4AspectRatios = ["match_input_image", "1:1", "4:3", "3:4", "16:9", "9:16", "3:2", "2:3", "21:9"];
