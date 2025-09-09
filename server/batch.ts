@@ -31,7 +31,7 @@ export type BatchJob = {
 };
 
 export const jobs = new Map<string, BatchJob>();
-export const queue = new PQueue({ concurrency: 3, timeout: 300_000, throwOnTimeout: true });
+export const queue = new PQueue({ concurrency: 3, timeout: 1_200_000, throwOnTimeout: true }); // 20 minutes timeout
 
 // Prompt templates
 const PROMPTS = {

@@ -498,7 +498,7 @@ router.get('/unassigned', async (req, res) => {
 
 // Background job polling function
 async function pollVideoJob(videoId: string, jobId: string, provider: any, userId?: string, startTime?: number) {
-  const maxAttempts = 30; // Maximum polling attempts (5 minutes with 10s intervals)
+  const maxAttempts = 120; // Maximum polling attempts (20 minutes with 10s intervals)
   let attempts = 0;
 
   const poll = async () => {
