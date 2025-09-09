@@ -1741,7 +1741,7 @@ function VideoGallery() {
 // Video generation form schema
 const videoGenerationSchema = z.object({
   prompt: z.string().min(1, 'Prompt is required').max(2000, 'Prompt must be less than 2000 characters'),
-  model: z.enum(['hailuo-02', 'kling-v2.1']),
+  model: z.enum(['hailuo-02', 'kling-v2.1', 'seedance-1-pro']),
   // Hailuo-02 specific parameters
   resolution: z.enum(['512p', '768p', '1080p']).optional(),
   firstFrameImage: z.string().optional(), // determines aspect ratio AND gets saved as reference
@@ -1751,8 +1751,14 @@ const videoGenerationSchema = z.object({
   negativePrompt: z.string().optional(), // things to avoid in video
   startImage: z.string().optional(), // first frame for kling v2.1
   aspectRatio: z.enum(['16:9', '9:16', '1:1']).optional(), // aspect ratio for kling v2.1
+  // Seedance 1-Pro specific parameters
+  seedanceResolution: z.enum(['480p', '720p', '1080p']).optional(), // Seedance resolution
+  seedanceAspectRatio: z.enum(['16:9', '4:3', '1:1', '3:4', '9:16', '21:9', '9:21']).optional(), // Seedance aspect ratio
+  seedanceImage: z.string().optional(), // Seedance image-to-video input
+  seedanceCameraFixed: z.boolean().optional(), // Seedance camera position control
+  seedanceSeed: z.number().int().optional(), // Seedance seed for reproducibility
   // Shared parameters
-  duration: z.number().int().min(5).max(10), // 5-10 seconds for kling, 6-10 for hailuo
+  duration: z.number().int().min(3).max(12), // 3-12 seconds for seedance, 5-10 for kling, 6-10 for hailuo
   projectId: z.string().optional(),
 });
 
@@ -1789,6 +1795,26 @@ const VIDEO_MODELS = {
     durationOptions: [
       { value: 5, label: '5 seconds' },
       { value: 10, label: '10 seconds' }
+    ]
+  },
+  'seedance-1-pro': {
+    label: 'ByteDance Seedance Pro',
+    description: 'Multi-shot video generation with creative flexibility and narrative coherence',
+    maxDuration: 12, // 3-12 seconds
+    resolutions: ['480p', '720p', '1080p'],
+    aspectRatios: ['16:9', '4:3', '1:1', '3:4', '9:16', '21:9', '9:21'],
+    supportsDurationInt: true,
+    supportsImage: true, // image-to-video
+    supportsSeed: true,
+    supportsCameraFixed: true,
+    supportsResolution: true,
+    supportsSeedanceAspectRatio: true,
+    durationOptions: [
+      { value: 3, label: '3 seconds' },
+      { value: 5, label: '5 seconds' },
+      { value: 8, label: '8 seconds' },
+      { value: 10, label: '10 seconds' },
+      { value: 12, label: '12 seconds' }
     ]
   }
 };
