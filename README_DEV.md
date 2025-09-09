@@ -27,10 +27,24 @@ The preflight script will show you exactly what information to collect, includin
 
 ### Integration Steps
 
-1. **Frontend**: Update model configs, form schemas, UI components
+1. **Frontend**: Update model configs, form schemas, UI components, **model selector icons & colors**
 2. **Backend**: Add parameter mapping, update analytics validation
 3. **Testing**: Follow the comprehensive test checklist
 4. **Documentation**: Update the change log when complete
+
+### Model Selector Architecture
+
+The system now uses distinctive icons and colors for each model:
+
+**Icon System:**
+- Each model has a specific Lucide React icon representing its capabilities
+- HaiLuo: `Zap` (physics simulation), Kling: `Target` (precision)
+- Add new icons in `getModelIcon()` function in `ModelSelector.tsx`
+
+**Color System:**
+- Strong, solid backgrounds with dark icons for maximum visibility
+- Pattern: `bg-[color]-100 border-[color]-300` + `text-[color]-700` icons
+- No gradients - uses reliable solid colors for cross-browser compatibility
 
 This process is based on real integration experience (Kling v2.1 Master) and includes lessons learned from common pitfalls like cross-model validation conflicts.
 

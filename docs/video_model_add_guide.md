@@ -52,7 +52,7 @@ export const VIDEO_MODELS: ModelDef[] = [
   {
     id: 'kling-v2.1',
     name: 'Kling v2.1 Master',
-    summary: 'Premium video generation with superb dynamics and prompt adherence.',
+    summary: 'Video generation with superb dynamics and prompt adherence.',
     details: [
       'Generate 1080p videos from text or image',
       'Supports 5-10 second video duration',
@@ -61,46 +61,88 @@ export const VIDEO_MODELS: ModelDef[] = [
       'Negative prompt support for precise control'
     ],
     recommended: true,
-    badges: ['Premium', 'Dynamic']
+    badges: [] // Badges removed for cleaner UI
   }
 ];
 ```
 
-### Step 2: Update Model Selector
+### Step 2: Update Model Selector Architecture
 
-Update `client/src/components/ModelSelector.tsx`:
+The model selector now uses a distinctive icon and color system. Update `client/src/components/ModelSelector.tsx`:
 
 ```typescript
+// Import your new icon
+import { Zap, Target, YourNewIcon } from 'lucide-react';
+
 // Get provider name from model id
 const getProviderName = (modelId: string): string => {
   if (modelId === 'hailuo-02') return 'Minimax';
-  if (modelId === 'kling-v2.1') return 'Kling';  // Add your model
+  if (modelId === 'kling-v2.1') return 'Kling';
+  if (modelId === 'your-new-model') return 'YourProvider';  // Add your model
   return 'Unknown';
 };
 
 // Get model version label
 const getVersionLabel = (modelId: string): string => {
   switch (modelId) {
-    case 'hailuo-02': return '02';
-    case 'kling-v2.1': return 'v2.1';  // Add your model
+    case 'hailuo-02': return 'v2';
+    case 'kling-v2.1': return 'v2.1';
+    case 'your-new-model': return 'v1.0';  // Add your model
     default: return '';
   }
 };
 
-// Get model colors
+// Get model-specific icon (NEW ARCHITECTURE)
+const getModelIcon = (modelId: string) => {
+  switch (modelId) {
+    case 'hailuo-02': return Zap; // Physics simulation energy
+    case 'kling-v2.1': return Target; // Precision and adherence
+    case 'your-new-model': return YourNewIcon; // Add your model icon
+    default: return Sparkles;
+  }
+};
+
+// Get model colors (UPDATED ARCHITECTURE)
 const getModelColors = (modelId: string) => {
   const provider = getProviderName(modelId);
   switch (provider) {
-    case 'Kling':  // Add your provider colors
+    case 'Minimax':  // HaiLuo model
       return {
-        primary: 'bg-gradient-to-r from-orange-500 to-red-500',
-        light: 'bg-orange-50 border-orange-200 text-orange-700',
-        text: 'text-orange-600'
+        primary: 'bg-cyan-100 border border-cyan-300', // Strong background
+        icon: 'text-cyan-700', // Dark icon for visibility
+        light: 'bg-cyan-50 border-cyan-200 text-cyan-700',
+        text: 'text-cyan-600'
       };
-    // ... other providers
+    case 'Kling':  // Kling model
+      return {
+        primary: 'bg-amber-100 border border-amber-300', // Strong background
+        icon: 'text-amber-700', // Dark icon for visibility
+        light: 'bg-amber-50 border-amber-200 text-amber-700',
+        text: 'text-amber-600'
+      };
+    case 'YourProvider':  // Add your provider colors
+      return {
+        primary: 'bg-purple-100 border border-purple-300',
+        icon: 'text-purple-700',
+        light: 'bg-purple-50 border-purple-200 text-purple-700',
+        text: 'text-purple-600'
+      };
+    default:
+      return {
+        primary: 'bg-gray-100 border border-gray-300',
+        icon: 'text-gray-700',
+        light: 'bg-gray-50 border-gray-200 text-gray-700',
+        text: 'text-gray-600'
+      };
   }
 };
 ```
+
+**Key Architecture Changes:**
+- **Icons**: Each model now has a specific Lucide React icon that represents its capabilities
+- **Colors**: Stronger backgrounds (`-100` suffix) with darker icons (`-700` suffix) for better visibility
+- **No Gradients**: Uses solid colors with borders for reliability across all browsers
+- **Icon Colors**: Separate `icon` property in color scheme for proper contrast
 
 ### Step 3: Update Form Schema
 
@@ -306,6 +348,26 @@ useEffect(() => {
 4. **Backend Mapping**: Send only parameters the API expects
 5. **Analytics**: Add model to valid models list
 
+### Step 2.1: Quick Reference - Adding a New Model Icon & Colors
+
+When adding a new model, follow this checklist:
+
+**1. Choose an appropriate Lucide React icon:**
+- Physics/Science models: `Zap`, `Atom`, `Cpu`
+- Creative/Artistic models: `Palette`, `Brush`, `Sparkles`
+- Precision/Technical models: `Target`, `Crosshair`, `Settings`
+- Speed/Performance models: `Bolt`, `Rocket`, `Gauge`
+
+**2. Select a color theme:**
+- Use distinct color families (cyan, amber, purple, emerald, rose, etc.)
+- Always use: `-100` for backgrounds, `-300` for borders, `-700` for icons
+- Example: `bg-emerald-100 border-emerald-300` with `text-emerald-700`
+
+**3. Update three functions in ModelSelector.tsx:**
+- `getProviderName()`: Map model ID to provider name
+- `getModelIcon()`: Map model ID to Lucide icon component
+- `getModelColors()`: Map provider to color scheme object
+
 ## Testing Plan
 
 ### Unit Tests
@@ -385,6 +447,14 @@ useEffect(() => {
 - [ ] Monitor first production generations
 
 ## Change Log
+
+### 2025-09-09 17:15 - Model Selector Architecture Update
+- **NEW**: Implemented distinctive icon and color system for model selector
+- **Icon System**: Each model now has specific Lucide React icon (Zap for HaiLuo, Target for Kling)
+- **Color Architecture**: Switched from unreliable gradients to solid backgrounds with strong contrast
+- **Visibility Fix**: Icons now use dark colors (`-700` suffix) on light backgrounds (`-100` suffix)
+- **UI Cleanup**: Removed badges for cleaner appearance, updated text content
+- **Documentation**: Updated integration guide with new architecture patterns
 
 ### 2025-09-09 16:00 - Critical Timeout Fix
 - **CRITICAL**: Fixed 5-minute timeout bug causing false failures
