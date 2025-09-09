@@ -4,6 +4,11 @@ export const modelCatalog = {
     description: "Faster, better generation and edits, supports multiple reference images.",
     visible: ["prompt", "image_input", "kavakStyle"] as string[]
   },
+  "bytedance/seedream-4": {
+    label: "Seedream 4.0 (ByteDance)",
+    description: "High-quality realistic image generation with 4K resolution support.",
+    visible: ["prompt", "size", "aspect_ratio", "image_input", "sequential_image_generation", "max_images", "kavakStyle"] as string[]
+  },
   "imagen-4": {
     label: "Imagen-4 (Google)",
     description: "Latest Google model with improved quality and accuracy.",
@@ -38,11 +43,6 @@ export const modelCatalog = {
     label: "Flux-Pro (Black Forest Labs)",
     description: "Fast, creative, high-quality; less prompt-accurate.",
     visible: ["prompt", "aspect_ratio", "seed", "kavakStyle"] as string[]
-  },
-  "bytedance/seedream-4": {
-    label: "Seedream 4.0 (ByteDance)",
-    description: "ByteDance's next-generation image creation model that combines text-to-image generation and image editing. Offers fast, high-resolution image generation up to 4K, rich prompt understanding, and support for multi-reference and batch workflows.",
-    visible: ["prompt", "size", "aspect_ratio", "image_input", "sequential_image_generation", "max_images", "kavakStyle"] as string[]
   }
 };
 

@@ -1,5 +1,5 @@
 import React from "react";
-import { Check, Brain, Zap, Cpu, ChevronDown, Film } from "lucide-react";
+import { Check, Brain, Zap, Cpu, ChevronDown, Film, Sparkles } from "lucide-react";
 
 // Banana emoji icon component
 const BananaIcon = ({ className }: { className?: string }) => (
@@ -21,6 +21,7 @@ const getProviderName = (modelKey: ModelKey): string => {
   if (modelKey.startsWith("imagen-")) return "Google";
   if (modelKey === "flux-pro" || modelKey === "flux-kontext-max" || modelKey === "flux-krea-dev") return "Black Forest Labs";
   if (modelKey === "wan-2.2") return "PrunaAI";
+  if (modelKey === "bytedance/seedream-4") return "ByteDance";
   return "Google";
 };
 
@@ -55,6 +56,7 @@ const getFeatureHighlight = (modelKey: ModelKey): string => {
     case "flux-kontext-max": return "Advanced editing";
     case "flux-krea-dev": return "Photorealistic";
     case "wan-2.2": return "Cinematic quality";
+    case "bytedance/seedream-4": return "4K realism";
     default: return "";
   }
 };
@@ -112,6 +114,8 @@ export default function AIModelSelector({ value, onChange, className, availableM
                     <Brain className="h-4 w-4 text-white" />
                   ) : value === "google/nano-banana" ? (
                     <BananaIcon className="text-white" />
+                  ) : value === "bytedance/seedream-4" ? (
+                    <Sparkles className="h-4 w-4 text-white" />
                   ) : value.startsWith("imagen") ? (
                     <Zap className="h-4 w-4 text-white" />
                   ) : value === "wan-2.2" ? (

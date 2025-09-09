@@ -59,6 +59,15 @@ export const providerColors = {
     bgHover: "#fde68a",
     text: "#f59e0b"
   },
+  // ByteDance Seedream - Premium Emerald Green
+  "bytedance": {
+    light: "#059669", // Emerald green
+    medium: "#047857",
+    dark: "#065f46",
+    bg: "#d1fae5",
+    bgHover: "#a7f3d0",
+    text: "#059669"
+  },
   // Default colors (fallback)
   default: {
     light: "#6b7280", // Gray
@@ -84,6 +93,8 @@ export const getModelColors = (modelKey: string) => {
     return providerColors["black-forest-labs"];
   } else if (modelKey === "wan-2.2") {
     return providerColors["pruna-ai"];
+  } else if (modelKey === "bytedance/seedream-4") {
+    return providerColors["bytedance"];
   }
   
   return providerColors.default;

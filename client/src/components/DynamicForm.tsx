@@ -600,8 +600,8 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form, availableMode
         />
       )}
 
-      {/* Max Images for Seedream 4 */}
-      {fields.includes("max_images") && (
+      {/* Max Images for Seedream 4 - only show when sequential generation is auto */}
+      {fields.includes("max_images") && form.watch("sequential_image_generation") === "auto" && (
         <FormField
           control={form.control}
           name={"max_images" as FormFieldName}
