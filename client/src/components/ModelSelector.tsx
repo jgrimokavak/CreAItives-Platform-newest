@@ -55,15 +55,15 @@ const getModelColors = (modelId: string) => {
   switch (provider) {
     case 'Minimax':
       return {
-        primary: 'bg-cyan-50 border border-cyan-200',
-        icon: 'text-cyan-600',
+        primary: 'bg-cyan-100 border border-cyan-300',
+        icon: 'text-cyan-700',
         light: 'bg-cyan-50 border-cyan-200 text-cyan-700',
         text: 'text-cyan-600'
       };
     case 'Kling':
       return {
-        primary: 'bg-amber-50 border border-amber-200',
-        icon: 'text-amber-600',
+        primary: 'bg-amber-100 border border-amber-300',
+        icon: 'text-amber-700',
         light: 'bg-amber-50 border-amber-200 text-amber-700',
         text: 'text-amber-600'
       };
