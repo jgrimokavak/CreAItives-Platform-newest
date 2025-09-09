@@ -277,6 +277,56 @@ export class ReplicateProvider extends BaseProvider {
       console.log('🔍 flux-krea-dev input after mapping:', JSON.stringify(body, null, 2));
     }
     
+    // Handle bytedance/seedream-4 specific parameters
+    if (modelKey === 'bytedance/seedream-4') {
+      console.log('🔍 seedream-4 input before processing:', JSON.stringify(body, null, 2));
+      
+      // Convert image_input URLs to public URLs (same logic as nano-banana)
+      if (body.image_input && Array.isArray(body.image_input) && body.image_input.length > 0) {
+        const publicUrls: string[] = [];
+        
+        for (const imageUrl of body.image_input) {
+          let publicUrl: string;
+          
+          if (imageUrl.startsWith('/api/object-storage/image/')) {
+            // Convert relative URL to absolute public URL
+            let baseUrl: string;
+            
+            if (process.env.REPLIT_DEPLOYMENT === '1') {
+              // Production deployment - use REPLIT_DOMAINS (first domain if multiple)
+              const domains = process.env.REPLIT_DOMAINS || process.env.REPLIT_DEV_DOMAIN || '';
+              const domain = domains.split(',')[0]; // Use first domain if comma-separated
+              baseUrl = `https://${domain}`;
+              console.log(`[SEEDREAM4] Production mode - using domain: ${domain}`);
+            } else if (process.env.REPLIT_DEV_DOMAIN) {
+              // Development on Replit
+              baseUrl = `https://${process.env.REPLIT_DEV_DOMAIN}`;
+              console.log(`[SEEDREAM4] Development mode - using domain: ${process.env.REPLIT_DEV_DOMAIN}`);
+            } else {
+              // Local development fallback
+              baseUrl = 'http://localhost:5000';
+              console.log(`[SEEDREAM4] Local mode - using localhost`);
+            }
+            
+            publicUrl = `${baseUrl}${imageUrl}`;
+            console.log(`[SEEDREAM4] URL conversion: ${imageUrl} → ${publicUrl}`);
+          } else if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+            // Already a public URL
+            publicUrl = imageUrl;
+            console.log(`[SEEDREAM4] Using existing public URL: ${publicUrl}`);
+          } else {
+            throw new Error(`Invalid URL format: ${imageUrl}`);
+          }
+          
+          publicUrls.push(publicUrl);
+        }
+        
+        body.image_input = publicUrls;
+      }
+      
+      console.log('🔍 seedream-4 input after processing:', JSON.stringify(body, null, 2));
+    }
+    
     log({
       ts: new Date().toISOString(),
       direction: "request",
