@@ -52,7 +52,7 @@ export const modelSchemas = {
   "bytedance/seedream-4": commonSchema.extend({
     image_input: z.array(z.string()).optional().default([]), // Array of image URLs for multi-reference generation
     size: z.enum(["1K", "2K", "4K"]).default("4K"),
-    aspect_ratio: z.enum(["match_input_image", "1:1", "4:3", "3:4", "16:9", "9:16", "3:2", "2:3", "21:9"]).default("match_input_image"),
+    aspect_ratio: z.enum(["match_input_image", "1:1", "4:3", "3:4", "16:9", "9:16", "3:2", "2:3", "21:9"]).default("1:1"),
     sequential_image_generation: z.enum(["disabled", "auto"]).default("disabled"),
     max_images: z.number().int().min(1).max(15).default(1),
   }),
@@ -111,7 +111,7 @@ export const modelDefaults = {
   "bytedance/seedream-4": {
     image_input: [],
     size: "4K",
-    aspect_ratio: "match_input_image",
+    aspect_ratio: "1:1",
     sequential_image_generation: "disabled",
     max_images: 1,
     kavakStyle: false,

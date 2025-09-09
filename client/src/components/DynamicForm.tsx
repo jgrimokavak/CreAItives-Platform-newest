@@ -549,7 +549,8 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form, availableMode
               <FormLabel className="text-sm font-medium">Image Resolution</FormLabel>
               <Select
                 onValueChange={field.onChange}
-                defaultValue={field.value as string}
+                defaultValue={(field.value as string) || "4K"}
+                value={field.value as string}
               >
                 <FormControl>
                   <SelectTrigger className="h-9 text-sm">

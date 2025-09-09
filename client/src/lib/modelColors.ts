@@ -59,14 +59,14 @@ export const providerColors = {
     bgHover: "#fde68a",
     text: "#f59e0b"
   },
-  // ByteDance Seedream - Premium Emerald Green
+  // ByteDance Seedream - Deep Rose/Crimson
   "bytedance": {
-    light: "#059669", // Emerald green
-    medium: "#047857",
-    dark: "#065f46",
-    bg: "#d1fae5",
-    bgHover: "#a7f3d0",
-    text: "#059669"
+    light: "#e11d48", // Rose red
+    medium: "#be123c",
+    dark: "#9f1239",
+    bg: "#ffe4e6",
+    bgHover: "#fecdd3",
+    text: "#e11d48"
   },
   // Default colors (fallback)
   default: {

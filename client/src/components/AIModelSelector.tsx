@@ -1,5 +1,5 @@
 import React from "react";
-import { Check, Brain, Zap, Cpu, ChevronDown, Film, Sparkles } from "lucide-react";
+import { Check, Brain, Zap, Cpu, ChevronDown, Film, Maximize2 } from "lucide-react";
 
 // Banana emoji icon component
 const BananaIcon = ({ className }: { className?: string }) => (
@@ -115,7 +115,7 @@ export default function AIModelSelector({ value, onChange, className, availableM
                   ) : value === "google/nano-banana" ? (
                     <BananaIcon className="text-white" />
                   ) : value === "bytedance/seedream-4" ? (
-                    <Sparkles className="h-4 w-4 text-white" />
+                    <Maximize2 className="h-4 w-4 text-white" />
                   ) : value.startsWith("imagen") ? (
                     <Zap className="h-4 w-4 text-white" />
                   ) : value === "wan-2.2" ? (

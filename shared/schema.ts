@@ -328,7 +328,7 @@ export const modelFormSchemas = {
     prompt: z.string().min(1).max(32000),
     image_input: z.array(z.string()).optional().default([]),
     size: z.enum(["1K", "2K", "4K"]).default("4K"),
-    aspect_ratio: z.enum(["match_input_image", "1:1", "4:3", "3:4", "16:9", "9:16", "3:2", "2:3", "21:9"]).default("match_input_image"),
+    aspect_ratio: z.enum(["match_input_image", "1:1", "4:3", "3:4", "16:9", "9:16", "3:2", "2:3", "21:9"]).default("1:1"),
     sequential_image_generation: z.enum(["disabled", "auto"]).default("disabled"),
     max_images: z.number().int().min(1).max(15).default(1),
   })
