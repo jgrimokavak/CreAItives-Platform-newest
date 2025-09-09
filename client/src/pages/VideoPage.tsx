@@ -1741,7 +1741,7 @@ function VideoGallery() {
 // Video generation form schema
 const videoGenerationSchema = z.object({
   prompt: z.string().min(1, 'Prompt is required').max(2000, 'Prompt must be less than 2000 characters'),
-  model: z.enum(['hailuo-02', 'kling-v2.1', 'test-model-1', 'test-model-2', 'test-model-3', 'test-model-4', 'test-model-5']),
+  model: z.enum(['hailuo-02', 'kling-v2.1']),
   // Hailuo-02 specific parameters
   resolution: z.enum(['512p', '768p', '1080p']).optional(),
   firstFrameImage: z.string().optional(), // determines aspect ratio AND gets saved as reference

@@ -19,7 +19,7 @@ interface ModelSelectorProps {
 // Get provider name from model id
 const getProviderName = (modelId: string): string => {
   if (modelId === 'hailuo-02') return 'Minimax';
-  if (modelId.startsWith('test-model')) return 'TestProvider';
+  if (modelId === 'kling-v2.1') return 'Kling';
   return 'Unknown';
 };
 
@@ -28,6 +28,7 @@ const getVersionLabel = (modelId: string): string => {
   // Only show versions that are actually meaningful
   switch (modelId) {
     case 'hailuo-02': return '02'; // This is part of the actual model name
+    case 'kling-v2.1': return 'v2.1'; // Kling model version
     default: return '';
   }
 };
@@ -49,11 +50,11 @@ const getModelColors = (modelId: string) => {
         light: 'bg-purple-50 border-purple-200 text-purple-700',
         text: 'text-purple-600'
       };
-    case 'TestProvider':
+    case 'Kling':
       return {
-        primary: 'bg-gradient-to-r from-green-500 to-teal-500',
-        light: 'bg-green-50 border-green-200 text-green-700',
-        text: 'text-green-600'
+        primary: 'bg-gradient-to-r from-orange-500 to-red-500',
+        light: 'bg-orange-50 border-orange-200 text-orange-700',
+        text: 'text-orange-600'
       };
     default:
       return {
