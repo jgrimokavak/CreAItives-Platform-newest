@@ -1,0 +1,230 @@
+filename: write_video_model_add_guide.ts
+
+"""
+Objective: Write and maintain a comprehensive, implementation-ready guide for adding new AI video models to the /video page. The guide must leverage all knowledge learned from the most recent model integration and be applicable to any future model.
+
+Trigger Rule:
+- If the user message contains: **ADD-VIDEO-MODEL**, first read `video_model_add_guide.md` (and `video_page_analysis.txt` if present) before taking any action.
+
+Steps:
+1) Create or update the guide file
+   - File: `video_model_add_guide.md`
+   - Purpose: A living, appendable, step-by-step playbook for integrating any new video model (frontend + backend), based on real lessons from the latest added model.
+   - Structure the guide with these sections:
+     1. Overview & Scope
+     2. Required Info From User (model capabilities & schema)
+     3. Frontend Integration (dynamic form + UI adaptation)
+     4. Backend Integration (API calls, polling/webhooks, storage)
+     5. Validation, Error Handling, and Edge Cases
+     6. Testing Plan (unit, integration, manual)
+     7. Performance & Cost Considerations
+     8. Security & Privacy
+     9. Versioning, Docs, and Maintenance
+     10. Change Log (append-only, timestamped)
+
+2) Incorporate prior knowledge
+   - Before writing, read:
+     - `video_page_analysis.txt` (append-only log of the /video page’s architecture & changes)
+     - Any implementation files touched by the most recent model addition
+   - Extract concrete patterns (naming, folder structure, utilities, schema mappers, request/response shapes, polling cadence, error codes, UI components).
+   - Explicitly document “what actually worked” and pitfalls discovered during the last integration.
+
+3) Define the **Required Info From User** (collect this before implementation)
+   - Identification
+     - `modelName` (internal display & key), `provider`, `version`
+   - Capabilities
+     - Modes: `text-to-video`, `image-to-video`, `image+text-to-video`
+     - Audio support, transparency, loop support
+   - Limits & Defaults
+     - Max duration (s), max resolution, fps limits, aspect ratios, file size/type constraints, steps, cfg, seed support, motion strength, negative prompts, safety toggles
+   - API Details
+     - Base URL, endpoint path, HTTP method, headers, auth, request schema, response schema, webhook (if any), polling strategy, timeout & retry rules, error codes
+   - UI/Form Requirements
+     - Required fields, enums, defaults, conditional fields, placeholders, help text
+   - Post-processing / Storage
+     - Output formats (mp4/gif/webm), expected URLs, storage target, CDN
+   - Cost/Perf
+     - Pricing hints, expected latency, queue behavior
+   - Samples
+     - Minimum viable payload, full recommended payload, expected response specimen
+
+4) Frontend integration guide (generate concrete steps + code scaffolds)
+   - Dynamic model registry
+     - File: e.g., `client/src/video/models/registry.ts`
+     - Export a typed registry entry for each model with:
+       ```ts
+       export type VideoModelSchema = {
+         key: string;
+         displayName: string;
+         capabilities: {
+           t2v: boolean;
+           i2v: boolean;
+           audio: boolean;
+         };
+         fields: Array<{
+           name: string;
+           label: string;
+           type: "text" | "textarea" | "number" | "select" | "switch" | "file" | "image";
+           required?: boolean;
+           defaultValue?: any;
+           options?: Array<{ label: string; value: string | number }>;
+           showIf?: { field: string; equals: any };
+           help?: string;
+           min?: number; max?: number; step?: number;
+         }>;
+         constraints?: {
+           maxDurationSec?: number;
+           supportedAspectRatios?: string[];
+           maxResolution?: { width: number; height: number };
+           maxFileSizeMB?: number;
+         };
+       }
+       ```
+       ```ts
+       export const MODELS: Record<string, VideoModelSchema> = {
+         // Example entry
+         "kling-v2.1-master": {
+           key: "kling-v2.1-master",
+           displayName: "Kling v2.1 Master",
+           capabilities: { t2v: true, i2v: true, audio: false },
+           fields: [
+             { name: "prompt", label: "Prompt", type: "textarea", required: true, help: "Describe the scene" },
+             { name: "image", label: "Reference Image", type: "image", showIf: { field: "mode", equals: "i2v" } },
+             { name: "seed", label: "Seed", type: "number", help: "Optional, for reproducibility" },
+             { name: "duration", label: "Duration (s)", type: "number", defaultValue: 5, min: 1, max: 10 },
+             { name: "ratio", label: "Aspect Ratio", type: "select", options: [{label:"16:9",value:"16:9"},{label:"9:16",value:"9:16"}], defaultValue: "16:9" },
+           ],
+           constraints: {
+             maxDurationSec: 10,
+             supportedAspectRatios: ["16:9","9:16","1:1"]
+           }
+         }
+       }
+       ```
+   - Form rendering
+     - File: e.g., `client/src/video/components/VideoModelForm.tsx`
+     - Render dynamically from `MODELS[modelKey].fields`
+     - Respect `required`, `defaultValue`, `showIf`, ranges, and help text
+     - Validate on submit using the schema; show inline errors
+     - Persist recent selections per model (optional)
+   - Page wiring
+     - File: `/video` page container (e.g., `client/src/pages/VideoPage.tsx`)
+     - Model selector -> loads schema -> renders dynamic form -> submit triggers `startVideoJob(modelKey, formValues)`
+   - UX details
+     - Disable unsupported modes, auto-switch fields on mode change
+     - Show computed constraints (e.g., max duration) and enforce them
+     - Progress UI: queued → processing → complete/failed
+     - Error toasts with actionable messages
+
+5) Backend integration guide (generate concrete steps + code scaffolds)
+   - Model action layer
+     - File: e.g., `server/video/models/<modelKey>.ts`
+     - Map form values → provider payload
+       ```ts
+       type StartJobInput = {
+         modelKey: string;
+         values: Record<string, any>;
+         userId: string;
+       }
+
+       export async function startKlingV21MasterJob(input: StartJobInput) {
+         const payload = {
+           prompt: input.values.prompt,
+           image: input.values.imageUrl ?? undefined,
+           ratio: input.values.ratio ?? "16:9",
+           duration: Math.min(input.values.duration ?? 5, 10),
+           seed: input.values.seed ?? undefined
+         };
+         return callReplicate({
+           model: "kling-v2.1-master",
+           version: "<version>",
+           input: payload
+         });
+       }
+       ```
+   - Provider client
+     - File: `server/video/providers/replicate.ts`
+       ```ts
+       export async function callReplicate(args: { model: string; version?: string; input: any }) {
+         // auth headers, POST, standardized result { id, status, outputUrl? }
+       }
+       export async function pollReplicate(jobId: string) {
+         // GET status; normalize states: queued|processing|succeeded|failed
+       }
+       ```
+   - Job orchestration
+     - File: `server/video/jobs.ts`
+       - Start job → store row in DB (`jobs` table) with `modelKey`, `input`, `status`, `userId`
+       - Polling or webhook handler to update status & output URL(s)
+       - On success: persist final asset (URL, duration, metadata) and link to user
+       - On error: persist error code/message
+   - API routes
+     - `POST /api/video/jobs` → start job
+     - `GET /api/video/jobs/:id` → job status
+     - (Optional) `POST /api/video/webhook` → provider callback
+   - Storage
+     - Normalize output to a standard shape `{url, width, height, duration, format}`
+     - Optional: upload to CDN/bucket; persist permanent URL
+
+6) Validation & error handling
+   - Frontend: required fields, min/max ranges, incompatible combos, file size/type checks
+   - Backend: schema validation, payload guardrails, timeout & retry policy, provider error mapping
+   - User-facing errors must suggest actionable fixes (e.g., “reduce duration to ≤ 10s”)
+
+7) Testing plan
+   - Unit tests for:
+     - Schema-to-form generator (showIf, defaults, constraints)
+     - Payload mapper for each model
+   - Integration tests for:
+     - Start job → polling/webhook → completion path
+     - Error propagation (provider error → UI)
+   - Manual test checklist:
+     - i2v & t2v paths
+     - Aspect ratios, duration limits, seed behavior
+     - Large inputs and invalid enums
+     - Network failures and retries
+
+8) Performance & cost
+   - Document expected latency & price tiers per model (if known)
+   - Recommend sane defaults (duration, resolution) balancing cost and quality
+   - Add exponential backoff to polling; cap retries; surface ETA when possible
+
+9) Security & privacy
+   - Do not log secrets or user prompts with PII
+   - Validate uploads; restrict file types; size limits server-side
+   - Ensure auth on job endpoints; only owner can read job status/results
+
+10) Versioning & maintenance
+   - Keep `video_model_add_guide.md` append-only with timestamped entries:
+     - `[YYYY-MM-DD HH:mm] What changed / Why / Impact`
+   - Update `video_page_analysis.txt` after each successful integration with a brief summary + pointers to code
+
+11) Populate the guide now
+   - Write the full guide into `video_model_add_guide.md` using the structure above.
+   - Include concrete examples from the last successful model integration:
+     - Real field names you used
+     - Final request payload
+     - Actual response normalization
+     - Any fixes/workarounds that made it work
+
+12) Enforce the trigger behavior
+   - On any future user task that includes **ADD-VIDEO-MODEL**:
+     - Step A: Read `video_model_add_guide.md` and `video_page_analysis.txt`
+     - Step B: Ask only for missing “Required Info From User”
+     - Step C: Implement following the guide, then append a new change log entry
+
+Testing:
+- Confirm `video_model_add_guide.md` exists and contains all sections + at least one concrete example from the last integration.
+- Simulate a new model addition:
+  - Ensure the agent asks only for missing Required Info.
+  - Verify dynamic form renders with required/conditional fields and validations.
+  - Start a job and see status progress through to completion.
+  - Confirm errors are surfaced with actionable messages.
+  - Append a timestamped entry to the guide’s change log and a brief summary in `video_page_analysis.txt`.
+
+Reminders & Constraints:
+- Always read the guide and analysis files first when trigger word **ADD-VIDEO-MODEL** is present.
+- The guide must remain implementation-focused with copy-pastable code scaffolds.
+- Keep logs append-only with timestamps. Never delete prior entries.
+- Keep names and paths consistent with the existing codebase conventions discovered in `video_page_analysis.txt`.
+"""
