@@ -1858,6 +1858,9 @@ export default function VideoPage() {
       resolution: '1080p',
       duration: 6,
       promptOptimizer: true,
+      // Kling v2.1 defaults
+      negativePrompt: '',
+      aspectRatio: '16:9',
     },
   });
 
@@ -2511,7 +2514,7 @@ export default function VideoPage() {
                           value={form.watch('duration')?.toString()}
                           onValueChange={(value) => {
                             // Handle different duration formats for different models
-                            if (VIDEO_MODELS[currentModel]?.supportsDurationInt) {
+                            if (VIDEO_MODELS[currentModel as keyof typeof VIDEO_MODELS]?.supportsDurationInt) {
                               form.setValue('duration', parseInt(value), { shouldDirty: true });
                             } else {
                               form.setValue('duration', value as any, { shouldDirty: true });
