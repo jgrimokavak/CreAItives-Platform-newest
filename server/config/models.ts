@@ -295,6 +295,65 @@ export const klingV21Schema = {
   required: ["prompt"]
 };
 
+// ByteDance Seedream 4 schema for image generation
+export const seedream4Schema = {
+  type: "object",
+  title: "Input",
+  required: ["prompt"],
+  properties: {
+    prompt: {
+      type: "string",
+      title: "Prompt",
+      description: "Text prompt for image generation",
+      "x-order": 0
+    },
+    image_input: {
+      type: "array",
+      items: {
+        type: "string",
+        format: "uri"
+      },
+      title: "Image Input",
+      default: [],
+      description: "Input image(s) for image-to-image generation. List of 1-10 images for single or multi-reference generation.",
+      "x-order": 1
+    },
+    size: {
+      enum: ["1K", "2K", "4K"],
+      type: "string",
+      title: "Size",
+      description: "Image resolution: 1K (1024px), 2K (2048px), or 4K (4096px).",
+      default: "4K",
+      "x-order": 2
+    },
+    aspect_ratio: {
+      enum: ["match_input_image", "1:1", "4:3", "3:4", "16:9", "9:16", "3:2", "2:3", "21:9"],
+      type: "string",
+      title: "Aspect Ratio",
+      description: "Image aspect ratio. Only used when size is not 'custom'. Use 'match_input_image' to automatically match the input image's aspect ratio.",
+      default: "match_input_image",
+      "x-order": 3
+    },
+    sequential_image_generation: {
+      enum: ["disabled", "auto"],
+      type: "string",
+      title: "Sequential Image Generation",
+      description: "Group image generation mode. 'disabled' generates a single image. 'auto' lets the model decide whether to generate multiple related images (e.g., story scenes, character variations).",
+      default: "disabled",
+      "x-order": 6
+    },
+    max_images: {
+      type: "integer",
+      title: "Max Images",
+      default: 1,
+      maximum: 15,
+      minimum: 1,
+      description: "Maximum number of images to generate when sequential_image_generation='auto'. Range: 1-15. Total images (input + generated) cannot exceed 15.",
+      "x-order": 7
+    }
+  }
+};
+
 // Nano Banana (Gemini 2.5 Flash Image) schema
 export const nanoBananaSchema = {
   type: "object",
@@ -422,6 +481,21 @@ export const models: ModelConfig[] = [
     },
     visible: ["prompt", "aspect_ratio", "seed", "juiced"],
     description: "This model generates beautiful cinematic 2 megapixel images in 3-4 seconds"
+  },
+  {
+    key: "bytedance/seedream-4",
+    provider: "replicate",
+    slug: "bytedance/seedream-4",
+    schema: seedream4Schema,
+    defaults: {
+      size: "4K",
+      aspect_ratio: "match_input_image",
+      sequential_image_generation: "disabled",
+      max_images: 1,
+      image_input: []
+    },
+    visible: ["prompt", "image_input", "size", "aspect_ratio", "sequential_image_generation", "max_images"],
+    description: "Seedream 4.0 – ByteDance's next-generation image creation model that combines text-to-image generation and image editing into a single architecture. Offers fast, high-resolution image generation, rich prompt understanding, and support for multi-reference and batch workflows."
   },
   // Video Models
   {

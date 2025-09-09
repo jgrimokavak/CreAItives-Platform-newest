@@ -1,0 +1,129 @@
+The model name/key: bytedance/seedream-4
+Which provider it uses (OpenAI, Replicate, etc.): Replicate
+The model's parameters and their types/constraints: use this exact schema "{
+  "type": "object",
+  "title": "Input",
+  "required": [
+    "prompt"
+  ],
+  "properties": {
+    "size": {
+      "enum": [
+        "1K",
+        "2K",
+        "4K",
+        "custom"
+      ],
+      "type": "string",
+      "title": "size",
+      "description": "Image resolution: 1K (1024px), 2K (2048px), 4K (4096px), or 'custom' for specific dimensions.",
+      "default": "4K",
+      "x-order": 2
+    },
+    "width": {
+      "type": "integer",
+      "title": "Width",
+      "default": 2048,
+      "maximum": 4096,
+      "minimum": 1024,
+      "x-order": 4,
+      "description": "Custom image width (only used when size='custom'). Range: 1024-4096 pixels."
+    },
+    "height": {
+      "type": "integer",
+      "title": "Height",
+      "default": 2048,
+      "maximum": 4096,
+      "minimum": 1024,
+      "x-order": 5,
+      "description": "Custom image height (only used when size='custom'). Range: 1024-4096 pixels."
+    },
+    "prompt": {
+      "type": "string",
+      "title": "Prompt",
+      "x-order": 0,
+      "description": "Text prompt for image generation"
+    },
+    "max_images": {
+      "type": "integer",
+      "title": "Max Images",
+      "default": 1,
+      "maximum": 15,
+      "minimum": 1,
+      "x-order": 7,
+      "description": "Maximum number of images to generate when sequential_image_generation='auto'. Range: 1-15. Total images (input + generated) cannot exceed 15."
+    },
+    "image_input": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      },
+      "title": "Image Input",
+      "default": [],
+      "x-order": 1,
+      "description": "Input image(s) for image-to-image generation. List of 1-10 images for single or multi-reference generation."
+    },
+    "aspect_ratio": {
+      "enum": [
+        "match_input_image",
+        "1:1",
+        "4:3",
+        "3:4",
+        "16:9",
+        "9:16",
+        "3:2",
+        "2:3",
+        "21:9"
+      ],
+      "type": "string",
+      "title": "aspect_ratio",
+      "description": "Image aspect ratio. Only used when size is not 'custom'. Use 'match_input_image' to automatically match the input image's aspect ratio.",
+      "default": "match_input_image",
+      "x-order": 3
+    },
+    "sequential_image_generation": {
+      "enum": [
+        "disabled",
+        "auto"
+      ],
+      "type": "string",
+      "title": "sequential_image_generation",
+      "description": "Group image generation mode. 'disabled' generates a single image. 'auto' lets the model decide whether to generate multiple related images (e.g., story scenes, character variations).",
+      "default": "disabled",
+      "x-order": 6
+    }
+  }
+}"
+Any special UI requirements: 
+- even though the model allows for custom "width" and "height" i think we can omit it that means also removing the "custom" option from the "size" parameter
+- for the "sequential_image_generation" option, please clarify what it is for.
+- make sure to use appropriate UI components for each of the parameters in the schema.
+The model slug/identifier from the provider: bytedance/seedream-4
+Model description: "Seedream 4.0
+Seedream 4.0 is ByteDance’s next-generation image creation model that combines text-to-image generation and image editing into a single architecture. It offers fast, high-resolution image generation, rich prompt understanding, and support for multi-reference and batch workflows.
+
+Key Features
+Unified generation & editing
+Both text-to-image creation and image modifications (e.g. removing or replacing objects) are handled in one model—no need for separate tools.
+
+High-resolution and fast inference
+Produces outputs up to 4K with significantly faster inference than prior versions.
+
+Batch and multi-reference support
+Accepts multiple reference images and returns multiple outputs in one request.
+
+Natural-language prompt editing
+Make precise edits using simple language, like “Remove the boy in this picture” or “Replace this dog with a Schnauzer.”
+
+Versatile style transfer
+Apply diverse visual styles such as watercolor, cyberpunk, or architectural to inputs or prompts.
+
+Knowledge-driven generation
+Capable of complex content like educational illustrations, charts, timelines, or annotated scenes, with strong reasoning and prompt-following abilities.
+
+Use Cases
+Scenario	Example
+Creative agencies / designers	Generate batches of concept art or storyboards from multi-image inputs.
+Illustration & education	Produce accurate diagrams or timelines with labeled details.
+Visual editing & prototyping	Modify photos or designs via text prompts for fast iteration."
