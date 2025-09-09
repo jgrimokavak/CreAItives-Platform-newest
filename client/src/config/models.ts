@@ -11,7 +11,7 @@ export type ModelDef = {
 export const VIDEO_MODELS: ModelDef[] = [
   {
     id: 'hailuo-02',
-    name: 'Minimax HaiLuo v2',
+    name: 'Minimax HaiLuo',
     summary: 'High-quality video synthesis with advanced physics simulation.',
     details: [
       'Native 1080p generation capability',
