@@ -1,0 +1,305 @@
+client:536 WebSocket connection to 'wss://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/?token=VR_1-utA8BDm' failed: 
+setupWebSocket @ client:536
+(anonymous) @ client:531
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=VR_1-utA8BDm' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+setupWebSocket @ client:536
+fallback @ client:509
+(anonymous) @ client:555
+chunk-C43VWYGG.js?v=9ca7ebfc:21507 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+VideoPage.tsx:1762 [DIAGNOSTIC] Loading VIDEO_MODELS configuration
+VideoPage.tsx:1797 [DIAGNOSTIC] VIDEO_MODELS loaded: {modelKeys: Array(2), models: {…}}
+websocket.ts:16 [MP][CLIENT] WS URL {protocol: 'wss:', hostname: 'eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev', port: '', url: 'wss://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/ws'}
+main.tsx:13 SW registered:  ServiceWorkerRegistration {installing: null, waiting: null, active: ServiceWorker, navigationPreload: NavigationPreloadManager, scope: 'https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/', …}
+video:1 <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">
+VideoPage.tsx:1880 Uncaught ReferenceError: Cannot access 'currentModel' before initialization
+    at VideoPage (VideoPage.tsx:1880:7)
+    at renderWithHooks (chunk-C43VWYGG.js?v=9ca7ebfc:12151:26)
+    at mountIndeterminateComponent (chunk-C43VWYGG.js?v=9ca7ebfc:14901:21)
+    at beginWork (chunk-C43VWYGG.js?v=9ca7ebfc:15882:22)
+    at HTMLUnknownElement.callCallback2 (chunk-C43VWYGG.js?v=9ca7ebfc:3674:22)
+    at Object.invokeGuardedCallbackDev (chunk-C43VWYGG.js?v=9ca7ebfc:3699:24)
+    at invokeGuardedCallback (chunk-C43VWYGG.js?v=9ca7ebfc:3733:39)
+    at beginWork$1 (chunk-C43VWYGG.js?v=9ca7ebfc:19733:15)
+    at performUnitOfWork (chunk-C43VWYGG.js?v=9ca7ebfc:19166:20)
+    at workLoopSync (chunk-C43VWYGG.js?v=9ca7ebfc:19105:13)
+VideoPage @ VideoPage.tsx:1880
+renderWithHooks @ chunk-C43VWYGG.js?v=9ca7ebfc:12151
+mountIndeterminateComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14901
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15882
+callCallback2 @ chunk-C43VWYGG.js?v=9ca7ebfc:3674
+invokeGuardedCallbackDev @ chunk-C43VWYGG.js?v=9ca7ebfc:3699
+invokeGuardedCallback @ chunk-C43VWYGG.js?v=9ca7ebfc:3733
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19733
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+performSyncWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18842
+flushSyncCallbacks @ chunk-C43VWYGG.js?v=9ca7ebfc:9119
+(anonymous) @ chunk-C43VWYGG.js?v=9ca7ebfc:18595
+setTimeout
+defaultScheduler @ @tanstack_react-query.js?v=9ca7ebfc:565
+flush @ @tanstack_react-query.js?v=9ca7ebfc:589
+batch @ @tanstack_react-query.js?v=9ca7ebfc:607
+dispatch_fn @ @tanstack_react-query.js?v=9ca7ebfc:1040
+setData @ @tanstack_react-query.js?v=9ca7ebfc:718
+onSuccess @ @tanstack_react-query.js?v=9ca7ebfc:940
+resolve @ @tanstack_react-query.js?v=9ca7ebfc:475
+Promise.then
+run @ @tanstack_react-query.js?v=9ca7ebfc:517
+start @ @tanstack_react-query.js?v=9ca7ebfc:555
+fetch @ @tanstack_react-query.js?v=9ca7ebfc:969
+executeFetch_fn @ @tanstack_react-query.js?v=9ca7ebfc:2280
+onSubscribe @ @tanstack_react-query.js?v=9ca7ebfc:1983
+subscribe @ @tanstack_react-query.js?v=9ca7ebfc:24
+(anonymous) @ @tanstack_react-query.js?v=9ca7ebfc:3147
+subscribeToStore @ chunk-C43VWYGG.js?v=9ca7ebfc:12587
+commitHookEffectListMount @ chunk-C43VWYGG.js?v=9ca7ebfc:16883
+commitPassiveMountOnFiber @ chunk-C43VWYGG.js?v=9ca7ebfc:18124
+commitPassiveMountEffects_complete @ chunk-C43VWYGG.js?v=9ca7ebfc:18097
+commitPassiveMountEffects_begin @ chunk-C43VWYGG.js?v=9ca7ebfc:18087
+commitPassiveMountEffects @ chunk-C43VWYGG.js?v=9ca7ebfc:18077
+flushPassiveEffectsImpl @ chunk-C43VWYGG.js?v=9ca7ebfc:19458
+flushPassiveEffects @ chunk-C43VWYGG.js?v=9ca7ebfc:19415
+performSyncWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18836
+flushSyncCallbacks @ chunk-C43VWYGG.js?v=9ca7ebfc:9119
+commitRootImpl @ chunk-C43VWYGG.js?v=9ca7ebfc:19400
+commitRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:19245
+finishConcurrentRender @ chunk-C43VWYGG.js?v=9ca7ebfc:18773
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18686
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+VideoPage.tsx:1880 Uncaught ReferenceError: Cannot access 'currentModel' before initialization
+    at VideoPage (VideoPage.tsx:1880:7)
+    at renderWithHooks (chunk-C43VWYGG.js?v=9ca7ebfc:12151:26)
+    at mountIndeterminateComponent (chunk-C43VWYGG.js?v=9ca7ebfc:14901:21)
+    at beginWork (chunk-C43VWYGG.js?v=9ca7ebfc:15882:22)
+    at HTMLUnknownElement.callCallback2 (chunk-C43VWYGG.js?v=9ca7ebfc:3674:22)
+    at Object.invokeGuardedCallbackDev (chunk-C43VWYGG.js?v=9ca7ebfc:3699:24)
+    at invokeGuardedCallback (chunk-C43VWYGG.js?v=9ca7ebfc:3733:39)
+    at beginWork$1 (chunk-C43VWYGG.js?v=9ca7ebfc:19733:15)
+    at performUnitOfWork (chunk-C43VWYGG.js?v=9ca7ebfc:19166:20)
+    at workLoopSync (chunk-C43VWYGG.js?v=9ca7ebfc:19105:13)
+VideoPage @ VideoPage.tsx:1880
+renderWithHooks @ chunk-C43VWYGG.js?v=9ca7ebfc:12151
+mountIndeterminateComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14901
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15882
+callCallback2 @ chunk-C43VWYGG.js?v=9ca7ebfc:3674
+invokeGuardedCallbackDev @ chunk-C43VWYGG.js?v=9ca7ebfc:3699
+invokeGuardedCallback @ chunk-C43VWYGG.js?v=9ca7ebfc:3733
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19733
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+recoverFromConcurrentError @ chunk-C43VWYGG.js?v=9ca7ebfc:18704
+performSyncWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18847
+flushSyncCallbacks @ chunk-C43VWYGG.js?v=9ca7ebfc:9119
+(anonymous) @ chunk-C43VWYGG.js?v=9ca7ebfc:18595
+setTimeout
+defaultScheduler @ @tanstack_react-query.js?v=9ca7ebfc:565
+flush @ @tanstack_react-query.js?v=9ca7ebfc:589
+batch @ @tanstack_react-query.js?v=9ca7ebfc:607
+dispatch_fn @ @tanstack_react-query.js?v=9ca7ebfc:1040
+setData @ @tanstack_react-query.js?v=9ca7ebfc:718
+onSuccess @ @tanstack_react-query.js?v=9ca7ebfc:940
+resolve @ @tanstack_react-query.js?v=9ca7ebfc:475
+Promise.then
+run @ @tanstack_react-query.js?v=9ca7ebfc:517
+start @ @tanstack_react-query.js?v=9ca7ebfc:555
+fetch @ @tanstack_react-query.js?v=9ca7ebfc:969
+executeFetch_fn @ @tanstack_react-query.js?v=9ca7ebfc:2280
+onSubscribe @ @tanstack_react-query.js?v=9ca7ebfc:1983
+subscribe @ @tanstack_react-query.js?v=9ca7ebfc:24
+(anonymous) @ @tanstack_react-query.js?v=9ca7ebfc:3147
+subscribeToStore @ chunk-C43VWYGG.js?v=9ca7ebfc:12587
+commitHookEffectListMount @ chunk-C43VWYGG.js?v=9ca7ebfc:16883
+commitPassiveMountOnFiber @ chunk-C43VWYGG.js?v=9ca7ebfc:18124
+commitPassiveMountEffects_complete @ chunk-C43VWYGG.js?v=9ca7ebfc:18097
+commitPassiveMountEffects_begin @ chunk-C43VWYGG.js?v=9ca7ebfc:18087
+commitPassiveMountEffects @ chunk-C43VWYGG.js?v=9ca7ebfc:18077
+flushPassiveEffectsImpl @ chunk-C43VWYGG.js?v=9ca7ebfc:19458
+flushPassiveEffects @ chunk-C43VWYGG.js?v=9ca7ebfc:19415
+performSyncWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18836
+flushSyncCallbacks @ chunk-C43VWYGG.js?v=9ca7ebfc:9119
+commitRootImpl @ chunk-C43VWYGG.js?v=9ca7ebfc:19400
+commitRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:19245
+finishConcurrentRender @ chunk-C43VWYGG.js?v=9ca7ebfc:18773
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18686
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+chunk-C43VWYGG.js?v=9ca7ebfc:14016 The above error occurred in the <VideoPage> component:
+
+    at VideoPage (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/pages/VideoPage.tsx:2789:21)
+    at main
+    at div
+    at div
+    at Sidebar (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/components/Sidebar.tsx:86:20)
+    at component
+    at Route (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:206:16)
+    at Switch (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:262:17)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/App.tsx?v=vwMjHH6Yt6cact7hI4syL:41:42)
+    at Router (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9ca7ebfc:161:17)
+    at EditorProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/src/context/EditorContext.tsx:20:34)
+    at Provider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UAGKRW3V.js?v=9ca7ebfc:38:15)
+    at TooltipProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9ca7ebfc:65:5)
+    at QueryClientProvider (https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9ca7ebfc:2934:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+logCapturedError @ chunk-C43VWYGG.js?v=9ca7ebfc:14016
+update.callback @ chunk-C43VWYGG.js?v=9ca7ebfc:14036
+callCallback @ chunk-C43VWYGG.js?v=9ca7ebfc:10491
+commitUpdateQueue @ chunk-C43VWYGG.js?v=9ca7ebfc:10508
+commitLayoutEffectOnFiber @ chunk-C43VWYGG.js?v=9ca7ebfc:17061
+commitLayoutMountEffects_complete @ chunk-C43VWYGG.js?v=9ca7ebfc:17948
+commitLayoutEffects_begin @ chunk-C43VWYGG.js?v=9ca7ebfc:17937
+commitLayoutEffects @ chunk-C43VWYGG.js?v=9ca7ebfc:17888
+commitRootImpl @ chunk-C43VWYGG.js?v=9ca7ebfc:19321
+commitRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:19245
+performSyncWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18863
+flushSyncCallbacks @ chunk-C43VWYGG.js?v=9ca7ebfc:9119
+(anonymous) @ chunk-C43VWYGG.js?v=9ca7ebfc:18595
+setTimeout
+defaultScheduler @ @tanstack_react-query.js?v=9ca7ebfc:565
+flush @ @tanstack_react-query.js?v=9ca7ebfc:589
+batch @ @tanstack_react-query.js?v=9ca7ebfc:607
+dispatch_fn @ @tanstack_react-query.js?v=9ca7ebfc:1040
+setData @ @tanstack_react-query.js?v=9ca7ebfc:718
+onSuccess @ @tanstack_react-query.js?v=9ca7ebfc:940
+resolve @ @tanstack_react-query.js?v=9ca7ebfc:475
+Promise.then
+run @ @tanstack_react-query.js?v=9ca7ebfc:517
+start @ @tanstack_react-query.js?v=9ca7ebfc:555
+fetch @ @tanstack_react-query.js?v=9ca7ebfc:969
+executeFetch_fn @ @tanstack_react-query.js?v=9ca7ebfc:2280
+onSubscribe @ @tanstack_react-query.js?v=9ca7ebfc:1983
+subscribe @ @tanstack_react-query.js?v=9ca7ebfc:24
+(anonymous) @ @tanstack_react-query.js?v=9ca7ebfc:3147
+subscribeToStore @ chunk-C43VWYGG.js?v=9ca7ebfc:12587
+commitHookEffectListMount @ chunk-C43VWYGG.js?v=9ca7ebfc:16883
+commitPassiveMountOnFiber @ chunk-C43VWYGG.js?v=9ca7ebfc:18124
+commitPassiveMountEffects_complete @ chunk-C43VWYGG.js?v=9ca7ebfc:18097
+commitPassiveMountEffects_begin @ chunk-C43VWYGG.js?v=9ca7ebfc:18087
+commitPassiveMountEffects @ chunk-C43VWYGG.js?v=9ca7ebfc:18077
+flushPassiveEffectsImpl @ chunk-C43VWYGG.js?v=9ca7ebfc:19458
+flushPassiveEffects @ chunk-C43VWYGG.js?v=9ca7ebfc:19415
+performSyncWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18836
+flushSyncCallbacks @ chunk-C43VWYGG.js?v=9ca7ebfc:9119
+commitRootImpl @ chunk-C43VWYGG.js?v=9ca7ebfc:19400
+commitRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:19245
+finishConcurrentRender @ chunk-C43VWYGG.js?v=9ca7ebfc:18773
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18686
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+chunk-C43VWYGG.js?v=9ca7ebfc:9129 Uncaught ReferenceError: Cannot access 'currentModel' before initialization
+    at VideoPage (VideoPage.tsx:1880:7)
+    at renderWithHooks (chunk-C43VWYGG.js?v=9ca7ebfc:12151:26)
+    at mountIndeterminateComponent (chunk-C43VWYGG.js?v=9ca7ebfc:14901:21)
+    at beginWork (chunk-C43VWYGG.js?v=9ca7ebfc:15882:22)
+    at beginWork$1 (chunk-C43VWYGG.js?v=9ca7ebfc:19721:22)
+    at performUnitOfWork (chunk-C43VWYGG.js?v=9ca7ebfc:19166:20)
+    at workLoopSync (chunk-C43VWYGG.js?v=9ca7ebfc:19105:13)
+    at renderRootSync (chunk-C43VWYGG.js?v=9ca7ebfc:19084:15)
+    at recoverFromConcurrentError (chunk-C43VWYGG.js?v=9ca7ebfc:18704:28)
+    at performSyncWorkOnRoot (chunk-C43VWYGG.js?v=9ca7ebfc:18847:28)
+VideoPage @ VideoPage.tsx:1880
+renderWithHooks @ chunk-C43VWYGG.js?v=9ca7ebfc:12151
+mountIndeterminateComponent @ chunk-C43VWYGG.js?v=9ca7ebfc:14901
+beginWork @ chunk-C43VWYGG.js?v=9ca7ebfc:15882
+beginWork$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:19721
+performUnitOfWork @ chunk-C43VWYGG.js?v=9ca7ebfc:19166
+workLoopSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19105
+renderRootSync @ chunk-C43VWYGG.js?v=9ca7ebfc:19084
+recoverFromConcurrentError @ chunk-C43VWYGG.js?v=9ca7ebfc:18704
+performSyncWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18847
+flushSyncCallbacks @ chunk-C43VWYGG.js?v=9ca7ebfc:9119
+(anonymous) @ chunk-C43VWYGG.js?v=9ca7ebfc:18595
+setTimeout
+defaultScheduler @ @tanstack_react-query.js?v=9ca7ebfc:565
+flush @ @tanstack_react-query.js?v=9ca7ebfc:589
+batch @ @tanstack_react-query.js?v=9ca7ebfc:607
+dispatch_fn @ @tanstack_react-query.js?v=9ca7ebfc:1040
+setData @ @tanstack_react-query.js?v=9ca7ebfc:718
+onSuccess @ @tanstack_react-query.js?v=9ca7ebfc:940
+resolve @ @tanstack_react-query.js?v=9ca7ebfc:475
+Promise.then
+run @ @tanstack_react-query.js?v=9ca7ebfc:517
+start @ @tanstack_react-query.js?v=9ca7ebfc:555
+fetch @ @tanstack_react-query.js?v=9ca7ebfc:969
+executeFetch_fn @ @tanstack_react-query.js?v=9ca7ebfc:2280
+onSubscribe @ @tanstack_react-query.js?v=9ca7ebfc:1983
+subscribe @ @tanstack_react-query.js?v=9ca7ebfc:24
+(anonymous) @ @tanstack_react-query.js?v=9ca7ebfc:3147
+subscribeToStore @ chunk-C43VWYGG.js?v=9ca7ebfc:12587
+commitHookEffectListMount @ chunk-C43VWYGG.js?v=9ca7ebfc:16883
+commitPassiveMountOnFiber @ chunk-C43VWYGG.js?v=9ca7ebfc:18124
+commitPassiveMountEffects_complete @ chunk-C43VWYGG.js?v=9ca7ebfc:18097
+commitPassiveMountEffects_begin @ chunk-C43VWYGG.js?v=9ca7ebfc:18087
+commitPassiveMountEffects @ chunk-C43VWYGG.js?v=9ca7ebfc:18077
+flushPassiveEffectsImpl @ chunk-C43VWYGG.js?v=9ca7ebfc:19458
+flushPassiveEffects @ chunk-C43VWYGG.js?v=9ca7ebfc:19415
+performSyncWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18836
+flushSyncCallbacks @ chunk-C43VWYGG.js?v=9ca7ebfc:9119
+commitRootImpl @ chunk-C43VWYGG.js?v=9ca7ebfc:19400
+commitRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:19245
+finishConcurrentRender @ chunk-C43VWYGG.js?v=9ca7ebfc:18773
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18686
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+websocket.ts:198 WebSocket connection to 'wss://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/ws' failed: WebSocket is closed before the connection is established.
+(anonymous) @ websocket.ts:198
+safelyCallDestroy @ chunk-C43VWYGG.js?v=9ca7ebfc:16716
+commitHookEffectListUnmount @ chunk-C43VWYGG.js?v=9ca7ebfc:16843
+commitPassiveUnmountInsideDeletedTreeOnFiber @ chunk-C43VWYGG.js?v=9ca7ebfc:18251
+commitPassiveUnmountEffectsInsideOfDeletedTree_begin @ chunk-C43VWYGG.js?v=9ca7ebfc:18213
+commitPassiveUnmountEffects_begin @ chunk-C43VWYGG.js?v=9ca7ebfc:18149
+commitPassiveUnmountEffects @ chunk-C43VWYGG.js?v=9ca7ebfc:18137
+flushPassiveEffectsImpl @ chunk-C43VWYGG.js?v=9ca7ebfc:19457
+flushPassiveEffects @ chunk-C43VWYGG.js?v=9ca7ebfc:19415
+performSyncWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18836
+flushSyncCallbacks @ chunk-C43VWYGG.js?v=9ca7ebfc:9119
+(anonymous) @ chunk-C43VWYGG.js?v=9ca7ebfc:18595
+setTimeout
+defaultScheduler @ @tanstack_react-query.js?v=9ca7ebfc:565
+flush @ @tanstack_react-query.js?v=9ca7ebfc:589
+batch @ @tanstack_react-query.js?v=9ca7ebfc:607
+dispatch_fn @ @tanstack_react-query.js?v=9ca7ebfc:1040
+setData @ @tanstack_react-query.js?v=9ca7ebfc:718
+onSuccess @ @tanstack_react-query.js?v=9ca7ebfc:940
+resolve @ @tanstack_react-query.js?v=9ca7ebfc:475
+Promise.then
+run @ @tanstack_react-query.js?v=9ca7ebfc:517
+start @ @tanstack_react-query.js?v=9ca7ebfc:555
+fetch @ @tanstack_react-query.js?v=9ca7ebfc:969
+executeFetch_fn @ @tanstack_react-query.js?v=9ca7ebfc:2280
+onSubscribe @ @tanstack_react-query.js?v=9ca7ebfc:1983
+subscribe @ @tanstack_react-query.js?v=9ca7ebfc:24
+(anonymous) @ @tanstack_react-query.js?v=9ca7ebfc:3147
+subscribeToStore @ chunk-C43VWYGG.js?v=9ca7ebfc:12587
+commitHookEffectListMount @ chunk-C43VWYGG.js?v=9ca7ebfc:16883
+commitPassiveMountOnFiber @ chunk-C43VWYGG.js?v=9ca7ebfc:18124
+commitPassiveMountEffects_complete @ chunk-C43VWYGG.js?v=9ca7ebfc:18097
+commitPassiveMountEffects_begin @ chunk-C43VWYGG.js?v=9ca7ebfc:18087
+commitPassiveMountEffects @ chunk-C43VWYGG.js?v=9ca7ebfc:18077
+flushPassiveEffectsImpl @ chunk-C43VWYGG.js?v=9ca7ebfc:19458
+flushPassiveEffects @ chunk-C43VWYGG.js?v=9ca7ebfc:19415
+performSyncWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18836
+flushSyncCallbacks @ chunk-C43VWYGG.js?v=9ca7ebfc:9119
+commitRootImpl @ chunk-C43VWYGG.js?v=9ca7ebfc:19400
+commitRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:19245
+finishConcurrentRender @ chunk-C43VWYGG.js?v=9ca7ebfc:18773
+performConcurrentWorkOnRoot @ chunk-C43VWYGG.js?v=9ca7ebfc:18686
+workLoop @ chunk-C43VWYGG.js?v=9ca7ebfc:197
+flushWork @ chunk-C43VWYGG.js?v=9ca7ebfc:176
+performWorkUntilDeadline @ chunk-C43VWYGG.js?v=9ca7ebfc:384
+websocket.ts:32 WebSocket error event: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+socket.onerror @ websocket.ts:32
+video:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+video:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
