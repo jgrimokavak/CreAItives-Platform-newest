@@ -1864,6 +1864,21 @@ export default function VideoPage() {
     },
   });
 
+  // Update form defaults when model changes
+  useEffect(() => {
+    if (currentModel === 'kling-v2.1') {
+      // Set Kling defaults
+      form.setValue('duration', 5);
+      form.setValue('aspectRatio', '16:9');
+      form.setValue('negativePrompt', '');
+    } else if (currentModel === 'hailuo-02') {
+      // Set Hailuo defaults
+      form.setValue('duration', 6);
+      form.setValue('resolution', '1080p');
+      form.setValue('promptOptimizer', true);
+    }
+  }, [currentModel, form]);
+
   const watchedModel = form.watch('model');
   
   // Use the currently selected model
@@ -2513,12 +2528,7 @@ export default function VideoPage() {
                         <Select
                           value={form.watch('duration')?.toString()}
                           onValueChange={(value) => {
-                            // Handle different duration formats for different models
-                            if (VIDEO_MODELS[currentModel as keyof typeof VIDEO_MODELS]?.supportsDurationInt) {
-                              form.setValue('duration', parseInt(value), { shouldDirty: true });
-                            } else {
-                              form.setValue('duration', value as any, { shouldDirty: true });
-                            }
+                            form.setValue('duration', parseInt(value), { shouldDirty: true });
                           }}
                           disabled={generateVideoMutation.isPending}
                         >
@@ -2526,21 +2536,40 @@ export default function VideoPage() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="6" className="py-3">
-                              <div className="flex flex-col items-start">
-                                <span className="font-medium">6 seconds</span>
-                                <span className="text-xs text-muted-foreground">Standard duration</span>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="10" disabled={form.watch('resolution') !== '768p'} className="py-3">
-                              <div className="flex flex-col items-start">
-                                <span className="font-medium">10 seconds</span>
-                                <span className="text-xs text-muted-foreground">768p resolution only</span>
-                              </div>
-                            </SelectItem>
+                            {currentModel === 'hailuo-02' ? (
+                              <>
+                                <SelectItem value="6" className="py-3">
+                                  <div className="flex flex-col items-start">
+                                    <span className="font-medium">6 seconds</span>
+                                    <span className="text-xs text-muted-foreground">Standard duration</span>
+                                  </div>
+                                </SelectItem>
+                                <SelectItem value="10" disabled={form.watch('resolution') !== '768p'} className="py-3">
+                                  <div className="flex flex-col items-start">
+                                    <span className="font-medium">10 seconds</span>
+                                    <span className="text-xs text-muted-foreground">768p resolution only</span>
+                                  </div>
+                                </SelectItem>
+                              </>
+                            ) : currentModel === 'kling-v2.1' ? (
+                              <>
+                                <SelectItem value="5" className="py-3">
+                                  <div className="flex flex-col items-start">
+                                    <span className="font-medium">5 seconds</span>
+                                    <span className="text-xs text-muted-foreground">Standard duration</span>
+                                  </div>
+                                </SelectItem>
+                                <SelectItem value="10" className="py-3">
+                                  <div className="flex flex-col items-start">
+                                    <span className="font-medium">10 seconds</span>
+                                    <span className="text-xs text-muted-foreground">Extended duration</span>
+                                  </div>
+                                </SelectItem>
+                              </>
+                            ) : null}
                           </SelectContent>
                         </Select>
-                        {form.watch('resolution') !== '768p' && (
+                        {currentModel === 'hailuo-02' && form.watch('resolution') !== '768p' && (
                           <p className="text-xs text-muted-foreground">
                             10-second videos require 768p resolution
                           </p>

@@ -60,25 +60,23 @@ export class ReplicateProvider extends BaseProvider {
 
     // Map parameters for kling-v2.1 model
     if (modelKey === 'kling-v2.1') {
-      // Map frontend parameters to model parameters
+      // For Kling, we need to send ONLY the exact parameters it expects
+      const klingBody: Record<string, any> = {
+        prompt: inputs.prompt, // required
+        duration: inputs.duration || 5, // required, enum [5, 10]
+        aspect_ratio: inputs.aspectRatio || '16:9', // required, default "16:9"
+      };
+
+      // Add optional parameters only if provided
       if (inputs.negativePrompt !== undefined && inputs.negativePrompt !== '') {
-        body.negative_prompt = inputs.negativePrompt;
-        delete body.negativePrompt;
-      } else {
-        // Remove the field entirely if empty or undefined
-        delete body.negativePrompt;
+        klingBody.negative_prompt = inputs.negativePrompt;
       }
       if (inputs.startImage !== undefined && inputs.startImage !== '') {
-        body.start_image = inputs.startImage;
-        delete body.startImage;
-      } else {
-        // Remove the field entirely if empty or undefined
-        delete body.startImage;
+        klingBody.start_image = inputs.startImage;
       }
-      if (inputs.aspectRatio !== undefined) {
-        body.aspect_ratio = inputs.aspectRatio;
-        delete body.aspectRatio;
-      }
+
+      // Replace body with only valid Kling parameters
+      body = klingBody;
     }
 
     log({
