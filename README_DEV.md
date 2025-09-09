@@ -36,6 +36,15 @@ This process is based on real integration experience (Kling v2.1 Master) and inc
 
 For full details, see `docs/video_model_add_guide.md`.
 
+## Video Generation System
+
+### Timeout Configuration
+- **Video Job Polling**: 20 minutes (120 attempts × 10s intervals)
+- **Job Queue Timeout**: 20 minutes (1,200,000ms)
+- **Replicate API Polling**: 10 minutes (600,000ms with exponential backoff)
+
+**Critical Note**: Video generations can take 5-15+ minutes. The system was previously limited to 5 minutes, causing false failures for successful long-duration generations (like Kling v2.1). This has been fixed as of 2025-09-09.
+
 ## Database Operations
 
 - **Schema changes**: Use `npm run db:push` (never manual SQL migrations)

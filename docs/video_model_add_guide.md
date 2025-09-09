@@ -340,16 +340,17 @@ useEffect(() => {
 ## Performance & Cost Notes
 
 ### Kling v2.1 Characteristics (Example)
-- **Typical Generation Time**: 5-15 minutes
+- **Typical Generation Time**: 5-15 minutes (system supports up to 20 minutes)
 - **Quality**: High (1080p fixed resolution)
 - **Cost Considerations**: 10-second videos cost more than 5-second
 - **Reliability**: Generally stable, standard Replicate polling
 
 ### Polling Strategy
-- **Initial Interval**: 2 seconds
-- **Backoff**: Exponential up to 5 seconds max
-- **Timeout**: 30 minutes total
+- **Initial Interval**: 10 seconds (video job polling)
+- **Backoff**: Exponential up to 5 seconds max (Replicate API polling)
+- **Timeout**: 20 minutes total (system & job queue)
 - **Retry Logic**: Standard Replicate error handling
+- **Max Attempts**: 120 polling attempts for video jobs
 
 ## Security & Privacy
 
@@ -384,6 +385,13 @@ useEffect(() => {
 - [ ] Monitor first production generations
 
 ## Change Log
+
+### 2025-09-09 16:00 - Critical Timeout Fix
+- **CRITICAL**: Fixed 5-minute timeout bug causing false failures
+- Video job polling increased from 30 to 120 attempts (5min → 20min)
+- Job queue timeout increased from 300,000ms to 1,200,000ms (5min → 20min)
+- Issue: Videos taking >5min (like Kling v2.1 at 7m57s) marked as failed despite Replicate success
+- Impact: All video models now properly support long-duration generations
 
 ### 2025-09-09 15:30 - Guide Created
 - Created comprehensive video model integration guide

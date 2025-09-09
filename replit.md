@@ -22,7 +22,7 @@ This platform is a comprehensive AI-powered multimedia generation system, specif
 - **Database**: PostgreSQL with Drizzle ORM (using Neon serverless)
 - **Build System**: ESBuild
 
-### Recent Changes (August 14, 2025)
+### Recent Changes (September 9, 2025)
 - **Phase 1 Complete**: Enhanced DataTable interface with server-side pagination, user drawers with detailed analytics, bulk actions, export functionality, and comprehensive audit logging. Successfully removed legacy UserManagementPage component.
 - **Phase 2 Complete**: Implemented comprehensive analytics system with content-focused KPI tracking, event logging pipeline, and Overview dashboard. Features content generation metrics (Images Generated, Videos Created, Upscales Completed), model usage tracking across platform models, feature-based analytics pipeline, and accurate success rate calculations.
 - **CRITICAL DATE PARSING FIX**: Resolved analytics dashboard showing zero data despite real events in database. Issue was date range ending at midnight START of day (00:00:00.000Z) instead of end of day (23:59:59.999Z). Fixed frontend to send proper time boundaries and backend to parse correctly.
@@ -33,6 +33,7 @@ This platform is a comprehensive AI-powered multimedia generation system, specif
 - **Route Fixes**: Resolved bulk actions routing issues by proper route ordering (bulk routes before parameterized routes), fixed missing admin/overview route in unauthenticated redirects.
 - **Car Generation Analytics**: Fixed car generation endpoint to properly track analytics events. Added authentication middleware and corrected user ID extraction (`req.user?.claims?.sub`) to match other endpoints. Car generations now appear in analytics dashboard under 'car_generation' feature with 'imagen-4' model tracking.
 - **Performance Analysis**: Comprehensive performance audit confirms analytics system has negligible resource impact. Database queries execute in <1ms, memory usage minimal (354MB), zero impact on core features. System scales to 10,000+ events without optimization. Production-ready with excellent performance characteristics.
+- **CRITICAL VIDEO TIMEOUT FIX**: Resolved critical 5-minute timeout bug causing false failures for successful video generations. Issue: videos taking >5 minutes (like Kling v2.1 at 7m57s) were marked as failed despite Replicate success. Fixed by increasing video job polling from 30 to 120 attempts (5min → 20min) and job queue timeout from 300,000ms to 1,200,000ms (5min → 20min). All video models now properly support long-duration generations up to 20 minutes.
 
 ### Key Components and Technical Implementations
 
