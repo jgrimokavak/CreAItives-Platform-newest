@@ -27,7 +27,7 @@ const getProviderName = (modelId: string): string => {
 const getVersionLabel = (modelId: string): string => {
   // Only show versions that are actually meaningful
   switch (modelId) {
-    case 'hailuo-02': return '02'; // This is part of the actual model name
+    case 'hailuo-02': return 'v2'; // This is part of the actual model name
     case 'kling-v2.1': return 'v2.1'; // Kling model version
     default: return '';
   }
