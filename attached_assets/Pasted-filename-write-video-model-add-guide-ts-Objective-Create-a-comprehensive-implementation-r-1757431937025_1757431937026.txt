@@ -1,0 +1,84 @@
+filename: write_video_model_add_guide.ts
+
+"""
+Objective: Create a comprehensive, implementation-ready guide for adding new AI video models to the `/video` page. The guide must be based on the agent’s own, most recent successful model integration work and applicable to any future model.
+
+Key Principles:
+- You (the agent) must review your own recent commits, diffs, and logs from the last video model integration and convert that knowledge into a practical, reusable guide.
+- Create the guide file now; it does not exist yet.
+- Establish a durable trigger that does not rely on your memory.
+
+Deliverables:
+1) Create `docs/video_model_add_guide.md`
+   - Purpose: A practical, end-to-end playbook for integrating any new video model (frontend + backend).
+   - Audience: Engineers (and the agent itself) who will add models in the future.
+   - Content (use concrete examples from the last integration you just completed):
+     - Overview & Scope
+     - What Info to Collect From the User (before coding)
+     - Frontend Integration (dynamic schema → adaptive form → submission flow)
+     - Backend Integration (map schema → provider payload → job orchestration)
+     - Validation & Error Handling
+     - Testing Plan (unit, integration, manual)
+     - Performance & Cost Notes
+     - Security & Privacy
+     - Maintenance & Versioning
+     - Change Log (append-only, timestamped)
+
+   - In “What Info to Collect From the User,” define a concise checklist you will ask for next time, e.g.:
+     - Identification: modelKey, displayName, provider, version
+     - Capabilities: modes (t2v, i2v, image+text), audio/looping, transparency
+     - Limits/Defaults: duration caps, supported ratios, max resolution, file size/types, seed/steps/cfg/motion strength, negative prompts, safety toggles
+     - API: base URL, endpoint, method, headers/auth, request/response schemas, webhooks or polling, timeouts/retries, known error codes
+     - UI/Form: required fields, enums, defaults, conditionals, help text
+     - Output & Storage: formats, URLs, CDN/storage
+     - Cost/Perf: rough latency/price expectations
+     - Samples: minimal payload, recommended payload, expected response example
+
+   - Use the last integration you completed to provide real field names, payload snippets, response shapes, and any fixes you implemented (e.g., form validation bugs, schema conflicts, polling cadence).
+
+2) Create a durable preflight trigger (no memory required)
+   - Add a CLI script `scripts/add-video-model-preflight.ts` that:
+     - Reads `docs/video_model_add_guide.md` and (if present) `video_page_analysis.txt`.
+     - Prints a short summary of the steps and the “What Info to Collect From the User” checklist.
+     - Exits with a clear list of any missing required inputs.
+   - Add a package.json script:
+     ```json
+     {
+       "scripts": {
+         "add-video-model": "ts-node scripts/add-video-model-preflight.ts"
+       }
+     }
+     ```
+   - Update `README_DEV.md` with a short section “Adding a New Video Model” that instructs devs (and the agent) to run:
+     ```
+     npm run add-video-model
+     ```
+     before starting any new model integration.
+   - This ensures that any future request (including “ADD-VIDEO-MODEL”) can be satisfied without memory: the workflow is encoded in the repo.
+
+3) Keep forms adaptive to model schemas
+   - In the guide, document the current typed model schema/registry and how the form renders dynamically from it.
+   - Show how required/optional/conditional fields are expressed, validated, and mapped to the backend payload.
+   - Provide a short, copy-pastable example of adding a new model entry to the registry and how the UI adapts.
+
+4) Backend mapping & jobs
+   - In the guide, show how form values map to provider payloads, how job creation/polling/webhooks are wired, and how outputs and errors are normalized.
+   - Include a real example from the last integration for start-call payload, status handling, and final output persistence.
+
+5) Testing & verification
+   - In the guide, include a minimal checklist to validate: schema/form behavior, start→poll→complete flow, error propagation, and typical edge cases.
+
+6) Append-only logging
+   - End the guide with a Change Log section.
+   - Append a timestamped entry describing that the guide was created, referencing the model used as the source for examples.
+
+Definition of Done:
+- `docs/video_model_add_guide.md` exists with the sections above and concrete examples drawn from your latest integration work.
+- `scripts/add-video-model-preflight.ts` exists and reads the guide + analysis file, printing the required-info checklist.
+- `package.json` contains the `"add-video-model"` script.
+- `README_DEV.md` contains a short “Adding a New Video Model” section pointing to `npm run add-video-model`.
+
+Notes:
+- Do not invent new patterns if the repo already has established ones; document and reuse what worked in your last integration.
+- Keep the guide implementation-focused; include concise, copy-pastable snippets and accurate file paths.
+"""
