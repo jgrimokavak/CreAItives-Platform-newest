@@ -1,5 +1,5 @@
 import React from "react";
-import { ModelKey, modelCatalog, fluxAspectRatios, imagenAspectRatios, fluxKontextAspectRatios, wan22AspectRatios } from "@/lib/modelCatalog";
+import { ModelKey, modelCatalog, fluxAspectRatios, imagenAspectRatios, fluxKontextAspectRatios, wan22AspectRatios, seedream4AspectRatios } from "@/lib/modelCatalog";
 import {
   FormField,
   FormItem,
@@ -200,6 +200,20 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form, availableMode
                                   ratio === "4:3" ? "(Classic)" : 
                                   ratio === "3:4" ? "(Portrait)" : 
                                   ratio === "21:9" ? "(Ultra-wide)" : ""}
+                        </SelectItem>
+                      ))
+                    ) : modelKey === "bytedance/seedream-4" ? (
+                      seedream4AspectRatios.map(ratio => (
+                        <SelectItem key={ratio} value={ratio}>
+                          {ratio === "match_input_image" ? "Match Input Image" :
+                           ratio === "1:1" ? "1:1 (Square)" : 
+                           ratio === "16:9" ? "16:9 (Landscape)" : 
+                           ratio === "9:16" ? "9:16 (Portrait)" : 
+                           ratio === "4:3" ? "4:3 (Classic)" : 
+                           ratio === "3:4" ? "3:4 (Portrait)" : 
+                           ratio === "3:2" ? "3:2 (Photo)" :
+                           ratio === "2:3" ? "2:3 (Portrait)" :
+                           ratio === "21:9" ? "21:9 (Ultra-wide)" : ratio}
                         </SelectItem>
                       ))
                     ) : (
@@ -492,6 +506,139 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form, availableMode
                   className="data-[state=checked]:bg-sky-500"
                 />
               </FormControl>
+            </FormItem>
+          )}
+        />
+      )}
+
+      {/* Image Input for multi-reference generation (Seedream 4 and Nano Banana) */}
+      {fields.includes("image_input") && (
+        <FormField
+          control={form.control}
+          name={"image_input" as FormFieldName}
+          render={({ field }) => (
+            <FormItem className="space-y-1.5">
+              <FormLabel className="text-sm font-medium">
+                Reference Images <span className="text-xs text-muted-foreground">(Optional)</span>
+              </FormLabel>
+              <FormControl>
+                <ReferenceImageUpload
+                  value={Array.isArray(field.value) ? field.value.join(',') : field.value as string || ''}
+                  onChange={(value) => {
+                    // Handle both single string and comma-separated values
+                    const values = value ? value.split(',').filter(v => v.trim()) : [];
+                    field.onChange(values);
+                  }}
+                  multiple={true}
+                />
+              </FormControl>
+              <p className="text-xs text-muted-foreground">
+                Upload 1-10 reference images for multi-reference generation
+              </p>
+            </FormItem>
+          )}
+        />
+      )}
+
+      {/* Size field for Seedream 4 (different from GPT size) */}
+      {fields.includes("size") && modelKey === "bytedance/seedream-4" && (
+        <FormField
+          control={form.control}
+          name={"size" as FormFieldName}
+          render={({ field }) => (
+            <FormItem className="space-y-1.5">
+              <FormLabel className="text-sm font-medium">Image Resolution</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value as string}
+              >
+                <FormControl>
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue placeholder="Select resolution" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="1K">1K (1024px)</SelectItem>
+                  <SelectItem value="2K">2K (2048px)</SelectItem>
+                  <SelectItem value="4K">4K (4096px) - Recommended</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Higher resolutions produce more detailed images but take longer to generate
+              </p>
+            </FormItem>
+          )}
+        />
+      )}
+
+      {/* Sequential Image Generation for Seedream 4 */}
+      {fields.includes("sequential_image_generation") && (
+        <FormField
+          control={form.control}
+          name={"sequential_image_generation" as FormFieldName}
+          render={({ field }) => (
+            <FormItem className="space-y-1.5">
+              <FormLabel className="text-sm font-medium">Generation Mode</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value as string}
+              >
+                <FormControl>
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue placeholder="Select generation mode" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="disabled">Single Image</SelectItem>
+                  <SelectItem value="auto">Auto (Multiple Related Images)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                'Auto' lets the model decide whether to generate multiple related images (story scenes, character variations, etc.)
+              </p>
+            </FormItem>
+          )}
+        />
+      )}
+
+      {/* Max Images for Seedream 4 */}
+      {fields.includes("max_images") && (
+        <FormField
+          control={form.control}
+          name={"max_images" as FormFieldName}
+          render={({ field }) => (
+            <FormItem className="space-y-1.5">
+              <FormLabel className="text-sm font-medium">Maximum Images</FormLabel>
+              <Select
+                onValueChange={(value) => field.onChange(parseInt(value))}
+                defaultValue={field.value?.toString() || "1"}
+              >
+                <FormControl>
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue placeholder="How many images?" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="1">1 Image</SelectItem>
+                  <SelectItem value="2">2 Images</SelectItem>
+                  <SelectItem value="3">3 Images</SelectItem>
+                  <SelectItem value="4">4 Images</SelectItem>
+                  <SelectItem value="5">5 Images</SelectItem>
+                  <SelectItem value="6">6 Images</SelectItem>
+                  <SelectItem value="7">7 Images</SelectItem>
+                  <SelectItem value="8">8 Images</SelectItem>
+                  <SelectItem value="9">9 Images</SelectItem>
+                  <SelectItem value="10">10 Images</SelectItem>
+                  <SelectItem value="11">11 Images</SelectItem>
+                  <SelectItem value="12">12 Images</SelectItem>
+                  <SelectItem value="13">13 Images</SelectItem>
+                  <SelectItem value="14">14 Images</SelectItem>
+                  <SelectItem value="15">15 Images</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Used when sequential generation is set to 'auto'. Total images (input + generated) cannot exceed 15.
+              </p>
             </FormItem>
           )}
         />
