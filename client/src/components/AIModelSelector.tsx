@@ -202,6 +202,8 @@ export default function AIModelSelector({ value, onChange, className, availableM
                       <Brain className="h-3.5 w-3.5 text-white" />
                     ) : modelKey === "google/nano-banana" ? (
                       <BananaIcon className="text-white" />
+                    ) : modelKey === "bytedance/seedream-4" ? (
+                      <Maximize2 className="h-3.5 w-3.5 text-white" />
                     ) : modelKey.startsWith("imagen") ? (
                       <Zap className="h-3.5 w-3.5 text-white" />
                     ) : modelKey === "wan-2.2" ? (
