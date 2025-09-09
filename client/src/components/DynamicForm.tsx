@@ -511,33 +511,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form, availableMode
         />
       )}
 
-      {/* Image Input for multi-reference generation (Seedream 4 and Nano Banana) */}
-      {fields.includes("image_input") && (
-        <FormField
-          control={form.control}
-          name={"image_input" as FormFieldName}
-          render={({ field }) => (
-            <FormItem className="space-y-1.5">
-              <FormLabel className="text-sm font-medium">
-                Reference Images <span className="text-xs text-muted-foreground">(Optional)</span>
-              </FormLabel>
-              <FormControl>
-                <ReferenceImageUpload
-                  value={Array.isArray(field.value) ? field.value.join(',') : field.value as string || ''}
-                  onChange={(value) => {
-                    // Handle both single string and comma-separated values
-                    const values = value ? value.split(',').filter(v => v.trim()) : [];
-                    field.onChange(values);
-                  }}
-                />
-              </FormControl>
-              <p className="text-xs text-muted-foreground">
-                Upload 1-10 reference images for multi-reference generation
-              </p>
-            </FormItem>
-          )}
-        />
-      )}
 
       {/* Size field for Seedream 4 (different from GPT size) */}
       {fields.includes("size") && modelKey === "bytedance/seedream-4" && (

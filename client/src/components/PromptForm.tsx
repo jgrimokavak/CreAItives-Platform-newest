@@ -77,7 +77,7 @@ export default function PromptForm({
   const [availableModels, setAvailableModels] = useState<ModelInfo[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Source images state (for nano banana)
+  // Source images state (for nano banana and seedream 4.0)
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<Record<string, string>>({});
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -141,8 +141,8 @@ export default function PromptForm({
         filteredValues.n = parseInt(values.count as string);
       }
       
-      // Add source images for nano banana by uploading them first (like edit tool)
-      if (modelKey === "google/nano-banana" && selectedFiles.length > 0) {
+      // Add source images for nano banana and seedream 4.0 by uploading them first (like edit tool)
+      if ((modelKey === "google/nano-banana" || modelKey === "bytedance/seedream-4") && selectedFiles.length > 0) {
         try {
           // Upload source images to temporary storage first
           const uploadFormData = new FormData();
@@ -315,7 +315,7 @@ export default function PromptForm({
     enhancePrompt();
   });
 
-  // Source images handling (for nano banana)
+  // Source images handling (for nano banana and seedream 4.0)
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
     
@@ -482,8 +482,8 @@ export default function PromptForm({
               )}
             />
 
-            {/* Source Images (for nano banana only) */}
-            {modelKey === "google/nano-banana" && (
+            {/* Source Images (for nano banana and seedream 4.0) */}
+            {(modelKey === "google/nano-banana" || modelKey === "bytedance/seedream-4") && (
               <div className="border border-dashed border-border rounded-lg p-5">
                 <h3 className="text-sm font-medium mb-3">Source Images (Optional)</h3>
                 
