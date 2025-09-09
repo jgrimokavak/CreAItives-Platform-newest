@@ -1877,7 +1877,7 @@ export default function VideoPage() {
       form.setValue('resolution', '1080p');
       form.setValue('promptOptimizer', true);
     }
-  }, [currentModel, form]);
+  }, [currentModel]);
 
   const watchedModel = form.watch('model');
   
