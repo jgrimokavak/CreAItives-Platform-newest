@@ -1907,6 +1907,12 @@ export default function VideoPage() {
       form.setValue('duration', 6);
       form.setValue('resolution', '1080p');
       form.setValue('promptOptimizer', true);
+    } else if (currentModel === 'seedance-1-pro') {
+      // Set Seedance defaults
+      form.setValue('duration', 5);
+      form.setValue('seedanceResolution', '1080p');
+      form.setValue('seedanceAspectRatio', '16:9');
+      form.setValue('seedanceCameraFixed', false);
     }
   }, [currentModel]);
 
@@ -2597,6 +2603,39 @@ export default function VideoPage() {
                                   </div>
                                 </SelectItem>
                               </>
+                            ) : currentModel === 'seedance-1-pro' ? (
+                              <>
+                                <SelectItem value="3" className="py-3">
+                                  <div className="flex flex-col items-start">
+                                    <span className="font-medium">3 seconds</span>
+                                    <span className="text-xs text-muted-foreground">Short video</span>
+                                  </div>
+                                </SelectItem>
+                                <SelectItem value="5" className="py-3">
+                                  <div className="flex flex-col items-start">
+                                    <span className="font-medium">5 seconds</span>
+                                    <span className="text-xs text-muted-foreground">Standard duration</span>
+                                  </div>
+                                </SelectItem>
+                                <SelectItem value="8" className="py-3">
+                                  <div className="flex flex-col items-start">
+                                    <span className="font-medium">8 seconds</span>
+                                    <span className="text-xs text-muted-foreground">Medium duration</span>
+                                  </div>
+                                </SelectItem>
+                                <SelectItem value="10" className="py-3">
+                                  <div className="flex flex-col items-start">
+                                    <span className="font-medium">10 seconds</span>
+                                    <span className="text-xs text-muted-foreground">Long duration</span>
+                                  </div>
+                                </SelectItem>
+                                <SelectItem value="12" className="py-3">
+                                  <div className="flex flex-col items-start">
+                                    <span className="font-medium">12 seconds</span>
+                                    <span className="text-xs text-muted-foreground">Maximum duration</span>
+                                  </div>
+                                </SelectItem>
+                              </>
                             ) : null}
                           </SelectContent>
                         </Select>
@@ -2758,6 +2797,136 @@ export default function VideoPage() {
                               className="w-full"
                             />
                           </div>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Enhanced Model-specific Options for Seedance 1-Pro */}
+                    {currentModel === 'seedance-1-pro' && (
+                      <>
+                        {/* Resolution for Seedance */}
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <ImageIcon className="w-4 h-4 text-primary" />
+                            <Label className="text-sm font-semibold">Resolution</Label>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            Choose the resolution for your video generation
+                          </p>
+                          <Select
+                            value={form.watch('seedanceResolution') || '1080p'}
+                            onValueChange={(value) => form.setValue('seedanceResolution', value as '480p' | '720p' | '1080p', { shouldDirty: true })}
+                          >
+                            <SelectTrigger className="h-12">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="480p" className="py-3">
+                                <div className="flex flex-col items-start">
+                                  <span className="font-medium">480p</span>
+                                  <span className="text-xs text-muted-foreground">854 × 480 pixels</span>
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="720p" className="py-3">
+                                <div className="flex flex-col items-start">
+                                  <span className="font-medium">720p</span>
+                                  <span className="text-xs text-muted-foreground">1280 × 720 pixels</span>
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="1080p" className="py-3">
+                                <div className="flex flex-col items-start">
+                                  <span className="font-medium">1080p</span>
+                                  <span className="text-xs text-muted-foreground">1920 × 1080 pixels</span>
+                                </div>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Aspect Ratio for Seedance */}
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <Square className="w-4 h-4 text-primary" />
+                            <Label className="text-sm font-semibold">Aspect Ratio</Label>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            Choose the aspect ratio for your video (ignored if an image is used)
+                          </p>
+                          <Select
+                            value={form.watch('seedanceAspectRatio') || '16:9'}
+                            onValueChange={(value) => form.setValue('seedanceAspectRatio', value as any, { shouldDirty: true })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select aspect ratio" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="16:9">16:9 (Landscape)</SelectItem>
+                              <SelectItem value="4:3">4:3 (Classic)</SelectItem>
+                              <SelectItem value="1:1">1:1 (Square)</SelectItem>
+                              <SelectItem value="3:4">3:4 (Vertical)</SelectItem>
+                              <SelectItem value="9:16">9:16 (Portrait)</SelectItem>
+                              <SelectItem value="21:9">21:9 (Cinematic)</SelectItem>
+                              <SelectItem value="9:21">9:21 (Tall)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Image Input for Seedance */}
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <ImageIcon className="w-4 h-4 text-primary" />
+                            <Label className="text-sm font-semibold">Input Image (Optional)</Label>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            Upload an image for image-to-video generation
+                          </p>
+                          <div className="p-4 bg-muted/30 rounded-lg border">
+                            <ReferenceImageUpload
+                              value={form.watch('seedanceImage') || undefined}
+                              onChange={(value) => {
+                                form.setValue('seedanceImage', value || '', { shouldDirty: true });
+                              }}
+                              className="w-full"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Camera Fixed Toggle for Seedance */}
+                        <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <VideoIcon className="w-4 h-4 text-primary" />
+                              <Label className="text-sm font-semibold">Fixed Camera Position</Label>
+                            </div>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Keep the camera position static during generation
+                            </p>
+                          </div>
+                          <Switch
+                            checked={form.watch('seedanceCameraFixed') || false}
+                            onCheckedChange={(checked) => form.setValue('seedanceCameraFixed', checked, { shouldDirty: true })}
+                          />
+                        </div>
+
+                        {/* Seed Input for Seedance */}
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <Settings className="w-4 h-4 text-primary" />
+                            <Label className="text-sm font-semibold">Seed (Optional)</Label>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            Set a seed value for reproducible results
+                          </p>
+                          <Input
+                            type="number"
+                            placeholder="Enter seed value (e.g., 42)"
+                            value={form.watch('seedanceSeed') || ''}
+                            onChange={(e) => {
+                              const value = e.target.value ? parseInt(e.target.value) : undefined;
+                              form.setValue('seedanceSeed', value, { shouldDirty: true });
+                            }}
+                            className="h-12"
+                          />
                         </div>
                       </>
                     )}
