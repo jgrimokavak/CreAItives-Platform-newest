@@ -1,0 +1,49 @@
+client:536 WebSocket connection to 'wss://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/?token=RqJfM2Ev9Lut' failed: 
+setupWebSocket @ client:536
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=RqJfM2Ev9Lut' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+chunk-C43VWYGG.js?v=9ca7ebfc:21507 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+VideoPage.tsx:1768 [DIAGNOSTIC] Loading VIDEO_MODELS configuration
+VideoPage.tsx:1823 [DIAGNOSTIC] VIDEO_MODELS loaded: Object
+websocket.ts:16 [MP][CLIENT] WS URL Object
+main.tsx:13 SW registered:  ServiceWorkerRegistration
+create:1 <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">
+websocket.ts:16 [MP][CLIENT] WS URL Object
+websocket.ts:28 WebSocket connected
+websocket.ts:28 WebSocket connected
+api/prompt-suggestions:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+usePromptSuggestions.ts:39 Error fetching prompt suggestions: Error: Failed to fetch suggestions
+    at usePromptSuggestions.ts:33:15
+(anonymous) @ usePromptSuggestions.ts:39
+api/generate:1  Failed to load resource: the server responded with a status of 400 (Bad Request)
+api/generate:1  Failed to load resource: the server responded with a status of 400 (Bad Request)
+queryClient.ts:14  POST https://eab9c231-a004-43ab-b28b-39f9c2640330-00-1w83auyo10azu.riker.replit.dev/api/generate 400 (Bad Request)
+apiRequest @ queryClient.ts:14
+mutationFn @ PromptForm.tsx:168
+fn @ @tanstack_react-query.js?v=9ca7ebfc:1236
+run @ @tanstack_react-query.js?v=9ca7ebfc:513
+start @ @tanstack_react-query.js?v=9ca7ebfc:555
+execute @ @tanstack_react-query.js?v=9ca7ebfc:1272
+await in execute
+mutate @ @tanstack_react-query.js?v=9ca7ebfc:2692
+(anonymous) @ @tanstack_react-query.js?v=9ca7ebfc:3415
+onSubmit @ PromptForm.tsx:393
+(anonymous) @ chunk-7QS4LYFY.js?v=9ca7ebfc:1506
+await in (anonymous)
+callCallback2 @ chunk-C43VWYGG.js?v=9ca7ebfc:3674
+invokeGuardedCallbackDev @ chunk-C43VWYGG.js?v=9ca7ebfc:3699
+invokeGuardedCallback @ chunk-C43VWYGG.js?v=9ca7ebfc:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-C43VWYGG.js?v=9ca7ebfc:3736
+executeDispatch @ chunk-C43VWYGG.js?v=9ca7ebfc:7014
+processDispatchQueueItemsInOrder @ chunk-C43VWYGG.js?v=9ca7ebfc:7034
+processDispatchQueue @ chunk-C43VWYGG.js?v=9ca7ebfc:7043
+dispatchEventsForPlugins @ chunk-C43VWYGG.js?v=9ca7ebfc:7051
+(anonymous) @ chunk-C43VWYGG.js?v=9ca7ebfc:7174
+batchedUpdates$1 @ chunk-C43VWYGG.js?v=9ca7ebfc:18881
+batchedUpdates @ chunk-C43VWYGG.js?v=9ca7ebfc:3579
+dispatchEventForPluginEventSystem @ chunk-C43VWYGG.js?v=9ca7ebfc:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-C43VWYGG.js?v=9ca7ebfc:5478
+dispatchEvent @ chunk-C43VWYGG.js?v=9ca7ebfc:5472
+dispatchDiscreteEvent @ chunk-C43VWYGG.js?v=9ca7ebfc:5449

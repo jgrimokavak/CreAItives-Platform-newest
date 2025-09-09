@@ -207,7 +207,7 @@ export type PhotoStudioJob = typeof photoStudioJobs.$inferSelect;
 
 // Image generation schema
 export const generateSchema = z.object({
-  modelKey: z.enum(["gpt-image-1", "imagen-3", "imagen-4", "flux-pro", "flux-kontext-max", "flux-krea-dev", "wan-2.2"]),
+  modelKey: z.enum(["gpt-image-1", "imagen-3", "imagen-4", "flux-pro", "flux-kontext-max", "flux-krea-dev", "wan-2.2", "google/nano-banana", "bytedance/seedream-4"]),
   inputs: z.record(z.any())
 });
 
@@ -240,7 +240,10 @@ export const generateImageSchema = z.object({
   // Updated to match the new model keys
   modelKey: z.enum(["gpt-image-1", "imagen-3", "imagen-4", "flux-pro", "flux-kontext-max", "flux-krea-dev", "wan-2.2", "google/nano-banana", "bytedance/seedream-4"]),
   // OpenAI-specific parameters (only validated when OpenAI model is selected)
-  size: z.enum(["auto", "1024x1024", "1536x1024", "1024x1536", "1792x1024", "1024x1792"]).optional(),
+  size: z.union([
+    z.enum(["auto", "1024x1024", "1536x1024", "1024x1536", "1792x1024", "1024x1792"]), // GPT-Image-1 formats
+    z.enum(["1K", "2K", "4K"]) // Seedream 4 formats
+  ]).optional(),
   quality: z.enum(["auto", "standard", "hd", "high", "medium", "low"]).optional(),
   style: z.enum(["vivid", "natural"]).optional(),
   n: z.number().int().min(1).max(10).optional(),
