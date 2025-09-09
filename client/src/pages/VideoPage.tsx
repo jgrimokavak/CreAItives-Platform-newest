@@ -1801,7 +1801,8 @@ console.log('[DIAGNOSTIC] VIDEO_MODELS loaded:', {
       label: model.label,
       maxDuration: model.maxDuration,
       maxDurationType: typeof model.maxDuration,
-      resolutions: model.resolutions
+      resolutions: 'resolutions' in model ? model.resolutions : undefined,
+      aspectRatios: 'aspectRatios' in model ? model.aspectRatios : undefined
     };
     return acc;
   }, {} as any)
@@ -1835,6 +1836,7 @@ export default function VideoPage() {
   const [newProjectDescription, setNewProjectDescription] = useState('');
   const [firstFrameImagePreview, setFirstFrameImagePreview] = useState<string | null>(null);
   const [lastFrameImagePreview, setLastFrameImagePreview] = useState<string | null>(null);
+  const [startImagePreview, setStartImagePreview] = useState<string | null>(null); // For Kling v2.1
   const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false);
   const [recentlyGeneratedVideos, setRecentlyGeneratedVideos] = useState<string[]>([]);
   
@@ -1861,8 +1863,8 @@ export default function VideoPage() {
 
   const watchedModel = form.watch('model');
   
-  // Always use hailuo-02 as it's the only model available
-  const currentModel = 'hailuo-02';
+  // Use the currently selected model
+  const currentModel = watchedModel || 'hailuo-02';
 
   // Fetch projects
   const { data: projects, isLoading: projectsLoading, refetch: refetchProjects } = useQuery<Project[]>({
@@ -2625,6 +2627,73 @@ export default function VideoPage() {
                                 />
                               </div>
                             </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Enhanced Model-specific Options for Kling v2.1 */}
+                    {currentModel === 'kling-v2.1' && (
+                      <>
+                        {/* Negative Prompt for Kling v2.1 */}
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <X className="w-4 h-4 text-primary" />
+                            <Label className="text-sm font-semibold">Negative Prompt (Optional)</Label>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            Describe what you don't want to see in your video
+                          </p>
+                          <Textarea
+                            placeholder="blurry, low quality, distorted..."
+                            value={form.watch('negativePrompt') || ''}
+                            onChange={(e) => form.setValue('negativePrompt', e.target.value, { shouldDirty: true })}
+                            className="min-h-[80px] resize-none"
+                          />
+                        </div>
+
+                        {/* Aspect Ratio for Kling v2.1 */}
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <Square className="w-4 h-4 text-primary" />
+                            <Label className="text-sm font-semibold">Aspect Ratio</Label>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            Choose the aspect ratio for your video (ignored if start image is provided)
+                          </p>
+                          <Select
+                            value={form.watch('aspectRatio') || '16:9'}
+                            onValueChange={(value) => form.setValue('aspectRatio', value as '16:9' | '9:16' | '1:1', { shouldDirty: true })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select aspect ratio" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="16:9">16:9 (Landscape)</SelectItem>
+                              <SelectItem value="9:16">9:16 (Portrait)</SelectItem>
+                              <SelectItem value="1:1">1:1 (Square)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Start Image for Kling v2.1 */}
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <ImageIcon className="w-4 h-4 text-primary" />
+                            <Label className="text-sm font-semibold">Start Image (Optional)</Label>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            Upload an image to use as the first frame of your video
+                          </p>
+                          <div className="p-4 bg-muted/30 rounded-lg border">
+                            <ReferenceImageUpload
+                              value={startImagePreview || undefined}
+                              onChange={(value) => {
+                                setStartImagePreview(value || null);
+                                form.setValue('startImage', value || '', { shouldDirty: true });
+                              }}
+                              className="w-full"
+                            />
                           </div>
                         </div>
                       </>
