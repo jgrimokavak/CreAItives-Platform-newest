@@ -36,7 +36,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form, availableMode
   return (
     <div className="space-y-4">
       {/* Size field for GPT-Image-1 (renamed to Aspect Ratio) */}
-      {fields.includes("size") && (
+      {fields.includes("size") && modelKey === "gpt-image-1" && (
         <FormField
           control={form.control}
           name={"size" as FormFieldName}

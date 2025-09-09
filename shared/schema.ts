@@ -238,7 +238,7 @@ export const generateImageSchema = z.object({
   // Common fields for all models
   prompt: z.string().min(1).max(32000),
   // Updated to match the new model keys
-  modelKey: z.enum(["gpt-image-1", "imagen-3", "imagen-4", "flux-pro", "flux-kontext-max", "flux-krea-dev", "wan-2.2", "google/nano-banana"]),
+  modelKey: z.enum(["gpt-image-1", "imagen-3", "imagen-4", "flux-pro", "flux-kontext-max", "flux-krea-dev", "wan-2.2", "google/nano-banana", "bytedance/seedream-4"]),
   // OpenAI-specific parameters (only validated when OpenAI model is selected)
   size: z.enum(["auto", "1024x1024", "1536x1024", "1024x1536", "1792x1024", "1024x1792"]).optional(),
   quality: z.enum(["auto", "standard", "hd", "high", "medium", "low"]).optional(),
@@ -265,6 +265,9 @@ export const generateImageSchema = z.object({
   go_fast: z.boolean().optional(), // For flux-krea-dev
   // WAN-2.2 specific fields
   juiced: z.boolean().optional(), // For wan-2.2
+  // ByteDance Seedream 4 specific fields
+  sequential_image_generation: z.enum(["disabled", "auto"]).optional(), // For bytedance/seedream-4
+  max_images: z.number().int().min(1).max(15).optional(), // For bytedance/seedream-4
   // KAVAK style toggle
   kavakStyle: z.boolean().optional().default(false)
 });
@@ -317,6 +320,14 @@ export const modelFormSchemas = {
     prompt: z.string().min(1).max(32000),
     image_input: z.array(z.string()).optional(),
     output_format: z.enum(["png", "jpg"]).optional(),
+  }),
+  "bytedance/seedream-4": z.object({
+    prompt: z.string().min(1).max(32000),
+    image_input: z.array(z.string()).optional().default([]),
+    size: z.enum(["1K", "2K", "4K"]).default("4K"),
+    aspect_ratio: z.enum(["match_input_image", "1:1", "4:3", "3:4", "16:9", "9:16", "3:2", "2:3", "21:9"]).default("match_input_image"),
+    sequential_image_generation: z.enum(["disabled", "auto"]).default("disabled"),
+    max_images: z.number().int().min(1).max(15).default(1),
   })
 };
 

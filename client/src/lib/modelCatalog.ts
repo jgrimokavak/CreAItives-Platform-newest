@@ -42,7 +42,7 @@ export const modelCatalog = {
   "bytedance/seedream-4": {
     label: "Seedream 4.0 (ByteDance)",
     description: "ByteDance's next-generation image creation model that combines text-to-image generation and image editing. Offers fast, high-resolution image generation up to 4K, rich prompt understanding, and support for multi-reference and batch workflows.",
-    visible: ["prompt", "image_input", "size", "aspect_ratio", "sequential_image_generation", "max_images", "kavakStyle"] as string[]
+    visible: ["prompt", "size", "aspect_ratio", "image_input", "sequential_image_generation", "max_images", "kavakStyle"] as string[]
   }
 };
 
