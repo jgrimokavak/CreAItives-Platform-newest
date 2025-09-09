@@ -1864,6 +1864,11 @@ export default function VideoPage() {
     },
   });
 
+  const watchedModel = form.watch('model');
+  
+  // Use the currently selected model
+  const currentModel = watchedModel || 'hailuo-02';
+
   // Update form defaults when model changes
   useEffect(() => {
     if (currentModel === 'kling-v2.1') {
@@ -1878,11 +1883,6 @@ export default function VideoPage() {
       form.setValue('promptOptimizer', true);
     }
   }, [currentModel]);
-
-  const watchedModel = form.watch('model');
-  
-  // Use the currently selected model
-  const currentModel = watchedModel || 'hailuo-02';
 
   // Fetch projects
   const { data: projects, isLoading: projectsLoading, refetch: refetchProjects } = useQuery<Project[]>({
