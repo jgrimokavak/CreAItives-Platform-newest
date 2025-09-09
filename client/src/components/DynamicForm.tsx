@@ -529,7 +529,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ modelKey, form, availableMode
                     const values = value ? value.split(',').filter(v => v.trim()) : [];
                     field.onChange(values);
                   }}
-                  multiple={true}
                 />
               </FormControl>
               <p className="text-xs text-muted-foreground">
