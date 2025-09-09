@@ -1741,13 +1741,19 @@ function VideoGallery() {
 // Video generation form schema
 const videoGenerationSchema = z.object({
   prompt: z.string().min(1, 'Prompt is required').max(2000, 'Prompt must be less than 2000 characters'),
-  model: z.enum(['hailuo-02', 'test-model-1', 'test-model-2', 'test-model-3', 'test-model-4', 'test-model-5']),
-  resolution: z.enum(['512p', '768p', '1080p']),
-  duration: z.number().int().min(6).max(10), // 6 or 10 seconds only  
-  projectId: z.string().optional(),
+  model: z.enum(['hailuo-02', 'kling-v2.1', 'test-model-1', 'test-model-2', 'test-model-3', 'test-model-4', 'test-model-5']),
+  // Hailuo-02 specific parameters
+  resolution: z.enum(['512p', '768p', '1080p']).optional(),
   firstFrameImage: z.string().optional(), // determines aspect ratio AND gets saved as reference
   lastFrameImage: z.string().optional(), // final frame target for video generation
-  promptOptimizer: z.boolean().default(true),
+  promptOptimizer: z.boolean().optional(),
+  // Kling v2.1 specific parameters
+  negativePrompt: z.string().optional(), // things to avoid in video
+  startImage: z.string().optional(), // first frame for kling v2.1
+  aspectRatio: z.enum(['16:9', '9:16', '1:1']).optional(), // aspect ratio for kling v2.1
+  // Shared parameters
+  duration: z.number().int().min(5).max(10), // 5-10 seconds for kling, 6-10 for hailuo
+  projectId: z.string().optional(),
 });
 
 export type VideoGenerationForm = z.infer<typeof videoGenerationSchema>;
@@ -1755,7 +1761,7 @@ export type VideoGenerationForm = z.infer<typeof videoGenerationSchema>;
 // DIAGNOSTIC: Log model configuration loading
 console.log('[DIAGNOSTIC] Loading VIDEO_MODELS configuration');
 
-// Video model configurations - Only Hailuo-02 is available
+// Video model configurations - Available models
 const VIDEO_MODELS = {
   'hailuo-02': {
     label: 'Minimax Hailuo-02',
@@ -1764,10 +1770,25 @@ const VIDEO_MODELS = {
     resolutions: ['512p', '768p', '1080p'],
     supportsDurationInt: true,
     supportsFirstFrame: true,
+    supportsLastFrame: true,
     supportsPromptOptimizer: true,
     durationOptions: [
       { value: 6, label: '6 seconds' },
       { value: 10, label: '10 seconds (768p only)' }
+    ]
+  },
+  'kling-v2.1': {
+    label: 'Kling v2.1 Master',
+    description: 'Premium video generation with superb dynamics and prompt adherence',
+    maxDuration: 10, // 5 or 10 seconds
+    aspectRatios: ['16:9', '9:16', '1:1'],
+    supportsDurationInt: true,
+    supportsStartImage: true,
+    supportsNegativePrompt: true,
+    supportsAspectRatio: true,
+    durationOptions: [
+      { value: 5, label: '5 seconds' },
+      { value: 10, label: '10 seconds' }
     ]
   }
 };
