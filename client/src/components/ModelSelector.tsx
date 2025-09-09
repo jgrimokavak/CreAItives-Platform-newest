@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, ChevronDown, Sparkles, Crown } from 'lucide-react';
+import { Check, ChevronDown, Sparkles, Crown, Zap, Target } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { VIDEO_MODELS } from '@/config/models';
 import {
@@ -40,21 +40,30 @@ const getFeatureHighlight = (modelId: string): string => {
   return model.badges[0]; // Use first badge as feature highlight
 };
 
+// Get model-specific icon
+const getModelIcon = (modelId: string) => {
+  switch (modelId) {
+    case 'hailuo-02': return Zap; // Physics simulation energy
+    case 'kling-v2.1': return Target; // Precision and adherence
+    default: return Sparkles;
+  }
+};
+
 // Get model colors based on provider
 const getModelColors = (modelId: string) => {
   const provider = getProviderName(modelId);
   switch (provider) {
     case 'Minimax':
       return {
-        primary: 'bg-gradient-to-r from-purple-500 to-blue-500',
-        light: 'bg-purple-50 border-purple-200 text-purple-700',
-        text: 'text-purple-600'
+        primary: 'bg-gradient-to-r from-cyan-500 to-blue-600',
+        light: 'bg-cyan-50 border-cyan-200 text-cyan-700',
+        text: 'text-cyan-600'
       };
     case 'Kling':
       return {
-        primary: 'bg-gradient-to-r from-orange-500 to-red-500',
-        light: 'bg-orange-50 border-orange-200 text-orange-700',
-        text: 'text-orange-600'
+        primary: 'bg-gradient-to-r from-amber-500 to-orange-600',
+        light: 'bg-amber-50 border-amber-200 text-amber-700',
+        text: 'text-amber-600'
       };
     default:
       return {
@@ -77,6 +86,7 @@ export function ModelSelector({ value, onChange, disabled }: ModelSelectorProps)
   const version = getVersionLabel(value);
   const provider = getProviderName(value);
   const featureHighlight = getFeatureHighlight(value);
+  const ModelIcon = getModelIcon(value);
 
   return (
     <div className="w-full">
@@ -93,7 +103,7 @@ export function ModelSelector({ value, onChange, disabled }: ModelSelectorProps)
             <div className="flex items-center gap-3 min-w-0 flex-1">
               {/* Model Icon */}
               <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-medium", colors.primary)}>
-                <Sparkles className="w-4 h-4" />
+                <ModelIcon className="w-4 h-4" />
               </div>
               
               {/* Model Info */}
@@ -133,6 +143,7 @@ export function ModelSelector({ value, onChange, disabled }: ModelSelectorProps)
             const modelVersion = getVersionLabel(model.id);
             const modelProvider = getProviderName(model.id);
             const modelFeature = getFeatureHighlight(model.id);
+            const DropdownModelIcon = getModelIcon(model.id);
 
             return (
               <DropdownMenuItem
@@ -149,7 +160,7 @@ export function ModelSelector({ value, onChange, disabled }: ModelSelectorProps)
               >
                 {/* Model Icon */}
                 <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center text-white flex-shrink-0", modelColors.primary)}>
-                  <Sparkles className="w-5 h-5" />
+                  <DropdownModelIcon className="w-5 h-5" />
                 </div>
 
                 {/* Model Details */}
