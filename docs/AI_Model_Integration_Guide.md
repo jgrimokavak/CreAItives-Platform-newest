@@ -164,7 +164,158 @@ For special field types like file uploads, create custom components:
 3. Submit and verify API call
 4. Check generated images appear in gallery
 
-## Common Errors and Solutions
+## Critical Integration Points (Lessons from ByteDance Seedream 4.0)
+
+### 5. Shared Schema Validation
+**File**: `shared/schema.ts`
+
+**CRITICAL**: Update ALL validation schemas, not just frontend forms:
+
+```typescript
+// 1. Update generateImageSchema
+export const generateImageSchema = {
+  // ... existing models
+  "bytedance/seedream-4": z.object({
+    prompt: z.string().min(1).max(32000),
+    image_input: z.array(z.string()).optional().default([]),
+    size: z.enum(["1K", "2K", "4K"]).default("4K"),
+    aspect_ratio: z.enum(["match_input_image", "1:1", "4:3", "3:4", "16:9", "9:16", "3:2", "2:3", "21:9"]).default("1:1"),
+    sequential_image_generation: z.enum(["disabled", "auto"]).default("disabled"),
+    max_images: z.number().int().min(1).max(15).default(1),
+  })
+};
+
+// 2. Update generateSchema if needed
+// 3. Ensure all related schemas are updated
+```
+
+### 6. Backend API Route Validation
+**Files**: 
+- `server/routes/enhancePrompt.ts`
+- `server/routes/promptSuggestions.ts`
+
+**CRITICAL**: Add model to ALL backend validation schemas:
+
+```typescript
+// enhancePrompt.ts
+const bodySchema = z.object({
+  text: z.string().min(3),
+  model: z.enum([
+    "gpt-image-1", 
+    "imagen-3", 
+    "imagen-4", 
+    "flux-pro", 
+    "flux-kontext-max", 
+    "flux-krea-dev", 
+    "wan-2.2", 
+    "google/nano-banana",
+    "bytedance/seedream-4" // ADD NEW MODEL HERE
+  ]),
+});
+
+// promptSuggestions.ts - Same validation schema update required
+```
+
+**CRITICAL**: Add model-specific guidance for AI enhance:
+
+```typescript
+// In enhancePrompt.ts systemTemplate function
+case "bytedance/seedream-4":
+  modelSpecificGuidance = "For Seedream 4.0: This model excels at ultra-high resolution (4K) image generation with rich prompt understanding. Emphasize detailed descriptions, realistic textures, and high-quality visual elements. Perfect for multi-reference image workflows and sequential generation.";
+  break;
+```
+
+### 7. Model Selector UI Integration
+**File**: `client/src/components/AIModelSelector.tsx`
+
+**CRITICAL**: Update BOTH icon locations (selected display AND dropdown list):
+
+```typescript
+// 1. Add import for new icon
+import { Maximize2 } from "lucide-react";
+
+// 2. Update provider mapping
+const getProviderName = (modelKey: ModelKey): string => {
+  // ... existing providers
+  if (modelKey === "bytedance/seedream-4") return "ByteDance";
+  return "Google";
+};
+
+// 3. Update feature highlights
+const getFeatureHighlight = (modelKey: ModelKey): string => {
+  // ... existing cases
+  case "bytedance/seedream-4": return "4K realism";
+  default: return "";
+};
+
+// 4. Update BOTH icon rendering locations:
+// Selected model display (around line 116)
+) : value === "bytedance/seedream-4" ? (
+  <Maximize2 className="h-4 w-4 text-white" />
+
+// Dropdown list display (around line 208) - EASY TO MISS!
+) : modelKey === "bytedance/seedream-4" ? (
+  <Maximize2 className="h-3.5 w-3.5 text-white" />
+```
+
+### 8. Color System Integration
+**File**: `client/src/lib/modelColors.ts`
+
+**CRITICAL**: Choose distinctive colors and add provider mapping:
+
+```typescript
+// 1. Add provider color definition
+"bytedance": {
+  light: "#e11d48", // Rose red - ensure it's distinctive
+  medium: "#be123c",
+  dark: "#9f1239",
+  bg: "#ffe4e6",
+  bgHover: "#fecdd3",
+  text: "#e11d48"
+},
+
+// 2. Add to getModelColors function
+} else if (modelKey === "bytedance/seedream-4") {
+  return providerColors["bytedance"];
+}
+```
+
+### 9. Conditional Field Display
+**File**: `client/src/components/DynamicForm.tsx`
+
+**CRITICAL**: Implement proper conditional field logic:
+
+```typescript
+// Only show max_images when sequential generation is "auto"
+{fields.includes("max_images") && form.watch("sequential_image_generation") === "auto" && (
+  <FormField
+    control={form.control}
+    name={"max_images" as FormFieldName}
+    render={({ field }) => (
+      // Field implementation
+    )}
+  />
+)}
+```
+
+### 10. Default Value Handling
+**Files**: 
+- `shared/schema.ts`
+- `client/src/lib/formSchemas.ts`
+- `client/src/components/DynamicForm.tsx`
+
+**CRITICAL**: Ensure consistent defaults across all files:
+
+```typescript
+// In DynamicForm.tsx for Select components
+<Select
+  onValueChange={field.onChange}
+  defaultValue={(field.value as string) || "4K"} // Provide fallback
+  value={field.value as string}
+>
+```
+
+## Common Errors and Solutions (Updated)
 
 ### Error 1: "No replacement was performed" in str_replace
 **Cause**: Field missing from frontend form schemas
@@ -186,26 +337,73 @@ For special field types like file uploads, create custom components:
 **Cause**: Missing import statements
 **Solution**: Add proper imports to DynamicForm.tsx
 
-## File Checklist
+### Error 6: AI Enhance/Prompt Suggestions not working
+**Cause**: Model missing from backend route validation schemas
+**Solution**: Add model to `enhancePrompt.ts` and `promptSuggestions.ts` enum arrays
+
+### Error 7: Icon not showing in dropdown
+**Cause**: Icon only updated in selected display, not dropdown list
+**Solution**: Update icon mapping in BOTH locations in AIModelSelector.tsx
+
+### Error 8: Color too similar to existing models
+**Cause**: Poor color choice without checking existing models
+**Solution**: Review all existing colors in modelColors.ts and choose distinctive ones
+
+### Error 9: Conditional fields always showing
+**Cause**: Missing conditional logic in DynamicForm.tsx
+**Solution**: Use form.watch() to conditionally render fields based on other field values
+
+### Error 10: "Invalid model attempted to be logged" in analytics
+**Cause**: Model validation in analytics doesn't include new model
+**Solution**: Update analytics model validation (though this may be handled automatically)
+
+### Error 11: Multiple validation schema conflicts
+**Cause**: Inconsistent schema definitions across shared/schema.ts and frontend
+**Solution**: Update ALL related schemas: generateImageSchema, generateSchema, modelFormSchemas
+
+## Comprehensive File Checklist (Updated)
 
 When adding a new model, ensure changes are made to:
 
 ### Backend Files:
 - [ ] `server/config/models.ts` - Model configuration and schema
 - [ ] `server/providers/[provider]-provider.ts` - Implementation and field mapping
+- [ ] `server/routes/enhancePrompt.ts` - Add model to validation enum
+- [ ] `server/routes/promptSuggestions.ts` - Add model to validation enum
 - [ ] `server/routes.ts` - API endpoints (usually auto-handled)
 
 ### Frontend Files:
 - [ ] `client/src/lib/formSchemas.ts` - Zod schemas, defaults, and types
 - [ ] `client/src/lib/modelCatalog.ts` - UI display configuration
-- [ ] `client/src/components/DynamicForm.tsx` - Custom UI components
+- [ ] `client/src/components/DynamicForm.tsx` - Custom UI components and conditional logic
+- [ ] `client/src/components/AIModelSelector.tsx` - Icon mapping (BOTH locations), provider mapping, feature highlights
+- [ ] `client/src/lib/modelColors.ts` - Color definitions and mapping
 - [ ] Import statements updated where needed
+
+### Shared Files:
+- [ ] `shared/schema.ts` - Update ALL validation schemas (generateImageSchema, generateSchema, etc.)
+
+### UI Integration Files:
+- [ ] Icon imports added to AIModelSelector.tsx
+- [ ] Color scheme distinctive from existing models
+- [ ] Provider name mapping added
+- [ ] Feature highlight text added
+- [ ] Conditional field display logic implemented
+
+### Backend AI Features:
+- [ ] Model added to enhancePrompt validation
+- [ ] Model-specific guidance added to enhancePrompt system template
+- [ ] Model added to promptSuggestions validation
 
 ### Validation Files:
 - [ ] TypeScript compilation passes
 - [ ] LSP diagnostics clear
-- [ ] Model appears in UI selector
+- [ ] Model appears in UI selector with correct icon and color
 - [ ] Form validation works
+- [ ] Default values populate correctly
+- [ ] Conditional fields show/hide properly
+- [ ] AI Enhance button works
+- [ ] Prompt suggestions work
 - [ ] API calls successful
 - [ ] Images generate and save
 
@@ -225,14 +423,60 @@ When adding a new model, ensure changes are made to:
 4. **Responsive Design**: Test on different screen sizes
 5. **Accessibility**: Include proper labels and descriptions
 
-## Success Indicators
+## Success Indicators (Comprehensive)
 
-- [ ] Model appears in create page dropdown
+### Basic Functionality:
+- [ ] Model appears in create page dropdown with correct name
+- [ ] Model has distinctive icon and color (not similar to existing models)
 - [ ] All model-specific fields render correctly
-- [ ] Form validation works properly  
+- [ ] Form validation works properly
+- [ ] Default values are set and display correctly
+- [ ] Conditional fields show/hide as expected
+
+### Advanced Features:
+- [ ] AI Enhance button works without errors
+- [ ] Prompt suggestions generate successfully
+- [ ] Model-specific guidance appears in enhanced prompts
 - [ ] Generate button creates job successfully
 - [ ] Images are generated and saved to gallery
-- [ ] No TypeScript or runtime errors
-- [ ] UI is responsive and accessible
 
-This guide should be referenced whenever adding new AI models to ensure consistent, error-free integration.
+### Technical Validation:
+- [ ] No TypeScript or runtime errors
+- [ ] LSP diagnostics are clear
+- [ ] All validation schemas are synchronized
+- [ ] Backend routes accept the new model
+- [ ] Analytics tracking works (no "Invalid model" errors)
+
+### UI/UX Validation:
+- [ ] Icon appears in both selected display AND dropdown list
+- [ ] Color scheme is distinctive and readable
+- [ ] UI is responsive and accessible
+- [ ] Provider name displays correctly
+- [ ] Feature highlight text is appropriate
+
+## Post-Integration Testing
+
+After completing the integration, test these scenarios:
+
+1. **Basic Generation**: Select model, enter prompt, generate image
+2. **AI Enhancement**: Click "AI Enhance" and verify it works
+3. **Prompt Suggestions**: Type a prompt and verify suggestions appear
+4. **Conditional Fields**: Test any conditional field display logic
+5. **Default Values**: Verify all defaults are set correctly
+6. **Form Validation**: Test with invalid inputs to ensure validation works
+7. **Image Upload**: If the model supports image input, test file uploads
+8. **Multiple Outputs**: If supported, test generating multiple images
+
+## Integration Time Estimate
+
+Based on the ByteDance Seedream 4.0 integration experience:
+- **Simple model (basic text-to-image)**: 30-45 minutes
+- **Complex model (multiple inputs, conditional fields)**: 1-2 hours
+- **Model with custom UI components**: 2-3 hours
+
+The majority of time is spent on:
+1. Updating all validation schemas (15-20 minutes)
+2. UI integration and styling (20-30 minutes)
+3. Testing and debugging (20-40 minutes)
+
+This guide should be referenced whenever adding new AI models to ensure consistent, error-free integration. Following this checklist will prevent the common issues encountered during the ByteDance Seedream 4.0 integration.
