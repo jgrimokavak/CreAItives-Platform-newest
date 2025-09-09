@@ -21,7 +21,7 @@ export const VIDEO_MODELS: ModelDef[] = [
       '6-10 second duration support'
     ],
     recommended: false,
-    badges: ['Physics']
+    badges: []
   },
   {
     id: 'kling-v2.1',
@@ -35,6 +35,6 @@ export const VIDEO_MODELS: ModelDef[] = [
       'Negative prompt support for precise control'
     ],
     recommended: true,
-    badges: ['Dynamic']
+    badges: []
   }
 ];
