@@ -2481,43 +2481,45 @@ export default function VideoPage() {
                     </div>
 
                     {/* Enhanced Resolution & Duration Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* Enhanced Resolution */}
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2">
-                          <ImageIcon className="w-4 h-4 text-primary" />
-                          <Label className="text-sm font-semibold">Resolution</Label>
+                    <div className={`grid gap-6 ${currentModel === 'hailuo-02' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
+                      {/* Enhanced Resolution - only for Hailuo-02 */}
+                      {currentModel === 'hailuo-02' && (
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <ImageIcon className="w-4 h-4 text-primary" />
+                            <Label className="text-sm font-semibold">Resolution</Label>
+                          </div>
+                          <Select
+                            value={form.watch('resolution')}
+                            onValueChange={(value) => form.setValue('resolution', value as any, { shouldDirty: true })}
+                            disabled={generateVideoMutation.isPending}
+                          >
+                            <SelectTrigger className="h-12 focus:ring-2 focus:ring-primary/20">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="512p" className="py-3">
+                                <div className="flex flex-col items-start">
+                                  <span className="font-medium">512p</span>
+                                  <span className="text-xs text-muted-foreground">854 × 512 pixels</span>
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="768p" className="py-3">
+                                <div className="flex flex-col items-start">
+                                  <span className="font-medium">768p</span>
+                                  <span className="text-xs text-muted-foreground">1366 × 768 pixels</span>
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="1080p" className="py-3">
+                                <div className="flex flex-col items-start">
+                                  <span className="font-medium">1080p</span>
+                                  <span className="text-xs text-muted-foreground">1920 × 1080 pixels</span>
+                                </div>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
-                        <Select
-                          value={form.watch('resolution')}
-                          onValueChange={(value) => form.setValue('resolution', value as any, { shouldDirty: true })}
-                          disabled={generateVideoMutation.isPending}
-                        >
-                          <SelectTrigger className="h-12 focus:ring-2 focus:ring-primary/20">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="512p" className="py-3">
-                              <div className="flex flex-col items-start">
-                                <span className="font-medium">512p</span>
-                                <span className="text-xs text-muted-foreground">854 × 512 pixels</span>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="768p" className="py-3">
-                              <div className="flex flex-col items-start">
-                                <span className="font-medium">768p</span>
-                                <span className="text-xs text-muted-foreground">1366 × 768 pixels</span>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="1080p" className="py-3">
-                              <div className="flex flex-col items-start">
-                                <span className="font-medium">1080p</span>
-                                <span className="text-xs text-muted-foreground">1920 × 1080 pixels</span>
-                              </div>
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                      )}
 
                       {/* Enhanced Duration */}
                       <div className="space-y-3">
