@@ -325,13 +325,19 @@ export type GenerateImageInput = z.infer<typeof generateImageSchema>;
 // Video generation schema
 export const generateVideoSchema = z.object({
   prompt: z.string().min(1, 'Prompt is required').max(2000, 'Prompt must be less than 2000 characters'),
-  model: z.enum(['hailuo-02']),
-  resolution: z.enum(['512p', '768p', '1080p']),
-  duration: z.number().int().min(6).max(10), // 6 or 10 seconds only
-  projectId: z.string().optional(),
+  model: z.enum(['hailuo-02', 'kling-v2.1']),
+  // Hailuo-02 specific parameters
+  resolution: z.enum(['512p', '768p', '1080p']).optional(),
   firstFrameImage: z.string().optional(), // determines aspect ratio AND gets saved as reference
   lastFrameImage: z.string().optional(), // final frame target for video generation
-  promptOptimizer: z.boolean().default(true),
+  promptOptimizer: z.boolean().optional(),
+  // Kling v2.1 specific parameters
+  negativePrompt: z.string().optional(), // things to avoid in video
+  startImage: z.string().optional(), // first frame for kling v2.1
+  aspectRatio: z.enum(['16:9', '9:16', '1:1']).optional(), // aspect ratio for kling v2.1
+  // Shared parameters
+  duration: z.number().int().min(5).max(10), // 5-10 seconds for kling, 6-10 for hailuo
+  projectId: z.string().optional(),
 });
 
 export type GenerateVideoInput = z.infer<typeof generateVideoSchema>;
@@ -346,6 +352,13 @@ export const videoModelSchemas = {
     firstFrameImage: z.string().optional(),
     lastFrameImage: z.string().optional(), // final frame target for video generation
     referenceImage: z.string().optional(), // base64 reference image to be stored in object storage
+  }),
+  "kling-v2.1": z.object({
+    prompt: z.string().min(1).max(2000),
+    negativePrompt: z.string().optional(), // things to avoid in video
+    startImage: z.string().optional(), // first frame of the video
+    aspectRatio: z.enum(['16:9', '9:16', '1:1']),
+    duration: z.number().int().min(5).max(10), // 5 or 10 seconds
   }),
 };
 
