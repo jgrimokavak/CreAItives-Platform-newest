@@ -325,7 +325,7 @@ export type GenerateImageInput = z.infer<typeof generateImageSchema>;
 // Video generation schema
 export const generateVideoSchema = z.object({
   prompt: z.string().min(1, 'Prompt is required').max(2000, 'Prompt must be less than 2000 characters'),
-  model: z.enum(['hailuo-02', 'kling-v2.1']),
+  model: z.enum(['hailuo-02', 'kling-v2.1', 'seedance-1-pro']),
   // Hailuo-02 specific parameters
   resolution: z.enum(['512p', '768p', '1080p']).optional(),
   firstFrameImage: z.string().optional(), // determines aspect ratio AND gets saved as reference
@@ -335,8 +335,14 @@ export const generateVideoSchema = z.object({
   negativePrompt: z.string().optional(), // things to avoid in video
   startImage: z.string().optional(), // first frame for kling v2.1
   aspectRatio: z.enum(['16:9', '9:16', '1:1']).optional(), // aspect ratio for kling v2.1
+  // Seedance 1-Pro specific parameters
+  seedanceResolution: z.enum(['480p', '720p', '1080p']).optional(), // Seedance resolution
+  seedanceAspectRatio: z.enum(['16:9', '4:3', '1:1', '3:4', '9:16', '21:9', '9:21']).optional(), // Seedance aspect ratio
+  seedanceImage: z.string().optional(), // Seedance image-to-video input
+  seedanceCameraFixed: z.boolean().optional(), // Seedance camera position control
+  seedanceSeed: z.number().int().optional(), // Seedance seed for reproducibility
   // Shared parameters
-  duration: z.number().int().min(5).max(10), // 5-10 seconds for kling, 6-10 for hailuo
+  duration: z.number().int().min(3).max(12), // 3-12 seconds for seedance, 5-10 for kling, 6-10 for hailuo
   projectId: z.string().optional(),
 });
 
@@ -359,6 +365,15 @@ export const videoModelSchemas = {
     startImage: z.string().optional(), // first frame of the video
     aspectRatio: z.enum(['16:9', '9:16', '1:1']),
     duration: z.number().int().min(5).max(10), // 5 or 10 seconds
+  }),
+  "seedance-1-pro": z.object({
+    prompt: z.string().min(1).max(2000),
+    seedanceResolution: z.enum(['480p', '720p', '1080p']).optional(),
+    seedanceAspectRatio: z.enum(['16:9', '4:3', '1:1', '3:4', '9:16', '21:9', '9:21']).optional(),
+    seedanceImage: z.string().optional(),
+    seedanceCameraFixed: z.boolean().optional(),
+    seedanceSeed: z.number().int().optional(),
+    duration: z.number().int().min(3).max(12), // 3-12 seconds
   }),
 };
 
