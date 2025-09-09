@@ -180,6 +180,76 @@ export const minimaxHailuoSchema = {
   required: ["prompt"]
 };
 
+// Seedance 1-Pro schema for video generation
+export const seedanceProSchema = {
+  type: "object",
+  title: "Input",
+  required: ["prompt"],
+  properties: {
+    fps: {
+      enum: [24],
+      type: "integer",
+      title: "fps",
+      description: "Frame rate (frames per second)",
+      default: 24,
+      "x-order": 5
+    },
+    seed: {
+      type: "integer",
+      title: "Seed",
+      "x-order": 7,
+      nullable: true,
+      description: "Random seed. Set for reproducible generation"
+    },
+    image: {
+      type: "string",
+      title: "Image",
+      format: "uri",
+      "x-order": 1,
+      nullable: true,
+      description: "Input image for image-to-video generation"
+    },
+    prompt: {
+      type: "string",
+      title: "Prompt",
+      "x-order": 0,
+      description: "Text prompt for video generation"
+    },
+    duration: {
+      type: "integer",
+      title: "Duration",
+      default: 5,
+      maximum: 12,
+      minimum: 3,
+      "x-order": 2,
+      description: "Video duration in seconds"
+    },
+    resolution: {
+      enum: ["480p", "720p", "1080p"],
+      type: "string",
+      title: "resolution",
+      description: "Video resolution",
+      default: "1080p",
+      "x-order": 3
+    },
+    aspect_ratio: {
+      enum: ["16:9", "4:3", "1:1", "3:4", "9:16", "21:9", "9:21"],
+      type: "string",
+      title: "aspect_ratio",
+      description: "Video aspect ratio. Ignored if an image is used.",
+      default: "16:9",
+      "x-order": 4
+    },
+    camera_fixed: {
+      type: "boolean",
+      title: "Camera Fixed",
+      default: false,
+      "x-order": 6,
+      description: "Whether to fix camera position"
+    }
+  }
+};
+
 // Kling v2.1 Master schema for video generation
 export const klingV21Schema = {
   type: "object",
@@ -379,6 +449,21 @@ export const models: ModelConfig[] = [
     },
     visible: ["prompt", "negative_prompt", "start_image", "aspect_ratio", "duration"],
     description: "Kling v2.1 Master – Premium video generation with superb dynamics and prompt adherence. Generate 1080p videos from text or image."
+  },
+  {
+    key: "seedance-1-pro",
+    provider: "replicate", 
+    slug: "bytedance/seedance-1-pro",
+    schema: seedanceProSchema,
+    defaults: {
+      duration: 5,
+      resolution: "1080p",
+      aspect_ratio: "16:9",
+      camera_fixed: false,
+      fps: 24
+    },
+    visible: ["prompt", "image", "duration", "resolution", "aspect_ratio", "camera_fixed", "seed"],
+    description: "Seedance 1-Pro – Multi-shot video generation with creative flexibility and narrative coherence. Supports both text-to-video and image-to-video generation."
   }
 ];
 
