@@ -131,32 +131,50 @@ export const fluxKreaDevSchema = {
 // Minimax Hailuo-02 schema for video generation
 export const minimaxHailuoSchema = {
   type: "object",
+  title: "Input",
   properties: {
     prompt: {
       type: "string",
-      description: "Text prompt for video generation"
+      title: "Prompt",
+      "x-order": 0,
+      description: "Text prompt for generation"
+    },
+    first_frame_image: {
+      type: "string",
+      title: "First Frame Image",
+      format: "uri",
+      "x-order": 1,
+      description: "First frame image for video generation. The output video will have the same aspect ratio as this image."
+    },
+    last_frame_image: {
+      type: "string",
+      title: "Last Frame Image",
+      format: "uri",
+      "x-order": 2,
+      description: "Last frame image for video generation. The final frame of the output video will match this image."
     },
     duration: {
       type: "integer",
       enum: [6, 10],
+      title: "duration",
+      "x-order": 3,
       description: "Duration of the video in seconds. 10 seconds is only available for 768p resolution.",
       default: 6
     },
     resolution: {
       type: "string",
       enum: ["512p", "768p", "1080p"],
+      title: "resolution",
+      "x-order": 4,
       description: "Pick between standard 512p, 768p, or pro 1080p resolution. The pro model is not just high resolution, it is also higher quality.",
       default: "1080p"
     },
     prompt_optimizer: {
       type: "boolean",
+      title: "Prompt Optimizer",
+      "x-order": 5,
       description: "Use prompt optimizer",
       default: true
-    },
-    first_frame_image: {
-      type: "string",
-      format: "uri",
-      description: "First frame image for video generation. The output video will have the same aspect ratio as this image."
     }
   },
   required: ["prompt"]
@@ -301,7 +319,7 @@ export const models: ModelConfig[] = [
       resolution: "1080p",
       prompt_optimizer: true
     },
-    visible: ["prompt", "duration", "resolution", "prompt_optimizer", "first_frame_image"],
+    visible: ["prompt", "duration", "resolution", "prompt_optimizer", "first_frame_image", "last_frame_image"],
     description: "Hailuo-02 – High-quality video generation from Minimax with fast generation times."
   }
 ];

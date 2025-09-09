@@ -1745,6 +1745,7 @@ const videoGenerationSchema = z.object({
   duration: z.number().int().min(6).max(10), // 6 or 10 seconds only  
   projectId: z.string().optional(),
   firstFrameImage: z.string().optional(), // determines aspect ratio AND gets saved as reference
+  lastFrameImage: z.string().optional(), // final frame target for video generation
   promptOptimizer: z.boolean().default(true),
 });
 
@@ -1811,6 +1812,7 @@ export default function VideoPage() {
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectDescription, setNewProjectDescription] = useState('');
   const [firstFrameImagePreview, setFirstFrameImagePreview] = useState<string | null>(null);
+  const [lastFrameImagePreview, setLastFrameImagePreview] = useState<string | null>(null);
   const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false);
   const [recentlyGeneratedVideos, setRecentlyGeneratedVideos] = useState<string[]>([]);
   
@@ -1906,6 +1908,11 @@ export default function VideoPage() {
       // Only include image if there's actually one selected
       if (firstFrameImagePreview) {
         payload.image = firstFrameImagePreview;
+      }
+      
+      // Include last frame image if available
+      if (lastFrameImagePreview) {
+        payload.lastFrameImage = lastFrameImagePreview;
       }
       
       const response = await apiRequest("/api/enhance-video-prompt", {
@@ -2551,6 +2558,27 @@ export default function VideoPage() {
                               onChange={(value) => {
                                 setFirstFrameImagePreview(value || null);
                                 form.setValue('firstFrameImage', value || '', { shouldDirty: true });
+                              }}
+                              className="w-full"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Enhanced Last Frame Image for Hailuo-02 */}
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <ImageIcon className="w-4 h-4 text-primary" />
+                            <Label className="text-sm font-semibold">Last Frame Image (Optional)</Label>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            Target end frame for your video generation
+                          </p>
+                          <div className="p-4 bg-muted/30 rounded-lg border">
+                            <ReferenceImageUpload
+                              value={lastFrameImagePreview || undefined}
+                              onChange={(value) => {
+                                setLastFrameImagePreview(value || null);
+                                form.setValue('lastFrameImage', value || '', { shouldDirty: true });
                               }}
                               className="w-full"
                             />

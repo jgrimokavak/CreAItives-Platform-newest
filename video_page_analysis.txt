@@ -646,3 +646,123 @@ FUTURE UPDATE PROTOCOL:
   * Impact on schemas, UI, and API interactions
 - Maintain chronological append-only format
 - Include code snippets and technical details
+
+=====================================================
+UPDATE LOG - HAILUO-02 MODEL ENHANCEMENT
+Timestamp: September 09, 2025 at 13:42 UTC
+=====================================================
+
+WHAT WAS MODIFIED:
+1. Backend schema in server/config/models.ts - Added last_frame_image parameter
+2. Shared validation schema in shared/schema.ts - Added lastFrameImage validation  
+3. Replicate provider parameter mapping - Added last_frame_image handling
+4. Frontend VideoPage.tsx - Added last frame image UI component and state management
+5. Prompt enhancement system - Included lastFrameImage in enhancement payload
+
+WHY IT WAS MODIFIED:
+The Minimax HaiLuo-02 model added support for a new `last_frame_image` parameter that allows users to specify a target end frame for video generation. This complements the existing `first_frame_image` parameter, providing more control over video generation by defining both start and end visual targets.
+
+DETAILED CHANGES:
+
+Backend Schema (server/config/models.ts):
+```typescript
+// Updated minimaxHailuoSchema to include last_frame_image
+last_frame_image: {
+  type: "string",
+  title: "Last Frame Image", 
+  format: "uri",
+  "x-order": 2,
+  description: "Last frame image for video generation. The final frame of the output video will match this image."
+}
+
+// Updated visible parameters
+visible: ["prompt", "duration", "resolution", "prompt_optimizer", "first_frame_image", "last_frame_image"]
+```
+
+Shared Schema (shared/schema.ts):
+```typescript
+// Added to generateVideoSchema
+lastFrameImage: z.string().optional(), // final frame target for video generation
+
+// Added to videoModelSchemas["hailuo-02"]  
+lastFrameImage: z.string().optional(), // final frame target for video generation
+```
+
+Replicate Provider (server/providers/replicate-provider.ts):
+```typescript
+// Added parameter mapping for hailuo-02
+if (inputs.lastFrameImage !== undefined && inputs.lastFrameImage !== '') {
+  body.last_frame_image = inputs.lastFrameImage;
+  delete body.lastFrameImage;
+} else {
+  delete body.lastFrameImage;
+}
+```
+
+Frontend UI (client/src/pages/VideoPage.tsx):
+```typescript
+// Added state management
+const [lastFrameImagePreview, setLastFrameImagePreview] = useState<string | null>(null);
+
+// Added form schema validation
+lastFrameImage: z.string().optional(), // final frame target for video generation
+
+// Added UI component (reused ReferenceImageUpload)
+<div className="space-y-3">
+  <div className="flex items-center gap-2">
+    <ImageIcon className="w-4 h-4 text-primary" />
+    <Label className="text-sm font-semibold">Last Frame Image (Optional)</Label>
+  </div>
+  <p className="text-sm text-muted-foreground">
+    Target end frame for your video generation
+  </p>
+  <div className="p-4 bg-muted/30 rounded-lg border">
+    <ReferenceImageUpload
+      value={lastFrameImagePreview || undefined}
+      onChange={(value) => {
+        setLastFrameImagePreview(value || null);
+        form.setValue('lastFrameImage', value || '', { shouldDirty: true });
+      }}
+      className="w-full"
+    />
+  </div>
+</div>
+
+// Updated prompt enhancement to include lastFrameImage
+if (lastFrameImagePreview) {
+  payload.lastFrameImage = lastFrameImagePreview;
+}
+```
+
+HOW IT AFFECTS EXISTING FUNCTIONALITY:
+1. **Backward Compatibility**: All existing functionality remains unchanged. The new parameter is optional.
+2. **Form Validation**: Extended existing Zod schemas to include the new optional parameter.
+3. **UI Layout**: Added the last frame image input below the first frame image input in the same visual style.
+4. **API Compatibility**: The Replicate provider properly maps the frontend parameter to the expected backend format.
+5. **State Management**: Uses the same pattern as firstFrameImage for consistency.
+
+IMPACT ON SCHEMAS, UI, AND API INTERACTIONS:
+
+Schema Impact:
+- generateVideoSchema now accepts lastFrameImage as optional string
+- videoModelSchemas["hailuo-02"] includes lastFrameImage validation
+- minimaxHailuoSchema follows updated Replicate API specification with x-order properties
+
+UI Impact:
+- New "Last Frame Image" section appears below "First Frame Image" for hailuo-02 model
+- Consistent visual design using same ReferenceImageUpload component
+- Form state properly manages both first and last frame images independently
+- Prompt enhancement system considers both images when available
+
+API Interaction Impact:
+- Frontend → Backend: lastFrameImage included in video generation requests
+- Backend → Replicate: lastFrameImage mapped to last_frame_image parameter
+- Validation ensures parameter is properly formatted before API calls
+- Error handling remains consistent with existing image parameter patterns
+
+TECHNICAL NOTES:
+- Reused existing ReferenceImageUpload component for consistency
+- Maintained same file validation rules (PNG, JPEG, WebP, max 25MB)
+- Both images use base64 data URL format for transmission
+- Parameter ordering follows Replicate API specification (x-order: 2)
+- No database schema changes required - images handled as form data

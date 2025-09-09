@@ -49,6 +49,13 @@ export class ReplicateProvider extends BaseProvider {
         // Remove the field entirely if empty or undefined
         delete body.firstFrameImage;
       }
+      if (inputs.lastFrameImage !== undefined && inputs.lastFrameImage !== '') {
+        body.last_frame_image = inputs.lastFrameImage;
+        delete body.lastFrameImage;
+      } else {
+        // Remove the field entirely if empty or undefined
+        delete body.lastFrameImage;
+      }
     }
 
     log({
