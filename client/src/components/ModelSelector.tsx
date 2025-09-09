@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, ChevronDown, Sparkles, Crown, Zap, Target } from 'lucide-react';
+import { Check, ChevronDown, Sparkles, Crown, Zap, Target, Film } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { VIDEO_MODELS } from '@/config/models';
 import {
@@ -20,6 +20,7 @@ interface ModelSelectorProps {
 const getProviderName = (modelId: string): string => {
   if (modelId === 'hailuo-02') return 'Minimax';
   if (modelId === 'kling-v2.1') return 'Kling';
+  if (modelId === 'seedance-1-pro') return 'ByteDance';
   return 'Unknown';
 };
 
@@ -29,6 +30,7 @@ const getVersionLabel = (modelId: string): string => {
   switch (modelId) {
     case 'hailuo-02': return 'v2'; // This is part of the actual model name
     case 'kling-v2.1': return 'v2.1'; // Kling model version
+    case 'seedance-1-pro': return 'Pro'; // Seedance Pro version
     default: return '';
   }
 };
@@ -45,6 +47,7 @@ const getModelIcon = (modelId: string) => {
   switch (modelId) {
     case 'hailuo-02': return Zap; // Physics simulation energy
     case 'kling-v2.1': return Target; // Precision and adherence
+    case 'seedance-1-pro': return Film; // Multi-shot creative filmmaking
     default: return Sparkles;
   }
 };
@@ -66,6 +69,13 @@ const getModelColors = (modelId: string) => {
         icon: 'text-amber-700',
         light: 'bg-amber-50 border-amber-200 text-amber-700',
         text: 'text-amber-600'
+      };
+    case 'ByteDance':
+      return {
+        primary: 'bg-purple-100 border border-purple-300',
+        icon: 'text-purple-700',
+        light: 'bg-purple-50 border-purple-200 text-purple-700',
+        text: 'text-purple-600'
       };
     default:
       return {
