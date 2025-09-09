@@ -307,14 +307,41 @@ if (modelKey === 'kling-v2.1') {
 }
 ```
 
-### Step 3: Update Analytics Validation
+### Step 3: Update Backend Validation Schema (CRITICAL)
+
+**⚠️ CRITICAL:** Update the backend validation schema in `shared/schema.ts` to include your new model:
+
+```typescript
+export const generateVideoSchema = z.object({
+  prompt: z.string().min(1, 'Prompt is required').max(2000, 'Prompt must be less than 2000 characters'),
+  model: z.enum(['hailuo-02', 'kling-v2.1', 'your-new-model']), // Add your model here
+  // ... rest of schema
+});
+
+// Also update the videoModelSchemas object:
+export const videoModelSchemas = {
+  // ... existing models
+  "your-new-model": z.object({
+    prompt: z.string().min(1).max(2000),
+    // Add your model-specific parameters here
+    duration: z.number().int().min(3).max(12), // Example
+  }),
+};
+```
+
+**Common Error:** If you forget this step, you'll see validation errors like:
+```
+400: {"error":"Invalid input","details":[{"received":"your-new-model","code":"invalid_enum_value","options":["hailuo-02","kling-v2.1"],"path":["model"],"message":"Invalid enum value. Expected 'hailuo-02' | 'kling-v2.1', received 'your-new-model'"}]}
+```
+
+### Step 4: Update Analytics Validation
 
 Add your model to the valid models list in `server/analytics.ts`:
 
 ```typescript
 const VALID_MODELS = [
   'gpt-image-1', 'imagen-4', 'imagen-3', 'flux-pro', 
-  'flux-kontext-max', 'flux-krea-dev', 'wan-2.2', 'hailuo-02', 'kling-v2.1', 'upscale',
+  'flux-kontext-max', 'flux-krea-dev', 'wan-2.2', 'hailuo-02', 'kling-v2.1', 'your-new-model', 'upscale',
   'google/nano-banana'
 ];
 ```
