@@ -2337,8 +2337,11 @@ export default function VideoPage() {
     }
   };
 
-  // Handle duration and resolution validation
+  // Handle duration and resolution validation - ONLY for Hailuo-02
   useEffect(() => {
+    // Only apply this validation for Hailuo-02 model
+    if (currentModel !== 'hailuo-02') return;
+    
     const currentDuration = form.watch('duration');
     const currentResolution = form.watch('resolution');
     
@@ -2351,7 +2354,7 @@ export default function VideoPage() {
         variant: 'destructive',
       });
     }
-  }, [form.watch('duration'), form.watch('resolution'), form, toast]);
+  }, [currentModel, form.watch('duration'), form.watch('resolution'), form, toast]);
 
   const handleEnhancePrompt = () => {
     const currentPrompt = form.getValues('prompt');
