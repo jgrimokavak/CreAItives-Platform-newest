@@ -182,17 +182,6 @@ export function ModelSelector({ value, onChange, disabled }: ModelSelectorProps)
                     {model.summary}
                   </p>
                   
-                  {/* Key capabilities - no truncation */}
-                  {model.details && model.details.length > 0 && (
-                    <div className="space-y-1">
-                      {model.details.slice(0, 3).map((detail, idx) => (
-                        <div key={idx} className="flex items-start gap-2 text-xs text-muted-foreground">
-                          <div className="w-1 h-1 rounded-full bg-muted-foreground/60 mt-2 flex-shrink-0"></div>
-                          <span className="leading-relaxed">{detail}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
 
                 {/* Selection Check */}
