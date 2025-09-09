@@ -2544,30 +2544,24 @@ export default function VideoPage() {
                           />
                         </div>
 
-                        {/* Enhanced Frame Control System for Hailuo-02 */}
-                        <div className="space-y-4">
+                        {/* Frame Control for Hailuo-02 */}
+                        <div className="space-y-3">
                           <div className="flex items-center gap-2">
                             <VideoIcon className="w-4 h-4 text-primary" />
                             <Label className="text-sm font-semibold">Frame Control (Optional)</Label>
                           </div>
                           <p className="text-sm text-muted-foreground">
-                            Control your video's beginning and ending frames for precise generation
+                            Set start and/or end frames to guide your video generation
                           </p>
                           
-                          {/* Frame Control Container */}
-                          <div className="relative bg-muted/20 rounded-xl p-6 border-2 border-dashed border-muted-foreground/20">
+                          {/* Simplified Frame Controls */}
+                          <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg border">
                             {/* First Frame */}
-                            <div className="space-y-3">
-                              <div className="flex items-center gap-2">
-                                <div className="flex items-center justify-center w-6 h-6 rounded-full bg-green-100 border border-green-300">
-                                  <Play className="w-3 h-3 text-green-600 fill-green-600" />
-                                </div>
-                                <Label className="text-sm font-medium text-green-700">Start Frame</Label>
-                              </div>
-                              <p className="text-xs text-muted-foreground ml-8">
-                                Sets aspect ratio and initial visual style
-                              </p>
-                              <div className="ml-8 p-4 bg-white/50 rounded-lg border">
+                            <div className="flex-1">
+                              <Label className="text-xs font-medium text-muted-foreground mb-2 block">
+                                Start Frame (Optional)
+                              </Label>
+                              <div className="border-2 border-dashed border-muted-foreground/30 rounded-lg p-3 bg-background">
                                 <ReferenceImageUpload
                                   value={firstFrameImagePreview || undefined}
                                   onChange={(value) => {
@@ -2579,29 +2573,27 @@ export default function VideoPage() {
                               </div>
                             </div>
 
-                            {/* Elegant Arrow Connector */}
-                            <div className="flex justify-center my-6">
-                              <div className="flex flex-col items-center">
-                                <div className="w-px h-4 bg-gradient-to-b from-green-300 to-blue-300"></div>
-                                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-green-100 to-blue-100 border border-gray-200 shadow-sm">
-                                  <ArrowDown className="w-4 h-4 text-blue-600" />
-                                </div>
-                                <div className="w-px h-4 bg-gradient-to-b from-blue-300 to-red-300"></div>
+                            {/* Arrow */}
+                            <div className="flex items-center justify-center py-8">
+                              <div className="text-muted-foreground">
+                                <svg width="24" height="16" viewBox="0 0 24 16" fill="none" className="text-muted-foreground">
+                                  <path 
+                                    d="M1 8H23M23 8L16 1M23 8L16 15" 
+                                    stroke="currentColor" 
+                                    strokeWidth="2" 
+                                    strokeLinecap="round" 
+                                    strokeLinejoin="round"
+                                  />
+                                </svg>
                               </div>
                             </div>
 
                             {/* Last Frame */}
-                            <div className="space-y-3">
-                              <div className="flex items-center gap-2">
-                                <div className="flex items-center justify-center w-6 h-6 rounded-full bg-red-100 border border-red-300">
-                                  <Square className="w-3 h-3 text-red-600 fill-red-600" />
-                                </div>
-                                <Label className="text-sm font-medium text-red-700">End Frame</Label>
-                              </div>
-                              <p className="text-xs text-muted-foreground ml-8">
-                                Target final frame for video completion
-                              </p>
-                              <div className="ml-8 p-4 bg-white/50 rounded-lg border">
+                            <div className="flex-1">
+                              <Label className="text-xs font-medium text-muted-foreground mb-2 block">
+                                End Frame (Optional)
+                              </Label>
+                              <div className="border-2 border-dashed border-muted-foreground/30 rounded-lg p-3 bg-background">
                                 <ReferenceImageUpload
                                   value={lastFrameImagePreview || undefined}
                                   onChange={(value) => {
