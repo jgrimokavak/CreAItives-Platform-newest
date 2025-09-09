@@ -65,7 +65,8 @@ import {
   EyeOff,
   Info,
   Trash,
-  Users
+  Users,
+  ArrowDown
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
@@ -2543,45 +2544,74 @@ export default function VideoPage() {
                           />
                         </div>
 
-                        {/* Enhanced First Frame Image for Hailuo-02 */}
-                        <div className="space-y-3">
+                        {/* Enhanced Frame Control System for Hailuo-02 */}
+                        <div className="space-y-4">
                           <div className="flex items-center gap-2">
-                            <ImageIcon className="w-4 h-4 text-primary" />
-                            <Label className="text-sm font-semibold">First Frame Image (Optional)</Label>
+                            <VideoIcon className="w-4 h-4 text-primary" />
+                            <Label className="text-sm font-semibold">Frame Control (Optional)</Label>
                           </div>
                           <p className="text-sm text-muted-foreground">
-                            Sets the aspect ratio for your video and guides the generation style
+                            Control your video's beginning and ending frames for precise generation
                           </p>
-                          <div className="p-4 bg-muted/30 rounded-lg border">
-                            <ReferenceImageUpload
-                              value={firstFrameImagePreview || undefined}
-                              onChange={(value) => {
-                                setFirstFrameImagePreview(value || null);
-                                form.setValue('firstFrameImage', value || '', { shouldDirty: true });
-                              }}
-                              className="w-full"
-                            />
-                          </div>
-                        </div>
+                          
+                          {/* Frame Control Container */}
+                          <div className="relative bg-muted/20 rounded-xl p-6 border-2 border-dashed border-muted-foreground/20">
+                            {/* First Frame */}
+                            <div className="space-y-3">
+                              <div className="flex items-center gap-2">
+                                <div className="flex items-center justify-center w-6 h-6 rounded-full bg-green-100 border border-green-300">
+                                  <Play className="w-3 h-3 text-green-600 fill-green-600" />
+                                </div>
+                                <Label className="text-sm font-medium text-green-700">Start Frame</Label>
+                              </div>
+                              <p className="text-xs text-muted-foreground ml-8">
+                                Sets aspect ratio and initial visual style
+                              </p>
+                              <div className="ml-8 p-4 bg-white/50 rounded-lg border">
+                                <ReferenceImageUpload
+                                  value={firstFrameImagePreview || undefined}
+                                  onChange={(value) => {
+                                    setFirstFrameImagePreview(value || null);
+                                    form.setValue('firstFrameImage', value || '', { shouldDirty: true });
+                                  }}
+                                  className="w-full"
+                                />
+                              </div>
+                            </div>
 
-                        {/* Enhanced Last Frame Image for Hailuo-02 */}
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-2">
-                            <ImageIcon className="w-4 h-4 text-primary" />
-                            <Label className="text-sm font-semibold">Last Frame Image (Optional)</Label>
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            Target end frame for your video generation
-                          </p>
-                          <div className="p-4 bg-muted/30 rounded-lg border">
-                            <ReferenceImageUpload
-                              value={lastFrameImagePreview || undefined}
-                              onChange={(value) => {
-                                setLastFrameImagePreview(value || null);
-                                form.setValue('lastFrameImage', value || '', { shouldDirty: true });
-                              }}
-                              className="w-full"
-                            />
+                            {/* Elegant Arrow Connector */}
+                            <div className="flex justify-center my-6">
+                              <div className="flex flex-col items-center">
+                                <div className="w-px h-4 bg-gradient-to-b from-green-300 to-blue-300"></div>
+                                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-green-100 to-blue-100 border border-gray-200 shadow-sm">
+                                  <ArrowDown className="w-4 h-4 text-blue-600" />
+                                </div>
+                                <div className="w-px h-4 bg-gradient-to-b from-blue-300 to-red-300"></div>
+                              </div>
+                            </div>
+
+                            {/* Last Frame */}
+                            <div className="space-y-3">
+                              <div className="flex items-center gap-2">
+                                <div className="flex items-center justify-center w-6 h-6 rounded-full bg-red-100 border border-red-300">
+                                  <Square className="w-3 h-3 text-red-600 fill-red-600" />
+                                </div>
+                                <Label className="text-sm font-medium text-red-700">End Frame</Label>
+                              </div>
+                              <p className="text-xs text-muted-foreground ml-8">
+                                Target final frame for video completion
+                              </p>
+                              <div className="ml-8 p-4 bg-white/50 rounded-lg border">
+                                <ReferenceImageUpload
+                                  value={lastFrameImagePreview || undefined}
+                                  onChange={(value) => {
+                                    setLastFrameImagePreview(value || null);
+                                    form.setValue('lastFrameImage', value || '', { shouldDirty: true });
+                                  }}
+                                  className="w-full"
+                                />
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </>
