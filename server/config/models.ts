@@ -180,6 +180,51 @@ export const minimaxHailuoSchema = {
   required: ["prompt"]
 };
 
+// Kling v2.1 Master schema for video generation
+export const klingV21Schema = {
+  type: "object",
+  title: "Input",
+  properties: {
+    prompt: {
+      type: "string",
+      title: "Prompt",
+      "x-order": 0,
+      description: "Text prompt for video generation"
+    },
+    negative_prompt: {
+      type: "string",
+      title: "Negative Prompt",
+      "x-order": 1,
+      description: "Things you do not want to see in the video",
+      default: ""
+    },
+    start_image: {
+      type: "string",
+      title: "Start Image",
+      format: "uri",
+      "x-order": 2,
+      description: "First frame of the video (optional)"
+    },
+    aspect_ratio: {
+      type: "string",
+      enum: ["16:9", "9:16", "1:1"],
+      title: "aspect_ratio",
+      "x-order": 3,
+      description: "Aspect ratio of the video. Ignored if start_image is provided.",
+      default: "16:9"
+    },
+    duration: {
+      type: "integer",
+      enum: [5, 10],
+      title: "duration",
+      "x-order": 4,
+      description: "Duration of the video in seconds",
+      default: 5
+    }
+  },
+  required: ["prompt"]
+};
+
 // Nano Banana (Gemini 2.5 Flash Image) schema
 export const nanoBananaSchema = {
   type: "object",
@@ -321,6 +366,19 @@ export const models: ModelConfig[] = [
     },
     visible: ["prompt", "duration", "resolution", "prompt_optimizer", "first_frame_image", "last_frame_image"],
     description: "Hailuo-02 – High-quality video generation from Minimax with fast generation times."
+  },
+  {
+    key: "kling-v2.1",
+    provider: "replicate", 
+    slug: "kwaivgi/kling-v2.1-master",
+    schema: klingV21Schema,
+    defaults: {
+      duration: 5,
+      aspect_ratio: "16:9",
+      negative_prompt: ""
+    },
+    visible: ["prompt", "negative_prompt", "start_image", "aspect_ratio", "duration"],
+    description: "Kling v2.1 Master – Premium video generation with superb dynamics and prompt adherence. Generate 1080p videos from text or image."
   }
 ];
 
