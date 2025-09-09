@@ -79,6 +79,30 @@ export class ReplicateProvider extends BaseProvider {
       body = klingBody;
     }
 
+    // Map parameters for seedance-1-pro model
+    if (modelKey === 'seedance-1-pro') {
+      // For Seedance, we need to send ONLY the exact parameters it expects
+      const seedanceBody: Record<string, any> = {
+        prompt: inputs.prompt, // required
+        duration: inputs.duration || 5, // required, default 5, range 3-12
+        resolution: inputs.seedanceResolution || '1080p', // optional, default "1080p"
+        aspect_ratio: inputs.seedanceAspectRatio || '16:9', // optional, default "16:9"
+        camera_fixed: inputs.seedanceCameraFixed || false, // optional, default false
+        fps: 24, // fixed at 24
+      };
+
+      // Add optional parameters only if provided
+      if (inputs.seedanceImage !== undefined && inputs.seedanceImage !== '') {
+        seedanceBody.image = inputs.seedanceImage;
+      }
+      if (inputs.seedanceSeed !== undefined && inputs.seedanceSeed !== null) {
+        seedanceBody.seed = inputs.seedanceSeed;
+      }
+
+      // Replace body with only valid Seedance parameters
+      body = seedanceBody;
+    }
+
     log({
       ts: new Date().toISOString(),
       direction: "request",
