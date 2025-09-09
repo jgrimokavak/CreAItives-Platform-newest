@@ -58,6 +58,29 @@ export class ReplicateProvider extends BaseProvider {
       }
     }
 
+    // Map parameters for kling-v2.1 model
+    if (modelKey === 'kling-v2.1') {
+      // Map frontend parameters to model parameters
+      if (inputs.negativePrompt !== undefined && inputs.negativePrompt !== '') {
+        body.negative_prompt = inputs.negativePrompt;
+        delete body.negativePrompt;
+      } else {
+        // Remove the field entirely if empty or undefined
+        delete body.negativePrompt;
+      }
+      if (inputs.startImage !== undefined && inputs.startImage !== '') {
+        body.start_image = inputs.startImage;
+        delete body.startImage;
+      } else {
+        // Remove the field entirely if empty or undefined
+        delete body.startImage;
+      }
+      if (inputs.aspectRatio !== undefined) {
+        body.aspect_ratio = inputs.aspectRatio;
+        delete body.aspectRatio;
+      }
+    }
+
     log({
       ts: new Date().toISOString(),
       direction: "request",
