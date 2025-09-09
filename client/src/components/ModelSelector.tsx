@@ -55,19 +55,22 @@ const getModelColors = (modelId: string) => {
   switch (provider) {
     case 'Minimax':
       return {
-        primary: 'bg-gradient-to-r from-cyan-500 to-blue-600',
+        primary: 'bg-cyan-50 border border-cyan-200',
+        icon: 'text-cyan-600',
         light: 'bg-cyan-50 border-cyan-200 text-cyan-700',
         text: 'text-cyan-600'
       };
     case 'Kling':
       return {
-        primary: 'bg-gradient-to-r from-amber-500 to-orange-600',
+        primary: 'bg-amber-50 border border-amber-200',
+        icon: 'text-amber-600',
         light: 'bg-amber-50 border-amber-200 text-amber-700',
         text: 'text-amber-600'
       };
     default:
       return {
-        primary: 'bg-gradient-to-r from-gray-500 to-gray-600',
+        primary: 'bg-gray-50 border border-gray-200',
+        icon: 'text-gray-600',
         light: 'bg-gray-50 border-gray-200 text-gray-700',
         text: 'text-gray-600'
       };
@@ -102,8 +105,8 @@ export function ModelSelector({ value, onChange, disabled }: ModelSelectorProps)
           >
             <div className="flex items-center gap-3 min-w-0 flex-1">
               {/* Model Icon */}
-              <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-medium", colors.primary)}>
-                <ModelIcon className="w-4 h-4" />
+              <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center text-sm font-medium", colors.primary)}>
+                <ModelIcon className={cn("w-4 h-4", colors.icon)} />
               </div>
               
               {/* Model Info */}
@@ -159,8 +162,8 @@ export function ModelSelector({ value, onChange, disabled }: ModelSelectorProps)
                 )}
               >
                 {/* Model Icon */}
-                <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center text-white flex-shrink-0", modelColors.primary)}>
-                  <DropdownModelIcon className="w-5 h-5" />
+                <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0", modelColors.primary)}>
+                  <DropdownModelIcon className={cn("w-5 h-5", modelColors.icon)} />
                 </div>
 
                 {/* Model Details */}
