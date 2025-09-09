@@ -1,0 +1,44 @@
+filename: analyze_video_page.ts
+
+"""
+Objective: Conduct a deep, exhaustive analysis of the `/video` page and maintain a living, append-only report in a text file.
+
+Steps:
+1. Inspect the `/video` page implementation.
+   - Document all functionalities, UI components, and data flows.
+   - Map how video models are integrated into the page.
+   - Explain how their schemas affect the frontend UI.
+   - Detail how the page communicates with the Replicate API.
+
+2. Produce a **comprehensive written report**:
+   - Save it as `video_page_analysis.txt` in the project root.
+   - The report must be detailed, structured, and cover every component, dependency, and workflow.
+   - Use append-only mode: never delete past entries, always add new notes with timestamps.
+   - Include diagrams or code references when helpful.
+
+3. Implement a system for ongoing updates:
+   - Before making any changes to the `/video` page, read the contents of `video_page_analysis.txt` first.
+   - After making changes, append a new section describing:
+     - What was modified.
+     - Why it was modified.
+     - How it affects existing functionalities, schemas, UI, and Replicate API interactions.
+
+4. Verify:
+   - Confirm that `video_page_analysis.txt` exists and is complete after the first run.
+   - Validate that edits to the `/video` page append new entries with timestamps.
+
+Testing:
+- After running the analysis, check `video_page_analysis.txt` for:
+  - Full descriptions of all existing functionalities.
+  - Coverage of video model integration and schemas.
+  - Clear explanation of Replicate API interactions.
+- Make a small change to the `/video` page and confirm that:
+  - The agent reads the file first.
+  - A new, timestamped section is appended to the file with the update details.
+
+Reminders & Constraints:
+- Be exhaustive — do not leave out components or hidden dependencies.
+- Always read from `video_page_analysis.txt` before applying new updates.
+- Append-only: keep a full historical log of the `/video` page’s evolution.
+- Use clear, professional language suitable for technical documentation.
+"""
