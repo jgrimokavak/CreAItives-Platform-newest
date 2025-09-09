@@ -36,5 +36,20 @@ export const VIDEO_MODELS: ModelDef[] = [
     ],
     recommended: true,
     badges: []
+  },
+  {
+    id: 'seedance-1-pro',
+    name: 'ByteDance Seedance Pro',
+    summary: 'Multi-shot video generation with creative flexibility and narrative coherence.',
+    details: [
+      'Text-to-video and image-to-video generation',
+      'Multi-shot support with narrative coherence',
+      'Variable duration: 3-12 seconds',
+      'Multiple resolutions: 480p, 720p, 1080p',
+      'Wide aspect ratio support (16:9, 4:3, 1:1, 3:4, 9:16, 21:9, 9:21)',
+      'Camera control and seed support for reproducibility'
+    ],
+    recommended: false,
+    badges: []
   }
 ];
