@@ -9,7 +9,7 @@ import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from '@/comp
 import { useToast } from '@/hooks/use-toast';
 import { useDebounce } from '@/hooks/useDebounce';
 import { apiRequest, queryClient } from '@/lib/queryClient';
-import { Loader2, FolderOpen, Star, Trash2, RotateCcw, Trash, Search, X, Sparkles, CheckSquare, SquareX } from 'lucide-react';
+import { Loader2, FolderOpen, Star, Trash2, RotateCcw, Trash, Search, X, Sparkles, CheckSquare, SquareX, Image } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ImageCard from '@/components/ImageCard';
 
@@ -38,6 +38,12 @@ interface GalleryImage {
   starred?: boolean;
   deletedAt: string | null;
 }
+
+// Compact number formatter for large counts
+const formatCompactNumber = (num: number): string => {
+  if (num < 1000) return num.toString();
+  return new Intl.NumberFormat(undefined, { notation: 'compact', maximumFractionDigits: 1 }).format(num);
+};
 
 const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -710,17 +716,66 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
                     : 'Trash'
                 }
               </h1>
-              <span className={cn(
-                "text-sm px-2.5 py-0.5 rounded-full",
-                selectionMode === 'selecting'
-                  ? "bg-primary/20 text-primary font-medium"
-                  : "bg-muted/50 text-muted-foreground"
-              )}>
-                {selectedIds.length > 0
-                  ? `${selectedIds.length} selected`
-                  : `${totalCount} ${mode === 'trash' ? 'items' : 'images'}`
-                }
-              </span>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span 
+                      className={cn(
+                        "text-sm px-2.5 py-0.5 rounded-full flex items-center gap-1.5",
+                        selectionMode === 'selecting'
+                          ? "bg-primary/20 text-primary font-medium"
+                          : "bg-muted/50 text-muted-foreground"
+                      )}
+                      data-testid="text-count"
+                      title={`${totalCount} ${mode === 'trash' ? 'items' : 'images'} total`}
+                      aria-live="polite"
+                    >
+                      {/* Context-aware icon */}
+                      {selectionMode === 'selecting' ? (
+                        <CheckSquare className="h-3.5 w-3.5" />
+                      ) : mode === 'trash' ? (
+                        <Trash2 className="h-3.5 w-3.5" />
+                      ) : activeFilters.starred ? (
+                        <Star className="h-3.5 w-3.5 fill-current" />
+                      ) : (
+                        <Image className="h-3.5 w-3.5" />
+                      )}
+                      
+                      {/* Content based on context */}
+                      {selectionMode === 'selecting' ? (
+                        selectedIds.length > 0 
+                          ? `${selectedIds.length}/${formatCompactNumber(totalCount)}`
+                          : formatCompactNumber(totalCount)
+                      ) : (
+                        formatCompactNumber(totalCount)
+                      )}
+                      
+                      {/* Results indicator when filtered */}
+                      {(searchTerm || activeFilters.starred) && selectionMode !== 'selecting' && (
+                        <span className="text-xs opacity-70">• results</span>
+                      )}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" align="start">
+                    <div className="text-xs space-y-1">
+                      <div className="font-medium">
+                        {totalCount.toLocaleString()} {mode === 'trash' ? 'items' : 'images'} total
+                      </div>
+                      <div className="text-muted-foreground">
+                        {images.length} loaded on this page
+                      </div>
+                      {(searchTerm || activeFilters.starred) && (
+                        <div className="text-muted-foreground border-t border-border pt-1 mt-1">
+                          <div>Filtered by:</div>
+                          {searchTerm && <div>• Search: "{searchTerm.length > 20 ? searchTerm.substring(0, 20) + '...' : searchTerm}"</div>}
+                          {activeFilters.starred && <div>• Starred images only</div>}
+                          {mode === 'trash' && <div>• Trash items</div>}
+                        </div>
+                      )}
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               
               {/* Selection mode indicator */}
               {selectionMode === 'selecting' && (
