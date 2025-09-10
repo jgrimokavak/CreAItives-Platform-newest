@@ -1340,9 +1340,48 @@ export class DatabaseStorage implements IStorage {
         conditions.push(inArray(images.model, models));
       }
       
-      // Add aspect ratio filtering
+      // Add aspect ratio filtering - check both aspectRatio field and dimensions-derived ratios
       if (aspectRatios && aspectRatios.length > 0) {
-        conditions.push(inArray(images.aspectRatio, aspectRatios));
+        const aspectRatioConditions = [];
+        
+        // First condition: match exact aspectRatio field values
+        aspectRatioConditions.push(inArray(images.aspectRatio, aspectRatios));
+        
+        // Second condition: check dimensions-derived ratios using integer math
+        const dimensionConditions = aspectRatios.map(ratio => {
+          switch (ratio) {
+            case '1:1':
+              // width === height (square)
+              return sql`(regexp_match(${images.dimensions}, '^(\\d+)x(\\d+)$'))[1]::int = (regexp_match(${images.dimensions}, '^(\\d+)x(\\d+)$'))[2]::int`;
+            case '16:9':
+              // width * 9 === height * 16 (widescreen)
+              return sql`(regexp_match(${images.dimensions}, '^(\\d+)x(\\d+)$'))[1]::int * 9 = (regexp_match(${images.dimensions}, '^(\\d+)x(\\d+)$'))[2]::int * 16`;
+            case '9:16':
+              // width * 16 === height * 9 (portrait/vertical)
+              return sql`(regexp_match(${images.dimensions}, '^(\\d+)x(\\d+)$'))[1]::int * 16 = (regexp_match(${images.dimensions}, '^(\\d+)x(\\d+)$'))[2]::int * 9`;
+            case '4:3':
+              // width * 3 === height * 4 (classic)
+              return sql`(regexp_match(${images.dimensions}, '^(\\d+)x(\\d+)$'))[1]::int * 3 = (regexp_match(${images.dimensions}, '^(\\d+)x(\\d+)$'))[2]::int * 4`;
+            case '3:2':
+              // width * 2 === height * 3 (photo)
+              return sql`(regexp_match(${images.dimensions}, '^(\\d+)x(\\d+)$'))[1]::int * 2 = (regexp_match(${images.dimensions}, '^(\\d+)x(\\d+)$'))[2]::int * 3`;
+            case '2:3':
+              // width * 3 === height * 2 (portrait photo)
+              return sql`(regexp_match(${images.dimensions}, '^(\\d+)x(\\d+)$'))[1]::int * 3 = (regexp_match(${images.dimensions}, '^(\\d+)x(\\d+)$'))[2]::int * 2`;
+            case '3:4':
+              // width * 4 === height * 3 (portrait classic)
+              return sql`(regexp_match(${images.dimensions}, '^(\\d+)x(\\d+)$'))[1]::int * 4 = (regexp_match(${images.dimensions}, '^(\\d+)x(\\d+)$'))[2]::int * 3`;
+            default:
+              return sql`false`;
+          }
+        });
+        
+        // Combine conditions with OR - match either exact aspectRatio OR calculated from dimensions
+        if (dimensionConditions.length > 0) {
+          aspectRatioConditions.push(or(...dimensionConditions));
+        }
+        
+        conditions.push(or(...aspectRatioConditions));
       }
       
       // Add date range filtering
@@ -1527,9 +1566,48 @@ export class DatabaseStorage implements IStorage {
         conditions.push(inArray(images.model, models));
       }
       
-      // Add aspect ratio filtering
+      // Add aspect ratio filtering - check both aspectRatio field and dimensions-derived ratios
       if (aspectRatios && aspectRatios.length > 0) {
-        conditions.push(inArray(images.aspectRatio, aspectRatios));
+        const aspectRatioConditions = [];
+        
+        // First condition: match exact aspectRatio field values
+        aspectRatioConditions.push(inArray(images.aspectRatio, aspectRatios));
+        
+        // Second condition: check dimensions-derived ratios using integer math
+        const dimensionConditions = aspectRatios.map(ratio => {
+          switch (ratio) {
+            case '1:1':
+              // width === height (square)
+              return sql`(regexp_match(${images.dimensions}, '^(\\d+)x(\\d+)$'))[1]::int = (regexp_match(${images.dimensions}, '^(\\d+)x(\\d+)$'))[2]::int`;
+            case '16:9':
+              // width * 9 === height * 16 (widescreen)
+              return sql`(regexp_match(${images.dimensions}, '^(\\d+)x(\\d+)$'))[1]::int * 9 = (regexp_match(${images.dimensions}, '^(\\d+)x(\\d+)$'))[2]::int * 16`;
+            case '9:16':
+              // width * 16 === height * 9 (portrait/vertical)
+              return sql`(regexp_match(${images.dimensions}, '^(\\d+)x(\\d+)$'))[1]::int * 16 = (regexp_match(${images.dimensions}, '^(\\d+)x(\\d+)$'))[2]::int * 9`;
+            case '4:3':
+              // width * 3 === height * 4 (classic)
+              return sql`(regexp_match(${images.dimensions}, '^(\\d+)x(\\d+)$'))[1]::int * 3 = (regexp_match(${images.dimensions}, '^(\\d+)x(\\d+)$'))[2]::int * 4`;
+            case '3:2':
+              // width * 2 === height * 3 (photo)
+              return sql`(regexp_match(${images.dimensions}, '^(\\d+)x(\\d+)$'))[1]::int * 2 = (regexp_match(${images.dimensions}, '^(\\d+)x(\\d+)$'))[2]::int * 3`;
+            case '2:3':
+              // width * 3 === height * 2 (portrait photo)
+              return sql`(regexp_match(${images.dimensions}, '^(\\d+)x(\\d+)$'))[1]::int * 3 = (regexp_match(${images.dimensions}, '^(\\d+)x(\\d+)$'))[2]::int * 2`;
+            case '3:4':
+              // width * 4 === height * 3 (portrait classic)
+              return sql`(regexp_match(${images.dimensions}, '^(\\d+)x(\\d+)$'))[1]::int * 4 = (regexp_match(${images.dimensions}, '^(\\d+)x(\\d+)$'))[2]::int * 3`;
+            default:
+              return sql`false`;
+          }
+        });
+        
+        // Combine conditions with OR - match either exact aspectRatio OR calculated from dimensions
+        if (dimensionConditions.length > 0) {
+          aspectRatioConditions.push(or(...dimensionConditions));
+        }
+        
+        conditions.push(or(...aspectRatioConditions));
       }
       
       // Add date range filtering

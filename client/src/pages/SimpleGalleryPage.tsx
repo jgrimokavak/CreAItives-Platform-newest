@@ -18,11 +18,9 @@ import {
   ModelFilter, 
   AspectRatioFilter, 
   ResolutionFilter, 
-  DateRangeFilter,
   useFilters,
   AllFilters
 } from '@/components/gallery/FilterComponents';
-import { DateRange } from 'react-day-picker';
 
 interface GalleryPageProps {
   mode?: 'gallery' | 'trash';
@@ -55,23 +53,12 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       models: params.get('models')?.split(',').filter(Boolean) || [],
       aspectRatios: params.get('aspectRatios')?.split(',').filter(Boolean) || [],
       resolutions: params.get('resolutions')?.split(',').filter(Boolean) || [],
-      dateRange: (() => {
-        const from = params.get('dateFrom');
-        const to = params.get('dateTo');
-        if (from || to) {
-          return {
-            from: from ? new Date(from) : undefined,
-            to: to ? new Date(to) : undefined,
-          };
-        }
-        return undefined;
-      })()
     };
   };
   
   // Filter state management with URL synchronization
   const filterState = useFilters(getInitialFiltersFromURL());
-  const { filters, updateModels, updateAspectRatios, updateResolutions, updateDateRange, clearAllFilters, activeFilterCount } = filterState;
+  const { filters, updateModels, updateAspectRatios, updateResolutions, clearAllFilters, activeFilterCount } = filterState;
   
   // Filter options data
   const { filterOptions, isLoading: filtersLoading, error: filtersError, models, aspectRatios, resolutions } = useFilterOptions();
@@ -85,7 +72,6 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       models: filters.models,
       aspectRatios: filters.aspectRatios,
       resolutions: filters.resolutions,
-      dateRange: filters.dateRange
     }
   };
   
@@ -128,17 +114,6 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       params.delete('resolutions');
     }
     
-    if (filters.dateRange?.from) {
-      params.set('dateFrom', filters.dateRange.from.toISOString());
-    } else {
-      params.delete('dateFrom');
-    }
-    
-    if (filters.dateRange?.to) {
-      params.set('dateTo', filters.dateRange.to.toISOString());
-    } else {
-      params.delete('dateTo');
-    }
     
     // Preserve existing search and mode parameters
     if (searchTerm) {
@@ -1011,7 +986,6 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
           updateModels={updateModels}
           updateAspectRatios={updateAspectRatios}
           updateResolutions={updateResolutions}
-          updateDateRange={updateDateRange}
           clearAllFilters={clearAllFilters}
           activeFilterCount={activeFilterCount}
           className="border-b"
@@ -1037,11 +1011,6 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
             isLoading={filtersLoading}
             error={filtersError}
             data-testid="filter-resolutions"
-          />
-          <DateRangeFilter
-            value={filters.dateRange}
-            onChange={updateDateRange}
-            data-testid="filter-date-range"
           />
           {/* Starred toggle integrated into filters */}
           <TooltipProvider>

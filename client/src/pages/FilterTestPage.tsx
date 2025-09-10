@@ -4,8 +4,7 @@ import {
   FilterContainer, 
   ModelFilter, 
   AspectRatioFilter, 
-  ResolutionFilter, 
-  DateRangeFilter,
+  ResolutionFilter,
   useFilters 
 } from '@/components/gallery/FilterComponents';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -23,8 +22,7 @@ const FilterTestPage: React.FC = () => {
     refetch,
     models,
     aspectRatios,
-    resolutions,
-    dateRange
+    resolutions
   } = useFilterOptions();
 
   // Use the filter management hook
@@ -33,7 +31,6 @@ const FilterTestPage: React.FC = () => {
     updateModels,
     updateAspectRatios,
     updateResolutions,
-    updateDateRange,
     clearAllFilters,
     activeFilterCount
   } = useFilters();
@@ -111,9 +108,9 @@ const FilterTestPage: React.FC = () => {
                 </div>
                 <div className="text-center p-3 bg-muted/50 rounded-md">
                   <div className="text-2xl font-bold text-purple-600">
-                    {dateRange ? '✓' : '✗'}
+                    Ready
                   </div>
-                  <div className="text-xs text-muted-foreground">Date Range</div>
+                  <div className="text-xs text-muted-foreground">System Status</div>
                 </div>
               </div>
             )}
@@ -171,12 +168,6 @@ const FilterTestPage: React.FC = () => {
                 error={error}
                 data-testid="resolution-filter-test"
               />
-              
-              <DateRangeFilter
-                value={filters.dateRange}
-                onChange={updateDateRange}
-                data-testid="date-range-filter-test"
-              />
             </FilterContainer>
           </CardContent>
         </Card>
@@ -233,16 +224,6 @@ const FilterTestPage: React.FC = () => {
                 )}
               </div>
 
-              <div>
-                <h4 className="font-medium mb-2">Selected Date Range</h4>
-                {filters.dateRange?.from || filters.dateRange?.to ? (
-                  <Badge variant="secondary" className="text-xs">
-                    {filters.dateRange?.from?.toLocaleDateString()} - {filters.dateRange?.to?.toLocaleDateString()}
-                  </Badge>
-                ) : (
-                  <p className="text-sm text-muted-foreground">None selected</p>
-                )}
-              </div>
             </div>
 
             <Separator />

@@ -4,7 +4,6 @@ import {
   ModelFilter,
   AspectRatioFilter,
   ResolutionFilter,
-  DateRangeFilter,
   useFilters,
   FilterOption
 } from './FilterComponents';
@@ -26,7 +25,6 @@ const FilterExample: React.FC = () => {
     updateModels,
     updateAspectRatios,
     updateResolutions,
-    updateDateRange,
     clearAllFilters,
     activeFilterCount
   } = useFilters();
@@ -57,11 +55,6 @@ const FilterExample: React.FC = () => {
         <ResolutionFilter
           value={filters.resolutions}
           onChange={updateResolutions}
-        />
-        
-        <DateRangeFilter
-          value={filters.dateRange}
-          onChange={updateDateRange}
         />
       </FilterContainer>
 

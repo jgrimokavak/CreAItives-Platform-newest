@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,7 +9,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { 
-  Calendar as CalendarIcon, 
   ChevronDown, 
   X, 
   Filter,
@@ -19,14 +17,11 @@ import {
   Tablet,
   Tv,
   Sparkles,
-  Clock,
   Settings2,
   AlertTriangle,
   Loader2,
   Hash
 } from 'lucide-react';
-import { format } from 'date-fns';
-import { DateRange } from 'react-day-picker';
 import { useFilterOptions } from '@/hooks/useFilterOptions';
 
 // ============================================================================
@@ -64,11 +59,6 @@ export interface ResolutionFilterProps {
   className?: string;
 }
 
-export interface DateRangeFilterProps {
-  value: DateRange | undefined;
-  onChange: (value: DateRange | undefined) => void;
-  className?: string;
-}
 
 export interface FilterContainerProps {
   children: React.ReactNode;
@@ -549,82 +539,6 @@ export const ResolutionFilter: React.FC<ResolutionFilterProps> = ({
   );
 };
 
-// ============================================================================
-// DATE RANGE FILTER COMPONENT
-// ============================================================================
-
-export const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
-  value,
-  onChange,
-  className
-}) => {
-  const handleClear = () => {
-    onChange(undefined);
-  };
-
-  const hasSelection = value?.from || value?.to;
-
-  const formatDateRange = (dateRange: DateRange | undefined) => {
-    if (!dateRange?.from) return 'Select dates';
-    if (!dateRange.to) return format(dateRange.from, 'MMM dd, yyyy');
-    return `${format(dateRange.from, 'MMM dd')} - ${format(dateRange.to, 'MMM dd, yyyy')}`;
-  };
-
-  return (
-    <div className={cn('flex flex-col gap-2', className)}>
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            className={cn(
-              'justify-between h-9 px-3 text-sm',
-              hasSelection && 'border-primary bg-primary/5'
-            )}
-            data-testid="button-date-range-filter"
-          >
-            <div className="flex items-center gap-2">
-              <CalendarIcon className="h-4 w-4" />
-              <span className="truncate max-w-[140px]">
-                {formatDateRange(value)}
-              </span>
-            </div>
-            <ChevronDown className="h-4 w-4 opacity-50" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start" data-testid="popover-date-range-filter">
-          <div className="space-y-3">
-            {hasSelection && (
-              <div className="p-3 pb-0">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-medium text-sm">Date Range</h4>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleClear}
-                    className="h-6 px-2 text-xs"
-                    data-testid="button-clear-date-range"
-                  >
-                    Clear
-                  </Button>
-                </div>
-              </div>
-            )}
-            
-            <Calendar
-              mode="range"
-              defaultMonth={value?.from}
-              selected={value}
-              onSelect={onChange}
-              numberOfMonths={2}
-              className="p-3"
-              data-testid="calendar-date-range"
-            />
-          </div>
-        </PopoverContent>
-      </Popover>
-    </div>
-  );
-};
 
 // ============================================================================
 // ACTIVE FILTER INDICATORS COMPONENT
@@ -657,18 +571,11 @@ export const ActiveFilterIndicators: React.FC<ActiveFilterIndicatorsProps> = ({
         return <Monitor className="h-3 w-3" />;
       case 'resolutions':
         return <Settings2 className="h-3 w-3" />;
-      case 'dateRange':
-        return <CalendarIcon className="h-3 w-3" />;
       default:
         return <Hash className="h-3 w-3" />;
     }
   };
 
-  const formatDateRange = (dateRange: DateRange | undefined): string => {
-    if (!dateRange?.from) return 'Date Range';
-    if (!dateRange.to) return format(dateRange.from, 'MMM dd, yyyy');
-    return `${format(dateRange.from, 'MMM dd')} - ${format(dateRange.to, 'MMM dd, yyyy')}`;
-  };
 
   const filterIndicators: React.ReactNode[] = [];
 
@@ -756,33 +663,6 @@ export const ActiveFilterIndicators: React.FC<ActiveFilterIndicatorsProps> = ({
     );
   });
 
-  // Add date range filter indicator
-  if (filters.dateRange?.from || filters.dateRange?.to) {
-    filterIndicators.push(
-      <Badge
-        key="dateRange"
-        variant="secondary"
-        className="h-7 px-2 text-xs bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 transition-colors dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800 dark:hover:bg-purple-900"
-        data-testid="filter-pill-date-range"
-      >
-        <div className="flex items-center gap-1.5">
-          {getIconForFilterType('dateRange')}
-          <span className="max-w-[120px] truncate">{formatDateRange(filters.dateRange)}</span>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onRemoveFilter('dateRange');
-            }}
-            className="ml-1 hover:bg-purple-200 dark:hover:bg-purple-800 rounded-sm p-0.5 transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-1 focus:ring-purple-500/50"
-            data-testid="button-remove-date-range"
-            aria-label="Remove date range filter"
-          >
-            <X className="h-3 w-3" />
-          </button>
-        </div>
-      </Badge>
-    );
-  }
 
   if (filterIndicators.length === 0) {
     return null;
@@ -822,7 +702,6 @@ export const FilterContainer: React.FC<FilterContainerProps> = ({
     if (filters.models.length > 0) parts.push(`${filters.models.length} model${filters.models.length !== 1 ? 's' : ''}`);
     if (filters.aspectRatios.length > 0) parts.push(`${filters.aspectRatios.length} ratio${filters.aspectRatios.length !== 1 ? 's' : ''}`);
     if (filters.resolutions.length > 0) parts.push(`${filters.resolutions.length} resolution${filters.resolutions.length !== 1 ? 's' : ''}`);
-    if (filters.dateRange?.from || filters.dateRange?.to) parts.push('date range');
     
     if (parts.length === 0) return 'No active filters';
     if (parts.length === 1) return parts[0];
@@ -969,7 +848,6 @@ export interface EnhancedFilterContainerProps {
   updateModels: (models: string[]) => void;
   updateAspectRatios: (aspectRatios: string[]) => void;
   updateResolutions: (resolutions: string[]) => void;
-  updateDateRange: (dateRange: DateRange | undefined) => void;
   clearAllFilters: () => void;
   activeFilterCount: number;
   className?: string;
@@ -981,7 +859,6 @@ export const EnhancedFilterContainer: React.FC<EnhancedFilterContainerProps> = (
   updateModels,
   updateAspectRatios,
   updateResolutions,
-  updateDateRange,
   clearAllFilters,
   activeFilterCount,
   className
@@ -1016,9 +893,6 @@ export const EnhancedFilterContainer: React.FC<EnhancedFilterContainerProps> = (
           updateResolutions([]);
         }
         break;
-      case 'dateRange':
-        updateDateRange(undefined);
-        break;
     }
   };
 
@@ -1047,7 +921,6 @@ export interface AllFilters {
   models: string[];
   aspectRatios: string[];
   resolutions: string[];
-  dateRange: DateRange | undefined;
 }
 
 export const useFilters = (initialFilters?: Partial<AllFilters>) => {
@@ -1055,7 +928,6 @@ export const useFilters = (initialFilters?: Partial<AllFilters>) => {
     models: [],
     aspectRatios: [],
     resolutions: [],
-    dateRange: undefined,
     ...initialFilters
   });
 
@@ -1071,16 +943,12 @@ export const useFilters = (initialFilters?: Partial<AllFilters>) => {
     setFilters(prev => ({ ...prev, resolutions }));
   };
 
-  const updateDateRange = (dateRange: DateRange | undefined) => {
-    setFilters(prev => ({ ...prev, dateRange }));
-  };
 
   const clearAllFilters = () => {
     setFilters({
       models: [],
       aspectRatios: [],
       resolutions: [],
-      dateRange: undefined
     });
   };
 
@@ -1089,7 +957,6 @@ export const useFilters = (initialFilters?: Partial<AllFilters>) => {
     if (filters.models.length > 0) count++;
     if (filters.aspectRatios.length > 0) count++;
     if (filters.resolutions.length > 0) count++;
-    if (filters.dateRange?.from || filters.dateRange?.to) count++;
     return count;
   };
 
@@ -1098,7 +965,6 @@ export const useFilters = (initialFilters?: Partial<AllFilters>) => {
     updateModels,
     updateAspectRatios,
     updateResolutions,
-    updateDateRange,
     clearAllFilters,
     activeFilterCount: getActiveFilterCount()
   };

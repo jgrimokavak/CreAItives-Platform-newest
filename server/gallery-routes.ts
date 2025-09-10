@@ -254,12 +254,45 @@ router.get('/gallery/filter-options', async (req, res) => {
       .map(([key, count]) => ({ key, count }))
       .sort((a, b) => b.count - a.count); // Sort by count descending
     
-    // Process aspect ratios with counts
+    // Process aspect ratios with counts - check both aspectRatio field and dimensions-derived ratios
     const aspectRatioCounts = new Map<string, number>();
+    
+    // Helper function to calculate aspect ratio from dimensions
+    const calculateAspectRatio = (dimensions: string | null): string | null => {
+      if (!dimensions) return null;
+      
+      const match = dimensions.match(/^(\d+)x(\d+)$/);
+      if (!match) return null;
+      
+      const width = parseInt(match[1], 10);
+      const height = parseInt(match[2], 10);
+      
+      // Use integer math to avoid floating point issues
+      if (width === height) return '1:1';
+      if (width * 9 === height * 16) return '16:9';
+      if (width * 16 === height * 9) return '9:16';
+      if (width * 3 === height * 4) return '4:3';
+      if (width * 2 === height * 3) return '3:2';
+      if (width * 3 === height * 2) return '2:3';
+      if (width * 4 === height * 3) return '3:4';
+      
+      return null;
+    };
+    
     allImages.forEach(img => {
-      if (img.aspectRatio) {
-        const current = aspectRatioCounts.get(img.aspectRatio) || 0;
-        aspectRatioCounts.set(img.aspectRatio, current + 1);
+      let aspectRatio = null;
+      
+      // First, try to use the stored aspectRatio if it's a canonical value
+      if (img.aspectRatio && ['1:1', '16:9', '9:16', '4:3', '3:2', '2:3', '3:4'].includes(img.aspectRatio)) {
+        aspectRatio = img.aspectRatio;
+      } else {
+        // Calculate from dimensions
+        aspectRatio = calculateAspectRatio(img.dimensions);
+      }
+      
+      if (aspectRatio) {
+        const current = aspectRatioCounts.get(aspectRatio) || 0;
+        aspectRatioCounts.set(aspectRatio, current + 1);
       }
     });
     
