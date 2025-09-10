@@ -15,6 +15,7 @@ import EnhancedUserManagementPage from "./pages/EnhancedUserManagementPage";
 import AdminOverviewPage from "./pages/AdminOverviewPage";
 import PageSettingsPage from "./pages/PageSettingsPage";
 import StorageManagementPage from "./pages/StorageManagementPage";
+import FilterTestPage from "./pages/FilterTestPage";
 import AdminRoute from "./components/AdminRoute";
 import { EditorProvider } from "@/context/EditorContext";
 import Sidebar from "@/components/Sidebar";
@@ -69,6 +70,11 @@ function Router() {
           <Route path="/gallery" component={() => (
             <Sidebar>
               <SimpleGalleryPage />
+            </Sidebar>
+          )} />
+          <Route path="/filter-test" component={() => (
+            <Sidebar>
+              <FilterTestPage />
             </Sidebar>
           )} />
           <Route path="/upscale" component={() => (
