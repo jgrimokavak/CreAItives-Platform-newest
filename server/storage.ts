@@ -92,10 +92,29 @@ export interface IStorage {
     userAgent?: string;
   }): Promise<AdminAuditLog>;
   saveImage(image: GeneratedImage): Promise<GeneratedImage>;
-  getAllImages(options?: { starred?: boolean; trash?: boolean; limit?: number; cursor?: string; searchQuery?: string }): Promise<{ 
+  getAllImages(options?: { 
+    starred?: boolean; 
+    trash?: boolean; 
+    limit?: number; 
+    cursor?: string; 
+    searchQuery?: string;
+    models?: string[];
+    aspectRatios?: string[];
+    resolutions?: string[];
+    dateRange?: { from?: Date; to?: Date };
+  }): Promise<{ 
     items: GeneratedImage[]; 
     nextCursor: string | null 
   }>;
+  getImageCount(options?: { 
+    starred?: boolean; 
+    trash?: boolean; 
+    searchQuery?: string;
+    models?: string[];
+    aspectRatios?: string[];
+    resolutions?: string[];
+    dateRange?: { from?: Date; to?: Date };
+  }): Promise<number>;
   getImageById(id: string): Promise<GeneratedImage | undefined>;
   updateImage(id: string, updates: Partial<GeneratedImage>): Promise<GeneratedImage | undefined>;
   deleteImage(id: string, permanent?: boolean): Promise<void>;

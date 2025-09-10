@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input';
 import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import { useFilterOptions } from '@/hooks/useFilterOptions';
+import { useGalleryData, type GalleryImage as GalleryImageType, type GalleryOptions, type GalleryFilters } from '@/hooks/useGalleryData';
+import { queryClient } from '@/lib/queryClient';
 import { Loader2, FolderOpen, Star, Trash2, RotateCcw, Trash, Search, X, Sparkles, CheckSquare, SquareX, Image } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ImageCard from '@/components/ImageCard';
@@ -26,27 +28,8 @@ interface GalleryPageProps {
   mode?: 'gallery' | 'trash';
 }
 
-// Use GeneratedImage type from shared definition
-import { GeneratedImage } from "@/types/image";
-
-// Extend the GeneratedImage with any gallery-specific properties
-interface GalleryImage {
-  id: string;
-  prompt: string;
-  width?: string | number;
-  height?: string | number;
-  model: string;
-  size: string;
-  quality?: string;
-  createdAt: string;
-  url?: string;
-  fullUrl: string;
-  thumbUrl: string;
-  sourceThumb?: string; // 128px thumbnail of the source image
-  sourceImage?: string; // Full-resolution source image
-  starred?: boolean;
-  deletedAt: string | null;
-}
+// Use GalleryImage type from the useGalleryData hook
+type GalleryImage = GalleryImageType;
 
 // Compact number formatter for large counts
 const formatCompactNumber = (num: number): string => {
@@ -58,8 +41,6 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState(''); // This will be used for actual searching
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectionMode, setSelectionMode] = useState<'none' | 'selecting'>('none');
   const [starred, setStarred] = useState(false); // Separate starred state for existing functionality
   const { toast } = useToast();
@@ -95,15 +76,34 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
   // Filter options data
   const { filterOptions, isLoading: filtersLoading, error: filtersError, models, aspectRatios, resolutions } = useFilterOptions();
   
-  // Real data from database with pagination
-  const [images, setImages] = useState<GalleryImage[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [hasNextPage, setHasNextPage] = useState(false);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [totalCount, setTotalCount] = useState(0);
-  const itemsPerPage = 50;
+  // Gallery data using React Query
+  const galleryOptions: GalleryOptions = {
+    starred,
+    trash: mode === 'trash',
+    searchQuery: searchTerm,
+    filters: {
+      models: filters.models,
+      aspectRatios: filters.aspectRatios,
+      resolutions: filters.resolutions,
+      dateRange: filters.dateRange
+    }
+  };
+  
+  const {
+    images,
+    totalCount,
+    isLoading,
+    isError: hasError,
+    error: galleryError,
+    isFetching,
+    isFetchingNextPage: loadingMore,
+    hasNextPage,
+    fetchNextPage,
+    refetch: refetchGallery
+  } = useGalleryData(galleryOptions);
+  
+  // Convert React Query error to string for compatibility
+  const errorMessage = hasError && galleryError ? galleryError.message : null;
   
   // URL synchronization: Update URL when filters change
   useEffect(() => {
@@ -186,107 +186,13 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
     setSearchTerm('');
   };
   
-  // Fetch gallery images with pagination
-  const fetchImages = async (cursor: string | null = null, append: boolean = false) => {
-    if (append) {
-      setLoadingMore(true);
-    } else {
-      setLoading(true);
-      setCurrentPage(1);
-    }
-    setError(null);
-    
-    try {
-      const params = new URLSearchParams();
-      
-      // Add filter parameters
-      if (filters.models.length > 0) {
-        params.append('models', filters.models.join(','));
-      }
-      if (filters.aspectRatios.length > 0) {
-        params.append('aspectRatios', filters.aspectRatios.join(','));
-      }
-      if (filters.resolutions.length > 0) {
-        params.append('resolutions', filters.resolutions.join(','));
-      }
-      if (filters.dateRange?.from) {
-        params.append('dateFrom', filters.dateRange.from.toISOString());
-      }
-      if (filters.dateRange?.to) {
-        params.append('dateTo', filters.dateRange.to.toISOString());
-      }
-      
-      // Add existing parameters
-      if (starred) params.append('starred', 'true');
-      if (mode === 'trash') params.append('trash', 'true');
-      if (searchTerm && searchTerm.trim() !== '') {
-        params.append('q', searchTerm.trim()); // Backend expects 'q' parameter
-      }
-      if (cursor) params.append('cursor', cursor);
-      params.append('limit', itemsPerPage.toString());
-      
-      const url = `/api/gallery?${params.toString()}`;
-      
-      const response = await fetch(url, {
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`Gallery fetch failed: ${response.status} ${response.statusText}`, errorText);
-        throw new Error(`Error fetching gallery: ${response.status} - ${errorText}`);
-      }
-      
-      const data = await response.json();
-      
-      // Ensure images have proper URLs
-      const formattedImages = data.items || [];
-      
-      // Clear selection when not appending
-      if (!append) {
-        setSelectedIds([]);
-      }
-      
-      // Update the images
-      if (append) {
-        setImages(prev => [...prev, ...formattedImages]);
-      } else {
-        setImages(formattedImages);
-      }
-      
-      // Update pagination state
-      setNextCursor(data.nextCursor || null);
-      setHasNextPage(!!data.nextCursor);
-      
-      // Update total count (only when not appending, as total shouldn't change during pagination)
-      if (!append && typeof data.totalCount === 'number') {
-        setTotalCount(data.totalCount);
-      }
-      
-    } catch (err) {
-      console.error('Error fetching gallery:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      setError(`Failed to load gallery images: ${errorMessage}`);
-      toast({
-        variant: 'destructive',
-        title: 'Gallery Error',
-        description: `Failed to load images: ${errorMessage}`
-      });
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
+  // Handle loading next page with React Query
+  const loadNextPage = () => {
+    if (hasNextPage && !loadingMore) {
+      fetchNextPage();
     }
   };
 
-  // Load next page
-  const loadNextPage = () => {
-    if (!hasNextPage || loadingMore) return;
-    setCurrentPage(prev => prev + 1);
-    fetchImages(nextCursor, true);
-  };
   
   // Toggle selection
   // Track last selected image for shift-click range selection
@@ -301,7 +207,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       setLastSelectedId(id);
     } else if (shiftKey && lastSelectedId) {
       // Handle shift-click range selection
-      const allImageIds = filteredImages.map(img => img.id);
+      const allImageIds = images.map(img => img.id);
       const currentIndex = allImageIds.indexOf(id);
       const lastIndex = allImageIds.indexOf(lastSelectedId);
       
@@ -335,7 +241,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
   // Select all visible images
   const selectAll = () => {
     setSelectionMode('selecting');
-    setSelectedIds(filteredImages.map(img => img.id));
+    setSelectedIds(images.map(img => img.id));
   };
   
   // Clear selection
@@ -424,10 +330,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       const newStarredState = !starred;
       console.log(`Setting image ${id} star status to ${newStarredState}`);
       
-      // Update the UI optimistically
-      setImages(prev =>
-        prev.map(img => img.id === id ? { ...img, starred: newStarredState } : img)
-      );
+      // Optimistic update will be handled by React Query cache invalidation
       
       // Make the actual API call
       const response = await fetch(`/api/image/${id}`, {
@@ -448,7 +351,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       // If we're in starred mode and unstarring, refresh the gallery to remove it
       if (starred && !newStarredState) {
         console.log('Refreshing gallery after unstarring in starred mode');
-        fetchImages();
+        queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
       }
       
       toast({
@@ -460,10 +363,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
     } catch (error) {
       console.error('Error starring image:', error);
       
-      // Revert on error
-      setImages(prev =>
-        prev.map(img => img.id === id ? { ...img, starred } : img)
-      );
+      // Error will trigger a refetch via React Query
       
       toast({
         variant: 'destructive',
@@ -476,19 +376,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
   // Handle delete/restore/permanent delete
   const handleTrash = async (id: string, isInTrash: boolean, permanent: boolean = false) => {
     try {
-      // Update UI optimistically
-      if (permanent) {
-        // Permanently delete
-        setImages(prev => prev.filter(img => img.id !== id));
-      } else if (isInTrash) {
-        // Restore from trash
-        setImages(prev =>
-          prev.map(img => img.id === id ? { ...img, deletedAt: null } : img)
-        );
-      } else {
-        // Move to trash
-        setImages(prev => prev.filter(img => img.id !== id));
-      }
+      // Optimistic updates will be handled by React Query cache invalidation
       
       // Make the actual API call
       const response = await fetch(`/api/image/${id}`, {
@@ -527,7 +415,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       }
     } catch (error) {
       // Revert on error by refreshing the data
-      fetchImages();
+      queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
       
       toast({
         variant: 'destructive',
@@ -546,28 +434,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
     console.log(`Bulk action '${action}' on ${idsToUpdate.length} images:`, idsToUpdate);
     
     try {
-      // Optimistic UI updates
-      if (action === 'star' || action === 'unstar') {
-        const newStarredValue = action === 'star';
-        setImages(prev =>
-          prev.map(img => idsToUpdate.includes(img.id) 
-            ? { ...img, starred: newStarredValue } 
-            : img
-          )
-        );
-      } else if (action === 'trash') {
-        setImages(prev => prev.filter(img => !idsToUpdate.includes(img.id)));
-      } else if (action === 'restore') {
-        setImages(prev =>
-          prev.map(img => idsToUpdate.includes(img.id) 
-            ? { ...img, deletedAt: null } 
-            : img
-          )
-        );
-      } else if (action === 'delete-permanent') {
-        // Remove from UI immediately
-        setImages(prev => prev.filter(img => !idsToUpdate.includes(img.id)));
-      }
+      // Optimistic updates will be handled by React Query cache invalidation
       
       // Make the actual API call
       const payload = {
@@ -609,7 +476,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       });
     } catch (error) {
       // Refresh data on error
-      fetchImages();
+      queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
       
       toast({
         variant: 'destructive',
@@ -628,20 +495,16 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
   };
   
 
-  // Since server-side filtering is now handled, we show all images from current pages
-  const filteredImages = images;
+  // All filtering is handled server-side by React Query
   
   // Total active filter count including starred state
   const totalActiveFilterCount = activeFilterCount + (starred ? 1 : 0);
   
-  // Fetch images when component mounts, mode changes, or filters change
+  // Handle gallery updates from websocket events
   useEffect(() => {
-    // Reset pagination and fetch fresh data when filters change
-    fetchImages();
-    
-    // Also refresh gallery when new images are created
     const handleWebSocketMessage = (ev: Event) => {
-      fetchImages();
+      // Invalidate and refetch gallery data when new images are created
+      queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
     };
     
     // Listen for custom events that we'll dispatch when websocket messages arrive
@@ -650,7 +513,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
     return () => {
       window.removeEventListener('gallery-updated', handleWebSocketMessage);
     };
-  }, [filters, searchTerm, starred, mode]);
+  }, []);
   
   // Keyboard shortcuts
   useEffect(() => {
@@ -662,7 +525,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       }
       
       // Ctrl/Cmd + A to select all
-      if ((e.ctrlKey || e.metaKey) && e.key === 'a' && filteredImages.length > 0) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'a' && images.length > 0) {
         // Only if we're in the gallery page, not in an input field
         if (document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
           e.preventDefault(); // Prevent default browser select all
@@ -678,10 +541,10 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [selectionMode, filteredImages.length, clearSelection, selectAll]);
+  }, [selectionMode, images.length, clearSelection, selectAll]);
   
-  // Loading state
-  if (loading) {
+  // Loading state - show loading for initial load only, not for filter changes
+  if (isLoading && images.length === 0) {
     return (
       <div className="flex flex-col justify-center items-center h-[70vh]">
         <div className="relative w-16 h-16 mb-4">
@@ -694,12 +557,12 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
   }
   
   // Error state
-  if (error) {
+  if (errorMessage) {
     return (
       <div className="flex flex-col justify-center items-center h-[70vh] text-center">
         <div className="bg-red-50 border border-red-100 rounded-lg p-8 shadow-sm max-w-md">
-          <p className="text-red-500 mb-4 text-lg">{error}</p>
-          <Button onClick={() => fetchImages()} className="gap-2">
+          <p className="text-red-500 mb-4 text-lg">{errorMessage}</p>
+          <Button onClick={() => refetchGallery()} className="gap-2">
             <RotateCcw className="h-4 w-4" />
             Try Again
           </Button>
@@ -775,7 +638,8 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       {/* Gallery toolbar */}
       <div className={cn(
         "sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border p-4 flex flex-col gap-3",
-        selectionMode === 'selecting' && "bg-primary/5"
+        selectionMode === 'selecting' && "bg-primary/5",
+        isFetching && "opacity-75 transition-opacity"
       )}>
         <div className="flex flex-wrap gap-3 items-center justify-between">
           <div className="flex flex-wrap gap-3 items-center">
@@ -1212,7 +1076,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
         "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 p-6",
         selectionMode === 'selecting' && "cursor-pointer"
       )}>
-        {filteredImages.map((image) => (
+        {images.map((image) => (
           <ImageCard
             key={image.id}
             image={{
@@ -1263,11 +1127,11 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       </div>
       
       {/* Pagination controls */}
-      {(hasNextPage || currentPage > 1) && (
+      {hasNextPage && (
         <div className="flex flex-col items-center gap-4 p-6 border-t border-border mt-6">
           {/* Page info */}
           <div className="text-sm text-muted-foreground text-center">
-            Showing page {currentPage} • {images.length} images loaded
+            {images.length} of {totalCount} images loaded
             {hasNextPage && ` • More available`}
           </div>
           
@@ -1288,7 +1152,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
               ) : (
                 <>
                   Load More
-                  <span className="text-xs opacity-70">({itemsPerPage} more)</span>
+                  <span className="text-xs opacity-70">(up to 50 more)</span>
                 </>
               )}
             </Button>
