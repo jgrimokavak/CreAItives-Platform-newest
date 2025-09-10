@@ -65,6 +65,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
   const [hasNextPage, setHasNextPage] = useState(false);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
   const itemsPerPage = 50;
   
   // Handle search submission
@@ -133,6 +134,11 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       // Update pagination state
       setNextCursor(data.nextCursor || null);
       setHasNextPage(!!data.nextCursor);
+      
+      // Update total count (only when not appending, as total shouldn't change during pagination)
+      if (!append && typeof data.totalCount === 'number') {
+        setTotalCount(data.totalCount);
+      }
       
     } catch (err) {
       console.error('Error fetching gallery:', err);
@@ -712,7 +718,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
               )}>
                 {selectedIds.length > 0
                   ? `${selectedIds.length} selected`
-                  : `${images.length} ${mode === 'trash' ? 'items' : 'images'}`
+                  : `${totalCount} ${mode === 'trash' ? 'items' : 'images'}`
                 }
               </span>
               

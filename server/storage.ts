@@ -1,6 +1,6 @@
 import { users, images, pageSettings, videos, projects, projectMembers, adminAuditLogs, type User, type UpsertUser, type GeneratedImage, type PageSettings, type InsertPageSettings, type Video, type InsertVideo, type Project, type InsertProject, type ProjectMember, type InsertProjectMember, type AdminAuditLog } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, asc, isNull, isNotNull, and, ilike, lt, sql, or, not, inArray, ne } from "drizzle-orm";
+import { eq, desc, asc, isNull, isNotNull, and, ilike, lt, sql, or, not, inArray, ne, count } from "drizzle-orm";
 import * as fs from "fs";
 import * as path from "path";
 import { push } from "./ws";
@@ -1364,6 +1364,67 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error getting images:', error);
       return { items: [], nextCursor: null };
+    }
+  }
+
+  async getImageCount(options: { starred?: boolean; trash?: boolean; searchQuery?: string } = {}): Promise<number> {
+    const { starred, trash, searchQuery } = options;
+    
+    // Get current environment to filter images
+    const currentEnv = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
+    
+    try {
+      // Build conditions array
+      const conditions = [];
+      
+      // CRITICAL FIX: Filter by environment to prevent cross-environment sync issues
+      conditions.push(eq(images.environment, currentEnv));
+      
+      // Filter by starred and trash status
+      if (starred) {
+        conditions.push(eq(images.starred, "true"));
+      }
+      
+      if (trash) {
+        conditions.push(isNotNull(images.deletedAt));
+      } else {
+        conditions.push(isNull(images.deletedAt));
+      }
+      
+      // Add text search if searchQuery is provided
+      if (searchQuery && searchQuery.trim() !== '') {
+        const searchTerm = searchQuery.trim();
+        
+        // Use case-insensitive ILIKE for flexible search
+        if (searchTerm.length >= 1) { // Allow even single character searches
+          try {
+            conditions.push(
+              ilike(images.prompt, `%${searchTerm}%`)
+            );
+          } catch (err) {
+            console.error(`Error adding search condition:`, err);
+          }
+        }
+      }
+      
+      // Build and execute the count query
+      let result;
+      if (conditions.length === 0) {
+        result = await db.select({ count: count() }).from(images);
+      } else if (conditions.length === 1) {
+        result = await db.select({ count: count() })
+          .from(images)
+          .where(conditions[0]);
+      } else {
+        result = await db.select({ count: count() })
+          .from(images)
+          .where(and(...conditions));
+      }
+      
+      return result[0]?.count || 0;
+    } catch (error) {
+      console.error('Error getting image count:', error);
+      return 0;
     }
   }
 

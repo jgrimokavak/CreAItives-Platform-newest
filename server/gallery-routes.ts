@@ -22,11 +22,19 @@ router.get('/gallery', async (req, res) => {
       searchQuery: q as string
     };
     
-    const { items, nextCursor } = await storage.getAllImages(searchParams);
+    const [{ items, nextCursor }, totalCount] = await Promise.all([
+      storage.getAllImages(searchParams),
+      storage.getImageCount({
+        starred: searchParams.starred,
+        trash: searchParams.trash,
+        searchQuery: searchParams.searchQuery
+      })
+    ]);
     
     res.json({
       items,
-      nextCursor
+      nextCursor,
+      totalCount
     });
   } catch (error) {
     console.error('Error fetching gallery:', error);
