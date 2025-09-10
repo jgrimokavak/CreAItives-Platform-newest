@@ -22,7 +22,8 @@ import {
   Clock,
   Settings2,
   AlertTriangle,
-  Loader2
+  Loader2,
+  Hash
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { DateRange } from 'react-day-picker';
@@ -73,6 +74,29 @@ export interface FilterContainerProps {
   children: React.ReactNode;
   onClearAll?: () => void;
   activeFilterCount?: number;
+  className?: string;
+  // Enhanced filter indicators props
+  filters?: AllFilters;
+  onRemoveFilter?: (filterType: keyof AllFilters, value?: string) => void;
+  filterOptions?: {
+    models: Array<{value: string; label: string; count: number}>;
+    aspectRatios: Array<{value: string; label: string; count: number}>;
+    resolutions: Array<{value: string; label: string; count: number}>;
+  };
+  isLoadingOptions?: boolean;
+  hasOptionsError?: boolean;
+  onRetryOptions?: () => void;
+}
+
+// Interface for individual filter indicators
+export interface ActiveFilterIndicatorsProps {
+  filters: AllFilters;
+  onRemoveFilter: (filterType: keyof AllFilters, value?: string) => void;
+  filterOptions?: {
+    models: Array<{value: string; label: string; count: number}>;
+    aspectRatios: Array<{value: string; label: string; count: number}>;
+    resolutions: Array<{value: string; label: string; count: number}>;
+  };
   className?: string;
 }
 
@@ -603,6 +627,175 @@ export const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
 };
 
 // ============================================================================
+// ACTIVE FILTER INDICATORS COMPONENT
+// ============================================================================
+
+export const ActiveFilterIndicators: React.FC<ActiveFilterIndicatorsProps> = ({
+  filters,
+  onRemoveFilter,
+  filterOptions,
+  className
+}) => {
+  const getLabelForFilterValue = (filterType: keyof AllFilters, value: string): string => {
+    switch (filterType) {
+      case 'models':
+        return filterOptions?.models.find(m => m.value === value)?.label || value;
+      case 'aspectRatios':
+        return filterOptions?.aspectRatios.find(a => a.value === value)?.label || value;
+      case 'resolutions':
+        return filterOptions?.resolutions.find(r => r.value === value)?.label || value;
+      default:
+        return value;
+    }
+  };
+
+  const getIconForFilterType = (filterType: keyof AllFilters) => {
+    switch (filterType) {
+      case 'models':
+        return <Sparkles className="h-3 w-3" />;
+      case 'aspectRatios':
+        return <Monitor className="h-3 w-3" />;
+      case 'resolutions':
+        return <Settings2 className="h-3 w-3" />;
+      case 'dateRange':
+        return <CalendarIcon className="h-3 w-3" />;
+      default:
+        return <Hash className="h-3 w-3" />;
+    }
+  };
+
+  const formatDateRange = (dateRange: DateRange | undefined): string => {
+    if (!dateRange?.from) return 'Date Range';
+    if (!dateRange.to) return format(dateRange.from, 'MMM dd, yyyy');
+    return `${format(dateRange.from, 'MMM dd')} - ${format(dateRange.to, 'MMM dd, yyyy')}`;
+  };
+
+  const filterIndicators: React.ReactNode[] = [];
+
+  // Add model filter indicators
+  filters.models.forEach(model => {
+    filterIndicators.push(
+      <Badge
+        key={`model-${model}`}
+        variant="secondary"
+        className="h-7 px-2 text-xs bg-primary/10 text-primary border-primary/20 hover:bg-primary/15 transition-colors"
+        data-testid={`filter-pill-model-${model}`}
+      >
+        <div className="flex items-center gap-1.5">
+          {getIconForFilterType('models')}
+          <span className="truncate max-w-[120px]">{getLabelForFilterValue('models', model)}</span>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemoveFilter('models', model);
+            }}
+            className="ml-1 hover:bg-primary/20 rounded-sm p-0.5 transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-1 focus:ring-primary/50"
+            data-testid={`button-remove-model-${model}`}
+            aria-label={`Remove ${getLabelForFilterValue('models', model)} filter`}
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </div>
+      </Badge>
+    );
+  });
+
+  // Add aspect ratio filter indicators
+  filters.aspectRatios.forEach(ratio => {
+    filterIndicators.push(
+      <Badge
+        key={`ratio-${ratio}`}
+        variant="secondary"
+        className="h-7 px-2 text-xs bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 transition-colors dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800 dark:hover:bg-blue-900"
+        data-testid={`filter-pill-aspect-ratio-${ratio}`}
+      >
+        <div className="flex items-center gap-1.5">
+          {getIconForFilterType('aspectRatios')}
+          <span className="truncate max-w-[80px]">{getLabelForFilterValue('aspectRatios', ratio)}</span>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemoveFilter('aspectRatios', ratio);
+            }}
+            className="ml-1 hover:bg-blue-200 dark:hover:bg-blue-800 rounded-sm p-0.5 transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-1 focus:ring-blue-500/50"
+            data-testid={`button-remove-aspect-ratio-${ratio}`}
+            aria-label={`Remove ${getLabelForFilterValue('aspectRatios', ratio)} aspect ratio filter`}
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </div>
+      </Badge>
+    );
+  });
+
+  // Add resolution filter indicators
+  filters.resolutions.forEach(resolution => {
+    filterIndicators.push(
+      <Badge
+        key={`resolution-${resolution}`}
+        variant="secondary"
+        className="h-7 px-2 text-xs bg-green-50 text-green-700 border-green-200 hover:bg-green-100 transition-colors dark:bg-green-950 dark:text-green-300 dark:border-green-800 dark:hover:bg-green-900"
+        data-testid={`filter-pill-resolution-${resolution}`}
+      >
+        <div className="flex items-center gap-1.5">
+          {getIconForFilterType('resolutions')}
+          <span className="truncate max-w-[100px]">{getLabelForFilterValue('resolutions', resolution)}</span>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemoveFilter('resolutions', resolution);
+            }}
+            className="ml-1 hover:bg-green-200 dark:hover:bg-green-800 rounded-sm p-0.5 transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-1 focus:ring-green-500/50"
+            data-testid={`button-remove-resolution-${resolution}`}
+            aria-label={`Remove ${getLabelForFilterValue('resolutions', resolution)} resolution filter`}
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </div>
+      </Badge>
+    );
+  });
+
+  // Add date range filter indicator
+  if (filters.dateRange?.from || filters.dateRange?.to) {
+    filterIndicators.push(
+      <Badge
+        key="dateRange"
+        variant="secondary"
+        className="h-7 px-2 text-xs bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 transition-colors dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800 dark:hover:bg-purple-900"
+        data-testid="filter-pill-date-range"
+      >
+        <div className="flex items-center gap-1.5">
+          {getIconForFilterType('dateRange')}
+          <span className="max-w-[120px] truncate">{formatDateRange(filters.dateRange)}</span>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemoveFilter('dateRange');
+            }}
+            className="ml-1 hover:bg-purple-200 dark:hover:bg-purple-800 rounded-sm p-0.5 transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-1 focus:ring-purple-500/50"
+            data-testid="button-remove-date-range"
+            aria-label="Remove date range filter"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </div>
+      </Badge>
+    );
+  }
+
+  if (filterIndicators.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className={cn('flex flex-wrap gap-1.5 items-center', className)}>
+      {filterIndicators}
+    </div>
+  );
+};
+
+// ============================================================================
 // FILTER CONTAINER COMPONENT
 // ============================================================================
 
@@ -610,9 +803,35 @@ export const FilterContainer: React.FC<FilterContainerProps> = ({
   children,
   onClearAll,
   activeFilterCount = 0,
+  filters,
+  onRemoveFilter,
+  filterOptions,
+  isLoadingOptions = false,
+  hasOptionsError = false,
+  onRetryOptions,
   className
 }) => {
   const hasActiveFilters = activeFilterCount > 0;
+  const showEnhancedIndicators = filters && onRemoveFilter;
+
+  // Generate detailed filter count breakdown
+  const getDetailedFilterSummary = (): string => {
+    if (!filters || activeFilterCount === 0) return 'No active filters';
+    
+    const parts: string[] = [];
+    if (filters.models.length > 0) parts.push(`${filters.models.length} model${filters.models.length !== 1 ? 's' : ''}`);
+    if (filters.aspectRatios.length > 0) parts.push(`${filters.aspectRatios.length} ratio${filters.aspectRatios.length !== 1 ? 's' : ''}`);
+    if (filters.resolutions.length > 0) parts.push(`${filters.resolutions.length} resolution${filters.resolutions.length !== 1 ? 's' : ''}`);
+    if (filters.dateRange?.from || filters.dateRange?.to) parts.push('date range');
+    
+    if (parts.length === 0) return 'No active filters';
+    if (parts.length === 1) return parts[0];
+    if (parts.length === 2) return `${parts[0]} & ${parts[1]}`;
+    
+    // For 3+ parts: "2 models, 1 ratio & date range"
+    const lastPart = parts.pop();
+    return `${parts.join(', ')} & ${lastPart}`;
+  };
 
   return (
     <div className={cn(
@@ -621,43 +840,202 @@ export const FilterContainer: React.FC<FilterContainerProps> = ({
       className
     )}>
       <div className="flex flex-col gap-3">
-        {/* Header with title and clear all button */}
+        {/* Header with enhanced title, status, and clear all button */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-muted-foreground" />
             <h3 className="font-medium text-sm">Filters</h3>
-            {hasActiveFilters && (
-              <Badge variant="secondary" className="h-5 px-1.5 text-xs">
-                {activeFilterCount} active
+            
+            {/* Enhanced filter status indicator */}
+            {isLoadingOptions ? (
+              <div className="flex items-center gap-1.5">
+                <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+                <Badge variant="outline" className="h-5 px-1.5 text-xs bg-muted/50">
+                  Loading...
+                </Badge>
+              </div>
+            ) : hasOptionsError ? (
+              <div className="flex items-center gap-1.5">
+                <AlertTriangle className="h-3 w-3 text-destructive" />
+                <Badge variant="destructive" className="h-5 px-1.5 text-xs">
+                  Error
+                </Badge>
+                {onRetryOptions && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onRetryOptions}
+                    className="h-5 px-1.5 text-xs hover:bg-destructive/10"
+                    data-testid="button-retry-filter-options"
+                  >
+                    Retry
+                  </Button>
+                )}
+              </div>
+            ) : hasActiveFilters ? (
+              <Badge 
+                variant="secondary" 
+                className="h-5 px-1.5 text-xs bg-primary/10 text-primary border-primary/20"
+                data-testid="badge-active-filter-count"
+              >
+                <span className="hidden sm:inline">{getDetailedFilterSummary()}</span>
+                <span className="sm:hidden">{activeFilterCount} active</span>
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="h-5 px-1.5 text-xs text-muted-foreground">
+                Ready
               </Badge>
             )}
           </div>
           
+          {/* Clear all button - enhanced with loading state */}
           {hasActiveFilters && onClearAll && (
             <Button
               variant="ghost"
               size="sm"
               onClick={onClearAll}
-              className="h-7 px-2 text-xs gap-1.5"
+              disabled={isLoadingOptions}
+              className="h-7 px-2 text-xs gap-1.5 hover:bg-destructive/10 hover:text-destructive transition-colors"
               data-testid="button-clear-all-filters"
             >
               <X className="h-3 w-3" />
-              Clear all
+              <span className="hidden sm:inline">Clear all</span>
+              <span className="sm:hidden">Clear</span>
             </Button>
           )}
         </div>
 
         {/* Filter components container */}
-        <div className="flex flex-wrap gap-2 items-center">
-          {children}
+        <div className="flex flex-wrap gap-2 items-center" data-testid="filter-controls-container">
+          {/* Disable filter controls during loading */}
+          <div className={cn(
+            "flex flex-wrap gap-2 items-center",
+            isLoadingOptions && "opacity-50 pointer-events-none"
+          )}>
+            {children}
+          </div>
         </div>
 
-        {/* Mobile responsive helper text */}
-        <div className="text-xs text-muted-foreground sm:hidden">
-          Tap filters to customize your view
+        {/* Enhanced filter indicators - show individual filter pills */}
+        {showEnhancedIndicators && hasActiveFilters && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-muted-foreground">Active filters:</span>
+            </div>
+            <ActiveFilterIndicators
+              filters={filters}
+              onRemoveFilter={onRemoveFilter}
+              filterOptions={filterOptions}
+              data-testid="active-filter-indicators"
+            />
+          </div>
+        )}
+
+        {/* Status and helper text */}
+        <div className="flex flex-col gap-1">
+          {/* Error message */}
+          {hasOptionsError && (
+            <div className="text-xs text-destructive flex items-center gap-1">
+              <AlertTriangle className="h-3 w-3" />
+              <span>Failed to load filter options. Some filters may not be available.</span>
+            </div>
+          )}
+          
+          {/* Mobile responsive helper text */}
+          {!hasOptionsError && (
+            <div className="text-xs text-muted-foreground">
+              <span className="sm:hidden">Tap filters to customize your view</span>
+              <span className="hidden sm:inline">
+                {hasActiveFilters 
+                  ? "Click individual filter pills above to remove them" 
+                  : "Select filters above to refine your gallery"}
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </div>
+  );
+};
+
+// ============================================================================
+// ENHANCED FILTER CONTAINER WITH LOADING/ERROR STATES
+// ============================================================================
+
+// Enhanced container component that includes all filter functionality
+export interface EnhancedFilterContainerProps {
+  children: React.ReactNode;
+  filters: AllFilters;
+  updateModels: (models: string[]) => void;
+  updateAspectRatios: (aspectRatios: string[]) => void;
+  updateResolutions: (resolutions: string[]) => void;
+  updateDateRange: (dateRange: DateRange | undefined) => void;
+  clearAllFilters: () => void;
+  activeFilterCount: number;
+  className?: string;
+}
+
+export const EnhancedFilterContainer: React.FC<EnhancedFilterContainerProps> = ({
+  children,
+  filters,
+  updateModels,
+  updateAspectRatios,
+  updateResolutions,
+  updateDateRange,
+  clearAllFilters,
+  activeFilterCount,
+  className
+}) => {
+  const { 
+    filterOptions, 
+    isLoading: isLoadingOptions, 
+    error: optionsError, 
+    refetch: retryOptions 
+  } = useFilterOptions();
+
+  const handleRemoveFilter = (filterType: keyof AllFilters, value?: string) => {
+    switch (filterType) {
+      case 'models':
+        if (value) {
+          updateModels(filters.models.filter(m => m !== value));
+        } else {
+          updateModels([]);
+        }
+        break;
+      case 'aspectRatios':
+        if (value) {
+          updateAspectRatios(filters.aspectRatios.filter(r => r !== value));
+        } else {
+          updateAspectRatios([]);
+        }
+        break;
+      case 'resolutions':
+        if (value) {
+          updateResolutions(filters.resolutions.filter(r => r !== value));
+        } else {
+          updateResolutions([]);
+        }
+        break;
+      case 'dateRange':
+        updateDateRange(undefined);
+        break;
+    }
+  };
+
+  return (
+    <FilterContainer
+      onClearAll={clearAllFilters}
+      activeFilterCount={activeFilterCount}
+      filters={filters}
+      onRemoveFilter={handleRemoveFilter}
+      filterOptions={filterOptions || undefined}
+      isLoadingOptions={isLoadingOptions}
+      hasOptionsError={!!optionsError}
+      onRetryOptions={() => retryOptions()}
+      className={className}
+    >
+      {children}
+    </FilterContainer>
   );
 };
 

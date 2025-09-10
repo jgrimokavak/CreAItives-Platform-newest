@@ -14,7 +14,7 @@ import { Loader2, FolderOpen, Star, Trash2, RotateCcw, Trash, Search, X, Sparkle
 import { cn } from '@/lib/utils';
 import ImageCard from '@/components/ImageCard';
 import { 
-  FilterContainer, 
+  EnhancedFilterContainer, 
   ModelFilter, 
   AspectRatioFilter, 
   ResolutionFilter, 
@@ -1004,13 +1004,17 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
         
       </div>
       
-      {/* Comprehensive Filter Bar */}
+      {/* Enhanced Filter Bar with Professional Indicators */}
       {mode === 'gallery' && (
-        <FilterContainer
-          onClearAll={handleClearAllFilters}
-          activeFilterCount={totalActiveFilterCount}
+        <EnhancedFilterContainer
+          filters={filters}
+          updateModels={updateModels}
+          updateAspectRatios={updateAspectRatios}
+          updateResolutions={updateResolutions}
+          updateDateRange={updateDateRange}
+          clearAllFilters={clearAllFilters}
+          activeFilterCount={activeFilterCount}
           className="border-b"
-          data-testid="filter-container"
         >
           <ModelFilter
             value={filters.models}
@@ -1068,7 +1072,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
               <TooltipContent side="bottom">Show only starred images</TooltipContent>
             </Tooltip>
           </TooltipProvider>
-        </FilterContainer>
+        </EnhancedFilterContainer>
       )}
       
       {/* Gallery grid */}
