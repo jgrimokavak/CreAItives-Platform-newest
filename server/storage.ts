@@ -1231,11 +1231,47 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  async getAllImages(options: { starred?: boolean; trash?: boolean; limit?: number; cursor?: string; searchQuery?: string } = {}): Promise<{ 
+  // Helper function to categorize resolution from dimensions
+  private getResolutionCategory(dimensions: string): string {
+    if (!dimensions) return 'standard';
+    
+    // Extract width from dimensions like "1024x1024" or "1920x1080"
+    const match = dimensions.match(/^(\d+)x\d+$/);
+    if (!match) return 'standard';
+    
+    const width = parseInt(match[1], 10);
+    
+    if (width >= 4096) return '4k';
+    if (width >= 2048) return 'ultra';
+    if (width >= 1536) return 'high';
+    return 'standard';
+  }
+
+  async getAllImages(options: { 
+    starred?: boolean; 
+    trash?: boolean; 
+    limit?: number; 
+    cursor?: string; 
+    searchQuery?: string;
+    models?: string[];
+    aspectRatios?: string[];
+    resolutions?: string[];
+    dateRange?: { from?: Date; to?: Date };
+  } = {}): Promise<{ 
     items: GeneratedImage[]; 
     nextCursor: string | null 
   }> {
-    const { starred, trash, limit = 50, cursor, searchQuery } = options;
+    const { 
+      starred, 
+      trash, 
+      limit = 50, 
+      cursor, 
+      searchQuery,
+      models,
+      aspectRatios,
+      resolutions,
+      dateRange
+    } = options;
     
     // Apply sensible limit constraints for performance
     const take = Math.min(Number(limit) || 50, 100);
@@ -1277,6 +1313,48 @@ export class DatabaseStorage implements IStorage {
           } catch (err) {
             console.error(`Error adding search condition:`, err);
           }
+        }
+      }
+      
+      // Add model filtering
+      if (models && models.length > 0) {
+        conditions.push(inArray(images.model, models));
+      }
+      
+      // Add aspect ratio filtering
+      if (aspectRatios && aspectRatios.length > 0) {
+        conditions.push(inArray(images.aspectRatio, aspectRatios));
+      }
+      
+      // Add date range filtering
+      if (dateRange) {
+        if (dateRange.from) {
+          conditions.push(sql`${images.createdAt} >= ${dateRange.from.toISOString()}`);
+        }
+        if (dateRange.to) {
+          conditions.push(sql`${images.createdAt} <= ${dateRange.to.toISOString()}`);
+        }
+      }
+      
+      // Add resolution filtering using SQL CASE statement
+      if (resolutions && resolutions.length > 0) {
+        const resolutionCaseConditions = resolutions.map(res => {
+          switch (res) {
+            case '4k':
+              return sql`(regexp_match(${images.dimensions}, '^(\\d+)x\\d+$'))[1]::int >= 4096`;
+            case 'ultra':
+              return sql`(regexp_match(${images.dimensions}, '^(\\d+)x\\d+$'))[1]::int >= 2048 AND (regexp_match(${images.dimensions}, '^(\\d+)x\\d+$'))[1]::int < 4096`;
+            case 'high':
+              return sql`(regexp_match(${images.dimensions}, '^(\\d+)x\\d+$'))[1]::int >= 1536 AND (regexp_match(${images.dimensions}, '^(\\d+)x\\d+$'))[1]::int < 2048`;
+            case 'standard':
+              return sql`(${images.dimensions} IS NULL OR ${images.dimensions} = '' OR (regexp_match(${images.dimensions}, '^(\\d+)x\\d+$'))[1]::int < 1536)`;
+            default:
+              return sql`false`;
+          }
+        });
+        
+        if (resolutionCaseConditions.length > 0) {
+          conditions.push(or(...resolutionCaseConditions));
         }
       }
       
@@ -1332,7 +1410,7 @@ export class DatabaseStorage implements IStorage {
       }
       
       // Convert to GeneratedImage type with thumbnail optimization
-      const mappedItems = items.map(item => {
+      let mappedItems = items.map(item => {
         // Convert string "true"/"false" to boolean
         const starredStatus = item.starred === "true";
         
@@ -1357,6 +1435,8 @@ export class DatabaseStorage implements IStorage {
         };
       });
       
+      // Resolution filtering is now handled server-side in SQL conditions above
+      
       return {
         items: mappedItems,
         nextCursor
@@ -1367,8 +1447,24 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getImageCount(options: { starred?: boolean; trash?: boolean; searchQuery?: string } = {}): Promise<number> {
-    const { starred, trash, searchQuery } = options;
+  async getImageCount(options: { 
+    starred?: boolean; 
+    trash?: boolean; 
+    searchQuery?: string;
+    models?: string[];
+    aspectRatios?: string[];
+    resolutions?: string[];
+    dateRange?: { from?: Date; to?: Date };
+  } = {}): Promise<number> {
+    const { 
+      starred, 
+      trash, 
+      searchQuery,
+      models,
+      aspectRatios,
+      resolutions,
+      dateRange
+    } = options;
     
     // Get current environment to filter images
     const currentEnv = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
@@ -1404,6 +1500,48 @@ export class DatabaseStorage implements IStorage {
           } catch (err) {
             console.error(`Error adding search condition:`, err);
           }
+        }
+      }
+      
+      // Add model filtering
+      if (models && models.length > 0) {
+        conditions.push(inArray(images.model, models));
+      }
+      
+      // Add aspect ratio filtering
+      if (aspectRatios && aspectRatios.length > 0) {
+        conditions.push(inArray(images.aspectRatio, aspectRatios));
+      }
+      
+      // Add date range filtering
+      if (dateRange) {
+        if (dateRange.from) {
+          conditions.push(sql`${images.createdAt} >= ${dateRange.from.toISOString()}`);
+        }
+        if (dateRange.to) {
+          conditions.push(sql`${images.createdAt} <= ${dateRange.to.toISOString()}`);
+        }
+      }
+      
+      // Add resolution filtering using SQL CASE statement (identical to getAllImages)
+      if (resolutions && resolutions.length > 0) {
+        const resolutionCaseConditions = resolutions.map(res => {
+          switch (res) {
+            case '4k':
+              return sql`(regexp_match(${images.dimensions}, '^(\\d+)x\\d+$'))[1]::int >= 4096`;
+            case 'ultra':
+              return sql`(regexp_match(${images.dimensions}, '^(\\d+)x\\d+$'))[1]::int >= 2048 AND (regexp_match(${images.dimensions}, '^(\\d+)x\\d+$'))[1]::int < 4096`;
+            case 'high':
+              return sql`(regexp_match(${images.dimensions}, '^(\\d+)x\\d+$'))[1]::int >= 1536 AND (regexp_match(${images.dimensions}, '^(\\d+)x\\d+$'))[1]::int < 2048`;
+            case 'standard':
+              return sql`(${images.dimensions} IS NULL OR ${images.dimensions} = '' OR (regexp_match(${images.dimensions}, '^(\\d+)x\\d+$'))[1]::int < 1536)`;
+            default:
+              return sql`false`;
+          }
+        });
+        
+        if (resolutionCaseConditions.length > 0) {
+          conditions.push(or(...resolutionCaseConditions));
         }
       }
       

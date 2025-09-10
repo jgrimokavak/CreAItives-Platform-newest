@@ -1,25 +1,80 @@
 import { Router } from 'express';
 import { db } from './db';
 import { images } from '@shared/schema';
-import { eq, isNull, isNotNull, desc } from 'drizzle-orm';
+import { eq, isNull, isNotNull, desc, and, sql } from 'drizzle-orm';
 import { push } from './ws';
 import { storage } from './storage';
 import { objectStorage } from './objectStorage';
 import { galleryRateLimit } from './middleware/rateLimiter';
+import { z } from 'zod';
+
+// Input validation schemas
+const dateStringSchema = z.string().refine((date) => {
+  const parsed = new Date(date);
+  return !isNaN(parsed.getTime());
+}, { message: 'Invalid date format' });
+
+const galleryQuerySchema = z.object({
+  cursor: z.string().optional(),
+  limit: z.union([z.string(), z.number()]).optional(),
+  starred: z.string().optional(),
+  trash: z.string().optional(),
+  q: z.string().optional(),
+  models: z.union([z.string(), z.array(z.string())]).optional(),
+  aspectRatios: z.union([z.string(), z.array(z.string())]).optional(),
+  resolutions: z.union([z.string(), z.array(z.string())]).optional(),
+  dateFrom: dateStringSchema.optional(),
+  dateTo: dateStringSchema.optional()
+});
 
 const router = Router();
 
 // Get gallery images with pagination - now using Object Storage
 router.get('/gallery', async (req, res) => {
   try {
-    const { cursor, limit = 50, starred, trash, q } = req.query;
+    // Validate input parameters
+    const validationResult = galleryQuerySchema.safeParse(req.query);
+    if (!validationResult.success) {
+      return res.status(400).json({ 
+        error: 'Invalid query parameters',
+        details: validationResult.error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`)
+      });
+    }
+    
+    const { 
+      cursor, 
+      limit = 50, 
+      starred, 
+      trash, 
+      q,
+      models,
+      aspectRatios,
+      resolutions,
+      dateFrom,
+      dateTo
+    } = validationResult.data;
+    
+    // Parse array parameters
+    const modelsArray = models ? (typeof models === 'string' ? models.split(',') : Array.isArray(models) ? models.filter(m => typeof m === 'string') as string[] : undefined) : undefined;
+    const aspectRatiosArray = aspectRatios ? (typeof aspectRatios === 'string' ? aspectRatios.split(',') : Array.isArray(aspectRatios) ? aspectRatios.filter(a => typeof a === 'string') as string[] : undefined) : undefined;
+    const resolutionsArray = resolutions ? (typeof resolutions === 'string' ? resolutions.split(',') : Array.isArray(resolutions) ? resolutions.filter(r => typeof r === 'string') as string[] : undefined) : undefined;
+    
+    // Parse date range
+    const dateRange = (dateFrom || dateTo) ? {
+      from: dateFrom ? new Date(dateFrom as string) : undefined,
+      to: dateTo ? new Date(dateTo as string) : undefined
+    } : undefined;
     
     const searchParams = {
       starred: starred === 'true',
       trash: trash === 'true',
       limit: Number(limit),
       cursor: cursor as string,
-      searchQuery: q as string
+      searchQuery: q as string,
+      models: modelsArray,
+      aspectRatios: aspectRatiosArray,
+      resolutions: resolutionsArray,
+      dateRange
     };
     
     const [{ items, nextCursor }, totalCount] = await Promise.all([
@@ -27,7 +82,11 @@ router.get('/gallery', async (req, res) => {
       storage.getImageCount({
         starred: searchParams.starred,
         trash: searchParams.trash,
-        searchQuery: searchParams.searchQuery
+        searchQuery: searchParams.searchQuery,
+        models: searchParams.models,
+        aspectRatios: searchParams.aspectRatios,
+        resolutions: searchParams.resolutions,
+        dateRange: searchParams.dateRange
       })
     ]);
     
@@ -151,6 +210,118 @@ router.delete('/image/:id', async (req, res) => {
   } catch (error) {
     console.error('Error deleting image:', error);
     res.status(500).json({ error: 'Failed to delete image' });
+  }
+});
+
+// Get filter metadata for dynamic filter population
+router.get('/gallery/filter-options', async (req, res) => {
+  try {
+    const currentEnv = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
+    
+    // Get all non-deleted images for current environment with resolution categories
+    const allImages = await db
+      .select({
+        model: images.model,
+        aspectRatio: images.aspectRatio,
+        dimensions: images.dimensions,
+        createdAt: images.createdAt,
+        resolutionCategory: sql`
+          CASE 
+            WHEN ${images.dimensions} IS NULL OR ${images.dimensions} = '' THEN 'standard'
+            WHEN (regexp_match(${images.dimensions}, '^(\\d+)x\\d+$'))[1]::int >= 4096 THEN '4k'
+            WHEN (regexp_match(${images.dimensions}, '^(\\d+)x\\d+$'))[1]::int >= 2048 THEN 'ultra'
+            WHEN (regexp_match(${images.dimensions}, '^(\\d+)x\\d+$'))[1]::int >= 1536 THEN 'high'
+            ELSE 'standard'
+          END
+        `.as('resolutionCategory')
+      })
+      .from(images)
+      .where(
+        and(
+          eq(images.environment, currentEnv),
+          isNull(images.deletedAt)
+        )
+      );
+    
+    // Process models with counts
+    const modelCounts = new Map<string, number>();
+    allImages.forEach(img => {
+      const current = modelCounts.get(img.model) || 0;
+      modelCounts.set(img.model, current + 1);
+    });
+    
+    const models = Array.from(modelCounts.entries())
+      .map(([key, count]) => ({ key, count }))
+      .sort((a, b) => b.count - a.count); // Sort by count descending
+    
+    // Process aspect ratios with counts
+    const aspectRatioCounts = new Map<string, number>();
+    allImages.forEach(img => {
+      if (img.aspectRatio) {
+        const current = aspectRatioCounts.get(img.aspectRatio) || 0;
+        aspectRatioCounts.set(img.aspectRatio, current + 1);
+      }
+    });
+    
+    const aspectRatios = Array.from(aspectRatioCounts.entries())
+      .map(([key, count]) => ({ 
+        key, 
+        count,
+        label: key === '16:9' ? 'Widescreen' : 
+               key === '9:16' ? 'Portrait' :
+               key === '1:1' ? 'Square' :
+               key === '4:3' ? 'Standard' :
+               key === '3:2' ? 'Photo' : key
+      }))
+      .sort((a, b) => b.count - a.count);
+    
+    // Process resolutions with counts (using SQL-computed categories)
+    const resolutionCounts = new Map<string, number>();
+    allImages.forEach(img => {
+      const category = String(img.resolutionCategory);
+      const current = resolutionCounts.get(category) || 0;
+      resolutionCounts.set(category, current + 1);
+    });
+    
+    const resolutions = Array.from(resolutionCounts.entries())
+      .map(([key, count]) => ({ 
+        key, 
+        count,
+        label: key === 'standard' ? 'Standard (1K)' :
+               key === 'high' ? 'High (1.5K+)' :
+               key === 'ultra' ? 'Ultra (2K+)' :
+               key === '4k' ? '4K' : key
+      }))
+      .sort((a, b) => {
+        // Custom sort order: standard, high, ultra, 4k
+        const order: Record<string, number> = { 'standard': 0, 'high': 1, 'ultra': 2, '4k': 3 };
+        return (order[a.key] || 999) - (order[b.key] || 999);
+      });
+    
+    // Get date range
+    const dates = allImages
+      .map(img => new Date(img.createdAt))
+      .sort((a, b) => a.getTime() - b.getTime());
+    
+    const dateRange = dates.length > 0 ? {
+      earliest: dates[0].toISOString(),
+      latest: dates[dates.length - 1].toISOString()
+    } : null;
+    
+    res.json({
+      models,
+      aspectRatios,
+      resolutions,
+      dateRange,
+      totalImages: allImages.length
+    });
+    
+  } catch (error) {
+    console.error('Error fetching filter options:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch filter options',
+      details: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined 
+    });
   }
 });
 
