@@ -7,11 +7,20 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
-import { useDebounce } from '@/hooks/useDebounce';
-import { apiRequest, queryClient } from '@/lib/queryClient';
+import { useFilterOptions } from '@/hooks/useFilterOptions';
 import { Loader2, FolderOpen, Star, Trash2, RotateCcw, Trash, Search, X, Sparkles, CheckSquare, SquareX, Image } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ImageCard from '@/components/ImageCard';
+import { 
+  FilterContainer, 
+  ModelFilter, 
+  AspectRatioFilter, 
+  ResolutionFilter, 
+  DateRangeFilter,
+  useFilters,
+  AllFilters
+} from '@/components/gallery/FilterComponents';
+import { DateRange } from 'react-day-picker';
 
 interface GalleryPageProps {
   mode?: 'gallery' | 'trash';
@@ -52,17 +61,39 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectionMode, setSelectionMode] = useState<'none' | 'selecting'>('none');
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [activeFilters, setActiveFilters] = useState<{
-    models: string[];
-    starred: boolean;
-  }>({
-    models: [],
-    starred: false
-  });
+  const [starred, setStarred] = useState(false); // Separate starred state for existing functionality
   const { toast } = useToast();
   const [_, navigate] = useLocation();
   const { setMode, setSourceImages } = useEditor();
+  
+  // Initialize filters from URL parameters
+  const getInitialFiltersFromURL = (): Partial<AllFilters> => {
+    const params = new URLSearchParams(window.location.search);
+    
+    return {
+      models: params.get('models')?.split(',').filter(Boolean) || [],
+      aspectRatios: params.get('aspectRatios')?.split(',').filter(Boolean) || [],
+      resolutions: params.get('resolutions')?.split(',').filter(Boolean) || [],
+      dateRange: (() => {
+        const from = params.get('dateFrom');
+        const to = params.get('dateTo');
+        if (from || to) {
+          return {
+            from: from ? new Date(from) : undefined,
+            to: to ? new Date(to) : undefined,
+          };
+        }
+        return undefined;
+      })()
+    };
+  };
+  
+  // Filter state management with URL synchronization
+  const filterState = useFilters(getInitialFiltersFromURL());
+  const { filters, updateModels, updateAspectRatios, updateResolutions, updateDateRange, clearAllFilters, activeFilterCount } = filterState;
+  
+  // Filter options data
+  const { filterOptions, isLoading: filtersLoading, error: filtersError, models, aspectRatios, resolutions } = useFilterOptions();
   
   // Real data from database with pagination
   const [images, setImages] = useState<GalleryImage[]>([]);
@@ -73,6 +104,76 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
   const [loadingMore, setLoadingMore] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
   const itemsPerPage = 50;
+  
+  // URL synchronization: Update URL when filters change
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    
+    // Update filter parameters
+    if (filters.models.length > 0) {
+      params.set('models', filters.models.join(','));
+    } else {
+      params.delete('models');
+    }
+    
+    if (filters.aspectRatios.length > 0) {
+      params.set('aspectRatios', filters.aspectRatios.join(','));
+    } else {
+      params.delete('aspectRatios');
+    }
+    
+    if (filters.resolutions.length > 0) {
+      params.set('resolutions', filters.resolutions.join(','));
+    } else {
+      params.delete('resolutions');
+    }
+    
+    if (filters.dateRange?.from) {
+      params.set('dateFrom', filters.dateRange.from.toISOString());
+    } else {
+      params.delete('dateFrom');
+    }
+    
+    if (filters.dateRange?.to) {
+      params.set('dateTo', filters.dateRange.to.toISOString());
+    } else {
+      params.delete('dateTo');
+    }
+    
+    // Preserve existing search and mode parameters
+    if (searchTerm) {
+      params.set('q', searchTerm);
+    } else {
+      params.delete('q');
+    }
+    
+    if (starred) {
+      params.set('starred', 'true');
+    } else {
+      params.delete('starred');
+    }
+    
+    // Update URL without triggering a page reload
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    window.history.replaceState(null, '', newUrl);
+  }, [filters, searchTerm, starred]);
+  
+  // Initialize search and starred from URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlSearch = params.get('q');
+    const urlStarred = params.get('starred') === 'true';
+    
+    if (urlSearch) {
+      setSearchInput(urlSearch);
+      setSearchTerm(urlSearch);
+    }
+    
+    if (urlStarred) {
+      setStarred(true);
+    }
+  }, []);
+  
   
   // Handle search submission
   const handleSearch = () => {
@@ -97,7 +198,26 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
     
     try {
       const params = new URLSearchParams();
-      if (activeFilters.starred) params.append('starred', 'true');
+      
+      // Add filter parameters
+      if (filters.models.length > 0) {
+        params.append('models', filters.models.join(','));
+      }
+      if (filters.aspectRatios.length > 0) {
+        params.append('aspectRatios', filters.aspectRatios.join(','));
+      }
+      if (filters.resolutions.length > 0) {
+        params.append('resolutions', filters.resolutions.join(','));
+      }
+      if (filters.dateRange?.from) {
+        params.append('dateFrom', filters.dateRange.from.toISOString());
+      }
+      if (filters.dateRange?.to) {
+        params.append('dateTo', filters.dateRange.to.toISOString());
+      }
+      
+      // Add existing parameters
+      if (starred) params.append('starred', 'true');
       if (mode === 'trash') params.append('trash', 'true');
       if (searchTerm && searchTerm.trim() !== '') {
         params.append('q', searchTerm.trim()); // Backend expects 'q' parameter
@@ -326,7 +446,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       console.log('Star response:', data);
       
       // If we're in starred mode and unstarring, refresh the gallery to remove it
-      if (activeFilters.starred && !newStarredState) {
+      if (starred && !newStarredState) {
         console.log('Refreshing gallery after unstarring in starred mode');
         fetchImages();
       }
@@ -499,67 +619,20 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
     }
   };
   
-  // Extract unique metadata values from images
-  const getFilterOptions = (images: GalleryImage[]) => {
-    const models = new Set<string>();
-    
-    // Add car-generator model to the options even if there are no images with this model yet
-    models.add('car-generator');
-    
-    images.forEach(img => {
-      if (img.model) models.add(img.model);
-    });
-    
-    return {
-      models: Array.from(models).sort()
-    };
+  // Clear all filters and reset search
+  const handleClearAllFilters = () => {
+    clearAllFilters();
+    setSearchInput('');
+    setSearchTerm('');
+    setStarred(false);
   };
   
-  // Apply filters to images (now only applies to display since filtering is done server-side)
-  const applyFilters = (images: GalleryImage[]) => {
-    if (!activeFilters.models.length) {
-      return images;
-    }
-    
-    return images.filter(img => {
-      const modelMatch = activeFilters.models.length === 0 || activeFilters.models.includes(img.model);
-      return modelMatch;
-    });
-  };
-  
-  // Toggle filter selection
-  const toggleFilter = (type: 'models', value: string) => {
-    setActiveFilters(prev => {
-      const current = [...prev[type]];
-      const index = current.indexOf(value);
-      
-      if (index >= 0) {
-        current.splice(index, 1);
-      } else {
-        current.push(value);
-      }
-      
-      return {
-        ...prev,
-        [type]: current
-      };
-    });
-  };
-  
-  // Clear all filters
-  const clearFilters = () => {
-    setActiveFilters({
-      models: [],
-      starred: false
-    });
-  };
 
   // Since server-side filtering is now handled, we show all images from current pages
-  // Client-side filtering is only used for model filtering as a secondary filter
-  const filteredImages = applyFilters(images);
+  const filteredImages = images;
   
-  // Get available filter options
-  const filterOptions = getFilterOptions(images);
+  // Total active filter count including starred state
+  const totalActiveFilterCount = activeFilterCount + (starred ? 1 : 0);
   
   // Fetch images when component mounts, mode changes, or filters change
   useEffect(() => {
@@ -577,7 +650,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
     return () => {
       window.removeEventListener('gallery-updated', handleWebSocketMessage);
     };
-  }, [mode, activeFilters.starred, activeFilters.models.join(','), searchTerm]);
+  }, [filters, searchTerm, starred, mode]);
   
   // Keyboard shortcuts
   useEffect(() => {
@@ -648,7 +721,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
             {searchTerm 
               ? 'No results found'
               : mode === 'gallery' 
-                ? activeFilters.starred 
+                ? starred 
                   ? 'No starred images yet' 
                   : 'Your gallery is empty'
                 : 'Trash is empty'
@@ -659,7 +732,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
             {searchTerm 
               ? `No images matching "${searchTerm}" were found`
               : mode === 'gallery' 
-                ? activeFilters.starred
+                ? starred
                   ? 'Images you star will appear here for quick access'
                   : 'Generate some amazing images to start building your collection'
                 : 'Items you delete will appear here for 30 days before being permanently removed'
@@ -674,9 +747,9 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
               </Button>
             )}
             
-            {mode === 'gallery' && activeFilters.starred && !searchTerm && (
+            {mode === 'gallery' && starred && !searchTerm && (
               <Button 
-                onClick={() => setActiveFilters(prev => ({...prev, starred: false}))} 
+                onClick={() => setStarred(false)} 
                 variant="outline" 
                 className="gap-2"
               >
@@ -685,7 +758,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
               </Button>
             )}
             
-            {mode === 'gallery' && !activeFilters.starred && !searchTerm && (
+            {mode === 'gallery' && !starred && !searchTerm && (
               <Button onClick={() => navigate('/')} className="gap-2">
                 <Sparkles className="h-4 w-4" />
                 Create images
@@ -735,7 +808,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
                         <CheckSquare className="h-3.5 w-3.5" />
                       ) : mode === 'trash' ? (
                         <Trash2 className="h-3.5 w-3.5" />
-                      ) : activeFilters.starred ? (
+                      ) : starred ? (
                         <Star className="h-3.5 w-3.5 fill-current" />
                       ) : (
                         <Image className="h-3.5 w-3.5" />
@@ -751,7 +824,7 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
                       )}
                       
                       {/* Results indicator when filtered */}
-                      {(searchTerm || activeFilters.starred) && selectionMode !== 'selecting' && (
+                      {(searchTerm || starred) && selectionMode !== 'selecting' && (
                         <span className="text-xs opacity-70">• results</span>
                       )}
                     </span>
@@ -764,11 +837,11 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
                       <div className="text-muted-foreground">
                         {images.length} loaded on this page
                       </div>
-                      {(searchTerm || activeFilters.starred) && (
+                      {(searchTerm || starred) && (
                         <div className="text-muted-foreground border-t border-border pt-1 mt-1">
                           <div>Filtered by:</div>
                           {searchTerm && <div>• Search: "{searchTerm.length > 20 ? searchTerm.substring(0, 20) + '...' : searchTerm}"</div>}
-                          {activeFilters.starred && <div>• Starred images only</div>}
+                          {starred && <div>• Starred images only</div>}
                           {mode === 'trash' && <div>• Trash items</div>}
                         </div>
                       )}
@@ -786,39 +859,26 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
               )}
             </div>
             
-            {/* Filters for gallery mode */}
+            {/* Starred toggle for quick access */}
             {mode === 'gallery' && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
-                      variant={activeFilters.starred || activeFilters.models.length > 0 ? "default" : "outline"}
+                      variant={starred ? "default" : "outline"}
                       size="sm"
-                      onClick={() => setFilterOpen(!filterOpen)}
+                      onClick={() => setStarred(!starred)}
                       className="gap-2"
+                      data-testid="button-starred-toggle"
                     >
-                      <svg 
-                        xmlns="http://www.w3.org/2000/svg" 
-                        width="15" 
-                        height="15" 
-                        viewBox="0 0 24 24" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        strokeWidth="2" 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round"
-                      >
-                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
-                      </svg>
-                      Filters
-                      {(activeFilters.starred || activeFilters.models.length > 0) && (
-                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
-                          {(activeFilters.starred ? 1 : 0) + activeFilters.models.length}
-                        </span>
-                      )}
+                      <Star className={cn(
+                        "h-4 w-4", 
+                        starred ? "fill-current text-yellow-400" : ""
+                      )} />
+                      {starred ? 'Starred Only' : 'Show Starred'}
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="bottom">Filter by star status or model</TooltipContent>
+                  <TooltipContent side="bottom">Toggle starred images filter</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             )}
@@ -1078,101 +1138,74 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
           </div>
         </div>
         
-        {/* Filter panel */}
-        {filterOpen && (
-          <div className="px-1 py-3 mt-1 border-t border-border animate-in fade-in-50">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium">Filter by</h3>
-              <div className="flex items-center gap-2">
-                {(activeFilters.models.length > 0 || activeFilters.starred) && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={clearFilters}
-                    className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
-                  >
-                    Clear filters
-                  </Button>
-                )}
+      </div>
+      
+      {/* Comprehensive Filter Bar */}
+      {mode === 'gallery' && (
+        <FilterContainer
+          onClearAll={handleClearAllFilters}
+          activeFilterCount={totalActiveFilterCount}
+          className="border-b"
+          data-testid="filter-container"
+        >
+          <ModelFilter
+            value={filters.models}
+            onChange={updateModels}
+            options={models}
+            data-testid="filter-models"
+          />
+          <AspectRatioFilter
+            value={filters.aspectRatios}
+            onChange={updateAspectRatios}
+            options={aspectRatios}
+            isLoading={filtersLoading}
+            error={filtersError}
+            data-testid="filter-aspect-ratios"
+          />
+          <ResolutionFilter
+            value={filters.resolutions}
+            onChange={updateResolutions}
+            options={resolutions}
+            isLoading={filtersLoading}
+            error={filtersError}
+            data-testid="filter-resolutions"
+          />
+          <DateRangeFilter
+            value={filters.dateRange}
+            onChange={updateDateRange}
+            data-testid="filter-date-range"
+          />
+          {/* Starred toggle integrated into filters */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
                 <Button
-                  variant="ghost"
+                  variant={starred ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setFilterOpen(false)}
-                  className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
-                >
-                  <X className="h-4 w-4" />
-                  <span className="sr-only">Close filters</span>
-                </Button>
-              </div>
-            </div>
-            
-            {/* Starred filter - shown at the top for prominence */}
-            <div className="mb-4">
-              <div className="flex items-center gap-2 h-10">
-                <Button
-                  variant={activeFilters.starred ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setActiveFilters(prev => ({...prev, starred: !prev.starred}))}
-                  className="gap-2 h-9"
+                  onClick={() => setStarred(!starred)}
+                  className={cn(
+                    "h-9 px-3 text-sm gap-2",
+                    starred && "border-primary bg-primary/10"
+                  )}
+                  data-testid="filter-starred"
                 >
                   <Star className={cn(
                     "h-4 w-4", 
-                    activeFilters.starred ? "fill-current text-yellow-400" : ""
+                    starred ? "fill-current text-yellow-400" : ""
                   )} />
-                  {activeFilters.starred ? "Showing Starred Only" : "Show Starred Images"}
-                </Button>
-                
-                {activeFilters.starred && (
-                  <p className="text-xs text-muted-foreground">
-                    Only showing images you've marked with a star
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              {/* Models */}
-              <div className="space-y-2">
-                <h4 className="text-xs font-medium text-muted-foreground mb-1.5">Models</h4>
-                <div className="flex flex-wrap gap-1.5">
-                  {filterOptions.models.map(model => (
-                    <Button
-                      key={model}
-                      variant={activeFilters.models.includes(model) ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => toggleFilter('models', model)}
-                      className={cn(
-                        "h-7 px-2 text-xs rounded-full",
-                        !activeFilters.models.includes(model) && (
-                          model === "car-generator" ? "border-amber-200 text-amber-700 bg-amber-50/30" :
-                          model === "gpt-image-1" ? "border-blue-200 text-blue-700 bg-blue-50/30" :
-                          model === "imagen-3" ? "border-emerald-200 text-emerald-700 bg-emerald-50/30" :
-                          model === "flux-pro" ? "border-violet-200 text-violet-700 bg-violet-50/30" : ""
-                        )
-                      )}
-                    >
-                      {model}
-                    </Button>
-                  ))}
-                  {filterOptions.models.length === 0 && (
-                    <p className="text-xs text-muted-foreground">No models found</p>
+                  <span>Starred</span>
+                  {starred && (
+                    <span className="h-5 px-1.5 text-xs bg-primary/20 rounded-full">
+                      Active
+                    </span>
                   )}
-                </div>
-              </div>
-            </div>
-            
-            <div className="mt-3 text-xs text-muted-foreground flex items-center gap-1.5">
-              <span className="bg-muted/50 px-1.5 py-0.5 rounded font-mono">
-                {filteredImages.length}
-              </span> 
-              <span>
-                {filteredImages.length === 1 ? 'result' : 'results'} on this page
-                {(activeFilters.starred || activeFilters.models.length > 0) ? ' with applied filters' : ''}
-              </span>
-            </div>
-          </div>
-        )}
-      </div>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Show only starred images</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </FilterContainer>
+      )}
       
       {/* Gallery grid */}
       <div className={cn(
