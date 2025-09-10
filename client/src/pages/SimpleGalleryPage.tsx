@@ -9,6 +9,7 @@ import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from '@/comp
 import { useToast } from '@/hooks/use-toast';
 import { useFilterOptions } from '@/hooks/useFilterOptions';
 import { useGalleryData, type GalleryImage as GalleryImageType, type GalleryOptions, type GalleryFilters } from '@/hooks/useGalleryData';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { queryClient } from '@/lib/queryClient';
 import { Loader2, FolderOpen, Star, Trash2, RotateCcw, Trash, Search, X, Sparkles, CheckSquare, SquareX, Image } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -167,6 +168,14 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       fetchNextPage();
     }
   };
+
+  // Infinite scroll integration
+  const sentinelRef = useInfiniteScroll({
+    onLoadMore: loadNextPage,
+    hasMore: hasNextPage,
+    isLoading: loadingMore,
+    rootMargin: '100px'
+  });
 
   
   // Toggle selection
@@ -1100,34 +1109,29 @@ const SimpleGalleryPage: React.FC<GalleryPageProps> = ({ mode = 'gallery' }) => 
       </div>
       
       {/* Pagination controls */}
+      {/* Infinite scroll sentinel */}
+      <div ref={sentinelRef} className="h-1 w-full" />
+      
       {hasNextPage && (
         <div className="flex flex-col items-center gap-4 p-6 border-t border-border mt-6">
           {/* Page info */}
           <div className="text-sm text-muted-foreground text-center">
             {images.length} of {totalCount} images loaded
             {hasNextPage && ` • More available`}
+            {loadingMore && ` • Loading more...`}
           </div>
           
-          {/* Load more button */}
-          {hasNextPage && (
+          {/* Load more button - now as fallback */}
+          {hasNextPage && !loadingMore && (
             <Button
               onClick={loadNextPage}
               disabled={loadingMore}
               variant="outline"
-              size="lg"
-              className="gap-2 min-w-[140px]"
+              size="sm"
+              className="gap-2 min-w-[140px] opacity-70"
             >
-              {loadingMore ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Loading...
-                </>
-              ) : (
-                <>
-                  Load More
-                  <span className="text-xs opacity-70">(up to 50 more)</span>
-                </>
-              )}
+              Load More
+              <span className="text-xs opacity-70">(fallback)</span>
             </Button>
           )}
         </div>
