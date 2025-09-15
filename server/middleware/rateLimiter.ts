@@ -154,7 +154,7 @@ class VideoRateLimiter {
 
   private cleanup(): void {
     const now = Date.now();
-    for (const [userId, userData] of this.userRequests.entries()) {
+    for (const [userId, userData] of Array.from(this.userRequests.entries())) {
       this.cleanupUserRequests(userId, now);
     }
   }
@@ -169,9 +169,9 @@ class VideoRateLimiter {
     const userStats: Record<string, { requests: number; lastActivity: number }> = {};
     let totalActiveRequests = 0;
 
-    for (const [userId, userData] of this.userRequests.entries()) {
+    for (const [userId, userData] of Array.from(this.userRequests.entries())) {
       const activeRequests = userData.requests.filter(
-        timestamp => timestamp > now - this.config.windowMs
+        (timestamp: number) => timestamp > now - this.config.windowMs
       ).length;
       
       if (activeRequests > 0) {
@@ -197,7 +197,8 @@ const videoRateLimiter = new VideoRateLimiter();
 // Express middleware for video generation
 export const videoRateLimit = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // Extract user ID from request (adjust based on your auth system)
+    // Extract user ID from request - using the authentication pattern from this codebase
+    // @ts-ignore - req.user is extended by authentication middleware
     const userId = req.user?.claims?.sub || req.user?.id;
     
     if (!userId) {
