@@ -58,7 +58,7 @@ router.post('/generate', async (req: any, res) => {
       id: videoId,
       prompt: inputs.prompt,
       model: model,
-      resolution: inputs.resolution,
+      resolution: inputs.resolution || '1080p',
       duration: inputs.duration?.toString() || '6', // convert to string, default to 6 seconds
       status: 'pending',
       userId: userId,

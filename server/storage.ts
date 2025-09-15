@@ -1850,41 +1850,19 @@ export class DatabaseStorage implements IStorage {
     items: Video[];
     nextCursor: string | null;
   }> {
-    const { userId, projectId, status, limit = 50, cursor } = options || {};
+    // REDUCED LIMIT TO PREVENT TIMEOUTS
+    const { userId, projectId, status, limit = 20, cursor } = options || {};
     
     // Get current environment to filter videos
     const currentEnv = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
     
-    // If fetching by userId, we need to get videos from:
-    // 1. Projects owned by the user
-    // 2. Projects where the user is a member
+    // OPTIMIZED QUERY - Simplified for performance
+    // When userId is provided without projectId, just get user's own videos
+    // This avoids complex subqueries that cause timeouts
     if (userId && !projectId) {
-      // Get all project IDs where user has access
-      const ownedProjects = await db
-        .select({ id: projects.id })
-        .from(projects)
-        .where(eq(projects.userId, userId));
-      
-      const memberProjects = await db
-        .select({ projectId: projectMembers.projectId })
-        .from(projectMembers)
-        .where(eq(projectMembers.userId, userId));
-      
-      const accessibleProjectIds = [
-        ...ownedProjects.map(p => p.id),
-        ...memberProjects.map(p => p.projectId)
-      ];
-      
-      // Build query for videos
       const conditions: any[] = [
         eq(videos.environment, currentEnv),
-        or(
-          eq(videos.userId, userId), // Videos created by user
-          and(
-            isNotNull(videos.projectId),
-            inArray(videos.projectId, accessibleProjectIds.length > 0 ? accessibleProjectIds : ['none'])
-          ) // Videos in accessible projects
-        )
+        eq(videos.userId, userId)  // Only user's own videos to avoid complex joins
       ];
       
       if (status) conditions.push(eq(videos.status, status));
