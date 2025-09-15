@@ -1345,7 +1345,7 @@ const CarCreationPage: React.FC = () => {
               value="single" 
               className="rounded-md font-medium text-xs sm:text-sm py-2 px-2 sm:px-4 transition-all duration-200 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground data-[state=inactive]:text-gray-700 dark:data-[state=inactive]:text-gray-200 hover:bg-gray-300/50 dark:hover:bg-gray-400/50"
             >
-              <span className="whitespace-nowrap">Custom Build</span>
+              <span className="whitespace-nowrap">Car Generator</span>
             </TabsTrigger>
             <TabsTrigger 
               value="photo-to-studio" 
