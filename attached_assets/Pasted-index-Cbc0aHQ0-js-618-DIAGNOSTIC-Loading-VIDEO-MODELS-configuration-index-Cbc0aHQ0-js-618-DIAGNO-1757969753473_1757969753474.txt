@@ -1,0 +1,72 @@
+index-Cbc0aHQ0.js:618 [DIAGNOSTIC] Loading VIDEO_MODELS configuration
+index-Cbc0aHQ0.js:618 [DIAGNOSTIC] VIDEO_MODELS loaded: Object
+index-Cbc0aHQ0.js:602 [MP][CLIENT] WS URL Object
+index-Cbc0aHQ0.js:697 SW registered:  ServiceWorkerRegistration
+create:1 <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">
+index-Cbc0aHQ0.js:602 WebSocket connected
+index-Cbc0aHQ0.js:602 [MP][CLIENT] WS URL Object
+index-Cbc0aHQ0.js:602 WebSocket connected
+index-Cbc0aHQ0.js:602 [MP][CLIENT] WS URL Object
+index-Cbc0aHQ0.js:602 [MP][CLIENT] WS URL Object
+index-Cbc0aHQ0.js:602 WebSocket connection to 'wss://creaitives-platform-2-0.replit.app/ws' failed: 
+fne @ index-Cbc0aHQ0.js:602
+index-Cbc0aHQ0.js:602 WebSocket error event: Event
+i.onerror @ index-Cbc0aHQ0.js:602
+index-Cbc0aHQ0.js:602 WebSocket connection to 'wss://creaitives-platform-2-0.replit.app/ws' failed: 
+fne @ index-Cbc0aHQ0.js:602
+index-Cbc0aHQ0.js:602 WebSocket error event: Event
+i.onerror @ index-Cbc0aHQ0.js:602
+index-Cbc0aHQ0.js:602 [MP][CLIENT] WS URL Object
+index-Cbc0aHQ0.js:602 WebSocket connection to 'wss://creaitives-platform-2-0.replit.app/ws' failed: 
+fne @ index-Cbc0aHQ0.js:602
+index-Cbc0aHQ0.js:602 WebSocket error event: Event
+i.onerror @ index-Cbc0aHQ0.js:602
+index-Cbc0aHQ0.js:602 [MP][CLIENT] WS URL Object
+index-Cbc0aHQ0.js:602 WebSocket connection to 'wss://creaitives-platform-2-0.replit.app/ws' failed: 
+fne @ index-Cbc0aHQ0.js:602
+index-Cbc0aHQ0.js:602 WebSocket error event: Event
+i.onerror @ index-Cbc0aHQ0.js:602
+index-Cbc0aHQ0.js:602 [MP][CLIENT] WS URL Object
+index-Cbc0aHQ0.js:602 WebSocket connection to 'wss://creaitives-platform-2-0.replit.app/ws' failed: 
+fne @ index-Cbc0aHQ0.js:602
+index-Cbc0aHQ0.js:602 WebSocket error event: Event
+i.onerror @ index-Cbc0aHQ0.js:602
+index-Cbc0aHQ0.js:602 [MP][CLIENT] WS URL Object
+index-Cbc0aHQ0.js:602 WebSocket connection to 'wss://creaitives-platform-2-0.replit.app/ws' failed: 
+fne @ index-Cbc0aHQ0.js:602
+index-Cbc0aHQ0.js:602 WebSocket error event: Event
+i.onerror @ index-Cbc0aHQ0.js:602
+index-Cbc0aHQ0.js:602 [MP][CLIENT] WS URL Object
+index-Cbc0aHQ0.js:602 WebSocket connection to 'wss://creaitives-platform-2-0.replit.app/ws' failed: 
+fne @ index-Cbc0aHQ0.js:602
+index-Cbc0aHQ0.js:602 WebSocket error event: Event
+i.onerror @ index-Cbc0aHQ0.js:602
+index-Cbc0aHQ0.js:602 [MP][CLIENT] WS URL Object
+index-Cbc0aHQ0.js:602 WebSocket connection to 'wss://creaitives-platform-2-0.replit.app/ws' failed: 
+fne @ index-Cbc0aHQ0.js:602
+index-Cbc0aHQ0.js:602 WebSocket error event: Event
+i.onerror @ index-Cbc0aHQ0.js:602
+index-Cbc0aHQ0.js:602 [MP][CLIENT] WS URL Object
+index-Cbc0aHQ0.js:602 WebSocket connection to 'wss://creaitives-platform-2-0.replit.app/ws' failed: 
+fne @ index-Cbc0aHQ0.js:602
+index-Cbc0aHQ0.js:602 WebSocket error event: Event
+i.onerror @ index-Cbc0aHQ0.js:602
+index-Cbc0aHQ0.js:602 [MP][CLIENT] WS URL Object
+index-Cbc0aHQ0.js:602 WebSocket connection to 'wss://creaitives-platform-2-0.replit.app/ws' failed: 
+fne @ index-Cbc0aHQ0.js:602
+index-Cbc0aHQ0.js:602 WebSocket error event: Event
+i.onerror @ index-Cbc0aHQ0.js:602
+index-Cbc0aHQ0.js:602 [MP][CLIENT] WS URL Object
+index-Cbc0aHQ0.js:602 WebSocket connected
+index-Cbc0aHQ0.js:602 [MP][CLIENT] WS URL Object
+index-Cbc0aHQ0.js:602 WebSocket connected
+create:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+create:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+create:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+create:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+api/projects/0bde7eeb-24be-4686-9172-35cc6fc83ca9/details:1  Failed to load resource: the server responded with a status of 500 ()
+projects:1  Failed to load resource: the server responded with a status of 429 ()
+video:1  Failed to load resource: the server responded with a status of 429 ()
+member-counts:1  Failed to load resource: the server responded with a status of 429 ()
+video:1  Failed to load resource: the server responded with a status of 429 ()
+index-DfbjGMRN.css:1  Failed to load resource: the server responded with a status of 429 ()
