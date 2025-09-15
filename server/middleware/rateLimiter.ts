@@ -114,21 +114,8 @@ class VideoRateLimiter {
       };
     }
 
-    // Check concurrent processing limit
-    try {
-      const { storage } = await import('../storage');
-      const processingVideos = await storage.getProcessingVideos(userId);
-      if (processingVideos.length >= this.config.maxConcurrentProcessing) {
-        return {
-          allowed: false,
-          reason: `Too many concurrent videos: ${processingVideos.length}/${this.config.maxConcurrentProcessing} currently processing`,
-          queuePosition: processingVideos.length - this.config.maxConcurrentProcessing + 1
-        };
-      }
-    } catch (error) {
-      console.error('Error checking concurrent processing:', error);
-      // On database error, allow the request but log it
-    }
+    // NOTE: Concurrency limits are now handled by the job queue system
+    // This rate limiter only handles per-minute request throttling
 
     // Record this request
     userData.requests.push(now);
@@ -208,18 +195,11 @@ export const videoRateLimit = async (req: Request, res: Response, next: NextFunc
     const rateCheckResult = await videoRateLimiter.checkRateLimit(userId);
 
     if (!rateCheckResult.allowed) {
-      const statusCode = rateCheckResult.queuePosition ? 202 : 429;
-      const response: any = {
+      // Only return 429 for rate limit exceeded (per-minute throttling)
+      return res.status(429).json({
         error: rateCheckResult.reason,
         retryAfter: rateCheckResult.retryAfter
-      };
-
-      if (rateCheckResult.queuePosition) {
-        response.queuePosition = rateCheckResult.queuePosition;
-        response.message = 'Request queued due to concurrent processing limit';
-      }
-
-      return res.status(statusCode).json(response);
+      });
     }
 
     next();
