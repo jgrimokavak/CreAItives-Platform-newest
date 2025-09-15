@@ -1,0 +1,79 @@
+index-Cbc0aHQ0.js:618 [DIAGNOSTIC] Loading VIDEO_MODELS configuration
+index-Cbc0aHQ0.js:618 [DIAGNOSTIC] VIDEO_MODELS loaded: {modelKeys: Array(3), models: {…}}
+index-Cbc0aHQ0.js:602 [MP][CLIENT] WS URL {protocol: 'wss:', hostname: 'creaitives-platform-2-0.replit.app', port: '', url: 'wss://creaitives-platform-2-0.replit.app/ws'}
+index-Cbc0aHQ0.js:697 SW registered:  ServiceWorkerRegistration {installing: null, waiting: null, active: ServiceWorker, navigationPreload: NavigationPreloadManager, scope: 'https://creaitives-platform-2-0.replit.app/', …}
+video:1 <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">
+index-Cbc0aHQ0.js:602 WebSocket connected
+index-Cbc0aHQ0.js:48  GET https://creaitives-platform-2-0.replit.app/api/projects/0bde7eeb-24be-4686-9172-35cc6fc83ca9/details 500 (Internal Server Error)
+Ye @ index-Cbc0aHQ0.js:48
+queryFn @ index-Cbc0aHQ0.js:618
+i @ index-Cbc0aHQ0.js:48
+y @ index-Cbc0aHQ0.js:48
+start @ index-Cbc0aHQ0.js:48
+fetch @ index-Cbc0aHQ0.js:48
+Jf @ index-Cbc0aHQ0.js:48
+setOptions @ index-Cbc0aHQ0.js:48
+(anonymous) @ index-Cbc0aHQ0.js:48
+zy @ index-Cbc0aHQ0.js:40
+hu @ index-Cbc0aHQ0.js:40
+$W @ index-Cbc0aHQ0.js:40
+il @ index-Cbc0aHQ0.js:40
+bP @ index-Cbc0aHQ0.js:40
+zo @ index-Cbc0aHQ0.js:38
+(anonymous) @ index-Cbc0aHQ0.js:40
+index-Cbc0aHQ0.js:48  GET https://creaitives-platform-2-0.replit.app/api/video?limit=100 429 (Too Many Requests)
+Ye @ index-Cbc0aHQ0.js:48
+queryFn @ index-Cbc0aHQ0.js:618
+i @ index-Cbc0aHQ0.js:48
+y @ index-Cbc0aHQ0.js:48
+start @ index-Cbc0aHQ0.js:48
+fetch @ index-Cbc0aHQ0.js:48
+Jf @ index-Cbc0aHQ0.js:48
+onSubscribe @ index-Cbc0aHQ0.js:48
+subscribe @ index-Cbc0aHQ0.js:48
+(anonymous) @ index-Cbc0aHQ0.js:48
+v5 @ index-Cbc0aHQ0.js:38
+zy @ index-Cbc0aHQ0.js:40
+hu @ index-Cbc0aHQ0.js:40
+$W @ index-Cbc0aHQ0.js:40
+il @ index-Cbc0aHQ0.js:40
+bP @ index-Cbc0aHQ0.js:40
+zo @ index-Cbc0aHQ0.js:38
+(anonymous) @ index-Cbc0aHQ0.js:40
+index-Cbc0aHQ0.js:48  GET https://creaitives-platform-2-0.replit.app/api/projects?withStats=true 429 (Too Many Requests)
+Ye @ index-Cbc0aHQ0.js:48
+queryFn @ index-Cbc0aHQ0.js:618
+i @ index-Cbc0aHQ0.js:48
+y @ index-Cbc0aHQ0.js:48
+start @ index-Cbc0aHQ0.js:48
+fetch @ index-Cbc0aHQ0.js:48
+Jf @ index-Cbc0aHQ0.js:48
+onSubscribe @ index-Cbc0aHQ0.js:48
+subscribe @ index-Cbc0aHQ0.js:48
+(anonymous) @ index-Cbc0aHQ0.js:48
+v5 @ index-Cbc0aHQ0.js:38
+zy @ index-Cbc0aHQ0.js:40
+hu @ index-Cbc0aHQ0.js:40
+$W @ index-Cbc0aHQ0.js:40
+il @ index-Cbc0aHQ0.js:40
+bP @ index-Cbc0aHQ0.js:40
+zo @ index-Cbc0aHQ0.js:38
+(anonymous) @ index-Cbc0aHQ0.js:40
+index-Cbc0aHQ0.js:48  GET https://creaitives-platform-2-0.replit.app/api/projects/member-counts 429 (Too Many Requests)
+(anonymous) @ index-Cbc0aHQ0.js:48
+i @ index-Cbc0aHQ0.js:48
+y @ index-Cbc0aHQ0.js:48
+start @ index-Cbc0aHQ0.js:48
+fetch @ index-Cbc0aHQ0.js:48
+Jf @ index-Cbc0aHQ0.js:48
+onSubscribe @ index-Cbc0aHQ0.js:48
+subscribe @ index-Cbc0aHQ0.js:48
+(anonymous) @ index-Cbc0aHQ0.js:48
+v5 @ index-Cbc0aHQ0.js:38
+zy @ index-Cbc0aHQ0.js:40
+hu @ index-Cbc0aHQ0.js:40
+$W @ index-Cbc0aHQ0.js:40
+il @ index-Cbc0aHQ0.js:40
+bP @ index-Cbc0aHQ0.js:40
+zo @ index-Cbc0aHQ0.js:38
+(anonymous) @ index-Cbc0aHQ0.js:40
