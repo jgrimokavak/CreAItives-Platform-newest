@@ -37,7 +37,7 @@ router.get('/object-storage/image/:path(*)', async (req: Request, res: Response)
   }
 });
 
-// Serve video files from object storage
+// Serve video files from object storage with cross-environment fallback
 router.get('/object-storage/video/:path(*)', async (req: Request, res: Response) => {
   try {
     const videoPath = req.params.path;
@@ -48,8 +48,33 @@ router.get('/object-storage/video/:path(*)', async (req: Request, res: Response)
 
     console.log(`[TRACE] Serving video from path: ${videoPath}`);
 
-    // Download video from Object Storage using the same method as images
-    const videoBuffer = await objectStorage.downloadImage(videoPath);
+    let videoBuffer: Buffer;
+    
+    try {
+      // Try to download from the requested path first
+      videoBuffer = await objectStorage.downloadImage(videoPath);
+    } catch (primaryError) {
+      // If it fails, try cross-environment fallback
+      let fallbackPath = '';
+      if (videoPath.startsWith('prod/')) {
+        fallbackPath = videoPath.replace('prod/', 'dev/');
+      } else if (videoPath.startsWith('dev/')) {
+        fallbackPath = videoPath.replace('dev/', 'prod/');
+      }
+      
+      if (fallbackPath) {
+        console.warn(`[FALLBACK] Primary path ${videoPath} failed, trying fallback: ${fallbackPath}`);
+        try {
+          videoBuffer = await objectStorage.downloadImage(fallbackPath);
+          console.log(`[FALLBACK] Successfully served from fallback path: ${fallbackPath}`);
+        } catch (fallbackError) {
+          console.error(`[FALLBACK] Both paths failed - Primary: ${videoPath}, Fallback: ${fallbackPath}`);
+          throw primaryError; // Throw original error
+        }
+      } else {
+        throw primaryError; // No fallback possible
+      }
+    }
     
     // Determine content type based on extension
     const ext = videoPath.split('.').pop()?.toLowerCase();

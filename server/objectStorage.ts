@@ -180,7 +180,7 @@ export class ObjectStorageService {
   }
 
   /**
-   * Download image from Object Storage
+   * Download image from Object Storage with better error handling
    */
   async downloadImage(path: string): Promise<Buffer> {
     try {
@@ -190,15 +190,18 @@ export class ObjectStorageService {
         if (result.ok) {
           return result.value[0] as Buffer;
         } else {
-          throw new Error('Download failed');
+          // Return null instead of throwing to allow graceful 404 handling
+          console.log(`[OBJECT-STORAGE] File not found: ${path}`);
+          throw new Error(`File not found: ${path}`);
         }
       } else {
         // Direct buffer response
         return result as Buffer;
       }
     } catch (error) {
-      console.error(`Error downloading image from path ${path}:`, error);
-      throw new Error(`Failed to download image: ${error}`);
+      // Log the specific error but don't expose internal details
+      console.error(`[OBJECT-STORAGE] Download failed for path ${path}:`, error);
+      throw error; // Re-throw to allow route handlers to catch and return proper HTTP status
     }
   }
 
