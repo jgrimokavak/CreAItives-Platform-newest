@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { videoJobProcessor } from "./services/videoJobProcessor";
 
 // Set CAR_SHEET_CSV env variable if not already set
 if (!process.env.CAR_SHEET_CSV) {
@@ -48,6 +49,9 @@ app.use((req, res, next) => {
 
 (async () => {
   const server = await registerRoutes(app);
+
+  // Start video job processor for background video generation processing
+  videoJobProcessor.start();
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     // Check if response has already been sent
