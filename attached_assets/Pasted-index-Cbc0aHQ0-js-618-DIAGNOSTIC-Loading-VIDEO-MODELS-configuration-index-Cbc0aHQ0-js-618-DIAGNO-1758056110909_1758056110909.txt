@@ -1,0 +1,16 @@
+index-Cbc0aHQ0.js:618 [DIAGNOSTIC] Loading VIDEO_MODELS configuration
+index-Cbc0aHQ0.js:618 [DIAGNOSTIC] VIDEO_MODELS loaded: Object
+index-Cbc0aHQ0.js:602 [MP][CLIENT] WS URL Object
+index-Cbc0aHQ0.js:697 SW registered:  ServiceWorkerRegistration
+gallery?:1 <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">
+index-Cbc0aHQ0.js:602 WebSocket connected
+api/projects/e4e9d30f-024f-46e4-9abf-1bafedd208f0/details:1  Failed to load resource: the server responded with a status of 500 ()
+video:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+video:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+video:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+video:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+video:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+video:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+video:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+video:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+video:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received

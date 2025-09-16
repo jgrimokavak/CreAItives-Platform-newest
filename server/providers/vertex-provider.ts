@@ -4,7 +4,7 @@ export class VertexProvider extends BaseProvider {
   name = 'vertex';
 
   supportsModel(modelKey: string): boolean {
-    return modelKey.startsWith('veo-');
+    return !!(modelKey && typeof modelKey === 'string' && modelKey.startsWith('veo-'));
   }
 
   async generate(options: any): Promise<any> {

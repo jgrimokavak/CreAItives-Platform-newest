@@ -44,7 +44,7 @@ export class FalProvider extends BaseProvider {
   };
   
   supportsModel(modelKey: string): boolean {
-    return modelKey in this.models;
+    return !!(modelKey && typeof modelKey === 'string' && modelKey in this.models);
   }
   
   getDefaults(modelKey: string): Record<string, any> {
