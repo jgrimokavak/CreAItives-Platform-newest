@@ -5,14 +5,12 @@ import { storage } from '../storage';
 import { ProviderRegistry } from '../providers/provider-registry';
 import crypto from 'crypto';
 import { ObjectStorageService } from '../objectStorage';
-import { videoRateLimit } from '../middleware/rateLimiter';
-import { videoJobQueue } from '../services/videoQueue';
 
 const router = express.Router();
 const providerRegistry = new ProviderRegistry();
 
-// Generate video endpoint with rate limiting
-router.post('/generate', videoRateLimit, async (req: any, res) => {
+// Generate video endpoint
+router.post('/generate', async (req: any, res) => {
   try {
     const user = req.user as any;
     const userId = user?.claims?.sub;
@@ -62,7 +60,7 @@ router.post('/generate', videoRateLimit, async (req: any, res) => {
       model: model,
       resolution: inputs.resolution || '1080p',
       duration: inputs.duration?.toString() || '6', // convert to string, default to 6 seconds
-      status: 'queued', // Changed from 'pending' to 'queued'
+      status: 'pending',
       userId: userId,
       projectId: projectId || null,
       firstFrameImage: inputs.firstFrameImage || null,
@@ -70,10 +68,9 @@ router.post('/generate', videoRateLimit, async (req: any, res) => {
       promptOptimizer: inputs.promptOptimizer !== false, // default to true
       aspectRatio: '16:9', // Default aspect ratio for hailuo-02
       environment: process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev',
-      queuedAt: new Date(), // Set queued timestamp
     });
 
-    // Validate that provider exists for the model
+    // Get the appropriate provider for video generation
     const provider = providerRegistry.getProviderForModel(model);
     if (!provider) {
       await storage.updateVideo(videoId, { 
@@ -83,54 +80,55 @@ router.post('/generate', videoRateLimit, async (req: any, res) => {
       return res.status(400).json({ error: `Unsupported model: ${model}` });
     }
 
-    // Enqueue the video generation job instead of executing directly
+    // Start video generation job
+    const startTime = Date.now();
     try {
-      const jobData = {
-        id: videoId,
-        userId,
-        model,
-        projectId: projectId || undefined, // Fix: use undefined instead of null
-        referenceImageUrl: referenceImageUrl || undefined, // Fix: convert null to undefined
-        // Pass all inputs (avoiding duplicates)
-        ...inputs,
-        // Override with processed values
-        prompt: inputs.prompt,
-        resolution: inputs.resolution || '1080p',
-        duration: inputs.duration?.toString() || '6',
-        promptOptimizer: inputs.promptOptimizer !== false
-      };
+      const jobResult = await provider.generateVideo(model, inputs);
+      
+      // Update video record with job information
+      const updatedVideo = await storage.updateVideo(videoId, {
+        jobId: jobResult.jobId,
+        status: 'processing'
+      });
 
-      const queueResult = await videoJobQueue.enqueueJob(jobData);
+      res.json({
+        success: true,
+        video: updatedVideo,
+        jobId: jobResult.jobId,
+        message: 'Video generation started successfully'
+      });
 
-      if (queueResult.queued) {
-        // Job was queued due to concurrency limits
-        res.status(202).json({
-          success: true,
-          video: video,
-          queued: true,
-          queuePosition: queueResult.position,
-          message: `Video queued for processing. Position in queue: ${queueResult.position}`
-        });
-      } else {
-        // Job started processing immediately
-        res.json({
-          success: true,
-          video: video,
-          queued: false,
-          message: 'Video generation started immediately'
-        });
-      }
+      // Start background polling for job completion (pass userId and startTime)
+      pollVideoJob(videoId, jobResult.jobId, provider, userId, startTime);
 
-    } catch (queueError: any) {
-      console.error('Queue error:', queueError);
+    } catch (providerError: any) {
+      console.error('Provider error:', providerError);
       await storage.updateVideo(videoId, { 
         status: 'failed', 
-        error: queueError.message || 'Failed to queue video generation' 
+        error: providerError.message || 'Provider error occurred' 
       });
       
+      // Log failed video generation to analytics
+      const { logActivity } = await import('../analytics');
+      const duration = Date.now() - startTime;
+      await logActivity({
+        userId,
+        event: 'video_generate_failure',
+        feature: 'video_generation',
+        model: model,
+        status: 'failed',
+        duration: Math.round(duration / 1000),
+        errorCode: providerError.code || 'PROVIDER_ERROR',
+        metadata: {
+          error: providerError.message?.substring(0, 200),
+          projectId: projectId || null
+        }
+      });
+      console.log(`Analytics tracked: Video generation failure for user ${userId}`);
+      
       return res.status(500).json({ 
-        error: 'Failed to queue video generation',
-        details: queueError.message
+        error: 'Failed to start video generation',
+        details: providerError.message
       });
     }
 

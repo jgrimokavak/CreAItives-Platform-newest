@@ -511,11 +511,6 @@ export const videos = pgTable("videos", {
   completedAt: timestamp("completed_at"),
   environment: text("environment").default("dev").notNull(), // 'dev' | 'prod'
   size: integer("size").default(0), // File size in bytes
-  // Job system columns for durability and recovery
-  attemptCount: integer("attempt_count").default(0).notNull(), // Number of processing attempts
-  nextPollAt: timestamp("next_poll_at"), // When to poll job status next
-  lastError: text("last_error"), // Latest error message for debugging
-  queuedAt: timestamp("queued_at"), // When job was queued for processing
 }, (table) => [
   // Performance indexes for common queries
   index("idx_videos_user_env").on(table.userId, table.environment),
