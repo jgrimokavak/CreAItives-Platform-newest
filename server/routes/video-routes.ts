@@ -7,9 +7,55 @@ import crypto from 'crypto';
 import { ObjectStorageService } from '../objectStorage';
 import { videoRateLimit } from '../middleware/rateLimiter';
 import { videoJobQueue } from '../services/videoQueue';
+import multer from 'multer';
 
 const router = express.Router();
 const providerRegistry = new ProviderRegistry();
+
+// Configure multer for memory storage (efficient for image uploads)
+const upload = multer({ storage: multer.memoryStorage() });
+const objectStorage = new ObjectStorageService();
+
+// Upload images for video generation (eliminates Base64 conversion bottleneck)
+router.post('/upload-image', upload.single('image'), async (req: any, res) => {
+  try {
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const file = req.file as Express.Multer.File;
+    if (!file) {
+      return res.status(400).json({ error: 'No image provided' });
+    }
+
+    // Validate file type
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.mimetype)) {
+      return res.status(400).json({ error: 'Please upload a PNG, JPEG, or WebP image' });
+    }
+
+    // Validate file size (max 25MB)
+    if (file.size > 25 * 1024 * 1024) {
+      return res.status(400).json({ error: 'File size must be less than 25MB' });
+    }
+
+    // Generate temporary video ID for reference image naming
+    const tempVideoId = crypto.randomUUID();
+    
+    // Upload directly to Object Storage (no Base64 conversion!)
+    const imageUrl = await objectStorage.uploadReferenceImage(file.buffer, tempVideoId);
+    
+    res.json({ 
+      imageUrl,
+      tempVideoId
+    });
+    
+  } catch (error: any) {
+    console.error('Error uploading video reference image:', error);
+    res.status(500).json({ error: error.message || 'Failed to upload image' });
+  }
+});
 
 // Generate video endpoint with rate limiting
 router.post('/generate', videoRateLimit, async (req: any, res) => {
@@ -34,27 +80,32 @@ router.post('/generate', videoRateLimit, async (req: any, res) => {
     // Create video record in database first to get the videoId
     const videoId = crypto.randomUUID();
     
-    // Handle first frame image upload to object storage if provided
-    // This image both guides the generation AND gets saved as reference
+    // Handle reference image URL (already uploaded via /upload-image endpoint)
+    // This approach eliminates Base64 conversion bottleneck
     let referenceImageUrl: string | null = null;
     if (inputs.firstFrameImage) {
-      console.log(`[TRACE] First frame image provided, uploading as reference for video ${videoId}`);
-      try {
-        // Parse base64 image data
-        const base64Data = inputs.firstFrameImage.replace(/^data:image\/[a-z]+;base64,/, '');
-        const imageBuffer = Buffer.from(base64Data, 'base64');
-        console.log(`[TRACE] Parsed first frame image buffer: ${imageBuffer.length} bytes`);
-        
-        // Upload to object storage as reference image using the actual video ID
-        const objectStorage = new ObjectStorageService();
-        referenceImageUrl = await objectStorage.uploadReferenceImage(imageBuffer, videoId);
-        console.log(`[TRACE] First frame image uploaded successfully as reference: ${referenceImageUrl}`);
-      } catch (uploadError) {
-        console.error('Failed to upload first frame image as reference:', uploadError);
-        // Continue without reference image - don't fail the entire request
+      // Check if this is already a URL (new optimized approach) or Base64 (legacy fallback)
+      if (inputs.firstFrameImage.startsWith('http://') || inputs.firstFrameImage.startsWith('https://')) {
+        // Already uploaded image URL - use directly
+        referenceImageUrl = inputs.firstFrameImage;
+        console.log(`[TRACE] Using pre-uploaded image URL as reference for video ${videoId}: ${referenceImageUrl}`);
+      } else if (inputs.firstFrameImage.startsWith('data:image/')) {
+        // Legacy Base64 fallback - convert if needed for backward compatibility
+        console.log(`[TRACE] Processing Base64 image as reference for video ${videoId} (legacy mode)`);
+        try {
+          const base64Data = inputs.firstFrameImage.replace(/^data:image\/[a-z]+;base64,/, '');
+          const imageBuffer = Buffer.from(base64Data, 'base64');
+          console.log(`[TRACE] Parsed Base64 image buffer: ${imageBuffer.length} bytes`);
+          
+          referenceImageUrl = await objectStorage.uploadReferenceImage(imageBuffer, videoId);
+          console.log(`[TRACE] Base64 image uploaded successfully as reference: ${referenceImageUrl}`);
+        } catch (uploadError) {
+          console.error('Failed to upload Base64 image as reference:', uploadError);
+          // Continue without reference image - don't fail the entire request
+        }
       }
     } else {
-      console.log(`[TRACE] No first frame image provided for video ${videoId}`);
+      console.log(`[TRACE] No reference image provided for video ${videoId}`);
     }
     const video = await storage.saveVideo({
       id: videoId,
@@ -226,14 +277,7 @@ router.get('/', async (req, res) => {
 
     console.log(`[VIDEO API] Retrieved ${videos.items?.length || 0} videos in ${Date.now() - startTime}ms`);
 
-    // Filter out failed videos from the gallery
-    const successfulVideos = videos.items?.filter(video => video.status !== 'failed') || [];
-
-    console.log(`[VIDEO API] Returning ${successfulVideos.length} successful videos after filtering`);
-
-    res.json({
-      items: successfulVideos
-    });
+    res.json(videos);
   } catch (error: any) {
     console.error('List videos error:', error);
     res.status(500).json({ error: 'Internal server error' });

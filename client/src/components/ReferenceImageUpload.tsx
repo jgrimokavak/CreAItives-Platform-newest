@@ -1,5 +1,6 @@
 import { useState, useRef, ChangeEvent } from "react";
 import { FaUpload, FaTrash } from "react-icons/fa";
+import { Loader2 } from "lucide-react";
 
 interface ReferenceImageUploadProps {
   value?: string;
@@ -9,6 +10,7 @@ interface ReferenceImageUploadProps {
 
 export default function ReferenceImageUpload({ value, onChange, className }: ReferenceImageUploadProps) {
   const [preview, setPreview] = useState<string | null>(value || null);
+  const [uploading, setUploading] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -28,19 +30,53 @@ export default function ReferenceImageUpload({ value, onChange, className }: Ref
       return;
     }
 
-    // Create preview and data URL
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      if (e.target?.result) {
-        const dataUrl = e.target.result as string;
-        setPreview(dataUrl);
-        onChange(dataUrl);
+    // Set upload loading state
+    setUploading(true);
+
+    try {
+      // Create efficient preview using createObjectURL (no Base64 conversion)
+      const previewUrl = URL.createObjectURL(file);
+      setPreview(previewUrl);
+
+      // Upload directly to server using FormData (eliminates Base64 bottleneck)
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const response = await fetch('/api/video/upload-image', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to upload image');
       }
-    };
-    reader.readAsDataURL(file);
+
+      const { imageUrl } = await response.json();
+      
+      // Call onChange with the uploaded image URL instead of Base64
+      onChange(imageUrl);
+      
+    } catch (error: any) {
+      console.error('Error uploading image:', error);
+      alert(error.message || 'Failed to upload image. Please try again.');
+      
+      // Clear preview on error
+      setPreview(null);
+      onChange(undefined);
+      if (imageInputRef.current) {
+        imageInputRef.current.value = "";
+      }
+    } finally {
+      setUploading(false);
+    }
   };
 
   const removeImage = () => {
+    // Clean up object URL if it exists to prevent memory leaks
+    if (preview && preview.startsWith('blob:')) {
+      URL.revokeObjectURL(preview);
+    }
     setPreview(null);
     onChange(undefined);
     if (imageInputRef.current) {
@@ -73,9 +109,14 @@ export default function ReferenceImageUpload({ value, onChange, className }: Ref
         <button
           type="button"
           onClick={() => imageInputRef.current?.click()}
-          className="w-20 h-20 flex items-center justify-center border border-dashed border-border rounded-md hover:bg-muted transition-colors"
+          disabled={uploading}
+          className="w-20 h-20 flex items-center justify-center border border-dashed border-border rounded-md hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <FaUpload className="text-muted-foreground" />
+          {uploading ? (
+            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+          ) : (
+            <FaUpload className="text-muted-foreground" />
+          )}
         </button>
       </div>
       

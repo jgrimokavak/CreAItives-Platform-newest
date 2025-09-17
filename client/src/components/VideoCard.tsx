@@ -403,13 +403,39 @@ export default function VideoCard({
             <div 
               className="absolute inset-0 w-full h-full flex flex-col items-center justify-center"
               style={{ 
-                background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+                background: currentVideo.status === 'failed' 
+                  ? 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)' 
+                  : 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
               }}
             >
-              <div className="p-4 rounded-lg bg-white/50 backdrop-blur-sm border border-white/20">
-                <VideoIconSm className="w-8 h-8 text-slate-500" />
+              <div className={`p-4 rounded-lg backdrop-blur-sm border ${
+                currentVideo.status === 'failed' 
+                  ? 'bg-red-50/70 border-red-200/30' 
+                  : 'bg-white/50 border-white/20'
+              }`}>
+                {currentVideo.status === 'failed' ? (
+                  <AlertCircle className="w-8 h-8 text-red-500" />
+                ) : (
+                  <VideoIconSm className="w-8 h-8 text-slate-500" />
+                )}
               </div>
-              <p className="text-xs text-slate-500 mt-2">Generating thumbnail...</p>
+              {currentVideo.status === 'failed' ? (
+                <div className="text-center mt-2">
+                  <p className="text-xs text-red-600 mb-2">Video generation failed</p>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete();
+                    }}
+                    className="text-xs px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-md transition-colors"
+                    data-testid="remove-failed-video"
+                  >
+                    Remove Failed Video
+                  </button>
+                </div>
+              ) : (
+                <p className="text-xs text-slate-500 mt-2">Generating thumbnail...</p>
+              )}
             </div>
           )}
           

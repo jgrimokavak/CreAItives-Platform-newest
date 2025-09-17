@@ -30,7 +30,7 @@ export class VideoJobQueue extends EventEmitter {
   private queue: QueuedJob[] = [];
   private processing = new Map<string, QueuedJob>();
   private userTokens = new Map<string, number>(); // Per-user concurrent processing tokens
-  private maxConcurrentPerUser = 2;
+  private maxConcurrentPerUser = 4;
   private maxRetries = 3;
   private isProcessing = false;
 
