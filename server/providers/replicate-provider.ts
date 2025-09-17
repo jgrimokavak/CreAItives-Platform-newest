@@ -37,6 +37,10 @@ export class ReplicateProvider extends BaseProvider {
 
     // Map parameters for hailuo-02 model
     if (modelKey === 'hailuo-02') {
+      // Convert duration from string to integer for Replicate API
+      if (inputs.duration !== undefined) {
+        body.duration = parseInt(inputs.duration) || 6; // Convert string to integer, default 6
+      }
       // Map frontend parameters to model parameters
       if (inputs.promptOptimizer !== undefined) {
         body.prompt_optimizer = inputs.promptOptimizer;
@@ -63,7 +67,7 @@ export class ReplicateProvider extends BaseProvider {
       // For Kling, we need to send ONLY the exact parameters it expects
       const klingBody: Record<string, any> = {
         prompt: inputs.prompt, // required
-        duration: inputs.duration || 5, // required, enum [5, 10]
+        duration: parseInt(inputs.duration) || 5, // required, enum [5, 10] - convert string to integer
         aspect_ratio: inputs.aspectRatio || '16:9', // required, default "16:9"
       };
 
@@ -84,7 +88,7 @@ export class ReplicateProvider extends BaseProvider {
       // For Seedance, we need to send ONLY the exact parameters it expects
       const seedanceBody: Record<string, any> = {
         prompt: inputs.prompt, // required
-        duration: inputs.duration || 5, // required, default 5, range 3-12
+        duration: parseInt(inputs.duration) || 5, // required, default 5, range 3-12 - convert string to integer
         resolution: inputs.seedanceResolution || '1080p', // optional, default "1080p"
         aspect_ratio: inputs.seedanceAspectRatio || '16:9', // optional, default "16:9"
         camera_fixed: inputs.seedanceCameraFixed || false, // optional, default false
