@@ -122,7 +122,7 @@ class VideoJobProcessor {
     try {
       console.log(`Polling video job ${videoId} (attempt ${attempt}/${maxAttempts})`);
       
-      const jobStatus = await provider.getVideoStatus(jobId);
+      const jobStatus = await provider.pollJobStatus(jobId);
       
       if (jobStatus.status === 'completed') {
         await this.handleJobCompletion(videoId, jobStatus, userId, startTime);
