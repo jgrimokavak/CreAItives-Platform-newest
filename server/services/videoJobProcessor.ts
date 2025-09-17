@@ -42,7 +42,8 @@ class VideoJobProcessor {
   }
 
   private async processJob(job: any): Promise<void> {
-    const { id: videoId, userId, model, data } = job;
+    const { id: videoId, userId, data } = job;
+    const { model } = data; // Fix: Extract model from job.data, not job
     const startTime = Date.now();
 
     try {
@@ -91,13 +92,14 @@ class VideoJobProcessor {
           userId,
           event: 'video_generate_failure',
           feature: 'video_generation',
-          model: model,
+          model: model || 'unknown',
           status: 'failed',
           duration: Math.round(duration / 1000),
           errorCode: error.code || 'PROCESSOR_ERROR',
           metadata: {
             error: error.message?.substring(0, 200),
-            projectId: data.projectId || null
+            projectId: data.projectId || null,
+            model: model || 'unknown'
           }
         });
         console.log(`Analytics tracked: Video generation failure for user ${userId}`);
