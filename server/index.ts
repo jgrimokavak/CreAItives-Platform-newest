@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { videoJobProcessor } from "./services/videoJobProcessor";
+import { runAutoMigration } from "./auto-migrate";
 
 // Set CAR_SHEET_CSV env variable if not already set
 if (!process.env.CAR_SHEET_CSV) {
@@ -49,6 +50,9 @@ app.use((req, res, next) => {
 
 (async () => {
   const server = await registerRoutes(app);
+
+  // Run automatic database migration to fix production schema issues
+  await runAutoMigration();
 
   // Start video job processor for background video generation processing
   videoJobProcessor.start();
