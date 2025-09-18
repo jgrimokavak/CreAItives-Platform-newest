@@ -1842,8 +1842,36 @@ export class DatabaseStorage implements IStorage {
 
   // Video operations
   async saveVideo(video: InsertVideo): Promise<Video> {
-    const [savedVideo] = await db.insert(videos).values(video).returning();
-    return savedVideo;
+    try {
+      const [savedVideo] = await db.insert(videos).values(video).returning();
+      return savedVideo;
+    } catch (error: any) {
+      // Handle missing columns in production gracefully
+      if (error.message?.includes('column') || error.message?.includes('environment')) {
+        console.error('[CRITICAL] saveVideo error - missing columns in production:', error.message);
+        
+        // Try saving without environment and other new fields
+        const fallbackVideo = { ...video };
+        // Remove fields that might not exist in production
+        delete (fallbackVideo as any).environment;
+        delete (fallbackVideo as any).referenceImageUrl;
+        delete (fallbackVideo as any).thumbUrl;
+        delete (fallbackVideo as any).queuedAt;
+        delete (fallbackVideo as any).attemptCount;
+        delete (fallbackVideo as any).nextPollAt;
+        delete (fallbackVideo as any).lastError;
+        
+        try {
+          const [savedVideo] = await db.insert(videos).values(fallbackVideo).returning();
+          console.warn('[FALLBACK] Video saved without new columns');
+          return savedVideo;
+        } catch (fallbackError: any) {
+          console.error('[CRITICAL] Fallback save also failed:', fallbackError.message);
+          throw fallbackError;
+        }
+      }
+      throw error;
+    }
   }
 
   async getAllVideos(options?: { userId?: string; projectId?: string; status?: string; limit?: number; cursor?: string }): Promise<{
@@ -1855,6 +1883,9 @@ export class DatabaseStorage implements IStorage {
     
     // Get current environment to filter videos
     const currentEnv = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
+    
+    // Production hotfix: Handle missing database columns gracefully
+    try {
     
     // OPTIMIZED QUERY - Simplified for performance
     // When userId is provided without projectId, just get user's own videos
@@ -1886,6 +1917,7 @@ export class DatabaseStorage implements IStorage {
       const conditions = [];
       
       // CRITICAL: Filter by environment to prevent cross-environment issues
+      // Note: This may fail in production if column doesn't exist
       conditions.push(eq(videos.environment, currentEnv));
       
       if (userId) conditions.push(eq(videos.userId, userId));
@@ -1906,6 +1938,45 @@ export class DatabaseStorage implements IStorage {
       const nextCursor = hasMore ? items[items.length - 1]?.createdAt?.toISOString() || null : null;
       
       return { items, nextCursor };
+    }
+    } catch (error: any) {
+      console.error('[CRITICAL] getAllVideos error - likely missing database columns in production:', error.message);
+      
+      // FALLBACK: Try query without environment filter if column doesn't exist
+      if (error.message?.includes('column') || error.message?.includes('environment')) {
+        console.warn('[FALLBACK] Attempting query without environment filter due to missing column');
+        
+        try {
+          // Simplified query without environment filter
+          const conditions: any[] = [];
+          if (userId) conditions.push(eq(videos.userId, userId));
+          if (projectId) conditions.push(eq(videos.projectId, projectId));
+          if (status) conditions.push(eq(videos.status, status));
+          if (cursor) conditions.push(lt(videos.createdAt, new Date(cursor)));
+          
+          let query = db.select().from(videos);
+          if (conditions.length > 0) {
+            query = query.where(and(...conditions)) as any;
+          }
+          
+          const videoList = await query
+            .orderBy(desc(videos.createdAt))
+            .limit(limit + 1);
+          
+          const hasMore = videoList.length > limit;
+          const items = hasMore ? videoList.slice(0, -1) : videoList;
+          const nextCursor = hasMore ? items[items.length - 1]?.createdAt?.toISOString() || null : null;
+          
+          console.warn('[FALLBACK] Successfully retrieved videos without environment filter');
+          return { items, nextCursor };
+        } catch (fallbackError: any) {
+          console.error('[CRITICAL] Fallback query also failed:', fallbackError.message);
+          throw fallbackError;
+        }
+      }
+      
+      // Re-throw if not a column error
+      throw error;
     }
   }
 
@@ -1937,12 +2008,13 @@ export class DatabaseStorage implements IStorage {
     // Get current environment to ensure we only check within the same environment
     const currentEnv = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
 
-    // Check if any other videos reference the same URLs (excluding the video being deleted)
-    // IMPORTANT: Only check within the same environment for proper isolation
-    const conditions: any[] = [
-      ne(videos.id, videoId),
-      eq(videos.environment, currentEnv) // Environment isolation
-    ];
+    try {
+      // Check if any other videos reference the same URLs (excluding the video being deleted)
+      // IMPORTANT: Only check within the same environment for proper isolation
+      const conditions: any[] = [
+        ne(videos.id, videoId),
+        eq(videos.environment, currentEnv) // Environment isolation
+      ];
     
     if (videoUrl && thumbUrl) {
       conditions.push(or(eq(videos.url, videoUrl), eq(videos.thumbUrl, thumbUrl)));
@@ -1964,42 +2036,113 @@ export class DatabaseStorage implements IStorage {
     console.log(`Reference check for video ${videoId} in ${currentEnv}: ${shouldDelete ? 'DELETE' : 'KEEP'} files (${referencingVideos.length} other references found)`);
     
     return shouldDelete;
+    } catch (error: any) {
+      // If environment column doesn't exist, check without it
+      if (error.message?.includes('column') || error.message?.includes('environment')) {
+        console.warn('[FALLBACK] Checking file references without environment filter');
+        
+        try {
+          const conditions: any[] = [ne(videos.id, videoId)];
+          
+          if (videoUrl && thumbUrl) {
+            conditions.push(or(eq(videos.url, videoUrl), eq(videos.thumbUrl, thumbUrl)));
+          } else if (videoUrl) {
+            conditions.push(eq(videos.url, videoUrl));
+          } else if (thumbUrl) {
+            conditions.push(eq(videos.thumbUrl, thumbUrl));
+          }
+          
+          const referencingVideos = await db
+            .select({ id: videos.id })
+            .from(videos)
+            .where(and(...conditions))
+            .limit(1);
+          
+          const shouldDelete = referencingVideos.length === 0;
+          console.warn(`[FALLBACK] Reference check without environment: ${shouldDelete ? 'DELETE' : 'KEEP'} files`);
+          return shouldDelete;
+        } catch (fallbackError: any) {
+          console.error('[CRITICAL] Fallback reference check failed:', fallbackError.message);
+          // Conservative: don't delete if we can't check
+          return false;
+        }
+      }
+      throw error;
+    }
   }
 
   // === JOB STATE MANAGEMENT METHODS ===
   
   // Queue a video for processing
   async queueVideo(id: string): Promise<Video | undefined> {
-    const [queuedVideo] = await db
-      .update(videos)
-      .set({ 
-        status: 'pending',
-        queuedAt: new Date(),
-        attemptCount: 0,
-        updatedAt: new Date()
-      })
-      .where(eq(videos.id, id))
-      .returning();
-    return queuedVideo;
+    try {
+      const [queuedVideo] = await db
+        .update(videos)
+        .set({ 
+          status: 'pending',
+          queuedAt: new Date(),
+          attemptCount: 0,
+          updatedAt: new Date()
+        })
+        .where(eq(videos.id, id))
+        .returning();
+      return queuedVideo;
+    } catch (error: any) {
+      // Fallback if new columns don't exist
+      if (error.message?.includes('column')) {
+        console.warn('[FALLBACK] queueVideo without new columns');
+        const [queuedVideo] = await db
+          .update(videos)
+          .set({ 
+            status: 'pending',
+            updatedAt: new Date()
+          })
+          .where(eq(videos.id, id))
+          .returning();
+        return queuedVideo;
+      }
+      throw error;
+    }
   }
 
   // Start processing a queued video
   async startVideoProcessing(id: string, jobId: string, nextPollAt: Date): Promise<Video | undefined> {
-    const [processingVideo] = await db
-      .update(videos)
-      .set({ 
-        status: 'processing',
-        jobId,
-        nextPollAt,
-        attemptCount: sql`${videos.attemptCount} + 1`,
-        updatedAt: new Date()
-      })
-      .where(and(
-        eq(videos.id, id),
-        eq(videos.status, 'pending') // Only start if still pending
-      ))
-      .returning();
-    return processingVideo;
+    try {
+      const [processingVideo] = await db
+        .update(videos)
+        .set({ 
+          status: 'processing',
+          jobId,
+          nextPollAt,
+          attemptCount: sql`${videos.attemptCount} + 1`,
+          updatedAt: new Date()
+        })
+        .where(and(
+          eq(videos.id, id),
+          eq(videos.status, 'pending') // Only start if still pending
+        ))
+        .returning();
+      return processingVideo;
+    } catch (error: any) {
+      // Fallback if new columns don't exist
+      if (error.message?.includes('column')) {
+        console.warn('[FALLBACK] startVideoProcessing without new columns');
+        const [processingVideo] = await db
+          .update(videos)
+          .set({ 
+            status: 'processing',
+            jobId,
+            updatedAt: new Date()
+          })
+          .where(and(
+            eq(videos.id, id),
+            eq(videos.status, 'pending')
+          ))
+          .returning();
+        return processingVideo;
+      }
+      throw error;
+    }
   }
 
   // Update job polling state (for retry attempts)
@@ -2026,42 +2169,86 @@ export class DatabaseStorage implements IStorage {
     fullUrl?: string;
     size?: number;
   }): Promise<Video | undefined> {
-    const [completedVideo] = await db
-      .update(videos)
-      .set({
-        status: 'completed',
-        url: completion.url,
-        thumbUrl: completion.thumbUrl,
-        fullUrl: completion.fullUrl,
-        size: completion.size,
-        completedAt: new Date(),
-        nextPollAt: null,
-        lastError: null,
-        updatedAt: new Date()
-      })
-      .where(and(
-        eq(videos.id, id),
-        eq(videos.status, 'processing') // Only complete if processing
-      ))
-      .returning();
-    return completedVideo;
+    try {
+      const [completedVideo] = await db
+        .update(videos)
+        .set({
+          status: 'completed',
+          url: completion.url,
+          thumbUrl: completion.thumbUrl,
+          fullUrl: completion.fullUrl,
+          size: completion.size,
+          completedAt: new Date(),
+          nextPollAt: null,
+          lastError: null,
+          updatedAt: new Date()
+        })
+        .where(and(
+          eq(videos.id, id),
+          eq(videos.status, 'processing') // Only complete if processing
+        ))
+        .returning();
+      return completedVideo;
+    } catch (error: any) {
+      // Fallback if new columns don't exist
+      if (error.message?.includes('column')) {
+        console.warn('[FALLBACK] completeVideoJob without new columns');
+        // Minimal update with only columns that should exist
+        const updateData: any = {
+          status: 'completed',
+          url: completion.url,
+          updatedAt: new Date()
+        };
+        // Only add optional columns if they might exist
+        if (completion.fullUrl) updateData.fullUrl = completion.fullUrl;
+        
+        const [completedVideo] = await db
+          .update(videos)
+          .set(updateData)
+          .where(and(
+            eq(videos.id, id),
+            eq(videos.status, 'processing')
+          ))
+          .returning();
+        return completedVideo;
+      }
+      throw error;
+    }
   }
 
   // Fail a video job with error details
   async failVideoJob(id: string, errorMessage: string): Promise<Video | undefined> {
-    const [failedVideo] = await db
-      .update(videos)
-      .set({
-        status: 'failed',
-        error: errorMessage,
-        lastError: errorMessage,
-        nextPollAt: null,
-        completedAt: new Date(),
-        updatedAt: new Date()
-      })
-      .where(eq(videos.id, id))
-      .returning();
-    return failedVideo;
+    try {
+      const [failedVideo] = await db
+        .update(videos)
+        .set({
+          status: 'failed',
+          error: errorMessage,
+          lastError: errorMessage,
+          nextPollAt: null,
+          completedAt: new Date(),
+          updatedAt: new Date()
+        })
+        .where(eq(videos.id, id))
+        .returning();
+      return failedVideo;
+    } catch (error: any) {
+      // Fallback if new columns don't exist
+      if (error.message?.includes('column')) {
+        console.warn('[FALLBACK] failVideoJob without new columns');
+        const [failedVideo] = await db
+          .update(videos)
+          .set({
+            status: 'failed',
+            error: errorMessage,
+            updatedAt: new Date()
+          })
+          .where(eq(videos.id, id))
+          .returning();
+        return failedVideo;
+      }
+      throw error;
+    }
   }
 
   // Get videos that need polling (processing status, nextPollAt in past)
@@ -2069,37 +2256,69 @@ export class DatabaseStorage implements IStorage {
     const currentEnv = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
     const now = new Date();
     
-    return await db
-      .select()
-      .from(videos)
-      .where(and(
-        eq(videos.environment, currentEnv),
-        eq(videos.status, 'processing'),
-        isNotNull(videos.jobId),
-        or(
-          isNull(videos.nextPollAt),
-          lte(videos.nextPollAt, now)
-        ),
-        lt(videos.attemptCount, 10) // Max 10 attempts to prevent infinite loops
-      ))
-      .orderBy(asc(videos.nextPollAt))
-      .limit(limit);
+    try {
+      return await db
+        .select()
+        .from(videos)
+        .where(and(
+          eq(videos.environment, currentEnv),
+          eq(videos.status, 'processing'),
+          isNotNull(videos.jobId),
+          or(
+            isNull(videos.nextPollAt),
+            lte(videos.nextPollAt, now)
+          ),
+          lt(videos.attemptCount, 10) // Max 10 attempts to prevent infinite loops
+        ))
+        .orderBy(asc(videos.nextPollAt))
+        .limit(limit);
+    } catch (error: any) {
+      // Fallback if columns don't exist in production
+      if (error.message?.includes('column')) {
+        console.warn('[FALLBACK] getVideosNeedingPoll without new columns');
+        // Simple fallback - just get processing videos
+        return await db
+          .select()
+          .from(videos)
+          .where(and(
+            eq(videos.status, 'processing'),
+            isNotNull(videos.jobId)
+          ))
+          .limit(limit);
+      }
+      throw error;
+    }
   }
 
   // Get videos waiting in queue
   async getQueuedVideos(limit: number = 10): Promise<Video[]> {
     const currentEnv = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
     
-    return await db
-      .select()
-      .from(videos)
-      .where(and(
-        eq(videos.environment, currentEnv),
-        eq(videos.status, 'pending'),
-        isNotNull(videos.queuedAt)
-      ))
-      .orderBy(asc(videos.queuedAt)) // First in, first out
-      .limit(limit);
+    try {
+      return await db
+        .select()
+        .from(videos)
+        .where(and(
+          eq(videos.environment, currentEnv),
+          eq(videos.status, 'pending'),
+          isNotNull(videos.queuedAt)
+        ))
+        .orderBy(asc(videos.queuedAt)) // First in, first out
+        .limit(limit);
+    } catch (error: any) {
+      // Fallback if columns don't exist in production
+      if (error.message?.includes('column')) {
+        console.warn('[FALLBACK] getQueuedVideos without new columns');
+        // Simple fallback - just get pending videos
+        return await db
+          .select()
+          .from(videos)
+          .where(eq(videos.status, 'pending'))
+          .orderBy(asc(videos.createdAt)) // Use createdAt instead
+          .limit(limit);
+      }
+      throw error;
+    }
   }
 
   // Get currently processing videos (for monitoring)
