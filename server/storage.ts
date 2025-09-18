@@ -1884,6 +1884,24 @@ export class DatabaseStorage implements IStorage {
     // Get current environment to filter videos
     const currentEnv = process.env.REPLIT_DEPLOYMENT === '1' ? 'prod' : 'dev';
     
+    // Check if environment column exists BEFORE using it
+    let hasEnvironmentColumn = true;
+    try {
+      const columnCheck = await db.execute(sql`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'videos' AND column_name = 'environment'
+        LIMIT 1
+      `);
+      hasEnvironmentColumn = columnCheck.rows.length > 0;
+      if (!hasEnvironmentColumn) {
+        console.warn('[WARNING] environment column does not exist in videos table - queries will not filter by environment');
+      }
+    } catch (e) {
+      console.warn('[WARNING] Could not check for environment column existence:', e);
+      hasEnvironmentColumn = false;
+    }
+    
     // Production hotfix: Handle missing database columns gracefully
     try {
     
@@ -1892,9 +1910,13 @@ export class DatabaseStorage implements IStorage {
     // This avoids complex subqueries that cause timeouts
     if (userId && !projectId) {
       const conditions: any[] = [
-        eq(videos.environment, currentEnv),
         eq(videos.userId, userId)  // Only user's own videos to avoid complex joins
       ];
+      
+      // Only add environment filter if column exists
+      if (hasEnvironmentColumn) {
+        conditions.push(eq(videos.environment, currentEnv));
+      }
       
       if (status) conditions.push(eq(videos.status, status));
       if (cursor) conditions.push(lt(videos.createdAt, new Date(cursor)));
@@ -1916,9 +1938,10 @@ export class DatabaseStorage implements IStorage {
       let query = db.select().from(videos) as any;
       const conditions = [];
       
-      // CRITICAL: Filter by environment to prevent cross-environment issues
-      // Note: This may fail in production if column doesn't exist
-      conditions.push(eq(videos.environment, currentEnv));
+      // CRITICAL: Only filter by environment if column exists
+      if (hasEnvironmentColumn) {
+        conditions.push(eq(videos.environment, currentEnv));
+      }
       
       if (userId) conditions.push(eq(videos.userId, userId));
       if (projectId) conditions.push(eq(videos.projectId, projectId));
