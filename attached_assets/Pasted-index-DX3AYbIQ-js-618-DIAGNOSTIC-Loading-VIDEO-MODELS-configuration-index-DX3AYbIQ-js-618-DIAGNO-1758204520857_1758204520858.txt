@@ -1,0 +1,43 @@
+index-DX3AYbIQ.js:618 [DIAGNOSTIC] Loading VIDEO_MODELS configuration
+index-DX3AYbIQ.js:618 [DIAGNOSTIC] VIDEO_MODELS loaded: Object
+index-DX3AYbIQ.js:602 [MP][CLIENT] WS URL Object
+index-DX3AYbIQ.js:697 SW registered:  ServiceWorkerRegistration
+index-DX3AYbIQ.js:602 WebSocket connected
+video:1 <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">
+index-DX3AYbIQ.js:602 [TRACE] WebSocket received event: jobCreated with data: Object
+index-DX3AYbIQ.js:602 [TRACE] Processing jobCreated event, dispatching ws-message
+index-DX3AYbIQ.js:602 [TRACE] WebSocket received event: jobCreated with data: Object
+index-DX3AYbIQ.js:602 [TRACE] Processing jobCreated event, dispatching ws-message
+index-DX3AYbIQ.js:602 [TRACE] WebSocket received event: jobUpdated with data: Object
+index-DX3AYbIQ.js:602 [TRACE] Processing jobUpdated event, dispatching ws-message
+index-DX3AYbIQ.js:602 [TRACE] WebSocket received event: jobUpdated with data: Object
+index-DX3AYbIQ.js:602 [TRACE] Processing jobUpdated event, dispatching ws-message
+index-DX3AYbIQ.js:602 [TRACE] WebSocket received event: jobUpdated with data: Object
+index-DX3AYbIQ.js:602 [TRACE] Processing jobUpdated event, dispatching ws-message
+index-DX3AYbIQ.js:602 [TRACE] WebSocket received event: jobUpdated with data: Object
+index-DX3AYbIQ.js:602 [TRACE] Processing jobUpdated event, dispatching ws-message
+api/video?limit=100:1  Failed to load resource: the server responded with a status of 500 ()
+index-DX3AYbIQ.js:602 [MP][CLIENT] WS URL Object
+index-DX3AYbIQ.js:602 WebSocket connection to 'wss://creaitives-platform-2-0.replit.app/ws' failed: 
+fne @ index-DX3AYbIQ.js:602
+index-DX3AYbIQ.js:602 WebSocket error event: Event
+i.onerror @ index-DX3AYbIQ.js:602
+video:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+video:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+video:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
+index-DX3AYbIQ.js:602 [MP][CLIENT] WS URL Object
+index-DX3AYbIQ.js:602 WebSocket connection to 'wss://creaitives-platform-2-0.replit.app/ws' failed: 
+fne @ index-DX3AYbIQ.js:602
+index-DX3AYbIQ.js:602 WebSocket error event: Event
+i.onerror @ index-DX3AYbIQ.js:602
+index-mRe-vCkf.css:1  Failed to load resource: the server responded with a status of 500 ()
+manifest.json:1  Failed to load resource: the server responded with a status of 500 ()
+index-DX3AYbIQ.js:602 [MP][CLIENT] WS URL {protocol: 'wss:', hostname: 'creaitives-platform-2-0.replit.app', port: '', url: 'wss://creaitives-platform-2-0.replit.app/ws'}
+index-DX3AYbIQ.js:602 WebSocket connection to 'wss://creaitives-platform-2-0.replit.app/ws' failed: 
+fne @ index-DX3AYbIQ.js:602
+i @ index-DX3AYbIQ.js:602
+(anonymous) @ index-DX3AYbIQ.js:602
+index-DX3AYbIQ.js:602 WebSocket error event: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+i.onerror @ index-DX3AYbIQ.js:602
+index-DX3AYbIQ.js:602 [MP][CLIENT] WS URL {protocol: 'wss:', hostname: 'creaitives-platform-2-0.replit.app', port: '', url: 'wss://creaitives-platform-2-0.replit.app/ws'}
+index-DX3AYbIQ.js:602 WebSocket connected
