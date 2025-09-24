@@ -1,0 +1,152 @@
+
+
+# Objective
+
+Perform a **deep, read-only diagnosis** of the Video page failures: (A) **Create Videos** end-to-end generation flow, (B) **Video Gallery** listing/preview/sharing, and (C) **Dev ↔ Prod parity** issues. Produce a precise, minimal fix plan. **Do not modify any source files, packages, or infrastructure.**
+
+# Hard Guardrails (Non-negotiable)
+
+* **Autonomy:** Low.
+* **NO CODE CHANGES.** No edits to tracked files, no commits, no formatting, no refactors, no package upgrades/downgrades.
+* Allowed writes: transient build artifacts (`.next/`, `dist/`, `.turbo/`, local caches) and logs **only**.
+* If any step would change tracked files or lockfiles, **stop and ask for approval**.
+
+# 1) Repo & Environment Inventory (Read-only)
+
+* Detect: Node version, package manager & lockfile, framework, build tool, SSR/CSR mode.
+* Locate env files/secrets (names only): `.env*`, Replit Secrets, any CI/CD envs. **Never print secret values.**
+* Output a concise **Toolchain/Env Matrix** (Node/PM/framework/build/runtime target, SSR/edge/adapter).
+
+# 2) Route & Component Map (Video page only)
+
+* Map files for **Create Videos** and **Video Gallery**: pages/routes, loaders, components, hooks, state (e.g., react-query/zustand/redux), API/fetch adapters, uploaders, players.
+* List exact filenames and line ranges for entry points and data-fetch boundaries (request builders, response handlers, mappers).
+
+# 3) Reproduce Failures Locally (Dev)
+
+* Start the **dev server** with current lockfiles (no reinstall unless integrity check fails; if it fails, stop and report).
+* On **Create Videos**, exercise:
+
+  * Model selection, **AI Enhance** prompt step, per-model options, **reference image rules** (allowed/blocked), **project selection**, submit, job queue hand-off, status polling, result persistence to the selected project.
+* On **Video Gallery**, exercise:
+
+  * Project-scoped listing, filters/pagination, preview playback, sharing toggle/ACL, rename/move/delete.
+* Capture:
+
+  * Console warnings/errors, network failures, stack traces (with **files + line numbers**), and failing payloads (headers/status/body **redacted for secrets**).
+  * Exact routes and component actions that trigger failures.
+
+# 4) Static Analysis & Suspects (Read-only)
+
+* Diff recent commits/PRs mentioning: “agent”, “video”, “gallery”, “generation”, “queue”, “storage”, “fetch”.
+* For each **suspect file**, record the **breaking-change hypothesis** (API path or type drift, state changes, router changes, CORS, storage SDK, queue/job types, import path case sensitivity, etc.).
+* Scan for: stale query keys, missing `projectId` in query keys, pagination key drift, SSR/CSR conditional fetches, error swallowing, try/catch that hides failures.
+
+# 5) Contracts & Runtime Shapes (No edits)
+
+* Enumerate all external services in scope: **object storage**, **job queue/worker**, **model APIs**, **project/sharing** service, **auth/session**.
+* For each UI action, capture **request/response shapes**: endpoint, method, required fields, optional fields, nullable fields, error envelope.
+* Note **schema drift** or renames (e.g., `project_id` vs `projectId`, `status` enum changes, pagination token shape).
+* Identify video playback pipeline (MP4/HLS/DASH): URLs, **CORS**, `Content-Type`, `Accept-Ranges`, partial content (206), and whether player needs MSE.
+
+# 6) Deep Dev ↔ Prod Parity Investigation (No edits)
+
+**Build/Run Modes**
+
+* Build **prod bundle locally** (allowed artifact write) and serve locally. Compare **dev vs local prod** behavior step-by-step for both Create Videos and Gallery.
+* Record **differences** in: environment variable injection (e.g., `NEXT_PUBLIC_` vs server-only), tree-shaking/side-effects, dynamic imports, hydration warnings.
+
+**Environment & Config Drift Checklist**
+
+* **Env Vars:** Compare required variables across dev/staging/prod (names only). Check for missing `NEXT_PUBLIC_` exposure or `import.meta.env` vs `process.env` confusion.
+* **Base URLs:** Relative vs absolute; SSR base URL in prod; `X-Forwarded-*` handling.
+* **Auth/Cookies:** domain/`SameSite`/`Secure`, HTTP vs HTTPS, cross-site requests, cookie not sent in prod.
+* **CORS/Headers:** API and storage allowlists, `Origin`/`Referer`, preflight (`OPTIONS`), bucket CORS for **video files** and **thumbnails** (read paths only).
+* **Storage:** Signed URL region mismatch, clock skew causing **immediate expiration**, wrong bucket/key prefix in prod, missing `Content-Type`/`Cache-Control`.
+* **Queue/Workers:** queue name/region mismatch, credentials scope, worker not subscribed to prod queue, status polling hitting different environment.
+* **Networking:** egress blocks, IP allowlists (verify if any **DB or service allowlist** exists before assuming), HTTP/2 vs HTTP/1.1 peculiarities, TLS/cert pinning.
+* **Platform Differences:** Linux case sensitivity (imports vs filenames), path separators, locale/timezone (UTC vs local) affecting sort/pagination or signed URLs.
+* **Security Headers/CSP:** media and connect src allowlists blocking player or API calls only in prod.
+* **CDN/Edge:** cached 404/403, missing range requests, `Vary` headers, stale cache masking writes.
+
+**Evidence Requirements**
+
+* Provide **paired evidence** for each parity issue: (dev observation) vs (prod/local-prod observation) with HAR snippets or cURL output (redacted).
+* If prod endpoints are private, use **health/metadata endpoints** only; do not mutate prod data.
+
+# 7) Playback & Gallery Deep Checks
+
+* **Playback**: confirm that MP4/HLS responses provide `206 Partial Content`, correct `Content-Type`, and CORS for media + segment files; note any blocked cross-origin requests.
+* **Gallery Listing**: verify project scoping in query params and server filters; confirm pagination cursors are stable and monotonic; check date serialization & timezone issues; verify sorting fields exist in responses.
+* **Sharing/ACL**: identify endpoints and payloads that toggle sharing; verify persistence/read-back symmetry (write succeeds → subsequent read reflects state).
+* **State & Caching**: inspect react-query (or similar) keys include `projectId`; check `staleTime`, `cacheTime`, and invalidation after mutations; ensure preview loader isn’t racing stale cache.
+
+# 8) “Database in Prod” Claim — Sanity Check (Read-only)
+
+* Verify if **any** component directly queries a database from the client or server runtime used in prod.
+* If prior errors claimed “cannot access DB”, check:
+
+  * Whether the app even talks to a DB directly vs a REST/GraphQL layer.
+  * Connection health via **non-mutating** health endpoints (if available).
+  * Pool size/timeouts in prod vs dev, network ACLs, secrets presence (names only).
+* Provide a short **finding**: “DB access not applicable” vs “DB access applicable, probable cause X” with evidence.
+
+# 9) Deliverables (Console output only; no file writes)
+
+1. **Toolchain/Env Matrix**.
+2. **Route/Component Map** for Create Videos + Video Gallery.
+3. **Error Catalog**: each error with route, component, file, line, stack, and failing request summary.
+4. **Contracts Table**: endpoints with request/response field diffs and suspected schema drift.
+5. **Dev↔Prod Parity Report**: checklist with pass/fail and evidence pairs.
+6. **Playback Compliance Report** (CORS, 206, Content-Type, range support).
+7. **Top 5 Root-Cause Hypotheses (Ranked)** with confidence scores and pointers to evidence.
+8. **Minimal Fix Plan** (bullets): for each fix, list files to change, rationale, risk level, and quick rollback note. **Plan only—no edits.**
+9. **Open Questions** that require owner confirmation.
+10. **Test Plan**: manual steps + proposed lightweight tests.
+
+# 10) Reporting Format
+
+* Print a single markdown report to console: `docs/video-page-diagnostic.md` (in-memory only).
+* Use sections mirroring the **Deliverables** list.
+* Include short **code snippets** where relevant as proposals (not applied), e.g.:
+
+```ts
+// Example zod guard for gallery list response (proposal, not applied)
+const GalleryItem = z.object({
+  id: z.string(),
+  projectId: z.string(),
+  title: z.string().optional(),
+  url: z.string().url(),
+  createdAt: z.string(),
+  // add fields actually observed…
+});
+const GalleryResponse = z.object({
+  items: z.array(GalleryItem),
+  nextCursor: z.string().nullable(),
+});
+```
+
+```ts
+// Example react-query key hygiene (proposal, not applied)
+const useGallery = (projectId: string, cursor?: string) =>
+  useQuery({
+    queryKey: ['gallery', projectId, cursor],
+    queryFn: () => api.gallery.list({ projectId, cursor }),
+    staleTime: 30_000,
+  });
+```
+
+# Testing (Read-only)
+
+* Verify all reproduction steps are deterministic in **dev** and **local prod build**.
+* Confirm that no tracked files changed (`git status` clean).
+* Ensure all reported network errors include method/url/status and whether the failure is CORS, auth, schema, or transport.
+
+# Reminders & Constraints
+
+* Scope strictly to **Create Videos** and **Video Gallery**.
+* **No schema migrations**, no env changes, no package changes.
+* Use **cURL/HAR** and logs for proof; do not mutate prod data.
+* If a step requires changes, **stop and present the plan** for human approval.
+
+
